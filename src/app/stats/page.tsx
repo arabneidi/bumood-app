@@ -96,63 +96,101 @@ export default function StatsPage() {
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      className="max-w-7xl mx-auto"
-    >
-      <motion.div 
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="text-center mb-12 relative overflow-hidden"
-      >
-        {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(12)].map((_, i) => (
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white">
+      {/* Futuristic Background */}
+      <div className="absolute inset-0">
+        {/* Animated Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_24%,rgba(147,51,234,0.1)_25%,rgba(147,51,234,0.1)_26%,transparent_27%,transparent_74%,rgba(59,130,246,0.1)_75%,rgba(59,130,246,0.1)_76%,transparent_77%)] bg-[length:50px_50px] animate-pulse"></div>
+        {/* Floating Particles */}
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-2 h-2 bg-indigo-300 rounded-full"
+              className="absolute w-2 h-2 bg-purple-400/30 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
               animate={{
-                x: [0, 100, 0],
-                y: [0, -50, 0],
+                y: [0, -100, 0],
+                x: [0, Math.random() * 50 - 25, 0],
                 opacity: [0, 1, 0],
               }}
               transition={{
-                duration: 4 + i * 0.5,
+                duration: 3 + Math.random() * 2,
                 repeat: Infinity,
-                delay: i * 0.3,
-              }}
-              style={{
-                left: `${10 + i * 8}%`,
-                top: `${20 + i * 5}%`,
+                delay: Math.random() * 2,
               }}
             />
           ))}
         </div>
+      </div>
 
-        <motion.h1 
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        className="max-w-7xl mx-auto relative z-10"
+      >
+      <motion.div 
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: [0, -8, 0], opacity: 1 }}
+        transition={{ 
+          opacity: { duration: 0.6, delay: 0.2 },
+          y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+        }}
+        className="text-center mb-12 relative overflow-hidden"
+      >
+        <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8">
+          {/* Glowing Edge Effect */}
+          <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+          
+          <motion.h1 
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-          className="text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 flex items-center justify-center"
+          className="text-5xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-4 flex items-center justify-center"
         >
-          <BarChart3 className="w-12 h-12 mr-4 text-indigo-500" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="mr-4"
+          >
+            <BarChart3 className="w-12 h-12 text-blue-400" />
+          </motion.div>
           Analytics Dashboard
-          <TrendingUp className="w-12 h-12 ml-4 text-purple-500" />
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="ml-4"
+          >
+            <TrendingUp className="w-12 h-12 text-purple-400" />
+          </motion.div>
         </motion.h1>
         
         <motion.p 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="text-xl text-gray-600 flex items-center justify-center"
+          className="text-xl text-slate-300 flex items-center justify-center"
         >
-          <Sparkles className="w-5 h-5 mr-2 text-yellow-500" />
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="mr-2"
+          >
+            <Sparkles className="w-5 h-5 text-yellow-400" />
+          </motion.div>
           Comprehensive insights into your mood patterns and wellness trends
-          <Sparkles className="w-5 h-5 ml-2 text-yellow-500" />
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
+            className="ml-2"
+          >
+            <Sparkles className="w-5 h-5 text-yellow-400" />
+          </motion.div>
         </motion.p>
+        </div>
       </motion.div>
 
       <AnalyticsDashboard data={moodEntries} />
@@ -160,45 +198,62 @@ export default function StatsPage() {
       {/* Network Graph Section */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.6 }}
+        animate={{ opacity: 1, y: [0, -6, 0] }}
+        transition={{ 
+          opacity: { duration: 0.6, delay: 0.4 },
+          y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
+        }}
         className="mb-16"
       >
-        <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-indigo-100">
+        <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8">
+          {/* Glowing Edge Effect */}
+          <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+          
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-              <span className="mr-2">🕸️</span>
+            <motion.h2 
+              className="text-2xl font-bold text-white flex items-center"
+              whileHover={{ scale: 1.05 }}
+            >
+              <motion.span 
+                className="mr-2 text-3xl"
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                🕸️
+              </motion.span>
               Your Life Network
-            </h2>
+            </motion.h2>
             
             {/* Time Range Selector for Network */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-600">View:</span>
-              <div className="flex bg-gray-100 rounded-lg p-1">
+              <span className="text-sm font-medium text-slate-300">View:</span>
+              <div className="flex bg-blue-900/30 backdrop-blur-xl rounded-lg p-1 border border-blue-400/30">
                 {[
                   { value: 'daily', label: 'Today', icon: '📅' },
                   { value: 'weekly', label: 'Week', icon: '📊' },
                   { value: 'monthly', label: 'Month', icon: '📈' },
                   { value: 'yearly', label: 'Year', icon: '🗓️' }
                 ].map((option) => (
-                  <button
+                  <motion.button
                     key={option.value}
                     onClick={() => setNetworkTimeRange(option.value as any)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
                       networkTimeRange === option.value
-                        ? 'bg-white text-indigo-600 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
+                        ? 'bg-blue-500/30 text-white shadow-lg'
+                        : 'text-slate-300 hover:text-white hover:bg-blue-500/20'
                     }`}
                   >
                     <span className="mr-1">{option.icon}</span>
                     {option.label}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
           </div>
           
-          <p className="text-gray-600 mb-6">
+          <p className="text-slate-300 mb-6">
             See how your activities, interests, and favorites connect over time. 
             Thicker lines = more frequent connections. Larger nodes = more activity.
           </p>
@@ -215,13 +270,21 @@ export default function StatsPage() {
       {userInfo?.gender === 'female' && (
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
+          animate={{ opacity: 1, y: [0, -5, 0] }}
+          transition={{ 
+            opacity: { duration: 0.6, delay: 0.2 },
+            y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+          }}
           className="mb-16"
         >
-          <PeriodInsights moodEntries={moodEntries} userInfo={userInfo} />
+          <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8">
+            {/* Glowing Edge Effect */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            <PeriodInsights moodEntries={moodEntries} userInfo={userInfo} />
+          </div>
         </motion.div>
       )}
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
