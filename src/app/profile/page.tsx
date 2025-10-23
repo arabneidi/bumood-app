@@ -795,6 +795,19 @@ export default function ProfilePage() {
                   >
                     Add Custom Category
                   </button>
+                  
+                  {/* Test button */}
+                  <button
+                    onClick={() => {
+                      console.log('Test button clicked!');
+                      setNewCategoryName('Test Category');
+                      setNewCategoryValue('Test Value');
+                    }}
+                    className="ml-4 px-4 py-2 bg-green-500 text-white rounded-lg text-sm"
+                  >
+                    Test Fill
+                  </button>
+                  
                   {(!newCategoryName.trim() || !newCategoryValue.trim()) && (
                     <p className="text-sm text-slate-400 mt-2">
                       Please fill in both fields to add a custom category
