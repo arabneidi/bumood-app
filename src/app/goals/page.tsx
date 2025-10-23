@@ -50,6 +50,10 @@ export default function GoalsPage() {
     currentValue: 0,
     difficulty: "medium"
   });
+  const [customCategory, setCustomCategory] = useState("");
+  const [customSubcategory, setCustomSubcategory] = useState("");
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [showCustomSubcategory, setShowCustomSubcategory] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [completedGoal, setCompletedGoal] = useState(null);
   const [completedGoals, setCompletedGoals] = useState([]);
@@ -143,7 +147,10 @@ export default function GoalsPage() {
   }, []);
 
   const handleCreateGoal = async () => {
-    if (!newGoal.title.trim()) return;
+    if (!newGoal.title.trim() || !newGoal.category || !newGoal.subcategory) {
+      alert("Please fill in all fields");
+      return;
+    }
 
     try {
       const response = await fetch("/api/goals", {
@@ -169,6 +176,10 @@ export default function GoalsPage() {
         setShowAddGoal(false);
         setSelectedCategory("");
         setSelectedSubcategory("");
+        setCustomCategory("");
+        setCustomSubcategory("");
+        setShowCustomCategory(false);
+        setShowCustomSubcategory(false);
       }
     } catch (error) {
       console.error("Error creating goal:", error);
@@ -432,6 +443,14 @@ export default function GoalsPage() {
                     
                     <div className="mb-4">
                       <div className="flex items-center mb-2">
+                        <span className="text-slate-300 text-sm">Category:</span>
+                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.category}</span>
+                      </div>
+                      <div className="flex items-center mb-2">
+                        <span className="text-slate-300 text-sm">Type:</span>
+                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.subcategory}</span>
+                      </div>
+                      <div className="flex items-center mb-2">
                         <span className="text-slate-300 text-sm">Difficulty:</span>
                         <span className="ml-2 text-sm font-medium text-slate-200 capitalize">{goal.difficulty}</span>
                       </div>
@@ -523,6 +542,14 @@ export default function GoalsPage() {
                     </div>
                     
                     <div className="mb-4">
+                      <div className="flex items-center mb-2">
+                        <span className="text-slate-300 text-sm">Category:</span>
+                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.category}</span>
+                      </div>
+                      <div className="flex items-center mb-2">
+                        <span className="text-slate-300 text-sm">Type:</span>
+                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.subcategory}</span>
+                      </div>
                       <div className="flex items-center mb-2">
                         <span className="text-slate-300 text-sm">Difficulty:</span>
                         <span className="ml-2 text-sm font-medium text-slate-200 capitalize">{goal.difficulty}</span>
@@ -673,6 +700,8 @@ export default function GoalsPage() {
                                 setSelectedCategory(category.id);
                                 setSelectedSubcategory(subcategory.id);
                                 setNewGoal({ ...newGoal, category: category.id, subcategory: subcategory.id });
+                                setShowCustomCategory(false);
+                                setShowCustomSubcategory(false);
                               }}
                               className={`p-3 rounded-lg border-2 transition-all duration-300 text-left ${
                                 selectedSubcategory === subcategory.id
@@ -687,6 +716,75 @@ export default function GoalsPage() {
                         </div>
                       </div>
                     ))}
+                    
+                    {/* Custom Category Option */}
+                    <div className="bg-slate-700/30 rounded-xl p-4 border border-slate-600/50">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-white">Custom Category</h3>
+                        <button
+                          onClick={() => {
+                            setShowCustomCategory(!showCustomCategory);
+                            setShowCustomSubcategory(false);
+                            if (!showCustomCategory) {
+                              setSelectedCategory("");
+                              setSelectedSubcategory("");
+                            }
+                          }}
+                          className={`px-4 py-2 rounded-lg border-2 transition-all duration-300 ${
+                            showCustomCategory
+                              ? 'border-cyan-400/70 bg-cyan-500/20 text-cyan-300'
+                              : 'border-slate-600/50 bg-slate-700/30 text-slate-300 hover:border-slate-500/70'
+                          }`}
+                        >
+                          {showCustomCategory ? 'Hide' : 'Create Custom'}
+                        </button>
+                      </div>
+                      
+                      {showCustomCategory && (
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-200 mb-2">Category Name</label>
+                            <input
+                              type="text"
+                              value={customCategory}
+                              onChange={(e) => setCustomCategory(e.target.value)}
+                              placeholder="e.g., Personal Development, Hobbies, etc."
+                              className="w-full p-3 rounded-lg bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-200 mb-2">Subcategory Name</label>
+                            <input
+                              type="text"
+                              value={customSubcategory}
+                              onChange={(e) => setCustomSubcategory(e.target.value)}
+                              placeholder="e.g., Learn Guitar, Photography, etc."
+                              className="w-full p-3 rounded-lg bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
+                            />
+                          </div>
+                          
+                          <button
+                            onClick={() => {
+                              if (customCategory.trim() && customSubcategory.trim()) {
+                                setSelectedCategory('custom');
+                                setSelectedSubcategory('custom');
+                                setNewGoal({ 
+                                  ...newGoal, 
+                                  category: customCategory.trim(),
+                                  subcategory: customSubcategory.trim()
+                                });
+                                setShowCustomSubcategory(true);
+                              }
+                            }}
+                            disabled={!customCategory.trim() || !customSubcategory.trim()}
+                            className="w-full py-2 px-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
+                          >
+                            Use Custom Category
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
