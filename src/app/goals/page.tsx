@@ -682,25 +682,45 @@ export default function GoalsPage() {
                 <div>
                   <label className="block text-lg font-semibold text-slate-200 mb-3">Choose Your Goal Category</label>
                   <div className="space-y-6">
-                    {goalCategories.map((category) => (
+                    {goalCategories.map((category, index) => {
+                      const colors = [
+                        { bg: 'rgba(6, 182, 212, 0.1)', border: 'rgba(6, 182, 212, 0.4)', glow: 'rgba(6, 182, 212, 0.3)' }, // Cyan
+                        { bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.4)', glow: 'rgba(34, 197, 94, 0.3)' }, // Green
+                        { bg: 'rgba(168, 85, 247, 0.1)', border: 'rgba(168, 85, 247, 0.4)', glow: 'rgba(168, 85, 247, 0.3)' }, // Purple
+                        { bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.4)', glow: 'rgba(245, 158, 11, 0.3)' }, // Orange
+                        { bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.4)', glow: 'rgba(239, 68, 68, 0.3)' }  // Red
+                      ];
+                      const color = colors[index % colors.length];
+                      
+                      return (
                       <div key={category.id} className="relative overflow-hidden group rounded-xl p-4 border backdrop-blur-sm"
                            style={{
-                             background: 'rgba(30, 41, 59, 0.2)',
+                             background: color.bg,
                              backdropFilter: 'blur(20px)',
-                             border: '1px solid rgba(6, 182, 212, 0.3)',
-                             boxShadow: 'inset 0 0 20px rgba(6, 182, 212, 0.2), 0 0 40px rgba(6, 182, 212, 0.3)'
+                             border: `1px solid ${color.border}`,
+                             boxShadow: `inset 0 0 20px ${color.glow}, 0 0 40px ${color.glow}`
                            }}>
                         <h3 className="text-lg font-bold text-white mb-4">{category.name}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {category.subcategories.map((subcategory) => (
+                          {category.subcategories.map((subcategory, subIndex) => {
+                            const subColors = [
+                              { bg: 'rgba(6, 182, 212, 0.2)', border: 'rgba(6, 182, 212, 0.5)', glow: 'rgba(6, 182, 212, 0.2)' }, // Cyan
+                              { bg: 'rgba(34, 197, 94, 0.2)', border: 'rgba(34, 197, 94, 0.5)', glow: 'rgba(34, 197, 94, 0.2)' }, // Green
+                              { bg: 'rgba(168, 85, 247, 0.2)', border: 'rgba(168, 85, 247, 0.5)', glow: 'rgba(168, 85, 247, 0.2)' }, // Purple
+                              { bg: 'rgba(245, 158, 11, 0.2)', border: 'rgba(245, 158, 11, 0.5)', glow: 'rgba(245, 158, 11, 0.2)' }, // Orange
+                              { bg: 'rgba(239, 68, 68, 0.2)', border: 'rgba(239, 68, 68, 0.5)', glow: 'rgba(239, 68, 68, 0.2)' }  // Red
+                            ];
+                            const subColor = subColors[subIndex % subColors.length];
+                            
+                            return (
                             <div
                               key={subcategory.id}
                               className="relative overflow-hidden p-4 rounded-lg border-2 transition-all duration-300"
                               style={{
-                                background: 'rgba(30, 41, 59, 0.3)',
+                                background: subColor.bg,
                                 backdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(6, 182, 212, 0.3)',
-                                boxShadow: 'inset 0 0 15px rgba(6, 182, 212, 0.15), 0 0 30px rgba(6, 182, 212, 0.25)'
+                                border: `1px solid ${subColor.border}`,
+                                boxShadow: `inset 0 0 15px ${subColor.glow}, 0 0 30px ${subColor.glow}`
                               }}
                             >
                               <h4 className="text-lg font-bold text-white mb-4">{subcategory.name}</h4>
@@ -753,10 +773,12 @@ export default function GoalsPage() {
                                 ))}
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
