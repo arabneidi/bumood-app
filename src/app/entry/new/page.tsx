@@ -1109,8 +1109,8 @@ export default function NewEntry() {
             <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
             
             {/* Background Effects */}
-            <div className="absolute -top-12 -right-12 w-56 h-56 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl" />
-            <div className="absolute -bottom-16 -left-10 w-60 h-60 bg-gradient-to-tr from-purple-400/10 to-pink-400/10 rounded-full blur-3xl" />
+            <div className="absolute top-8 right-8 w-56 h-56 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-8 left-8 w-60 h-60 bg-gradient-to-tr from-purple-400/10 to-pink-400/10 rounded-full blur-3xl" />
 
             <div className="relative z-10">
               <h3 className="text-2xl font-extrabold text-white mb-6 flex items-center">
