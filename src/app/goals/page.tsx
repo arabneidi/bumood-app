@@ -432,25 +432,60 @@ export default function GoalsPage() {
                       <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mr-4">
                         <Target className="w-6 h-6 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold text-white">{goal.title}</h3>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-white mb-1" style={{
+                          background: 'linear-gradient(45deg, #06b6d4, #3b82f6, #8b5cf6)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          textShadow: '0 0 20px rgba(6, 182, 212, 0.5)'
+                        }}>
+                          {goal.title}
+                        </h3>
+                        <div className="text-xs text-cyan-300 font-medium">Active Goal</div>
+                      </div>
                     </div>
                     
-                    <div className="mb-4">
-                      <div className="flex items-center mb-2">
-                        <span className="text-slate-300 text-sm">Category:</span>
-                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.category}</span>
+                    <div className="mb-4 space-y-3">
+                      {/* Category */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/20">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-cyan-300 text-sm font-medium">Category</span>
+                        </div>
+                        <span className="text-white text-sm font-bold bg-cyan-500/20 px-3 py-1 rounded-full">{goal.category}</span>
                       </div>
-                      <div className="flex items-center mb-2">
-                        <span className="text-slate-300 text-sm">Type:</span>
-                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.subcategory}</span>
+                      
+                      {/* Type */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-400/20">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-purple-400 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-purple-300 text-sm font-medium">Type</span>
+                        </div>
+                        <span className="text-white text-sm font-bold bg-purple-500/20 px-3 py-1 rounded-full">{goal.subcategory}</span>
                       </div>
-                      <div className="flex items-center mb-2">
-                        <span className="text-slate-300 text-sm">Difficulty:</span>
-                        <span className="ml-2 text-sm font-medium text-slate-200 capitalize">{goal.difficulty}</span>
+                      
+                      {/* Difficulty */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-400/20">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-orange-400 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-orange-300 text-sm font-medium">Difficulty</span>
+                        </div>
+                        <span className={`text-white text-sm font-bold px-3 py-1 rounded-full capitalize ${
+                          goal.difficulty === 'easy' ? 'bg-green-500/20' :
+                          goal.difficulty === 'medium' ? 'bg-yellow-500/20' :
+                          'bg-red-500/20'
+                        }`}>
+                          {goal.difficulty}
+                        </span>
                       </div>
-                      <div className="flex items-center mb-2">
-                        <span className="text-slate-300 text-sm">Progress:</span>
-                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.currentValue}/{goal.targetValue} days</span>
+                      
+                      {/* Progress */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-400/20">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-emerald-300 text-sm font-medium">Progress</span>
+                        </div>
+                        <span className="text-white text-sm font-bold bg-emerald-500/20 px-3 py-1 rounded-full">{goal.currentValue}/{goal.targetValue} days</span>
                       </div>
                     </div>
 
@@ -529,28 +564,60 @@ export default function GoalsPage() {
                       <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mr-4">
                         <Target className="w-6 h-6 text-white" />
                       </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-green-300">{goal.title}</h3>
-                        <div className="text-sm text-green-400">✅ Completed</div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-white mb-1" style={{
+                          background: 'linear-gradient(45deg, #10b981, #059669, #047857)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          textShadow: '0 0 20px rgba(16, 185, 129, 0.5)'
+                        }}>
+                          {goal.title}
+                        </h3>
+                        <div className="text-xs text-green-300 font-medium">✅ Completed Goal</div>
                       </div>
                     </div>
                     
-                    <div className="mb-4">
-                      <div className="flex items-center mb-2">
-                        <span className="text-slate-300 text-sm">Category:</span>
-                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.category}</span>
+                    <div className="mb-4 space-y-3">
+                      {/* Category */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-400/20">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-green-300 text-sm font-medium">Category</span>
+                        </div>
+                        <span className="text-white text-sm font-bold bg-green-500/20 px-3 py-1 rounded-full">{goal.category}</span>
                       </div>
-                      <div className="flex items-center mb-2">
-                        <span className="text-slate-300 text-sm">Type:</span>
-                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.subcategory}</span>
+                      
+                      {/* Type */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-400/20">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-emerald-300 text-sm font-medium">Type</span>
+                        </div>
+                        <span className="text-white text-sm font-bold bg-emerald-500/20 px-3 py-1 rounded-full">{goal.subcategory}</span>
                       </div>
-                      <div className="flex items-center mb-2">
-                        <span className="text-slate-300 text-sm">Difficulty:</span>
-                        <span className="ml-2 text-sm font-medium text-slate-200 capitalize">{goal.difficulty}</span>
+                      
+                      {/* Difficulty */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border border-teal-400/20">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-teal-400 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-teal-300 text-sm font-medium">Difficulty</span>
+                        </div>
+                        <span className={`text-white text-sm font-bold px-3 py-1 rounded-full capitalize ${
+                          goal.difficulty === 'easy' ? 'bg-green-500/20' :
+                          goal.difficulty === 'medium' ? 'bg-yellow-500/20' :
+                          'bg-red-500/20'
+                        }`}>
+                          {goal.difficulty}
+                        </span>
                       </div>
-                      <div className="flex items-center mb-2">
-                        <span className="text-slate-300 text-sm">Duration:</span>
-                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.targetValue} days</span>
+                      
+                      {/* Duration */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/20">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-cyan-300 text-sm font-medium">Duration</span>
+                        </div>
+                        <span className="text-white text-sm font-bold bg-cyan-500/20 px-3 py-1 rounded-full">{goal.targetValue} days</span>
                       </div>
                     </div>
 
