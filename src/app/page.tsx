@@ -960,51 +960,34 @@ export default function Home() {
                     📝 Latest Entry
                   </motion.h3>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
-                    {[
-                      { value: recentEntry.valence, label: "Valence", color: "from-blue-500 to-purple-500", icon: "😊", delay: 1.1 },
-                      { value: recentEntry.energy, label: "Energy", color: "from-green-500 to-emerald-500", icon: "⚡", delay: 1.2 },
-                      { value: recentEntry.focus, label: "Focus", color: "from-cyan-500 to-blue-500", icon: "🎯", delay: 1.3 },
-                      { value: recentEntry.stress, label: "Stress", color: "from-red-500 to-orange-500", icon: "😰", delay: 1.4 }
-                    ].map((item, index) => (
-                      <motion.div 
-                        key={index}
-                        initial={{ opacity: 0, scale: 0, rotate: -90 }}
-                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                        transition={{ delay: item.delay, type: "spring", stiffness: 200 }}
-                        whileHover={{ scale: 1.15, rotate: 5 }}
-                        className={`bg-gradient-to-br ${item.color} p-6 rounded-3xl text-center shadow-lg transform`}
-                      >
-                        <motion.div
-                          animate={{ scale: [1, 1.2, 1], rotate: [0, 15, -15, 0] }}
-                          transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
-                          className="text-4xl mb-2"
-                        >
-                          {item.icon}
-                        </motion.div>
-                        <div className="text-3xl font-bold text-white mb-1 drop-shadow-lg">{item.value}</div>
-                        <div className="text-sm text-white font-semibold opacity-90">{item.label}</div>
-                      </motion.div>
-                    ))}
+                  <div className="grid grid-cols-2 gap-4 relative z-10">
+                    <div className="text-center p-4 bg-purple-500/20 border border-purple-400/50 rounded-2xl">
+                      <div className="text-3xl mb-2">😊</div>
+                      <div className="text-3xl font-bold">{recentEntry.valence}</div>
+                      <div className="text-sm text-slate-300">Valence</div>
+                    </div>
+                    <div className="text-center p-4 bg-green-500/20 border border-green-400/50 rounded-2xl">
+                      <div className="text-3xl mb-2">⚡</div>
+                      <div className="text-3xl font-bold">{recentEntry.energy}</div>
+                      <div className="text-sm text-slate-300">Energy</div>
+                    </div>
+                    <div className="text-center p-4 bg-blue-500/20 border border-blue-400/50 rounded-2xl">
+                      <div className="text-3xl mb-2">🎯</div>
+                      <div className="text-3xl font-bold">{recentEntry.focus}</div>
+                      <div className="text-sm text-slate-300">Focus</div>
+                    </div>
+                    <div className="text-center p-4 bg-red-500/20 border border-red-400/50 rounded-2xl">
+                      <div className="text-3xl mb-2">😰</div>
+                      <div className="text-3xl font-bold">{recentEntry.stress}</div>
+                      <div className="text-sm text-slate-300">Stress</div>
+                    </div>
                   </div>
                   
                   {recentEntry.notes && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 1.5, duration: 0.5 }}
-                      whileHover={{ scale: 1.02 }}
-                      className="mt-8 p-6 bg-slate-800/40 backdrop-blur-sm rounded-3xl shadow-lg border border-blue-500/20 relative overflow-hidden"
-                    >
-                      <motion.div
-                        className="absolute top-2 right-2 text-2xl"
-                        animate={{ rotate: [0, 20, -20, 0] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        💭
-                      </motion.div>
-                      <p className="text-slate-300 italic text-lg relative">"{recentEntry.notes}"</p>
-                    </motion.div>
+                    <div className="mt-6 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl p-4">
+                      <h4 className="font-bold text-slate-200 mb-2">Notes</h4>
+                      <p className="text-sm text-slate-300">{recentEntry.notes}</p>
+                    </div>
                   )}
                 </div>
               </motion.div>
