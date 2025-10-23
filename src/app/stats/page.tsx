@@ -170,38 +170,19 @@ export default function StatsPage() {
           </div>
         </motion.div>
 
-        {/* Analytics Dashboard and DSS Radar - Side by Side */}
+        {/* Analytics Dashboard */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-12 grid grid-cols-1 lg:grid-cols-2 gap-6"
+          className="mb-12"
         >
-          {/* Analytics Dashboard */}
           <motion.div 
             whileHover={{ scale: 1.02, y: -5 }}
             transition={{ type: "spring", stiffness: 300 }}
             className="relative bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
           >
-            <AnalyticsDashboard data={moodEntries} />
-          </motion.div>
-
-          {/* DSS Radar Chart */}
-          <motion.div 
-            whileHover={{ scale: 1.02, y: -5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-            className="relative bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
-          >
-            <motion.h3 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.9 }}
-              className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 flex items-center"
-            >
-              <Target className="w-6 h-6 mr-2 text-purple-500" />
-              DSS Radar
-            </motion.h3>
-            <DSSRadar data={dssData} loading={dssLoading} />
+            <AnalyticsDashboard data={moodEntries} dssData={dssData} dssLoading={dssLoading} />
           </motion.div>
         </motion.div>
 

@@ -7,6 +7,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import MoodChart from '../charts/MoodChart';
 import ModernRadarChart from '../charts/ModernRadarChart';
+import DSSRadar from './DSSRadar';
 import ActivityChart from '../charts/ActivityChart';
 import HeatmapChart from '../charts/HeatmapChart';
 import ProgressCircle from '../ui/ProgressCircle';
@@ -15,9 +16,11 @@ import { motion } from 'framer-motion';
 
 interface AnalyticsDashboardProps {
   data: MoodEntry[];
+  dssData?: any;
+  dssLoading?: boolean;
 }
 
-export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
+export default function AnalyticsDashboard({ data, dssData, dssLoading }: AnalyticsDashboardProps) {
   if (data.length === 0) {
     return (
       <motion.div
@@ -452,6 +455,32 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
               Wellness Radar
             </motion.h3>
             <ModernRadarChart data={data} height={250} />
+          </Card>
+        </motion.div>
+      </motion.div>
+
+      {/* DSS Radar */}
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.7 }}
+        className="mb-8"
+      >
+        <motion.div
+          whileHover={{ scale: 1.02, y: -5 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-purple-500/20 hover:shadow-xl transition-all duration-300">
+            <motion.h3 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.9 }}
+              className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 flex items-center"
+            >
+              <Target className="w-6 h-6 mr-2 text-purple-500" />
+              DSS Radar
+            </motion.h3>
+            <DSSRadar data={dssData} loading={dssLoading} />
           </Card>
         </motion.div>
       </motion.div>
