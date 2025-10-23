@@ -18,8 +18,9 @@ interface ActivitySelectorProps {
 
 const activityCategories = {
   'Physical': {
-    color: 'bg-red-500',
-    selectedColor: 'bg-red-600',
+    color: 'bg-gradient-to-r from-red-500 to-pink-500',
+    selectedColor: 'bg-gradient-to-r from-red-600 to-pink-600',
+    cardStyle: 'bg-gradient-to-br from-red-500/20 to-pink-500/15 border-red-400/30',
     activities: [
       { id: 'exercise', name: 'Exercise', icon: '💪', color: 'bg-red-100 text-red-800' },
       { id: 'walking', name: 'Walking', icon: '🚶', color: 'bg-red-100 text-red-800' },
@@ -30,8 +31,9 @@ const activityCategories = {
     ]
   },
   'Mental': {
-    color: 'bg-blue-500',
-    selectedColor: 'bg-blue-600',
+    color: 'bg-gradient-to-r from-blue-500 to-cyan-500',
+    selectedColor: 'bg-gradient-to-r from-blue-600 to-cyan-600',
+    cardStyle: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/15 border-blue-400/30',
     activities: [
       { id: 'reading', name: 'Reading', icon: '📚', color: 'bg-blue-100 text-blue-800' },
       { id: 'learning', name: 'Learning', icon: '🎓', color: 'bg-blue-100 text-blue-800' },
@@ -42,8 +44,9 @@ const activityCategories = {
     ]
   },
   'Social': {
-    color: 'bg-green-500',
-    selectedColor: 'bg-green-600',
+    color: 'bg-gradient-to-r from-green-500 to-emerald-500',
+    selectedColor: 'bg-gradient-to-r from-green-600 to-emerald-600',
+    cardStyle: 'bg-gradient-to-br from-green-500/20 to-emerald-500/15 border-green-400/30',
     activities: [
       { id: 'socializing', name: 'Socializing', icon: '👥', color: 'bg-green-100 text-green-800' },
       { id: 'family_time', name: 'Family Time', icon: '👨‍👩‍👧‍👦', color: 'bg-green-100 text-green-800' },
@@ -54,8 +57,9 @@ const activityCategories = {
     ]
   },
   'Creative': {
-    color: 'bg-purple-500',
-    selectedColor: 'bg-purple-600',
+    color: 'bg-gradient-to-r from-purple-500 to-indigo-500',
+    selectedColor: 'bg-gradient-to-r from-purple-600 to-indigo-600',
+    cardStyle: 'bg-gradient-to-br from-purple-500/20 to-indigo-500/15 border-purple-400/30',
     activities: [
       { id: 'music', name: 'Music', icon: '🎵', color: 'bg-purple-100 text-purple-800' },
       { id: 'art', name: 'Art', icon: '🎨', color: 'bg-purple-100 text-purple-800' },
@@ -66,8 +70,9 @@ const activityCategories = {
     ]
   },
   'Relaxation': {
-    color: 'bg-yellow-500',
-    selectedColor: 'bg-yellow-600',
+    color: 'bg-gradient-to-r from-amber-500 to-orange-500',
+    selectedColor: 'bg-gradient-to-r from-amber-600 to-orange-600',
+    cardStyle: 'bg-gradient-to-br from-amber-500/20 to-orange-500/15 border-amber-400/30',
     activities: [
       { id: 'sleeping', name: 'Sleeping', icon: '😴', color: 'bg-yellow-100 text-yellow-800' },
       { id: 'napping', name: 'Napping', icon: '💤', color: 'bg-yellow-100 text-yellow-800' },
@@ -78,8 +83,9 @@ const activityCategories = {
     ]
   },
   'Work': {
-    color: 'bg-gray-500',
-    selectedColor: 'bg-gray-600',
+    color: 'bg-gradient-to-r from-slate-500 to-gray-500',
+    selectedColor: 'bg-gradient-to-r from-slate-600 to-gray-600',
+    cardStyle: 'bg-gradient-to-br from-slate-500/20 to-gray-500/15 border-slate-400/30',
     activities: [
       { id: 'working', name: 'Working', icon: '💼', color: 'bg-gray-100 text-gray-800' },
       { id: 'studying', name: 'Studying', icon: '📖', color: 'bg-gray-100 text-gray-800' },
@@ -137,10 +143,10 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
                 key={activity.id}
                 type="button"
                 onClick={() => handleActivityClick(activity.id)}
-                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                className={`p-5 rounded-2xl border-2 transition-all duration-300 shadow-lg backdrop-blur-sm ${
                   isSelected
-                    ? 'border-blue-500 bg-blue-50 shadow-lg scale-105'
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+                    ? `${activityCategories[activeCategory as keyof typeof activityCategories].cardStyle} scale-105 shadow-xl`
+                    : 'bg-gradient-to-br from-slate-500/20 to-gray-500/15 border-slate-400/30 hover:shadow-md'
                 }`}
                 whileHover={{ scale: isSelected ? 1.05 : 1.02 }}
                 whileTap={{ scale: 0.95 }}
@@ -149,9 +155,9 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
                 transition={{ duration: 0.2 }}
               >
                 <div className="text-center">
-                  <div className="text-3xl mb-2">{activity.icon}</div>
-                  <div className={`text-sm font-medium ${
-                    isSelected ? 'text-blue-700' : 'text-gray-700'
+                  <div className="text-3xl mb-3">{activity.icon}</div>
+                  <div className={`text-sm font-semibold ${
+                    isSelected ? 'text-white drop-shadow-lg' : 'text-white/90'
                   }`}>
                     {activity.name}
                   </div>
@@ -159,7 +165,7 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="mt-2 text-blue-600"
+                      className="mt-2 text-white text-lg font-bold"
                     >
                       ✓
                     </motion.div>

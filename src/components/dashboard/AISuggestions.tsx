@@ -596,26 +596,26 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
       ) : (
         <div className="space-y-4">
           {displayedSuggestions.map((suggestion, index) => {
-            // Create vibrant color schemes based on priority and type
+            // Create vibrant color schemes based on priority and type (matching meals & drinks style)
             const getSuggestionColors = (priority: string, type: string) => {
               if (priority === 'high') {
                 return {
-                  background: 'bg-gradient-to-br from-red-500/30 via-pink-500/20 to-rose-500/30',
-                  border: 'border-red-400/60',
+                  background: 'bg-gradient-to-br from-red-500/20 to-pink-500/15',
+                  border: 'border-red-400/30',
                   glow: 'shadow-red-500/20',
                   badge: 'bg-gradient-to-r from-red-500 to-pink-500 text-white border-red-300'
                 };
               } else if (priority === 'medium') {
                 return {
-                  background: 'bg-gradient-to-br from-yellow-500/30 via-orange-500/20 to-amber-500/30',
-                  border: 'border-yellow-400/60',
-                  glow: 'shadow-yellow-500/20',
-                  badge: 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-yellow-300'
+                  background: 'bg-gradient-to-br from-amber-500/20 to-orange-500/15',
+                  border: 'border-amber-400/30',
+                  glow: 'shadow-amber-500/20',
+                  badge: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-300'
                 };
               } else {
                 return {
-                  background: 'bg-gradient-to-br from-green-500/30 via-emerald-500/20 to-teal-500/30',
-                  border: 'border-green-400/60',
+                  background: 'bg-gradient-to-br from-green-500/20 to-emerald-500/15',
+                  border: 'border-green-400/30',
                   glow: 'shadow-green-500/20',
                   badge: 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-300'
                 };
@@ -627,11 +627,11 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
             return (
               <div
                 key={index}
-                className={`backdrop-blur-lg border-2 rounded-2xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] ${colors.background} ${colors.border} ${colors.glow}`}
+                className={`backdrop-blur-sm border-2 rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${colors.background} ${colors.border} ${colors.glow}`}
               >
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl shadow-lg">
+                    <div className="w-12 h-12 rounded-full bg-slate-800/50 backdrop-blur-sm flex items-center justify-center text-2xl shadow-lg border-2 border-white/20">
                       {suggestion.icon}
                     </div>
                   </div>
@@ -646,13 +646,13 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
                     <p className="text-white/95 text-sm mb-4 drop-shadow-md leading-relaxed">{suggestion.description}</p>
                     
                     {suggestion.reasoning && (
-                      <div className="mb-4 p-4 bg-white/10 backdrop-blur-sm rounded-xl text-xs text-white/90 border border-white/20 shadow-lg">
+                      <div className="mb-4 p-4 bg-slate-800/50 backdrop-blur-sm rounded-xl text-xs text-white/90 border border-slate-600/50 shadow-lg">
                         <strong className="text-white font-semibold">🧠 AI Reasoning:</strong> {suggestion.reasoning}
                       </div>
                     )}
                     
                     {suggestion.action && (
-                      <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                      <div className="flex items-center justify-between bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-600/50">
                         <span className="text-sm font-medium text-white drop-shadow-md flex items-center">
                           <span className="text-lg mr-2">💡</span>
                           {suggestion.action}
