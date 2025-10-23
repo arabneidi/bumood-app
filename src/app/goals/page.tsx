@@ -227,11 +227,6 @@ export default function GoalsPage() {
           50% { transform: translate(-5px, -10px) rotate(180deg); }
           75% { transform: translate(-15px, 5px) rotate(270deg); }
         }
-        
-        @keyframes glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.3); }
-          50% { box-shadow: 0 0 40px rgba(6, 182, 212, 0.6), 0 0 60px rgba(59, 130, 246, 0.4); }
-        }
       `}</style>
 
       <div className="relative z-10 container mx-auto px-6 py-12">
@@ -281,58 +276,78 @@ export default function GoalsPage() {
               {goals.map((goal, index) => (
                 <div 
                   key={goal.id} 
-                  className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden group hover:scale-105 transition-all duration-500"
+                  className="relative overflow-hidden group hover:scale-105 transition-all duration-500 rounded-2xl"
                   style={{
                     animation: `float ${3 + (index * 0.5)}s ease-in-out infinite`,
-                    animationDelay: `${index * 0.2}s`
+                    animationDelay: `${index * 0.2}s`,
+                    background: 'rgba(30, 41, 59, 0.3)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
                   }}
                 >
-                  {/* Glow effect */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="absolute inset-0 rounded-2xl shadow-[0_0_30px_rgba(6,182,212,0.3)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mr-4">
-                      <Target className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white">{goal.title}</h3>
-                  </div>
+                  {/* Edge glow effect */}
+                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{
+                      background: 'linear-gradient(45deg, transparent, rgba(6, 182, 212, 0.1), transparent)',
+                      border: '1px solid rgba(6, 182, 212, 0.3)',
+                      boxShadow: 'inset 0 0 20px rgba(6, 182, 212, 0.2), 0 0 40px rgba(6, 182, 212, 0.3)'
+                    }}
+                  ></div>
                   
-                  <div className="mb-4">
-                    <div className="flex items-center mb-2">
-                      <span className="text-slate-300 text-sm">Difficulty:</span>
-                      <span className="ml-2 text-sm font-medium text-slate-200 capitalize">{goal.difficulty}</span>
+                  {/* Glass overlay */}
+                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  ></div>
+                  
+                  <div className="relative z-10 p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mr-4">
+                        <Target className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white">{goal.title}</h3>
                     </div>
-                    <div className="flex items-center mb-2">
-                      <span className="text-slate-300 text-sm">Progress:</span>
-                      <span className="ml-2 text-sm font-medium text-slate-200">{goal.currentValue}/{goal.targetValue} days</span>
+                    
+                    <div className="mb-4">
+                      <div className="flex items-center mb-2">
+                        <span className="text-slate-300 text-sm">Difficulty:</span>
+                        <span className="ml-2 text-sm font-medium text-slate-200 capitalize">{goal.difficulty}</span>
+                      </div>
+                      <div className="flex items-center mb-2">
+                        <span className="text-slate-300 text-sm">Progress:</span>
+                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.currentValue}/{goal.targetValue} days</span>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="mb-4">
-                    <div className="w-full bg-slate-700 rounded-full h-3 mb-2">
-                      <div
-                        className="bg-gradient-to-r from-cyan-500 to-blue-500 h-3 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.round((goal.currentValue / goal.targetValue) * 100)}%` }}
-                      ></div>
+                    <div className="mb-4">
+                      <div className="w-full bg-slate-700 rounded-full h-3 mb-2">
+                        <div
+                          className="bg-gradient-to-r from-cyan-500 to-blue-500 h-3 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.round((goal.currentValue / goal.targetValue) * 100)}%` }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-300 text-sm">{Math.round((goal.currentValue / goal.targetValue) * 100)}%</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-300 text-sm">{Math.round((goal.currentValue / goal.targetValue) * 100)}%</span>
-                    </div>
-                  </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => updateProgress(goal.id, -1)}
-                      className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-all duration-200"
-                    >
-                      -1
-                    </button>
-                    <button
-                      onClick={() => updateProgress(goal.id, 1)}
-                      className="px-3 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-sm font-medium transition-all duration-200"
-                    >
-                      +1
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => updateProgress(goal.id, -1)}
+                        className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-all duration-200"
+                      >
+                        -1
+                      </button>
+                      <button
+                        onClick={() => updateProgress(goal.id, 1)}
+                        className="px-3 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-sm font-medium transition-all duration-200"
+                      >
+                        +1
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
