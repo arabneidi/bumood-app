@@ -886,9 +886,9 @@ export default function ProfilePage() {
                 disabled={loading}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative overflow-hidden px-10 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-bold text-xl shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 disabled:opacity-50 border border-emerald-400/30"
+                className="relative overflow-hidden px-10 py-4 bg-blue-900/20 backdrop-blur-xl border border-blue-400/30 rounded-2xl font-bold text-xl shadow-lg hover:shadow-blue-500/20 transition-all duration-300 disabled:opacity-50"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 rounded-2xl border border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
                 <div className="relative flex items-center justify-center space-x-3">
                   {loading ? (
                     <>
