@@ -9,6 +9,43 @@ import ParameterSlider from "@/components/ui/ParameterSlider";
 import ActivitySelector from "@/components/ui/ActivitySelector";
 import { generateAISuggestions } from "@/lib/aiService";
 
+// Helper functions for genre styling
+const getGenreSelectedStyle = (genre: string) => {
+  const colorMap: { [key: string]: string } = {
+    'Pop': 'bg-gradient-to-r from-pink-500/30 to-rose-500/20 text-white shadow-lg scale-105 border border-pink-400/50',
+    'Hip-Hop': 'bg-gradient-to-r from-purple-500/30 to-indigo-500/20 text-white shadow-lg scale-105 border border-purple-400/50',
+    'Dance': 'bg-gradient-to-r from-cyan-500/30 to-blue-500/20 text-white shadow-lg scale-105 border border-cyan-400/50',
+    'Electronic': 'bg-gradient-to-r from-green-500/30 to-emerald-500/20 text-white shadow-lg scale-105 border border-green-400/50',
+    'Indie Pop': 'bg-gradient-to-r from-yellow-500/30 to-orange-500/20 text-white shadow-lg scale-105 border border-yellow-400/50',
+    'K-Pop': 'bg-gradient-to-r from-red-500/30 to-pink-500/20 text-white shadow-lg scale-105 border border-red-400/50',
+    'Reggaeton': 'bg-gradient-to-r from-orange-500/30 to-red-500/20 text-white shadow-lg scale-105 border border-orange-400/50',
+    'R&B': 'bg-gradient-to-r from-blue-500/30 to-purple-500/20 text-white shadow-lg scale-105 border border-blue-400/50',
+    'Alternative': 'bg-gradient-to-r from-slate-500/30 to-gray-500/20 text-white shadow-lg scale-105 border border-slate-400/50',
+    'Fitness Remix': 'bg-gradient-to-r from-emerald-500/30 to-teal-500/20 text-white shadow-lg scale-105 border border-emerald-400/50',
+    'Yoga Chill': 'bg-gradient-to-r from-teal-500/30 to-cyan-500/20 text-white shadow-lg scale-105 border border-teal-400/50',
+    'Motivational': 'bg-gradient-to-r from-amber-500/30 to-yellow-500/20 text-white shadow-lg scale-105 border border-amber-400/50'
+  };
+  return colorMap[genre] || 'bg-gradient-to-r from-blue-500/30 to-purple-500/20 text-white shadow-lg scale-105 border border-blue-400/50';
+};
+
+const getGenreUnselectedStyle = (genre: string) => {
+  const colorMap: { [key: string]: string } = {
+    'Pop': 'bg-gradient-to-r from-pink-500/15 to-rose-500/10 text-pink-200 hover:from-pink-500/25 hover:to-rose-500/15 border border-pink-400/20 hover:border-pink-300/40',
+    'Hip-Hop': 'bg-gradient-to-r from-purple-500/15 to-indigo-500/10 text-purple-200 hover:from-purple-500/25 hover:to-indigo-500/15 border border-purple-400/20 hover:border-purple-300/40',
+    'Dance': 'bg-gradient-to-r from-cyan-500/15 to-blue-500/10 text-cyan-200 hover:from-cyan-500/25 hover:to-blue-500/15 border border-cyan-400/20 hover:border-cyan-300/40',
+    'Electronic': 'bg-gradient-to-r from-green-500/15 to-emerald-500/10 text-green-200 hover:from-green-500/25 hover:to-emerald-500/15 border border-green-400/20 hover:border-green-300/40',
+    'Indie Pop': 'bg-gradient-to-r from-yellow-500/15 to-orange-500/10 text-yellow-200 hover:from-yellow-500/25 hover:to-orange-500/15 border border-yellow-400/20 hover:border-yellow-300/40',
+    'K-Pop': 'bg-gradient-to-r from-red-500/15 to-pink-500/10 text-red-200 hover:from-red-500/25 hover:to-pink-500/15 border border-red-400/20 hover:border-red-300/40',
+    'Reggaeton': 'bg-gradient-to-r from-orange-500/15 to-red-500/10 text-orange-200 hover:from-orange-500/25 hover:to-red-500/15 border border-orange-400/20 hover:border-orange-300/40',
+    'R&B': 'bg-gradient-to-r from-blue-500/15 to-purple-500/10 text-blue-200 hover:from-blue-500/25 hover:to-purple-500/15 border border-blue-400/20 hover:border-blue-300/40',
+    'Alternative': 'bg-gradient-to-r from-slate-500/15 to-gray-500/10 text-slate-200 hover:from-slate-500/25 hover:to-gray-500/15 border border-slate-400/20 hover:border-slate-300/40',
+    'Fitness Remix': 'bg-gradient-to-r from-emerald-500/15 to-teal-500/10 text-emerald-200 hover:from-emerald-500/25 hover:to-teal-500/15 border border-emerald-400/20 hover:border-emerald-300/40',
+    'Yoga Chill': 'bg-gradient-to-r from-teal-500/15 to-cyan-500/10 text-teal-200 hover:from-teal-500/25 hover:to-cyan-500/15 border border-teal-400/20 hover:border-teal-300/40',
+    'Motivational': 'bg-gradient-to-r from-amber-500/15 to-yellow-500/10 text-amber-200 hover:from-amber-500/25 hover:to-yellow-500/15 border border-amber-400/20 hover:border-amber-300/40'
+  };
+  return colorMap[genre] || 'bg-gradient-to-r from-slate-500/15 to-gray-500/10 text-slate-200 hover:from-slate-500/25 hover:to-gray-500/15 border border-slate-400/20 hover:border-slate-300/40';
+};
+
 export default function NewEntry() {
   const router = useRouter();
   const [reflection, setReflection] = useState("");
@@ -805,8 +842,8 @@ export default function NewEntry() {
                               }}
                               className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
                                 selectedGenres.includes(genre)
-                                  ? 'bg-gradient-to-r from-blue-500/30 to-purple-500/20 text-white shadow-lg scale-105 border border-blue-400/50'
-                                  : 'bg-gradient-to-r from-slate-500/20 to-gray-500/15 text-slate-300 hover:from-slate-400/30 hover:to-gray-400/20 border border-slate-400/30 hover:border-slate-300/50'
+                                  ? getGenreSelectedStyle(genre)
+                                  : getGenreUnselectedStyle(genre)
                               }`}
                             >
                               {genre}

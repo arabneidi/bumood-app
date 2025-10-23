@@ -177,52 +177,6 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
         </motion.div>
       </AnimatePresence>
 
-      {/* Selected Activities Summary */}
-      {selectedActivities.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="p-5 bg-gradient-to-br from-blue-500/20 to-cyan-500/15 border border-blue-400/30 rounded-2xl shadow-lg backdrop-blur-sm"
-        >
-          <h4 className="text-sm font-semibold text-white mb-3 flex items-center">
-            <span className="mr-2">✅</span>
-            Selected Activities ({selectedActivities.length})
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {selectedActivities.map((activityId) => {
-              // Find the activity in all categories
-              let activity = null;
-              for (const category of Object.values(activityCategories)) {
-                const found = category.activities.find(a => a.id === activityId);
-                if (found) {
-                  activity = found;
-                  break;
-                }
-              }
-              if (!activity) return null;
-              
-              return (
-                <motion.span
-                  key={activityId}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="inline-flex items-center space-x-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm text-white rounded-full text-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <span className="text-lg">{activity.icon}</span>
-                  <span className="font-medium">{activity.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => onActivityToggle(activityId)}
-                    className="ml-1 text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 transition-all duration-200"
-                  >
-                    ×
-                  </button>
-                </motion.span>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 }
