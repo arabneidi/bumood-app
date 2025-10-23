@@ -3,6 +3,19 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Helper function for category unselected styles
+const getCategoryUnselectedStyle = (category: string) => {
+  const colorMap: { [key: string]: string } = {
+    'Physical': 'bg-gradient-to-r from-red-500/20 to-pink-500/15 text-red-200 hover:text-white hover:scale-105 border border-red-400/30 hover:border-red-300/50 hover:shadow-lg',
+    'Mental': 'bg-gradient-to-r from-blue-500/20 to-cyan-500/15 text-blue-200 hover:text-white hover:scale-105 border border-blue-400/30 hover:border-blue-300/50 hover:shadow-lg',
+    'Social': 'bg-gradient-to-r from-green-500/20 to-emerald-500/15 text-green-200 hover:text-white hover:scale-105 border border-green-400/30 hover:border-green-300/50 hover:shadow-lg',
+    'Creative': 'bg-gradient-to-r from-purple-500/20 to-indigo-500/15 text-purple-200 hover:text-white hover:scale-105 border border-purple-400/30 hover:border-purple-300/50 hover:shadow-lg',
+    'Relaxation': 'bg-gradient-to-r from-amber-500/20 to-orange-500/15 text-amber-200 hover:text-white hover:scale-105 border border-amber-400/30 hover:border-amber-300/50 hover:shadow-lg',
+    'Work': 'bg-gradient-to-r from-slate-500/20 to-gray-500/15 text-slate-200 hover:text-white hover:scale-105 border border-slate-400/30 hover:border-slate-300/50 hover:shadow-lg'
+  };
+  return colorMap[category] || 'bg-gradient-to-r from-slate-500/20 to-gray-500/15 text-slate-200 hover:text-white hover:scale-105 border border-slate-400/30 hover:border-slate-300/50 hover:shadow-lg';
+};
+
 interface Activity {
   id: string;
   name: string;
@@ -107,18 +120,18 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
   return (
     <div className="space-y-6">
       {/* Category Tabs */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         {Object.entries(activityCategories).map(([category, data]) => (
           <motion.button
             key={category}
             type="button"
             onClick={() => setActiveCategory(category)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+            className={`px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300 backdrop-blur-sm ${
               activeCategory === category
-                ? `${data.color} text-white shadow-lg`
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? `${data.color} text-white shadow-xl scale-105 border-2 border-white/30`
+                : getCategoryUnselectedStyle(category)
             }`}
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: activeCategory === category ? 1.05 : 1.08 }}
             whileTap={{ scale: 0.95 }}
           >
             {category}
