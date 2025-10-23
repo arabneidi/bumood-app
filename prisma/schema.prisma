@@ -62,7 +62,6 @@ model User {
   favoriteArtists String? // JSON array: artists (learned from art activity)
   favoriteMovies String? // JSON array: movies and TV shows (learned from watching activities)
   favoritePhilosophers String? // JSON array: philosophers (learned from philosophy interest)
-  customCategories String? // JSON array: user-defined custom categories with their favorites
   
   accounts      Account[]
   sessions      Session[]
@@ -98,6 +97,9 @@ model MoodEntry {
   voiceNote   String?  // AI-transcribed voice note
   aiSuggestion String? // AI-generated suggestion
   
+  // Time-of-day bucket for Mood Composite calculation
+  timeBucket  String   @default("morning") // "morning", "midday", "evening", "night"
+  
   // Daily tracking
   onPeriod    Boolean  @default(false) // Is on period today
   waterIntake Int?     // glasses of water
@@ -105,6 +107,9 @@ model MoodEntry {
   mealQuality String?  // poor, fair, good, excellent
   caffeine    Int?     // caffeinated drinks
   alcohol     Int?     // alcoholic drinks
+  
+  // Mood Composite (MC) score
+  moodComposite Float? // MC = 0.4*zV + 0.3*zE + 0.2*zF - 0.2*zS
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -237,6 +242,24 @@ model DailyTracking {
   medicationTaken Boolean @default(false)
   supplements String?  // JSON string of supplements taken
   symptoms    String?  // JSON string of any physical symptoms
+  
+  // DSS Components - Daily Success Score
+  // Learning Momentum (LM) = deepwork_minutes + 10*tasks_completed
+  deepworkMinutes Int?     @default(0) // Minutes of deep work/focused work
+  tasksCompleted  Int?     @default(0) // Number of tasks completed
+  
+  // Recovery Index (RI) = sleep_hours + (recovery_action ? 1 : 0)
+  sleepHours       Float?  // Hours of sleep (already exists in MoodEntry, but tracking here too)
+  recoveryAction   Boolean @default(false) // Did any recovery activity (meditation, rest, etc.)
+  
+  // Connection (CN) = positive_social_touchpoints
+  positiveSocialTouchpoints Int? @default(0) // Number of positive social interactions
+  
+  // DSS Score (calculated)
+  dssScore         Float?  // Daily Success Score (0.5*zLM + 0.3*zRI + 0.2*zCN)
+  learningMomentum Float?  // LM component score
+  recoveryIndex    Float?  // RI component score
+  connectionScore  Float?  // CN component score
   
   // Notes
   notes       String?

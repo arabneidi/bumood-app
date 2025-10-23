@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { calculateMoodComposite, getTimeBucket } from "@/lib/moodCompositeCalculator";
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +25,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Calculate Mood Composite
+    const currentDate = new Date();
+    const timeBucket = getTimeBucket(currentDate);
+    const mcResult = await calculateMoodComposite(
+      dummyUserId,
+      parseInt(valence),
+      parseInt(energy),
+      parseInt(focus),
+      parseInt(stress),
+      currentDate
+    );
+
     const moodEntry = await db.moodEntry.create({
       data: {
         userId: dummyUserId,
@@ -37,6 +50,8 @@ export async function POST(request: NextRequest) {
         reflection: reflection || null,
         voiceNote: voiceNote || null,
         aiSuggestion: aiSuggestion || null,
+        timeBucket: timeBucket,
+        moodComposite: mcResult.moodComposite,
         onPeriod: onPeriod || false,
         waterIntake: waterIntake ? parseInt(waterIntake) : null,
         mealsEaten: mealsEaten ? parseInt(mealsEaten) : null,

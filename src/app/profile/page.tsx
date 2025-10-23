@@ -27,9 +27,7 @@ export default function ProfilePage() {
   
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [customCategories, setCustomCategories] = useState<Array<{id: string, name: string, value: string}>>([]);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryValue, setNewCategoryValue] = useState('');
+  // Custom categories removed from schema
   
   const interestOptions = [
     { name: 'gym', emoji: '💪', color: 'from-red-400 to-pink-500' },
@@ -60,13 +58,8 @@ export default function ProfilePage() {
     loadProfile();
   }, []);
 
-  // Debug custom categories changes
-  useEffect(() => {
-    console.log('customCategories changed:', customCategories);
-  }, [customCategories]);
-
   // Debug component render
-  console.log('Profile component rendering with state:', { newCategoryName, newCategoryValue, customCategories });
+  console.log('Profile component rendering with state:', { profile });
   
   // Test if console.log works at all
   console.log('=== CONSOLE TEST - IF YOU SEE THIS, CONSOLE IS WORKING ===');
@@ -91,10 +84,7 @@ export default function ProfilePage() {
           favoriteArtists: data.favoriteArtists || '',
           favoritePhilosophers: data.favoritePhilosophers || ''
         });
-        // Load custom categories
-        if (data.customCategories) {
-          setCustomCategories(JSON.parse(data.customCategories));
-        }
+        // Custom categories removed from schema
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -102,23 +92,7 @@ export default function ProfilePage() {
   };
 
 
-  const removeCustomCategory = async (id: string) => {
-    const updatedCategories = customCategories.filter(cat => cat.id !== id);
-    setCustomCategories(updatedCategories);
-    
-    // Save to database
-    try {
-      await fetch('/api/user', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customCategories: JSON.stringify(updatedCategories)
-        })
-      });
-    } catch (error) {
-      console.error('Error saving custom categories:', error);
-    }
-  };
+  // Custom categories functionality removed
 
   const handleIncrement = (field: 'age' | 'height' | 'weight') => {
     const currentValue = parseFloat(profile[field]) || 0;
@@ -160,7 +134,7 @@ export default function ProfilePage() {
           favoriteMusicians: profile.favoriteMusicians || null,
           favoriteArtists: profile.favoriteArtists || null,
           favoritePhilosophers: profile.favoritePhilosophers || null,
-          customCategories: JSON.stringify(customCategories) // Custom categories
+          // Custom categories removed
         })
       });
       
@@ -762,127 +736,12 @@ export default function ProfilePage() {
                   />
                 </motion.div>
 
-                {/* Custom Categories */}
-                {customCategories.map((category, index) => (
-                  <motion.div
-                    key={category.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    whileHover={{ scale: 1.05, rotate: index % 2 === 0 ? 2 : -2 }}
-                    className="group"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="block text-lg font-bold text-slate-200 flex items-center">
-                        <span className="text-2xl mr-2">⭐</span>
-                        {category.name}
-                      </label>
-                      <motion.button
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => removeCustomCategory(category.id)}
-                        className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
-                      >
-                        ✕
-                      </motion.button>
-                    </div>
-                    <input
-                      type="text"
-                      value={category.value}
-                      onChange={(e) => {
-                        const updatedCategories = customCategories.map(cat => 
-                          cat.id === category.id ? { ...cat, value: e.target.value } : cat
-                        );
-                        setCustomCategories(updatedCategories);
-                      }}
-                      className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-cyan-500/10"
-                      placeholder={`Enter your favorite ${category.name.toLowerCase()}`}
-                    />
-                  </motion.div>
-                ))}
+                {/* Custom Categories removed from schema */}
               </div>
 
             </motion.div>
 
-            {/* Add Custom Category - Compact Design */}
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: [0, -6, 0] }}
-              transition={{ 
-                opacity: { duration: 0.5 },
-                y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
-              }}
-              className="mb-12"
-            >
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-black bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                  Add New Category
-                </h2>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 text-white font-bold transition-all duration-300"
-                    placeholder="Category name (e.g., Movies, Podcasts)"
-                  />
-                </div>
-                
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={newCategoryValue}
-                    onChange={(e) => setNewCategoryValue(e.target.value)}
-                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300"
-                    placeholder="Your favorites (e.g., Christopher Nolan, Joe Rogan)"
-                  />
-                </div>
-                
-                <motion.button
-                  onClick={async () => {
-                    if (newCategoryName.trim() && newCategoryValue.trim()) {
-                      const newCategory = {
-                        id: Date.now().toString(),
-                        name: newCategoryName.trim(),
-                        value: newCategoryValue.trim()
-                      };
-                      const updatedCategories = [...customCategories, newCategory];
-                      setCustomCategories(updatedCategories);
-                      setNewCategoryName('');
-                      setNewCategoryValue('');
-                      
-                      // Save to database
-                      try {
-                        await fetch('/api/user', {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            customCategories: JSON.stringify(updatedCategories)
-                          })
-                        });
-                      } catch (error) {
-                        console.error('Error saving custom categories:', error);
-                      }
-                    }
-                  }}
-                  disabled={!newCategoryName.trim() || !newCategoryValue.trim()}
-                  whileHover={{ scale: 1.15, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="ml-6 p-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-2xl font-bold shadow-xl hover:shadow-purple-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
-                >
-                  <div className="absolute inset-0 rounded-2xl border border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
-                  <div className="relative flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus">
-                      <path d="M5 12h14"></path>
-                      <path d="M12 5v14"></path>
-                    </svg>
-                  </div>
-                </motion.button>
-              </div>
-            </motion.div>
+            {/* Custom Categories functionality removed from schema */}
 
             {/* Save Button */}
             <motion.div

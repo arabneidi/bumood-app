@@ -21,6 +21,12 @@ export default function Home() {
   const [showAllEntries, setShowAllEntries] = useState(false);
   const [achievementsLoading, setAchievementsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [dssScore, setDssScore] = useState<number | null>(null);
+  const [dssLoading, setDssLoading] = useState(true);
+  const [dssData, setDssData] = useState<any>(null);
+  const [moodComposite, setMoodComposite] = useState<number | null>(null);
+  const [mcLoading, setMcLoading] = useState(true);
+  const [currentTimeBucket, setCurrentTimeBucket] = useState<string>('');
 
   useEffect(() => {
     async function fetchMoodEntries() {
@@ -48,6 +54,54 @@ export default function Home() {
         console.error("Error fetching achievements:", error);
       } finally {
         setAchievementsLoading(false);
+      }
+    }
+
+    async function fetchDSSScore() {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const response = await fetch("/api/dss?userId=dummy-user", {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            setDssScore(data.data.dssScore);
+            setDssData(data.data);
+          }
+        }
+      } catch (error) {
+          console.error("Error fetching DSS score:", error);
+        } finally {
+          setDssLoading(false);
+        }
+      }
+
+    async function fetchMoodComposite() {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const response = await fetch("/api/mood-composite?userId=dummy-user", {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            setMoodComposite(data.data.trends.moodComposites[data.data.trends.moodComposites.length - 1] || null);
+            setCurrentTimeBucket(data.data.currentTimeBucket);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching Mood Composite:", error);
+      } finally {
+        setMcLoading(false);
       }
     }
 
@@ -145,9 +199,17 @@ export default function Home() {
       }
     }
 
-    fetchMoodEntries();
-    fetchAchievements();
-    fetchUserPreferences();
+    // Run all data fetching in parallel for faster loading
+    Promise.all([
+      fetchMoodEntries(),
+      fetchAchievements(),
+      fetchUserPreferences(),
+      fetchDSSScore(),
+      fetchMoodComposite()
+    ]).catch(err => {
+      console.error('Error fetching data:', err);
+    });
+    
     generateQuote().catch(err => {
       console.error('Quote generation failed:', err);
       setInspirationalQuote(getRandomQuote());
@@ -196,7 +258,8 @@ export default function Home() {
   const averageEnergy = totalEntries > 0 ? (filteredEntries.reduce((sum, entry) => sum + entry.energy, 0) / totalEntries) : 0;
   const averageFocus = totalEntries > 0 ? (filteredEntries.reduce((sum, entry) => sum + entry.focus, 0) / totalEntries) : 0;
   const averageStress = totalEntries > 0 ? (filteredEntries.reduce((sum, entry) => sum + entry.stress, 0) / totalEntries) : 0;
-  const lifeRhythmScore = totalEntries > 0 ? Math.round((averageValence + averageEnergy + averageFocus) / 3 * 10) : 0;
+  // Use DSS score as primary display score
+  const displayScore = dssScore !== null && dssScore !== undefined ? dssScore : 0;
 
   // CUMULATIVE METRICS: Sum for the time period (for daily totals)
   const totalWater = filteredEntries.reduce((sum, entry) => sum + (entry.waterIntake || 0), 0);
@@ -207,36 +270,26 @@ export default function Home() {
 
   // Mood coloring functions (same as calendar)
   const getMoodColor = (mood: MoodEntry) => {
-    // Use the same calculation as dashboard: Life Rhythm Score (0-100)
-    const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
-    // Life Rhythm Score ranges from 0 to 100
-    if (lifeRhythmScore >= 80) return "bg-gradient-to-br from-green-400 to-emerald-500";  // 80%+
-    if (lifeRhythmScore >= 60) return "bg-gradient-to-br from-blue-400 to-cyan-500";      // 60%+
-    if (lifeRhythmScore >= 40) return "bg-gradient-to-br from-yellow-400 to-orange-400";  // 40%+
-    if (lifeRhythmScore >= 20) return "bg-gradient-to-br from-orange-400 to-red-400";     // 20%+
-    return "bg-gradient-to-br from-red-500 to-pink-600";  // Below 20%
+    // Use DSS score for coloring (DSS ranges from -3 to +3 typically)
+    const score = dssScore !== null && dssScore !== undefined ? dssScore : 0;
+    if (score >= 1) return "bg-gradient-to-br from-green-400 to-emerald-500";  // Excellent
+    if (score >= 0) return "bg-gradient-to-br from-blue-400 to-cyan-500";      // Good
+    if (score >= -1) return "bg-gradient-to-br from-yellow-400 to-orange-400"; // Fair
+    return "bg-gradient-to-br from-red-500 to-pink-600";  // Needs Improvement
   };
 
   const getMoodEmoji = (mood: MoodEntry) => {
-    // Use the same calculation as dashboard: Life Rhythm Score (0-100)
-    const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
-    // Life Rhythm Score ranges from 0 to 100
-    if (lifeRhythmScore >= 90) return "😍";  // 90%+
-    if (lifeRhythmScore >= 80) return "😊";  // 80%+
-    if (lifeRhythmScore >= 70) return "🙂";  // 70%+
-    if (lifeRhythmScore >= 60) return "😐";  // 60%+
-    if (lifeRhythmScore >= 50) return "😕";  // 50%+
-    if (lifeRhythmScore >= 40) return "😟";  // 40%+
-    if (lifeRhythmScore >= 30) return "😰";  // 30%+
-    if (lifeRhythmScore >= 20) return "😢";  // 20%+
-    return "😭";  // Below 20%
+    // Use DSS score for emoji (DSS ranges from -3 to +3 typically)
+    const score = dssScore !== null && dssScore !== undefined ? dssScore : 0;
+    if (score >= 1) return "😍";  // Excellent
+    if (score >= 0) return "😊";  // Good
+    if (score >= -1) return "🙂"; // Fair
+    return "😟";  // Needs Improvement
   };
 
   const getMoodScore = (mood: MoodEntry) => {
-    // Use the same calculation as dashboard: Life Rhythm Score
-    // (valence + energy + focus + (sleep / 2)) / 3.5 * 10
-    const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
-    return lifeRhythmScore;
+    // Use DSS score for main display
+    return dssScore !== null && dssScore !== undefined ? Math.round(dssScore * 10) : 0;
   };
 
   return (
@@ -375,7 +428,7 @@ export default function Home() {
                       transition={{ duration: 1.5, repeat: Infinity }}
                       className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-3 drop-shadow-lg"
                     >
-                      💓 Today Rhythm Score
+                      📊 Daily Success Score
                     </motion.h2>
                   </motion.div>
                   
@@ -410,7 +463,13 @@ export default function Home() {
                           className="text-center"
                         >
                           <div className="text-6xl font-bold text-white drop-shadow-lg">
-                            {lifeRhythmScore}
+                            {dssLoading ? (
+                              <div className="animate-pulse">...</div>
+                            ) : (
+                              displayScore !== null && displayScore !== undefined 
+                                ? displayScore.toFixed(2) 
+                                : 'N/A'
+                            )}
                           </div>
                           <div className="text-white text-sm font-semibold">
                             Score
@@ -884,7 +943,7 @@ export default function Home() {
                             </div>
                             <div className="text-sm text-white font-semibold opacity-90 flex items-center justify-center">
                               <span className="mr-2">{getMoodEmoji(entry)}</span>
-                              Today Rhythm Score
+                              Daily Success Score
                             </div>
                           </div>
                         </div>
@@ -1002,6 +1061,33 @@ export default function Home() {
               </motion.div>
             )}
 
+            {/* Mood Composite Display */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.4 }}
+              className="mb-16"
+            >
+              <div className="relative bg-purple-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-400/30 p-8 overflow-hidden">
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
+                    📈 Mood Composite ({mcLoading ? 'loading...' : (currentTimeBucket || 'unknown')})
+                  </h3>
+                  <div className="text-4xl font-bold text-white mb-2">
+                    {mcLoading ? (
+                      <div className="animate-pulse">...</div>
+                    ) : (
+                      moodComposite !== null && moodComposite !== undefined 
+                        ? moodComposite.toFixed(2) 
+                        : 'N/A'
+                    )}
+                  </div>
+                  <p className="text-sm text-purple-200">
+                    MC = 0.4×zV + 0.3×zE + 0.2×zF - 0.2×zS
+                  </p>
+                </div>
+              </div>
+            </motion.div>
 
             {/* Recent Entry - Floating Rounded Rectangle */}
             {recentEntry && (

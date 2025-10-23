@@ -28,8 +28,7 @@ export async function GET(request: NextRequest) {
         favoriteMusicians: true,
         favoriteArtists: true,
         favoriteMovies: true,
-        favoritePhilosophers: true,
-        customCategories: true
+        favoritePhilosophers: true
       }
     });
     
@@ -44,7 +43,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(user);
   } catch (error) {
     console.error('❌ Error fetching user:', error);
-    return NextResponse.json({ error: 'Failed to fetch user', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch user', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }
 
@@ -58,7 +57,7 @@ export async function PUT(request: NextRequest) {
     const { 
       userId = 'dummy-user', gender, name, age, height, weight, timezone, 
       interests, quoteStyle, favoriteAuthors,
-      favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers, customCategories
+      favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers
     } = body;
     
     console.log('Updating user:', userId);
@@ -79,8 +78,7 @@ export async function PUT(request: NextRequest) {
         ...(favoriteMusicians !== undefined && { favoriteMusicians }),
         ...(favoriteArtists !== undefined && { favoriteArtists }),
         ...(favoriteMovies !== undefined && { favoriteMovies }),
-        ...(favoritePhilosophers !== undefined && { favoritePhilosophers }),
-        ...(customCategories !== undefined && { customCategories })
+        ...(favoritePhilosophers !== undefined && { favoritePhilosophers })
       }
     });
     
@@ -88,7 +86,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(user);
   } catch (error) {
     console.error('❌ Error updating user:', error);
-    return NextResponse.json({ error: 'Failed to update user', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update user', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }
 

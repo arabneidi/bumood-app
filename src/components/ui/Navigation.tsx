@@ -54,8 +54,8 @@ export default function Navigation() {
                   ease: "easeInOut"
                 }}
               >
-                <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent group-hover:from-cyan-300 group-hover:to-blue-400 transition-all duration-500" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontWeight: 800, letterSpacing: '-0.02em' }}>BU</span>
-                <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent group-hover:from-pink-400 group-hover:to-purple-500 transition-all duration-500" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontWeight: 800, letterSpacing: '-0.02em' }}>Mood</span>
+                <span className="bg-clip-text text-transparent group-hover:opacity-80 transition-all duration-500" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontWeight: 800, letterSpacing: '-0.02em', color: '#7080E0' }}>BU</span>
+                <span className="bg-gradient-to-r from-purple-400 via-purple-500 to-pink-400 bg-clip-text text-transparent group-hover:from-purple-300 group-hover:via-purple-400 group-hover:to-pink-300 transition-all duration-500" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontWeight: 800, letterSpacing: '-0.02em' }}>Mood</span>
               </motion.span>
             </Link>
           </div>

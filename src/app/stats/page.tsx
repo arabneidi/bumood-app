@@ -6,6 +6,7 @@ import { BarChart3, TrendingUp, Sparkles } from 'lucide-react';
 import AnalyticsDashboard from '@/components/dashboard/AnalyticsDashboard';
 import TagsNetworkGraph from '@/components/dashboard/TagsNetworkGraph';
 import PeriodInsights from '@/components/dashboard/PeriodInsights';
+import DSSRadar from '@/components/dashboard/DSSRadar';
 
 interface MoodEntry {
   id: string;
@@ -36,6 +37,11 @@ export default function StatsPage() {
   const [networkTimeRange, setNetworkTimeRange] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // DSS states
+  const [dssData, setDssData] = useState<any>(null);
+  const [dssLoading, setDssLoading] = useState(true);
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,6 +66,22 @@ export default function StatsPage() {
           const preferencesData = await preferencesResponse.json();
           setUserPreferences(preferencesData);
         }
+
+        // Fetch DSS data
+        try {
+          const dssResponse = await fetch('/api/dss?userId=dummy-user');
+          if (dssResponse.ok) {
+            const dssData = await dssResponse.json();
+            if (dssData.success && dssData.data) {
+              setDssData(dssData.data);
+            }
+          }
+        } catch (dssError) {
+          console.error('Error fetching DSS data:', dssError);
+        } finally {
+          setDssLoading(false);
+        }
+
 
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -159,6 +181,19 @@ export default function StatsPage() {
             <AnalyticsDashboard data={moodEntries} />
           </div>
         </motion.div>
+
+        {/* DSS Radar Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
+          className="mb-12"
+        >
+          <div className="relative bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-4 shadow-lg">
+            <DSSRadar data={dssData} loading={dssLoading} />
+          </div>
+        </motion.div>
+
 
         {/* Network Graph Section */}
         <motion.div
