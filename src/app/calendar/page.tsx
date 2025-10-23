@@ -64,31 +64,38 @@ export default function CalendarPage() {
 
   const getMoodColor = (mood: MoodEntry | undefined) => {
     if (!mood) return "bg-slate-800/40 backdrop-blur-xl border border-slate-600/50";
-    const valence = mood.valence;
-    if (valence >= 8) return "bg-gradient-to-br from-green-400 to-emerald-500";
-    if (valence >= 6) return "bg-gradient-to-br from-blue-400 to-cyan-500";
-    if (valence >= 4) return "bg-gradient-to-br from-yellow-400 to-orange-400";
-    if (valence >= 2) return "bg-gradient-to-br from-orange-400 to-red-400";
-    return "bg-gradient-to-br from-red-500 to-pink-600";
+    // Calculate total score: valence + energy + focus + (10 - stress)
+    const totalScore = mood.valence + mood.energy + mood.focus + (10 - mood.stress);
+    // Total score ranges from 4 to 40, so we adjust thresholds
+    if (totalScore >= 32) return "bg-gradient-to-br from-green-400 to-emerald-500";  // 80%+ of max
+    if (totalScore >= 24) return "bg-gradient-to-br from-blue-400 to-cyan-500";      // 60%+ of max
+    if (totalScore >= 16) return "bg-gradient-to-br from-yellow-400 to-orange-400";  // 40%+ of max
+    if (totalScore >= 8) return "bg-gradient-to-br from-orange-400 to-red-400";      // 20%+ of max
+    return "bg-gradient-to-br from-red-500 to-pink-600";  // Below 20%
   };
 
   const getMoodEmoji = (mood: MoodEntry | undefined) => {
     if (!mood) return "";
-    const valence = mood.valence;
-    if (valence >= 9) return "😍";
-    if (valence >= 8) return "😊";
-    if (valence >= 7) return "🙂";
-    if (valence >= 6) return "😐";
-    if (valence >= 5) return "😕";
-    if (valence >= 4) return "😟";
-    if (valence >= 3) return "😰";
-    if (valence >= 2) return "😢";
-    return "😭";
+    // Calculate total score: valence + energy + focus + (10 - stress)
+    const totalScore = mood.valence + mood.energy + mood.focus + (10 - mood.stress);
+    // Total score ranges from 4 to 40, so we adjust thresholds
+    if (totalScore >= 36) return "😍";  // 90%+ of max
+    if (totalScore >= 32) return "😊";  // 80%+ of max
+    if (totalScore >= 28) return "🙂";  // 70%+ of max
+    if (totalScore >= 24) return "😐";  // 60%+ of max
+    if (totalScore >= 20) return "😕";  // 50%+ of max
+    if (totalScore >= 16) return "😟";  // 40%+ of max
+    if (totalScore >= 12) return "😰";  // 30%+ of max
+    if (totalScore >= 8) return "😢";   // 20%+ of max
+    return "😭";  // Below 20%
   };
 
   const getMoodScore = (mood: MoodEntry | undefined) => {
     if (!mood) return "";
-    return mood.valence;
+    // Calculate total score: valence + energy + focus + (10 - stress)
+    // Stress is inverted so lower stress = higher score
+    const totalScore = mood.valence + mood.energy + mood.focus + (10 - mood.stress);
+    return totalScore;
   };
 
   if (loading) {
@@ -156,7 +163,7 @@ export default function CalendarPage() {
                     {moodEntry && (
                       <div className="flex flex-col items-center">
                         <span className="text-lg mb-1">{moodEmoji}</span>
-                        <span className="text-xs font-bold text-white/90">{moodScore}/10</span>
+                        <span className="text-xs font-bold text-white/90">{moodScore}/40</span>
                       </div>
                     )}
                   </button>
