@@ -29,8 +29,80 @@ export default function Home() {
   const [currentTimeBucket, setCurrentTimeBucket] = useState<string>('');
 
   useEffect(() => {
-    // Set loading to false immediately to show empty state
-    setLoading(false);
+    async function fetchData() {
+      try {
+        // Fetch all data in parallel
+        const [moodEntriesRes, achievementsRes, userRes, dssRes, mcRes] = await Promise.all([
+          fetch("/api/mood-entries"),
+          fetch("/api/achievements"),
+          fetch("/api/user?userId=dummy-user"),
+          fetch(`/api/dss?userId=dummy-user&date=${new Date().toISOString().split('T')[0]}`),
+          fetch("/api/mood-composite?userId=dummy-user")
+        ]);
+
+        // Process mood entries
+        if (moodEntriesRes.ok) {
+          const data = await moodEntriesRes.json();
+          setMoodEntries(data);
+        }
+
+        // Process achievements
+        if (achievementsRes.ok) {
+          const data = await achievementsRes.json();
+          setAchievements(data);
+          setAchievementsLoading(false);
+        }
+
+        // Process user data
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          setUserPreferences({
+            interests: userData.interests ? JSON.parse(userData.interests) : [],
+            favoriteWriters: userData.favoriteWriters ? userData.favoriteWriters.split(',').map((w: string) => w.trim()).filter(Boolean) : [],
+            favoriteMusicians: userData.favoriteMusicians ? userData.favoriteMusicians.split(',').map((m: string) => m.trim()).filter(Boolean) : [],
+            favoriteSportsFigures: userData.favoriteSportsFigures ? userData.favoriteSportsFigures.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+            favoriteArtists: userData.favoriteArtists ? userData.favoriteArtists.split(',').map((a: string) => a.trim()).filter(Boolean) : [],
+            favoritePhilosophers: userData.favoritePhilosophers ? userData.favoritePhilosophers.split(',').map((p: string) => p.trim()).filter(Boolean) : []
+          });
+        }
+
+        // Process DSS data
+        if (dssRes.ok) {
+          const data = await dssRes.json();
+          if (data.success && data.data) {
+            setDssScore(data.data.dssScore);
+            setDssData(data.data);
+          }
+          setDssLoading(false);
+        }
+
+        // Process mood composite
+        if (mcRes.ok) {
+          const data = await mcRes.json();
+          if (data.success && data.data) {
+            setMoodComposite(data.data.trends.moodComposites[data.data.trends.moodComposites.length - 1] || null);
+            setCurrentTimeBucket(data.data.currentTimeBucket);
+          }
+          setMcLoading(false);
+        }
+
+        // Generate quote
+        try {
+          const quote = getRandomQuote();
+          setInspirationalQuote(quote);
+        } catch (error) {
+          console.error('Error generating quote:', error);
+          setInspirationalQuote("Your mental wellness journey starts here.");
+        }
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
   }, []);
 
   // Filter entries based on time range
