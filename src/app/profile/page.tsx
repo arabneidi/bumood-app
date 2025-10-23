@@ -289,8 +289,12 @@ export default function ProfilePage() {
             {/* Personal Information Section */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
+              animate={{ opacity: 1, x: 0, y: [0, -8, 0] }}
+              transition={{ 
+                opacity: { duration: 0.5, delay: 0.5 },
+                x: { duration: 0.5, delay: 0.5 },
+                y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+              }}
               className="mb-12"
             >
               <div className="flex items-center mb-8">
@@ -466,8 +470,12 @@ export default function ProfilePage() {
             {/* Interests Section */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7 }}
+              animate={{ opacity: 1, x: 0, y: [0, -10, 0] }}
+              transition={{ 
+                opacity: { duration: 0.5, delay: 0.7 },
+                x: { duration: 0.5, delay: 0.7 },
+                y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+              }}
               className="mb-12"
             >
               <div className="flex items-center mb-8">
@@ -537,8 +545,11 @@ export default function ProfilePage() {
             {/* Quote Style Section */}
             <motion.div
               initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 }}
+              animate={{ opacity: 1, y: [0, -6, 0] }}
+              transition={{ 
+                opacity: { duration: 0.5, delay: 0.9 },
+                y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
+              }}
               className="mb-12"
             >
               <div className="flex items-center mb-8">
@@ -609,8 +620,11 @@ export default function ProfilePage() {
             {/* Activity-Specific Favorites */}
             <motion.div
               initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1 }}
+              animate={{ opacity: 1, y: [0, -7, 0] }}
+              transition={{ 
+                opacity: { duration: 0.5, delay: 1.1 },
+                y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" }
+              }}
               className="mb-12"
             >
               <div className="flex items-center mb-8">
