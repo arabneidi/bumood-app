@@ -182,9 +182,10 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="p-4 bg-gray-100 rounded-xl border border-gray-200"
+          className="p-5 bg-gradient-to-br from-blue-500/20 to-cyan-500/15 border border-blue-400/30 rounded-2xl shadow-lg backdrop-blur-sm"
         >
-          <h4 className="text-sm font-medium text-gray-800 mb-2">
+          <h4 className="text-sm font-semibold text-white mb-3 flex items-center">
+            <span className="mr-2">✅</span>
             Selected Activities ({selectedActivities.length})
           </h4>
           <div className="flex flex-wrap gap-2">
@@ -205,14 +206,14 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
                   key={activityId}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="inline-flex items-center space-x-1 px-3 py-1 bg-white text-gray-800 rounded-full text-sm border border-gray-200"
+                  className="inline-flex items-center space-x-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm text-white rounded-full text-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  <span>{activity.icon}</span>
-                  <span>{activity.name}</span>
+                  <span className="text-lg">{activity.icon}</span>
+                  <span className="font-medium">{activity.name}</span>
                   <button
                     type="button"
                     onClick={() => onActivityToggle(activityId)}
-                    className="ml-1 text-gray-600 hover:text-gray-800"
+                    className="ml-1 text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 transition-all duration-200"
                   >
                     ×
                   </button>

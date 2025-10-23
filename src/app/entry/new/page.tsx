@@ -803,10 +803,10 @@ export default function NewEntry() {
                                   setSelectedGenres(prev => [...prev, genre]);
                                 }
                               }}
-                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
                                 selectedGenres.includes(genre)
-                                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
-                                  : 'bg-gradient-to-r from-slate-700 to-slate-600 text-slate-300 hover:from-slate-600 hover:to-slate-500 border border-slate-500'
+                                  ? 'bg-gradient-to-r from-blue-500/30 to-purple-500/20 text-white shadow-lg scale-105 border border-blue-400/50'
+                                  : 'bg-gradient-to-r from-slate-500/20 to-gray-500/15 text-slate-300 hover:from-slate-400/30 hover:to-gray-400/20 border border-slate-400/30 hover:border-slate-300/50'
                               }`}
                             >
                               {genre}
@@ -817,10 +817,10 @@ export default function NewEntry() {
                     ))}
                 
                     {selectedGenres.length > 0 && (
-                      <div className="flex items-center justify-between bg-blue-900/30 rounded-lg p-4 border border-blue-400/30">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-blue-400">✅</span>
-                          <span className="text-sm font-medium text-blue-200">
+                      <div className="flex items-center justify-between bg-gradient-to-br from-blue-500/20 to-purple-500/15 rounded-2xl p-5 border border-blue-400/30 shadow-lg backdrop-blur-sm">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">✅</span>
+                          <span className="text-sm font-semibold text-white">
                             {selectedGenres.length} genre{selectedGenres.length !== 1 ? 's' : ''} selected
                           </span>
                         </div>
@@ -831,7 +831,7 @@ export default function NewEntry() {
                             e.stopPropagation();
                             generateSpecificOptions(selectedGenres);
                           }}
-                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                          className="px-6 py-3 bg-gradient-to-r from-blue-500/30 to-purple-500/20 text-white rounded-xl font-semibold hover:from-blue-600/40 hover:to-purple-600/30 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-400/50 backdrop-blur-sm"
                         >
                           Next: Choose Specific Favorites
                         </button>
