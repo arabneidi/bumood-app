@@ -7,16 +7,20 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { currentValue, streak, bestStreak, completed } = body;
+    const { currentValue, progress, streak, bestStreak, completed, completedAt } = body;
+
+    const updateData: any = {};
+    
+    if (currentValue !== undefined) updateData.currentValue = currentValue;
+    if (progress !== undefined) updateData.progress = progress;
+    if (streak !== undefined) updateData.streak = streak;
+    if (bestStreak !== undefined) updateData.bestStreak = bestStreak;
+    if (completed !== undefined) updateData.completed = completed;
+    if (completedAt !== undefined) updateData.completedAt = completedAt;
 
     const updatedGoal = await db.goal.update({
       where: { id: params.id },
-      data: {
-        currentValue,
-        streak,
-        bestStreak,
-        completed,
-      },
+      data: updateData,
     });
     return NextResponse.json(updatedGoal);
   } catch (error) {

@@ -151,24 +151,49 @@ export default function GoalsPage() {
     }
   };
 
-  const updateProgress = (goalId, change) => {
-    setGoals(prevGoals =>
-      prevGoals.map(goal => {
-        if (goal.id === goalId) {
-          const newValue = Math.max(0, Math.min(goal.currentValue + change, goal.targetValue));
-          const newProgress = Math.round((newValue / goal.targetValue) * 100);
-          
-          // Check if goal is completed (100%)
-          if (newProgress >= 100 && change > 0) {
-            setCompletedGoal(goal);
-            setShowCompletionModal(true);
-          }
-          
-          return { ...goal, currentValue: newValue, progress: newProgress };
+  const updateProgress = async (goalId, change) => {
+    const updatedGoals = goals.map(goal => {
+      if (goal.id === goalId) {
+        const newValue = Math.max(0, Math.min(goal.currentValue + change, goal.targetValue));
+        const newProgress = Math.round((newValue / goal.targetValue) * 100);
+        
+        // Check if goal is completed (100%)
+        if (newProgress >= 100 && change > 0) {
+          setCompletedGoal(goal);
+          setShowCompletionModal(true);
         }
-        return goal;
-      })
-    );
+        
+        return { ...goal, currentValue: newValue, progress: newProgress };
+      }
+      return goal;
+    });
+
+    // Update local state immediately for responsive UI
+    setGoals(updatedGoals);
+
+    // Update database
+    try {
+      const goalToUpdate = updatedGoals.find(goal => goal.id === goalId);
+      if (goalToUpdate) {
+        const response = await fetch(`/api/goals/${goalId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            currentValue: goalToUpdate.currentValue,
+            progress: goalToUpdate.progress,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error('Failed to update goal progress in database');
+          // Optionally revert the local state change
+        }
+      }
+    } catch (error) {
+      console.error('Error updating goal progress:', error);
+    }
   };
 
   const getSelectedCategory = () => {
@@ -180,18 +205,44 @@ export default function GoalsPage() {
     return category?.subcategories.find(sub => sub.id === selectedSubcategory);
   };
 
-  const handleGoalCompletion = () => {
+  const handleGoalCompletion = async () => {
     if (completedGoal) {
-      // Remove completed goal from the list
-      setGoals(prevGoals => prevGoals.filter(goal => goal.id !== completedGoal.id));
-      
-      // Here you would typically:
-      // 1. Save the completed goal to a "completed goals" list
-      // 2. Update achievement progress
-      // 3. Send notification to user
-      // 4. Update user statistics
-      
-      console.log(`Goal completed: ${completedGoal.title}`);
+      try {
+        // Update database - mark goal as completed
+        const response = await fetch(`/api/goals/${completedGoal.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            completed: true,
+            completedAt: new Date().toISOString(),
+            currentValue: completedGoal.targetValue,
+            progress: 100,
+          }),
+        });
+
+        if (response.ok) {
+          // Remove completed goal from the list
+          setGoals(prevGoals => prevGoals.filter(goal => goal.id !== completedGoal.id));
+          
+          // Here you would typically:
+          // 1. Update achievement progress
+          // 2. Send notification to user
+          // 3. Update user statistics
+          
+          console.log(`Goal completed: ${completedGoal.title}`);
+          
+          // TODO: Update achievements based on completed goal
+          // TODO: Send completion notification
+          // TODO: Update user statistics
+          
+        } else {
+          console.error('Failed to mark goal as completed in database');
+        }
+      } catch (error) {
+        console.error('Error completing goal:', error);
+      }
       
       // Reset modal state
       setShowCompletionModal(false);
