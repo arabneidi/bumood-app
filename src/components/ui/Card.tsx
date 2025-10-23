@@ -8,7 +8,7 @@ interface CardProps {
 }
 
 export default function Card({ children, className = '', hover = false, gradient = false }: CardProps) {
-  const baseClasses = 'bg-white rounded-2xl shadow-lg border border-gray-100';
+  const baseClasses = 'rounded-2xl shadow-lg';
   const hoverClasses = hover ? 'transform transition-all duration-300 hover:scale-105 hover:shadow-xl' : '';
   const gradientClasses = gradient ? 'bg-gradient-to-br from-indigo-50 to-blue-50' : '';
   

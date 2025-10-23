@@ -26,7 +26,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
         transition={{ duration: 0.6 }}
         className="relative overflow-hidden"
       >
-        <Card className="p-12 text-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-2 border-indigo-200">
+        <Card className="p-12 text-center bg-slate-800/40 backdrop-blur-sm border border-blue-500/20">
           <motion.div
             animate={{ 
               rotate: [0, 10, -10, 0],
@@ -45,7 +45,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4"
+            className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4"
           >
             No Analytics Yet
           </motion.h2>
@@ -53,7 +53,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-gray-600 text-lg mb-6"
+            className="text-slate-300 text-lg mb-6"
           >
             Start tracking your mood to see detailed analytics and insights
           </motion.p>
@@ -62,7 +62,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
             whileTap={{ scale: 0.95 }}
           >
             <Link href="/entry/new" className="inline-block">
-              <Button className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg">
+              <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Create New Entry
               </Button>
@@ -74,7 +74,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
             {[...Array(6)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-2 h-2 bg-indigo-300 rounded-full"
+                className="absolute w-2 h-2 bg-blue-400/30 rounded-full"
                 animate={{
                   x: [0, 100, 0],
                   y: [0, -50, 0],
@@ -140,10 +140,10 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
   if (topActivities.length === 0) {
     return (
       <div className="space-y-8">
-        <Card className="p-12 text-center">
+        <Card className="p-12 text-center bg-slate-800/40 backdrop-blur-sm border border-blue-500/20">
           <div className="text-6xl mb-4">📊</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">No Activity Data Yet</h2>
-          <p className="text-gray-600 mb-6">Start selecting activities in your mood entries to see analytics here</p>
+          <h2 className="text-2xl font-bold text-white mb-4">No Activity Data Yet</h2>
+          <p className="text-slate-300 mb-6">Start selecting activities in your mood entries to see analytics here</p>
           <Link href="/entry/new" className="inline-block">
             <Button>Create New Entry</Button>
           </Link>
@@ -186,7 +186,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 300 }}
         >
-          <Card className="p-6 text-center bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-200 hover:shadow-xl transition-all duration-300">
+          <Card className="p-6 text-center bg-slate-800/40 backdrop-blur-sm border border-red-500/20 hover:shadow-xl transition-all duration-300">
             <motion.div 
               animate={{ 
                 scale: [1, 1.1, 1],
@@ -209,7 +209,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 {avgValence.toFixed(1)}
               </motion.span>
             </motion.div>
-            <div className="text-sm font-medium text-gray-700">Average Valence</div>
+            <div className="text-sm font-medium text-slate-300">Average Valence</div>
             {valenceTrend !== 0 && (
               <motion.div 
                 initial={{ opacity: 0 }}
@@ -229,7 +229,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
         >
-          <Card className="p-6 text-center bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200 hover:shadow-xl transition-all duration-300">
+          <Card className="p-6 text-center bg-slate-800/40 backdrop-blur-sm border border-yellow-500/20 hover:shadow-xl transition-all duration-300">
             <motion.div 
               animate={{ 
                 scale: [1, 1.1, 1],
@@ -252,7 +252,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 {avgEnergy.toFixed(1)}
               </motion.span>
             </motion.div>
-            <div className="text-sm font-medium text-gray-700">Average Energy</div>
+            <div className="text-sm font-medium text-slate-300">Average Energy</div>
           </Card>
         </motion.div>
 
@@ -261,7 +261,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 300, delay: 0.2 }}
         >
-          <Card className="p-6 text-center bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 hover:shadow-xl transition-all duration-300">
+          <Card className="p-6 text-center bg-slate-800/40 backdrop-blur-sm border border-blue-500/20 hover:shadow-xl transition-all duration-300">
             <motion.div 
               animate={{ 
                 scale: [1, 1.1, 1],
@@ -284,7 +284,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 {avgFocus.toFixed(1)}
               </motion.span>
             </motion.div>
-            <div className="text-sm font-medium text-gray-700">Average Focus</div>
+            <div className="text-sm font-medium text-slate-300">Average Focus</div>
           </Card>
         </motion.div>
 
@@ -293,7 +293,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 300, delay: 0.3 }}
         >
-          <Card className="p-6 text-center bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 hover:shadow-xl transition-all duration-300">
+          <Card className="p-6 text-center bg-slate-800/40 backdrop-blur-sm border border-purple-500/20 hover:shadow-xl transition-all duration-300">
             <motion.div 
               animate={{ 
                 scale: [1, 1.1, 1],
@@ -316,7 +316,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 {lifeRhythmScore}
               </motion.span>
             </motion.div>
-            <div className="text-sm font-medium text-gray-700">Life Rhythm Score</div>
+            <div className="text-sm font-medium text-slate-300">Life Rhythm Score</div>
           </Card>
         </motion.div>
       </motion.div>
@@ -329,7 +329,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
         transition={{ duration: 0.6, delay: 0.4 }}
         whileHover={{ scale: 1.02 }}
       >
-        <Card className="p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-2 border-indigo-200 hover:shadow-2xl transition-all duration-500">
+        <Card className="p-8 bg-slate-800/40 backdrop-blur-sm border border-blue-500/20 hover:shadow-2xl transition-all duration-500">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <motion.div 
               initial={{ x: -20, opacity: 0 }}
@@ -341,7 +341,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.8, type: "spring" }}
-                className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2"
+                className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2"
               >
                 Life Rhythm Score
               </motion.h2>
@@ -349,7 +349,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
-                className="text-gray-600 text-lg mb-4"
+                className="text-slate-300 text-lg mb-4"
               >
                 Your overall wellbeing based on mood, energy, and calmness patterns
               </motion.p>
@@ -359,13 +359,13 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 transition={{ delay: 1.2 }}
                 className="grid grid-cols-2 gap-4 text-sm"
               >
-                <div className="flex justify-between p-2 bg-white/50 rounded-lg">
-                  <span className="text-gray-600 font-medium">Stress Level:</span>
-                  <span className="font-bold text-red-600">{avgStress.toFixed(1)}/10</span>
+                <div className="flex justify-between p-2 bg-slate-700/50 rounded-lg">
+                  <span className="text-slate-300 font-medium">Stress Level:</span>
+                  <span className="font-bold text-red-400">{avgStress.toFixed(1)}/10</span>
                 </div>
-                <div className="flex justify-between p-2 bg-white/50 rounded-lg">
-                  <span className="text-gray-600 font-medium">Sleep Quality:</span>
-                  <span className="font-bold text-blue-600">{avgSleep.toFixed(1)}h</span>
+                <div className="flex justify-between p-2 bg-slate-700/50 rounded-lg">
+                  <span className="text-slate-300 font-medium">Sleep Quality:</span>
+                  <span className="font-bold text-blue-400">{avgSleep.toFixed(1)}h</span>
                 </div>
               </motion.div>
             </motion.div>
@@ -390,7 +390,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
             {[...Array(8)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-1 h-1 bg-indigo-400 rounded-full"
+                className="absolute w-1 h-1 bg-blue-400/50 rounded-full"
                 animate={{
                   x: [0, 50, 0],
                   y: [0, -30, 0],
@@ -423,7 +423,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
           whileHover={{ scale: 1.02, y: -5 }}
           transition={{ type: "spring", stiffness: 300 }}
         >
-          <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 hover:shadow-xl transition-all duration-300">
+          <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-green-500/20 hover:shadow-xl transition-all duration-300">
             <motion.h3 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -441,7 +441,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
           whileHover={{ scale: 1.02, y: -5 }}
           transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
         >
-          <Card className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 hover:shadow-xl transition-all duration-300">
+          <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-blue-500/20 hover:shadow-xl transition-all duration-300">
             <motion.h3 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -467,7 +467,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
           whileHover={{ scale: 1.02, y: -5 }}
           transition={{ type: "spring", stiffness: 300 }}
         >
-          <Card className="p-6 bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 hover:shadow-xl transition-all duration-300">
+          <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-orange-500/20 hover:shadow-xl transition-all duration-300">
             <motion.h3 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -485,7 +485,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
           whileHover={{ scale: 1.02, y: -5 }}
           transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
         >
-          <Card className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 hover:shadow-xl transition-all duration-300">
+          <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-purple-500/20 hover:shadow-xl transition-all duration-300">
             <motion.h3 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -507,7 +507,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
         transition={{ duration: 0.6, delay: 1 }}
         whileHover={{ scale: 1.01 }}
       >
-        <Card className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 hover:shadow-xl transition-all duration-300">
+        <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-indigo-500/20 hover:shadow-xl transition-all duration-300">
           <motion.h3 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -529,7 +529,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
           transition={{ duration: 0.6, delay: 1.2 }}
           whileHover={{ scale: 1.01 }}
         >
-          <Card className="p-6 bg-gradient-to-br from-cyan-50 to-blue-50 border-2 border-cyan-200 hover:shadow-xl transition-all duration-300">
+          <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-cyan-500/20 hover:shadow-xl transition-all duration-300">
             <motion.h3 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -547,11 +547,11 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 1.6 + index * 0.1, type: "spring" }}
                   whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 bg-white/50 rounded-lg hover:bg-white/80 transition-all duration-300"
+                  className="text-center p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/80 transition-all duration-300"
                 >
-                  <div className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-1">{avgMood.toFixed(1)}</div>
-                  <div className="text-sm font-medium text-gray-700">{time}</div>
-                  <div className="text-xs text-gray-500">({count} entries)</div>
+                  <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-1">{avgMood.toFixed(1)}</div>
+                  <div className="text-sm font-medium text-slate-300">{time}</div>
+                  <div className="text-xs text-slate-400">({count} entries)</div>
                 </motion.div>
               ))}
             </div>
@@ -566,7 +566,7 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
         transition={{ duration: 0.6, delay: 1.4 }}
         whileHover={{ scale: 1.01 }}
       >
-        <Card className="p-6 bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 hover:shadow-xl transition-all duration-300">
+        <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-emerald-500/20 hover:shadow-xl transition-all duration-300">
           <motion.h3 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -582,12 +582,12 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 1.8 }}
-                className="flex items-start space-x-3 p-4 bg-green-100 rounded-lg border border-green-200 hover:bg-green-200 transition-all duration-300"
+                className="flex items-start space-x-3 p-4 bg-green-900/30 rounded-lg border border-green-500/20 hover:bg-green-900/50 transition-all duration-300"
               >
                 <TrendingUp className="w-5 h-5 text-green-600 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-green-800">Positive Trend</h4>
-                  <p className="text-green-700 text-sm">Your mood has improved by {valenceTrend.toFixed(1)} points compared to last week. Keep up the great work!</p>
+                  <h4 className="font-semibold text-green-400">Positive Trend</h4>
+                  <p className="text-green-300 text-sm">Your mood has improved by {valenceTrend.toFixed(1)} points compared to last week. Keep up the great work!</p>
                 </div>
               </motion.div>
             )}
@@ -597,12 +597,12 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 2 }}
-                className="flex items-start space-x-3 p-4 bg-yellow-100 rounded-lg border border-yellow-200 hover:bg-yellow-200 transition-all duration-300"
+                className="flex items-start space-x-3 p-4 bg-yellow-900/30 rounded-lg border border-yellow-500/20 hover:bg-yellow-900/50 transition-all duration-300"
               >
                 <Activity className="w-5 h-5 text-yellow-600 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-yellow-800">Sleep Optimization</h4>
-                  <p className="text-yellow-700 text-sm">Your average sleep is {avgSleep.toFixed(1)} hours. Consider improving your sleep routine for better mood and energy.</p>
+                  <h4 className="font-semibold text-yellow-400">Sleep Optimization</h4>
+                  <p className="text-yellow-300 text-sm">Your average sleep is {avgSleep.toFixed(1)} hours. Consider improving your sleep routine for better mood and energy.</p>
                 </div>
               </motion.div>
             )}
@@ -612,12 +612,12 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 2.2 }}
-                className="flex items-start space-x-3 p-4 bg-blue-100 rounded-lg border border-blue-200 hover:bg-blue-200 transition-all duration-300"
+                className="flex items-start space-x-3 p-4 bg-blue-900/30 rounded-lg border border-blue-500/20 hover:bg-blue-900/50 transition-all duration-300"
               >
                 <Brain className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-blue-800">Activity Insights</h4>
-                  <p className="text-blue-700 text-sm">Your most common activities are: {topActivities.slice(0, 3).map(([activity]) => activity).join(', ')}. Consider how these activities affect your mood.</p>
+                  <h4 className="font-semibold text-blue-400">Activity Insights</h4>
+                  <p className="text-blue-300 text-sm">Your most common activities are: {topActivities.slice(0, 3).map(([activity]) => activity).join(', ')}. Consider how these activities affect your mood.</p>
                 </div>
               </motion.div>
             )}

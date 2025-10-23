@@ -117,51 +117,65 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
   if (!userInfo || userInfo.gender !== 'female') return null;
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-rose-50 to-pink-50">
+    <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-pink-500/20">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-gray-900 flex items-center"><span className="mr-2">🩸</span>Period Insights</h3>
-        <div className="text-sm text-gray-600">Avg cycle: <span className="font-semibold">{data.avgCycle} days</span></div>
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-400 via-rose-400 to-pink-500 bg-clip-text text-transparent flex items-center">
+          <span className="mr-3 text-3xl animate-pulse">🩸</span>
+          Period Insights
+        </h3>
+        <div className="text-sm text-slate-300">
+          Avg cycle: <span className="font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">{data.avgCycle} days</span>
+        </div>
       </div>
 
       {/* Mini on/off chart for last 90 days */}
-      <div className="w-full overflow-hidden rounded-xl border border-rose-200 bg-white mb-4">
+      <div className="w-full overflow-hidden rounded-xl border border-pink-500/30 bg-gradient-to-r from-slate-700/50 to-slate-600/50 mb-4 shadow-lg">
         <div className="flex w-full">
           {data.series.map((d, idx) => (
-            <div key={idx} className={"h-8 " + (d.on ? "bg-rose-400" : "bg-rose-100")} style={{ width: `${100 / Math.max(data.series.length, 1)}%` }} />
+            <div 
+              key={idx} 
+              className={"h-8 transition-all duration-300 hover:scale-110 " + (d.on ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-pink-500/50 shadow-lg" : "bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-500 hover:to-slate-400")} 
+              style={{ width: `${100 / Math.max(data.series.length, 1)}%` }} 
+            />
           ))}
         </div>
-        <div className="px-3 py-2 text-xs text-gray-600 flex justify-between">
-          <span>90 days ago</span>
-          <span>Today</span>
+        <div className="px-3 py-2 text-xs text-slate-300 flex justify-between bg-slate-800/50">
+          <span className="font-medium">90 days ago</span>
+          <span className="font-medium">Today</span>
         </div>
       </div>
 
       {/* Predictions & correlations */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-lg bg-white border border-rose-200">
-          <div className="text-xs text-gray-500">Last start</div>
-          <div className="text-gray-900 font-semibold">{data.lastStart ? new Date(data.lastStart).toLocaleDateString() : '—'}</div>
-          <div className="mt-2 text-xs text-gray-500">Days since</div>
-          <div className="text-gray-900">{data.daysSinceLast ?? '—'}</div>
+        <div className="p-4 rounded-lg bg-gradient-to-br from-slate-700/50 to-slate-600/50 border border-pink-500/30 hover:border-pink-400/50 transition-all duration-300 shadow-lg">
+          <div className="text-xs text-pink-300 font-medium uppercase tracking-wide">Last start</div>
+          <div className="text-white font-bold text-lg">{data.lastStart ? new Date(data.lastStart).toLocaleDateString() : '—'}</div>
+          <div className="mt-2 text-xs text-slate-400 font-medium">Days since</div>
+          <div className="text-pink-300 font-semibold">{data.daysSinceLast ?? '—'}</div>
         </div>
-        <div className="p-4 rounded-lg bg-white border border-rose-200">
-          <div className="text-xs text-gray-500">Predicted next start</div>
-          <div className="text-gray-900 font-semibold">{data.predictedNextStart ? new Date(data.predictedNextStart).toLocaleDateString() : '—'}</div>
-          <div className="mt-2 text-xs text-gray-500">Hydration today</div>
-          <div className="text-gray-900">{data.todayWater} glasses</div>
+        <div className="p-4 rounded-lg bg-gradient-to-br from-slate-700/50 to-slate-600/50 border border-rose-500/30 hover:border-rose-400/50 transition-all duration-300 shadow-lg">
+          <div className="text-xs text-rose-300 font-medium uppercase tracking-wide">Predicted next start</div>
+          <div className="text-white font-bold text-lg">{data.predictedNextStart ? new Date(data.predictedNextStart).toLocaleDateString() : '—'}</div>
+          <div className="mt-2 text-xs text-slate-400 font-medium">Hydration today</div>
+          <div className="text-rose-300 font-semibold">{data.todayWater} glasses</div>
         </div>
-        <div className="p-4 rounded-lg bg-white border border-rose-200">
-          <div className="text-xs text-gray-500">Stress/Valence (30d avg)</div>
-          <div className="text-gray-900 font-semibold">{data.stressAvg}/10 stress, {data.valenceAvg}/10 happiness</div>
-          <div className="mt-2 text-xs text-gray-500">Note</div>
-          <div className="text-gray-900 text-sm">Higher stress may shorten/shift cycles; we factor this when alerting.</div>
+        <div className="p-4 rounded-lg bg-gradient-to-br from-slate-700/50 to-slate-600/50 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 shadow-lg">
+          <div className="text-xs text-purple-300 font-medium uppercase tracking-wide">Stress/Valence (30d avg)</div>
+          <div className="text-white font-bold text-lg">{data.stressAvg}/10 stress, {data.valenceAvg}/10 happiness</div>
+          <div className="mt-2 text-xs text-slate-400 font-medium">Note</div>
+          <div className="text-purple-300 text-sm">Higher stress may shorten/shift cycles; we factor this when alerting.</div>
         </div>
       </div>
 
       {showAlert && (
-        <div className="mt-4 p-4 rounded-lg bg-rose-100 border border-rose-200 text-rose-900 flex items-start justify-between">
-          <div className="mr-3">{alertText}</div>
-          <button onClick={() => setShowAlert(false)} className="text-sm underline">Dismiss</button>
+        <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-pink-900/40 to-rose-900/40 border border-pink-500/30 text-pink-200 flex items-start justify-between shadow-lg">
+          <div className="mr-3 font-medium">{alertText}</div>
+          <button 
+            onClick={() => setShowAlert(false)} 
+            className="text-sm font-semibold text-pink-300 hover:text-pink-100 underline transition-colors duration-200"
+          >
+            Dismiss
+          </button>
         </div>
       )}
     </Card>
