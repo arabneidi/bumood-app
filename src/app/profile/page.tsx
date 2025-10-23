@@ -745,23 +745,15 @@ export default function ProfilePage() {
                 ))}
               </div>
 
-              {/* Add Custom Category */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.3 }}
-                className="mt-12"
-              >
-                <h3 className="text-2xl font-black bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent mb-6">
-                  Add Custom Category
+              {/* Add Custom Category - SIMPLIFIED */}
+              <div className="mt-12 p-4 border-2 border-red-500 bg-red-100">
+                <h3 className="text-2xl font-black text-red-800 mb-6">
+                  Add Custom Category (TEST VERSION)
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="group"
-                  >
-                    <label className="block text-lg font-bold text-slate-200 mb-3">
+                  <div>
+                    <label className="block text-lg font-bold text-red-800 mb-3">
                       Category Name
                     </label>
                     <input
@@ -771,16 +763,13 @@ export default function ProfilePage() {
                         console.log('Category name changed:', e.target.value);
                         setNewCategoryName(e.target.value);
                       }}
-                      className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-blue-500/10"
+                      className="w-full px-4 py-2 border-2 border-red-500 rounded text-black"
                       placeholder="e.g., Movies, Podcasts, YouTube"
                     />
-                  </motion.div>
+                  </div>
                   
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="group"
-                  >
-                    <label className="block text-lg font-bold text-slate-200 mb-3">
+                  <div>
+                    <label className="block text-lg font-bold text-red-800 mb-3">
                       Your Favorites
                     </label>
                     <input
@@ -790,49 +779,49 @@ export default function ProfilePage() {
                         console.log('Category value changed:', e.target.value);
                         setNewCategoryValue(e.target.value);
                       }}
-                      className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-indigo-500/10"
+                      className="w-full px-4 py-2 border-2 border-red-500 rounded text-black"
                       placeholder="e.g., Christopher Nolan, Joe Rogan, TED Talks"
                     />
-                  </motion.div>
+                  </div>
                 </div>
                 
-                <div className="text-center">
+                <div className="text-center space-x-4">
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('Button clicked!', { newCategoryName, newCategoryValue });
+                    onClick={() => {
+                      console.log('MAIN BUTTON CLICKED!', { newCategoryName, newCategoryValue });
                       addCustomCategory();
                     }}
                     disabled={!newCategoryName.trim() || !newCategoryValue.trim()}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+                    className="px-6 py-3 bg-blue-500 text-white rounded font-bold disabled:opacity-50"
                   >
                     Add Custom Category
                   </button>
                   
-                  {/* Test button */}
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('Test button clicked!');
+                    onClick={() => {
+                      console.log('TEST BUTTON CLICKED!');
                       setNewCategoryName('Test Category');
                       setNewCategoryValue('Test Value');
                     }}
-                    className="ml-4 px-4 py-2 bg-green-500 text-white rounded-lg text-sm"
+                    className="px-4 py-2 bg-green-500 text-white rounded"
                   >
                     Test Fill
                   </button>
                   
-                  {(!newCategoryName.trim() || !newCategoryValue.trim()) && (
-                    <p className="text-sm text-slate-400 mt-2">
-                      Please fill in both fields to add a custom category
-                    </p>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      console.log('ALERT BUTTON CLICKED!');
+                      alert('Alert button works!');
+                    }}
+                    className="px-4 py-2 bg-yellow-500 text-black rounded"
+                  >
+                    Alert Test
+                  </button>
                 </div>
-              </motion.div>
+              </div>
             </motion.div>
 
             {/* Simple Test Button */}
