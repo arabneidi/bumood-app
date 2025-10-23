@@ -714,6 +714,35 @@ export default function GoalsPage() {
                             </button>
                           ))}
                         </div>
+                        
+                        {/* Goal Suggestions for selected category */}
+                        {selectedCategory === category.id && (
+                          <div className="mt-6 pt-4 border-t border-slate-600/50">
+                            <h4 className="text-lg font-semibold text-slate-200 mb-4">Choose Your Goal</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {category.subcategories
+                                .filter(sub => sub.examples)
+                                .flatMap(sub => sub.examples)
+                                .map((suggestion, index) => (
+                                <button
+                                  key={index}
+                                  onClick={() => {
+                                    setNewGoal({ 
+                                      ...newGoal, 
+                                      title: suggestion,
+                                      category: category.id,
+                                      subcategory: selectedSubcategory
+                                    });
+                                  }}
+                                  className="p-3 rounded-lg border border-slate-600/50 bg-slate-700/30 hover:border-cyan-400/50 hover:bg-cyan-500/10 transition-all duration-300 text-left"
+                                >
+                                  <h5 className="text-sm font-medium text-white mb-1">{suggestion}</h5>
+                                  <p className="text-xs text-slate-400">Click to use this goal</p>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                     
@@ -788,39 +817,9 @@ export default function GoalsPage() {
                   </div>
                 </div>
 
-                {/* Examples and Customization */}
+                {/* Days and Difficulty */}
                 {selectedSubcategory && (
-                  <div className="space-y-4 -mt-2">
-                    {/* Connection indicator */}
-                    <div className="flex items-center justify-center mb-4">
-                      <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"></div>
-                      <div className="mx-4 px-3 py-1 bg-cyan-400/20 rounded-full text-cyan-300 text-sm font-medium">
-                        Next Step
-                      </div>
-                      <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"></div>
-                    </div>
-                    
-                    {/* Examples - Connected to category section */}
-                    <div className="bg-slate-700/30 rounded-xl p-4 border border-slate-600/50">
-                      <label className="block text-lg font-semibold text-slate-200 mb-3">Choose Your Goal</label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {getSelectedSubcategory()?.examples.map((example, index) => (
-                          <button
-                            key={index}
-                            onClick={() => setNewGoal({ ...newGoal, title: example })}
-                            className={`p-4 rounded-lg border-2 transition-all duration-300 text-left ${
-                              newGoal.title === example
-                                ? 'border-cyan-400/70 bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
-                                : 'border-slate-600/50 bg-slate-700/30 hover:border-slate-500/70'
-                            }`}
-                          >
-                            <span className="text-slate-300 font-medium">{example}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Days and Difficulty */}
+                  <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-lg font-semibold text-slate-200 mb-3">Target Days</label>
