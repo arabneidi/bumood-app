@@ -798,55 +798,39 @@ export default function ProfilePage() {
 
             </motion.div>
 
-            {/* Add Custom Category - CLEAN VERSION */}
+            {/* Add Custom Category - Compact Design */}
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-12"
             >
-              <div className="flex items-center mb-8">
-                <div className="mr-4">
-                  <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-8 h-8 text-white">
-                      <path d="M5 12h14"></path>
-                      <path d="M12 5v14"></path>
-                    </svg>
-                  </div>
-                </div>
-                <h2 className="text-4xl font-black bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
-                  Add Custom Category
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-black bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                  Add New Category
                 </h2>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <label className="block text-lg font-bold text-slate-200 mb-3">
-                    Category Name
-                  </label>
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
                   <input
                     type="text"
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
-                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-green-500/20 focus:border-green-400 text-white font-bold transition-all duration-300"
-                    placeholder="e.g., Movies, Podcasts, YouTube"
+                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 text-white font-bold transition-all duration-300"
+                    placeholder="Category name (e.g., Movies, Podcasts)"
                   />
                 </div>
                 
-                <div>
-                  <label className="block text-lg font-bold text-slate-200 mb-3">
-                    Your Favorites
-                  </label>
+                <div className="flex-1">
                   <input
                     type="text"
                     value={newCategoryValue}
                     onChange={(e) => setNewCategoryValue(e.target.value)}
-                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-green-500/20 focus:border-green-400 text-white font-bold transition-all duration-300"
-                    placeholder="e.g., Christopher Nolan, Joe Rogan, TED Talks"
+                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300"
+                    placeholder="Your favorites (e.g., Christopher Nolan, Joe Rogan)"
                   />
                 </div>
-              </div>
-              
-              <div className="text-center mt-8 space-x-4">
+                
                 <motion.button
                   onClick={async () => {
                     if (newCategoryName.trim() && newCategoryValue.trim()) {
@@ -875,16 +859,18 @@ export default function ProfilePage() {
                     }
                   }}
                   disabled={!newCategoryName.trim() || !newCategoryValue.trim()}
-                  whileHover={{ scale: 1.1, rotate: 2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative overflow-hidden px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-bold text-lg shadow-2xl transition-all duration-300 disabled:opacity-50"
+                  whileHover={{ scale: 1.15, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="ml-6 p-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-2xl font-bold shadow-xl hover:shadow-purple-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
                 >
-                  <div className="absolute inset-0 rounded-2xl border border-green-400/50 shadow-[0_0_25px_rgba(34,197,94,0.6)] animate-pulse"></div>
-                  <div className="relative flex items-center justify-center space-x-3">
-                    <span>Add Custom Category</span>
+                  <div className="absolute inset-0 rounded-2xl border border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+                  <div className="relative flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus">
+                      <path d="M5 12h14"></path>
+                      <path d="M12 5v14"></path>
+                    </svg>
                   </div>
                 </motion.button>
-                
               </div>
             </motion.div>
 
