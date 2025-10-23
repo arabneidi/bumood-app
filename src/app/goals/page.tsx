@@ -52,6 +52,7 @@ export default function GoalsPage() {
   });
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [completedGoal, setCompletedGoal] = useState(null);
+  const [completedGoals, setCompletedGoals] = useState([]);
 
   const goalCategories = [
     {
@@ -111,12 +112,23 @@ export default function GoalsPage() {
         const response = await fetch("/api/goals");
         if (response.ok) {
           const data = await response.json();
-          // Calculate progress for each goal
-          const goalsWithProgress = data.map((goal: any) => ({
-            ...goal,
-            progress: Math.round((goal.currentValue / goal.targetValue) * 100)
-          }));
-          setGoals(goalsWithProgress);
+          // Filter active and completed goals
+          const activeGoals = data
+            .filter((goal: any) => !goal.completed)
+            .map((goal: any) => ({
+              ...goal,
+              progress: Math.round((goal.currentValue / goal.targetValue) * 100)
+            }));
+          
+          const completedGoalsData = data
+            .filter((goal: any) => goal.completed)
+            .map((goal: any) => ({
+              ...goal,
+              progress: 100
+            }));
+          
+          setGoals(activeGoals);
+          setCompletedGoals(completedGoalsData);
         } else {
           console.error("Failed to fetch goals");
         }
@@ -227,7 +239,6 @@ export default function GoalsPage() {
           },
           body: JSON.stringify({
             completed: true,
-            completedAt: new Date().toISOString(),
             currentValue: completedGoal.targetValue,
           }),
         });
@@ -462,6 +473,83 @@ export default function GoalsPage() {
             </div>
           )}
         </div>
+
+        {/* Completed Goals Section */}
+        {completedGoals.length > 0 && (
+          <div className="mb-16">
+            <div className="text-center mb-12">
+              <h2 className="text-5xl font-black mb-4" style={{
+                background: 'linear-gradient(45deg, #10b981, #059669, #047857, #065f46)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>
+                Completed Goals
+              </h2>
+              <p className="text-slate-300 text-lg">Your achievements and completed goals</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {completedGoals.map((goal, index) => (
+                <div 
+                  key={goal.id} 
+                  className="relative overflow-hidden group hover:scale-105 transition-all duration-500 rounded-2xl"
+                  style={{
+                    animation: `float ${4 + (index * 0.3)}s ease-in-out infinite`,
+                    animationDelay: `${index * 0.2}s`,
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  {/* Edge glow effect - green for completed */}
+                  <div className="absolute inset-0 rounded-2xl"
+                    style={{
+                      background: 'linear-gradient(45deg, transparent, rgba(16, 185, 129, 0.1), transparent)',
+                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      boxShadow: 'inset 0 0 20px rgba(16, 185, 129, 0.2), 0 0 40px rgba(16, 185, 129, 0.3)'
+                    }}
+                  ></div>
+                  
+                  <div className="relative z-10 p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mr-4">
+                        <Target className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-green-300">{goal.title}</h3>
+                        <div className="text-sm text-green-400">✅ Completed</div>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="flex items-center mb-2">
+                        <span className="text-slate-300 text-sm">Difficulty:</span>
+                        <span className="ml-2 text-sm font-medium text-slate-200 capitalize">{goal.difficulty}</span>
+                      </div>
+                      <div className="flex items-center mb-2">
+                        <span className="text-slate-300 text-sm">Duration:</span>
+                        <span className="ml-2 text-sm font-medium text-slate-200">{goal.targetValue} days</span>
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <div className="w-full bg-slate-700 rounded-full h-3 mb-2">
+                        <div
+                          className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-300"
+                          style={{ width: '100%' }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-green-300 text-sm font-bold">100% Complete!</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Achievements */}
         <div className="mb-16">

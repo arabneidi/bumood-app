@@ -7,7 +7,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { currentValue, streak, bestStreak, completed, completedAt } = body;
+    const { currentValue, streak, bestStreak, completed } = body;
 
     const updateData: any = {};
     
@@ -15,7 +15,6 @@ export async function PUT(
     if (streak !== undefined) updateData.streak = streak;
     if (bestStreak !== undefined) updateData.bestStreak = bestStreak;
     if (completed !== undefined) updateData.completed = completed;
-    if (completedAt !== undefined) updateData.completedAt = completedAt;
 
     const updatedGoal = await db.goal.update({
       where: { id: params.id },
