@@ -31,13 +31,32 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="text-3xl font-bold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer">
-              <span className="inline-block drop-shadow-lg" style={{
-                textShadow: '0 0 15px rgba(99, 102, 241, 0.6)',
-                filter: 'drop-shadow(0 0 10px rgba(99, 102, 241, 0.4))'
-              }}>
-                BUMood ✨
-              </span>
+            <Link href="/" className="text-4xl cursor-pointer group">
+              <motion.span 
+                className="drop-shadow-lg group-hover:scale-105 transition-all duration-500"
+                style={{
+                  fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  fontWeight: 800,
+                  letterSpacing: '-0.02em',
+                  textTransform: 'uppercase'
+                }}
+                animate={{ 
+                  y: [0, -8, 0],
+                  textShadow: [
+                    '0 0 20px rgba(147, 51, 234, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)',
+                    '0 0 30px rgba(147, 51, 234, 0.8), 0 0 60px rgba(59, 130, 246, 0.5)',
+                    '0 0 20px rgba(147, 51, 234, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)'
+                  ]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent group-hover:from-cyan-300 group-hover:to-blue-400 transition-all duration-500" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontWeight: 800, letterSpacing: '-0.02em' }}>BU</span>
+                <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent group-hover:from-pink-400 group-hover:to-purple-500 transition-all duration-500" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontWeight: 800, letterSpacing: '-0.02em' }}>Mood</span>
+              </motion.span>
             </Link>
           </div>
           <div className="flex items-center space-x-3">
