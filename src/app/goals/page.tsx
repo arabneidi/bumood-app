@@ -348,7 +348,7 @@ export default function GoalsPage() {
         }
       `}</style>
 
-      <div className="relative z-10 container mx-auto px-6 py-12">
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-12">
         <h1
           className="text-6xl font-bold text-center mb-12"
           style={{
@@ -391,7 +391,7 @@ export default function GoalsPage() {
               <p className="text-slate-300 text-lg font-medium">Create your first goal to get started on your journey!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
               {goals.map((goal, index) => (
                 <div 
                   key={goal.id} 
@@ -488,7 +488,7 @@ export default function GoalsPage() {
               <p className="text-slate-300 text-lg">Your achievements and completed goals</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
               {completedGoals.map((goal, index) => (
                 <div 
                   key={goal.id} 
@@ -574,7 +574,7 @@ export default function GoalsPage() {
               </div>
               <h3 className="text-3xl font-black bg-gradient-to-r from-green-500 via-emerald-500 to-cyan-500 bg-clip-text text-transparent">✅ Achieved Badges</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {achievements.achieved.map((badge, index) => (
                 <div 
                   key={badge.id} 
@@ -611,7 +611,7 @@ export default function GoalsPage() {
               </div>
               <h3 className="text-3xl font-black bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 bg-clip-text text-transparent">🔒 Locked Badges</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {achievements.locked.map((badge, index) => (
                 <div 
                   key={badge.id} 
@@ -643,7 +643,7 @@ export default function GoalsPage() {
       {/* Create Goal Modal */}
       {showAddGoal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowAddGoal(false)}>
-          <div className="relative w-[95vw] h-[95vh] mx-4 bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="relative w-[95vw] max-w-6xl h-[95vh] mx-4 bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="absolute inset-0 rounded-3xl border-2 border-cyan-400/50 shadow-[0_0_25px_rgba(6,182,212,0.6)] animate-pulse pointer-events-none"></div>
             
             <div className="relative z-10">
