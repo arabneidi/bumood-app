@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import ParameterSlider from "@/components/ui/ParameterSlider";
@@ -444,568 +445,812 @@ export default function NewEntry() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8">
-      <h1 className="text-4xl font-bold text-gray-900 mb-8">New Mood Entry</h1>
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <ParameterSlider
-          label="Valence"
-          value={formData.valence}
-          onChange={(val) => handleChange("valence", val)}
-          min={1}
-          max={10}
-          minLabel="Negative"
-          maxLabel="Positive"
-          color="from-red-400 to-green-500"
-          icon="😊"
-          valueLabels={{
-            1: "Very Negative", 2: "Negative", 3: "Slightly Negative", 4: "Neutral-", 5: "Neutral",
-            6: "Neutral+", 7: "Slightly Positive", 8: "Positive", 9: "Very Positive", 10: "Ecstatic"
-          }}
-        />
-
-        <ParameterSlider
-          label="Energy"
-          value={formData.energy}
-          onChange={(val) => handleChange("energy", val)}
-          min={1}
-          max={10}
-          minLabel="Drained"
-          maxLabel="Energized"
-          color="from-blue-400 to-yellow-500"
-          icon="⚡"
-          valueLabels={{
-            1: "Exhausted", 2: "Very Low", 3: "Low", 4: "Tired", 5: "Normal",
-            6: "Rested", 7: "Active", 8: "High", 9: "Very High", 10: "Hyper"
-          }}
-        />
-
-        <ParameterSlider
-          label="Focus"
-          value={formData.focus}
-          onChange={(val) => handleChange("focus", val)}
-          min={1}
-          max={10}
-          minLabel="Distracted"
-          maxLabel="Focused"
-          color="from-purple-400 to-pink-500"
-          icon="🎯"
-          valueLabels={{
-            1: "Completely Distracted", 2: "Very Distracted", 3: "Distracted", 4: "Wandering", 5: "Moderate",
-            6: "Attentive", 7: "Engaged", 8: "Highly Focused", 9: "Deep Focus", 10: "Laser Focus"
-          }}
-        />
-
-        <ParameterSlider
-          label="Stress"
-          value={formData.stress}
-          onChange={(val) => handleChange("stress", val)}
-          min={1}
-          max={10}
-          minLabel="Calm"
-          maxLabel="Stressed"
-          color="from-green-400 to-red-500"
-          icon="😟"
-          valueLabels={{
-            1: "Zen Master", 2: "Very Calm", 3: "Calm", 4: "Relaxed", 5: "Mild",
-            6: "Moderate", 7: "Elevated", 8: "High", 9: "Very High", 10: "Overwhelmed"
-          }}
-        />
-
-        <ParameterSlider
-          label="Sleep"
-          value={formData.sleep}
-          onChange={(val) => handleChange("sleep", val)}
-          min={0}
-          max={12}
-          minLabel="No sleep"
-          maxLabel="12+ hours"
-          color="from-indigo-400 to-purple-500"
-          icon="😴"
-          valueLabels={{
-            0: "No sleep", 1: "1 hour", 2: "2 hours", 3: "3 hours", 4: "4 hours", 5: "5 hours",
-            6: "6 hours", 7: "7 hours", 8: "8 hours", 9: "9 hours", 10: "10 hours", 11: "11 hours", 12: "12+ hours"
-          }}
-        />
-
-        <ActivitySelector
-          selectedActivities={formData.activities}
-          onActivityToggle={(activity) => {
-            const newActivities = formData.activities.includes(activity)
-              ? formData.activities.filter(a => a !== activity)
-              : [...formData.activities, activity];
-            handleChange("activities", newActivities);
-          }}
-        />
-
-        {/* Toggle: AI Preference Learning opt-out */}
-        <Card className="p-4">
-          <label className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              checked={enablePreferenceLearning}
-              onChange={(e) => setEnablePreferenceLearning(e.target.checked)}
-              className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white">
+      {/* Futuristic Background */}
+      <div className="absolute inset-0">
+        {/* Animated Grid Pattern */}
+        <div className="absolute top-24 left-0 right-0 bottom-0 z-0 bg-[linear-gradient(90deg,transparent_24%,rgba(147,51,234,0.1)_25%,rgba(147,51,234,0.1)_26%,transparent_27%,transparent_74%,rgba(59,130,246,0.1)_75%,rgba(59,130,246,0.1)_76%,transparent_77%)] bg-[length:50px_50px] animate-pulse"></div>
+        {/* Floating Particles */}
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-purple-400/30 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -100, 0],
+                x: [0, Math.random() * 50 - 25, 0],
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
             />
-            <div className="flex-1">
-              <span className="font-semibold text-gray-900">Enable AI to learn my preferences during this entry</span>
-              <p className="text-sm text-gray-600">Uncheck if you don’t want to see AI suggestions for genres and favorites right now.</p>
-            </div>
-          </label>
-        </Card>
+          ))}
+        </div>
+      </div>
 
-        {/* AI Preference Learning */}
-        {enablePreferenceLearning && formData.activities.length > 0 && (
-          <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50">
-            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-              <span className="mr-2">🎯</span>
-              Help Us Know You Better
-            </h3>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        className="max-w-4xl mx-auto py-8 relative z-10"
+      >
+        {/* Header Section */}
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: [0, -8, 0], opacity: 1 }}
+          transition={{
+            opacity: { duration: 0.6, delay: 0.2 },
+            y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+          }}
+          className="text-center mb-12 relative overflow-hidden"
+        >
+          <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8">
+            {/* Glowing Edge Effect */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
             
-            {/* Step Indicator */}
-            <div className="flex items-center justify-center mb-6">
-              <div className="flex items-center space-x-4">
-                <div className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
-                  currentStep === 'genres' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-600'
-                }`}>
-                  <span className="w-6 h-6 rounded-full bg-white text-green-600 font-bold text-sm flex items-center justify-center">1</span>
-                  <span className="font-semibold">Choose Genres</span>
-                </div>
-                <div className="w-8 h-0.5 bg-gray-300"></div>
-                <div className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
-                  currentStep === 'specifics' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-600'
-                }`}>
-                  <span className="w-6 h-6 rounded-full bg-white text-green-600 font-bold text-sm flex items-center justify-center">2</span>
-                  <span className="font-semibold">Pick Favorites</span>
-                </div>
+            <motion.h1
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+              className="text-5xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-4 flex items-center justify-center"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="mr-4"
+              >
+                <span className="text-4xl">📝</span>
+              </motion.div>
+              New Mood Entry
+              <motion.div
+                animate={{ rotate: -360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="ml-4"
+              >
+                <span className="text-4xl">✨</span>
+              </motion.div>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="text-xl text-slate-300 flex items-center justify-center"
+            >
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="mr-2"
+              >
+                <span className="text-2xl">🎯</span>
+              </motion.div>
+              Track your mood and wellness metrics
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
+                className="ml-2"
+              >
+                <span className="text-2xl">💫</span>
+              </motion.div>
+            </motion.p>
+          </div>
+        </motion.div>
+      
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Mood Parameters Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: [0, -6, 0] }}
+            transition={{
+              opacity: { duration: 0.6, delay: 0.2 },
+              y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
+            }}
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
+          >
+            {/* Glowing Edge Effect */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            
+            <div className="relative z-10">
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+                <motion.span
+                  className="mr-2 text-3xl"
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  📊
+                </motion.span>
+                Mood Parameters
+              </h2>
+              
+              <div className="space-y-6">
+                <ParameterSlider
+                  label="Valence"
+                  value={formData.valence}
+                  onChange={(val) => handleChange("valence", val)}
+                  min={1}
+                  max={10}
+                  minLabel="Negative"
+                  maxLabel="Positive"
+                  color="from-red-400 to-green-500"
+                  icon="😊"
+                  valueLabels={{
+                    1: "Very Negative", 2: "Negative", 3: "Slightly Negative", 4: "Neutral-", 5: "Neutral",
+                    6: "Neutral+", 7: "Slightly Positive", 8: "Positive", 9: "Very Positive", 10: "Ecstatic"
+                  }}
+                />
+
+                <ParameterSlider
+                  label="Energy"
+                  value={formData.energy}
+                  onChange={(val) => handleChange("energy", val)}
+                  min={1}
+                  max={10}
+                  minLabel="Drained"
+                  maxLabel="Energized"
+                  color="from-blue-400 to-yellow-500"
+                  icon="⚡"
+                  valueLabels={{
+                    1: "Exhausted", 2: "Very Low", 3: "Low", 4: "Tired", 5: "Normal",
+                    6: "Rested", 7: "Active", 8: "High", 9: "Very High", 10: "Hyper"
+                  }}
+                />
+
+                <ParameterSlider
+                  label="Focus"
+                  value={formData.focus}
+                  onChange={(val) => handleChange("focus", val)}
+                  min={1}
+                  max={10}
+                  minLabel="Distracted"
+                  maxLabel="Focused"
+                  color="from-purple-400 to-pink-500"
+                  icon="🎯"
+                  valueLabels={{
+                    1: "Completely Distracted", 2: "Very Distracted", 3: "Distracted", 4: "Wandering", 5: "Moderate",
+                    6: "Attentive", 7: "Engaged", 8: "Highly Focused", 9: "Deep Focus", 10: "Laser Focus"
+                  }}
+                />
+
+                <ParameterSlider
+                  label="Stress"
+                  value={formData.stress}
+                  onChange={(val) => handleChange("stress", val)}
+                  min={1}
+                  max={10}
+                  minLabel="Calm"
+                  maxLabel="Stressed"
+                  color="from-green-400 to-red-500"
+                  icon="😟"
+                  valueLabels={{
+                    1: "Zen Master", 2: "Very Calm", 3: "Calm", 4: "Relaxed", 5: "Mild",
+                    6: "Moderate", 7: "Elevated", 8: "High", 9: "Very High", 10: "Overwhelmed"
+                  }}
+                />
+
+                <ParameterSlider
+                  label="Sleep"
+                  value={formData.sleep}
+                  onChange={(val) => handleChange("sleep", val)}
+                  min={0}
+                  max={12}
+                  minLabel="No sleep"
+                  maxLabel="12+ hours"
+                  color="from-indigo-400 to-purple-500"
+                  icon="😴"
+                  valueLabels={{
+                    0: "No sleep", 1: "1 hour", 2: "2 hours", 3: "3 hours", 4: "4 hours", 5: "5 hours",
+                    6: "6 hours", 7: "7 hours", 8: "8 hours", 9: "9 hours", 10: "10 hours", 11: "11 hours", 12: "12+ hours"
+                  }}
+                />
               </div>
             </div>
+          </motion.div>
+
+          {/* Activities Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: [0, -5, 0] }}
+            transition={{
+              opacity: { duration: 0.6, delay: 0.4 },
+              y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+            }}
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
+          >
+            {/* Glowing Edge Effect */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
             
-            {preferencesLocked ? (
-              <div className="text-center py-8">
-                <div className="text-6xl mb-4">🎉</div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">All Preferences Saved!</h4>
-                <p className="text-gray-600 mb-4">
-                  Your selections are saved and locked for this entry.
-                </p>
-                <div className="bg-green-100 rounded-lg p-4">
-                  <p className="text-sm text-green-800">
-                    ✅ We will use them for AI personalization now.
-                  </p>
+            <div className="relative z-10">
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+                <motion.span
+                  className="mr-2 text-3xl"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  🎯
+                </motion.span>
+                Activities
+              </h2>
+              
+              <ActivitySelector
+                selectedActivities={formData.activities}
+                onActivityToggle={(activity) => {
+                  const newActivities = formData.activities.includes(activity)
+                    ? formData.activities.filter(a => a !== activity)
+                    : [...formData.activities, activity];
+                  handleChange("activities", newActivities);
+                }}
+              />
+            </div>
+          </motion.div>
+
+          {/* AI Preference Learning Toggle */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: [0, -4, 0] }}
+            transition={{
+              opacity: { duration: 0.6, delay: 0.6 },
+              y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" }
+            }}
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-6"
+          >
+            {/* Glowing Edge Effect */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            
+            <div className="relative z-10">
+              <label className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={enablePreferenceLearning}
+                  onChange={(e) => setEnablePreferenceLearning(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 bg-blue-900/30 border-blue-400/50"
+                />
+                <div className="flex-1">
+                  <span className="font-semibold text-white">Enable AI to learn my preferences during this entry</span>
+                  <p className="text-sm text-slate-300">Uncheck if you don't want to see AI suggestions for genres and favorites right now.</p>
                 </div>
-              </div>
-            ) : isGeneratingPreferences ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                <span className="ml-3 text-gray-600">Loading preference options...</span>
-              </div>
-            ) : currentStep === 'genres' && genreOptions.length > 0 ? (
-              <div className="space-y-6">
-                {genreOptions.map((option, index) => (
-                  <div key={index} className="bg-white rounded-lg p-4 border-2 border-green-100">
-                    <h4 className="font-semibold text-gray-900 mb-2">{option.title}</h4>
-                    <p className="text-sm text-gray-600 mb-4">{option.description}</p>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {option.options.map((genre: string) => (
+              </label>
+            </div>
+          </motion.div>
+
+          {/* AI Preference Learning */}
+          {enablePreferenceLearning && formData.activities.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: [0, -3, 0] }}
+              transition={{
+                opacity: { duration: 0.6, delay: 0.8 },
+                y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
+              }}
+              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
+            >
+              {/* Glowing Edge Effect */}
+              <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+              
+              <div className="relative z-10">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                  <motion.span
+                    className="mr-2 text-2xl"
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    🎯
+                  </motion.span>
+                  Help Us Know You Better
+                </h3>
+            
+                {/* Step Indicator */}
+                <div className="flex items-center justify-center mb-6">
+                  <div className="flex items-center space-x-4">
+                    <div className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
+                      currentStep === 'genres' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
+                    }`}>
+                      <span className="w-6 h-6 rounded-full bg-white text-blue-600 font-bold text-sm flex items-center justify-center">1</span>
+                      <span className="font-semibold">Choose Genres</span>
+                    </div>
+                    <div className="w-8 h-0.5 bg-slate-600"></div>
+                    <div className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
+                      currentStep === 'specifics' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
+                    }`}>
+                      <span className="w-6 h-6 rounded-full bg-white text-blue-600 font-bold text-sm flex items-center justify-center">2</span>
+                      <span className="font-semibold">Pick Favorites</span>
+                    </div>
+                  </div>
+                </div>
+            
+                {preferencesLocked ? (
+                  <div className="text-center py-8">
+                    <div className="text-6xl mb-4">🎉</div>
+                    <h4 className="text-lg font-semibold text-white mb-2">All Preferences Saved!</h4>
+                    <p className="text-slate-300 mb-4">
+                      Your selections are saved and locked for this entry.
+                    </p>
+                    <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-400/30">
+                      <p className="text-sm text-blue-200">
+                        ✅ We will use them for AI personalization now.
+                      </p>
+                    </div>
+                  </div>
+                ) : isGeneratingPreferences ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-3 text-slate-300">Loading preference options...</span>
+                  </div>
+                ) : currentStep === 'genres' && genreOptions.length > 0 ? (
+                  <div className="space-y-6">
+                    {genreOptions.map((option, index) => (
+                      <div key={index} className="bg-slate-800/40 backdrop-blur-xl rounded-lg p-4 border-2 border-blue-400/30">
+                        <h4 className="font-semibold text-white mb-2">{option.title}</h4>
+                        <p className="text-sm text-slate-300 mb-4">{option.description}</p>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          {option.options.map((genre: string) => (
+                            <button
+                              key={genre}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (selectedGenres.includes(genre)) {
+                                  setSelectedGenres(prev => prev.filter(g => g !== genre));
+                                } else {
+                                  setSelectedGenres(prev => [...prev, genre]);
+                                }
+                              }}
+                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                                selectedGenres.includes(genre)
+                                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
+                                  : 'bg-gradient-to-r from-slate-700 to-slate-600 text-slate-300 hover:from-slate-600 hover:to-slate-500 border border-slate-500'
+                              }`}
+                            >
+                              {genre}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                
+                    {selectedGenres.length > 0 && (
+                      <div className="flex items-center justify-between bg-blue-900/30 rounded-lg p-4 border border-blue-400/30">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-blue-400">✅</span>
+                          <span className="text-sm font-medium text-blue-200">
+                            {selectedGenres.length} genre{selectedGenres.length !== 1 ? 's' : ''} selected
+                          </span>
+                        </div>
                         <button
-                          key={genre}
                           type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            if (selectedGenres.includes(genre)) {
-                              setSelectedGenres(prev => prev.filter(g => g !== genre));
-                            } else {
-                              setSelectedGenres(prev => [...prev, genre]);
-                            }
+                            generateSpecificOptions(selectedGenres);
                           }}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                            selectedGenres.includes(genre)
-                              ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg scale-105'
-                              : 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 hover:from-blue-200 hover:to-purple-200 border border-blue-200'
-                          }`}
+                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                         >
-                          {genre}
+                          Next: Choose Specific Favorites
                         </button>
-                      ))}
+                      </div>
+                    )}
+              </div>
+                ) : currentStep === 'specifics' && preferenceOptions.length > 0 ? (
+                  <div className="space-y-6">
+                    {/* Back Button */}
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCurrentStep('genres');
+                          setSelectedPreferences([]);
+                        }}
+                        className="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:text-white transition-colors"
+                      >
+                        <span>←</span>
+                        <span>Back to Genres</span>
+                      </button>
+                      <div className="text-sm text-slate-400">
+                        Selected genres: {selectedGenres.join(', ')}
+                      </div>
                     </div>
+                
+                    {preferenceOptions.map((option, index) => (
+                      <div key={index} className="bg-slate-800/40 backdrop-blur-xl rounded-lg p-4 border-2 border-blue-400/30">
+                        <h4 className="font-semibold text-white mb-2">{option.title}</h4>
+                        <p className="text-sm text-slate-300 mb-4">{option.description}</p>
+                        
+                        {option.currentCount > 0 && (
+                          <div className="mb-4 p-3 bg-blue-900/30 rounded-lg border border-blue-400/30">
+                            <p className="text-sm text-blue-200">
+                              <span className="font-semibold">Already saved:</span> {option.currentCount} preference{option.currentCount !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                        )}
+                    
+                        <div className="flex flex-wrap gap-2">
+                          {option.options.map((pref: string) => (
+                            <button
+                              key={pref}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (selectedPreferences.includes(pref)) {
+                                  setSelectedPreferences(prev => prev.filter(p => p !== pref));
+                                } else {
+                                  setSelectedPreferences(prev => [...prev, pref]);
+                                }
+                              }}
+                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                                selectedPreferences.includes(pref)
+                                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
+                                  : 'bg-gradient-to-r from-slate-700 to-slate-600 text-slate-300 hover:from-slate-600 hover:to-slate-500 border border-slate-500'
+                              }`}
+                            >
+                              {pref}
+                            </button>
+                          ))}
+                        </div>
+                    
+                        {/* Custom Input Section */}
+                        <div className="mt-4 pt-4 border-t border-slate-600">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowCustomInput(!showCustomInput);
+                              }}
+                              className="flex items-center space-x-1 px-3 py-1 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                            >
+                              <span>{showCustomInput ? '−' : '+'}</span>
+                              <span>Add Custom {option.title.split('/')[0]}</span>
+                            </button>
+                          </div>
+                          
+                          {showCustomInput && (
+                            <div className="flex space-x-2 p-4 bg-blue-900/30 rounded-lg border-2 border-blue-400/30">
+                              <input
+                                type="text"
+                                value={customInput}
+                                onChange={(e) => setCustomInput(e.target.value)}
+                                placeholder={`Enter custom ${option.title.toLowerCase()}`}
+                                className="flex-1 px-4 py-3 border-2 border-blue-400/50 rounded-lg text-base font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-800/50 shadow-sm text-white placeholder-slate-400 caret-blue-400"
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter' && customInput.trim()) {
+                                    e.preventDefault();
+                                    if (!selectedPreferences.includes(customInput.trim())) {
+                                      setSelectedPreferences(prev => [...prev, customInput.trim()]);
+                                    }
+                                    setCustomInput('');
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (customInput.trim() && !selectedPreferences.includes(customInput.trim())) {
+                                    setSelectedPreferences(prev => [...prev, customInput.trim()]);
+                                    setCustomInput('');
+                                  }
+                                }}
+                                disabled={!customInput.trim()}
+                                className="px-6 py-3 bg-blue-600 text-white rounded-lg text-base font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                              >
+                                Add
+                              </button>
+                            </div>
+                          )}
+                        </div>
                   </div>
                 ))}
                 
-                {selectedGenres.length > 0 && (
-                  <div className="flex items-center justify-between bg-green-100 rounded-lg p-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-green-600">✅</span>
-                      <span className="text-sm font-medium text-green-800">
-                        {selectedGenres.length} genre{selectedGenres.length !== 1 ? 's' : ''} selected
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        generateSpecificOptions(selectedGenres);
-                      }}
-                      className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      Next: Choose Specific Favorites
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : currentStep === 'specifics' && preferenceOptions.length > 0 ? (
-              <div className="space-y-6">
-                {/* Back Button */}
-                <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setCurrentStep('genres');
-                      setSelectedPreferences([]);
-                    }}
-                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                  >
-                    <span>←</span>
-                    <span>Back to Genres</span>
-                  </button>
-                  <div className="text-sm text-gray-500">
-                    Selected genres: {selectedGenres.join(', ')}
-                  </div>
-                </div>
-                
-                {preferenceOptions.map((option, index) => (
-                  <div key={index} className="bg-white rounded-lg p-4 border-2 border-green-100">
-                    <h4 className="font-semibold text-gray-900 mb-2">{option.title}</h4>
-                    <p className="text-sm text-gray-600 mb-4">{option.description}</p>
-                    
-                    {option.currentCount > 0 && (
-                      <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-blue-800">
-                          <span className="font-semibold">Already saved:</span> {option.currentCount} preference{option.currentCount !== 1 ? 's' : ''}
-                        </p>
+                    {selectedPreferences.length > 0 && (
+                      <div className="flex items-center justify-between bg-blue-900/30 rounded-lg p-4 border border-blue-400/30">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-blue-400">✅</span>
+                          <span className="text-sm font-medium text-blue-200">
+                            {selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''} selected
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            savePreferences();
+                          }}
+                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                        >
+                          Save Preferences
+                        </button>
                       </div>
                     )}
                     
-                    <div className="flex flex-wrap gap-2">
-                      {option.options.map((pref: string) => (
-                        <button
-                          key={pref}
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (selectedPreferences.includes(pref)) {
-                              setSelectedPreferences(prev => prev.filter(p => p !== pref));
-                            } else {
-                              setSelectedPreferences(prev => [...prev, pref]);
-                            }
-                          }}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                            selectedPreferences.includes(pref)
-                              ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg scale-105'
-                              : 'bg-gradient-to-r from-pink-100 to-orange-100 text-pink-800 hover:from-pink-200 hover:to-orange-200 border border-pink-200'
-                          }`}
-                        >
-                          {pref}
-                        </button>
-                      ))}
-                    </div>
-                    
-                    {/* Custom Input Section */}
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setShowCustomInput(!showCustomInput);
-                          }}
-                          className="flex items-center space-x-1 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                        >
-                          <span>{showCustomInput ? '−' : '+'}</span>
-                          <span>Add Custom {option.title.split('/')[0]}</span>
-                        </button>
-                      </div>
-                      
-                      {showCustomInput && (
-                        <div className="flex space-x-2 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                          <input
-                            type="text"
-                            value={customInput}
-                            onChange={(e) => setCustomInput(e.target.value)}
-                            placeholder={`Enter custom ${option.title.toLowerCase()}`}
-                            className="flex-1 px-4 py-3 border-2 border-blue-300 rounded-lg text-base font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm text-gray-900 placeholder-gray-500 caret-blue-600"
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter' && customInput.trim()) {
-                                e.preventDefault();
-                                if (!selectedPreferences.includes(customInput.trim())) {
-                                  setSelectedPreferences(prev => [...prev, customInput.trim()]);
-                                }
-                                setCustomInput('');
-                              }
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              if (customInput.trim() && !selectedPreferences.includes(customInput.trim())) {
-                                setSelectedPreferences(prev => [...prev, customInput.trim()]);
-                                setCustomInput('');
-                              }
-                            }}
-                            disabled={!customInput.trim()}
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg text-base font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-                          >
-                            Add
-                          </button>
-                        </div>
-                      )}
+                    <p className="text-xs text-slate-400 mt-3">
+                      💡 This helps us personalize future suggestions based on your interests!
+                    </p>
+              </div>
+                ) : formData.activities.length > 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-6xl mb-4">🎉</div>
+                    <h4 className="text-lg font-semibold text-white mb-2">All Preferences Saved!</h4>
+                    <p className="text-slate-300 mb-4">
+                      You've already saved preferences for all selected activities. 
+                      The AI will use these for personalized suggestions!
+                    </p>
+                    <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-400/30">
+                      <p className="text-sm text-blue-200">
+                        ✅ Your preferences are cached and ready for AI personalization
+                      </p>
                     </div>
                   </div>
-                ))}
-                
-                {selectedPreferences.length > 0 && (
-                  <div className="flex items-center justify-between bg-green-100 rounded-lg p-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-green-600">✅</span>
-                      <span className="text-sm font-medium text-green-800">
-                        {selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''} selected
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        savePreferences();
-                      }}
-                      className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                ) : (
+                  <p className="text-slate-300 text-center py-4">
+                    Select activities above to help us learn your preferences!
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Period Tracking - Only for females */}
+          {userInfo && userInfo.gender === 'female' && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: [0, -4, 0] }}
+              transition={{
+                opacity: { duration: 0.6, delay: 1.0 },
+                y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" }
+              }}
+              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
+            >
+              {/* Glowing Edge Effect */}
+              <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white flex items-center">
+                    <motion.span
+                      className="mr-2 text-2xl"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
                     >
-                      Save Preferences
-                    </button>
+                      🩸
+                    </motion.span>
+                    Period Tracking
+                  </h3>
+                  <span className="text-xs text-slate-400">Optional</span>
+                </div>
+
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    aria-pressed={formData.onPeriod}
+                    onClick={() => handleChange('onPeriod', !formData.onPeriod)}
+                    className={`w-full md:w-auto inline-flex items-center space-x-3 px-5 py-3 rounded-full transition-all border-2 shadow-sm
+                      ${formData.onPeriod
+                        ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border-pink-300 hover:from-pink-600 hover:to-rose-600'
+                        : 'bg-slate-800/50 text-pink-400 border-pink-400/50 hover:bg-slate-700/50'}
+                    `}
+                  >
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-lg shadow ${formData.onPeriod ? 'bg-white/20' : 'bg-pink-900/30 text-pink-400'}`}>🩸</span>
+                    <div className="text-left">
+                      <div className="font-semibold">
+                        {formData.onPeriod ? 'On period today' : 'Mark period today'}
+                      </div>
+                      <div className={`text-xs ${formData.onPeriod ? 'text-white/90' : 'text-pink-400/80'}`}>
+                        Tap to {formData.onPeriod ? 'unset' : 'set'}
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Meals & Drinks Tracking */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: [0, -3, 0] }}
+            transition={{
+              opacity: { duration: 0.6, delay: 1.2 },
+              y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
+            }}
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 overflow-hidden"
+          >
+            {/* Glowing Edge Effect */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            
+            {/* Background Effects */}
+            <div className="absolute -top-12 -right-12 w-56 h-56 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-16 -left-10 w-60 h-60 bg-gradient-to-tr from-purple-400/10 to-pink-400/10 rounded-full blur-3xl" />
+
+            <div className="relative z-10">
+              <h3 className="text-2xl font-extrabold text-white mb-6 flex items-center">
+                <motion.span
+                  className="mr-3 text-3xl"
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  🍽️
+                </motion.span>
+                Meals & Drinks
+              </h3>
+          
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Row 1: Water + Caffeine */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Water */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/15 border border-blue-400/30 shadow-lg backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xl">💧</span>
+                        <span className="font-semibold text-white">Water</span>
+                      </div>
+                      <span className="text-xs text-slate-400">glasses</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button type="button" aria-label="Decrease water" onClick={() => adjustCount('waterIntake', -1)} className="w-9 h-9 rounded-lg bg-slate-800/50 backdrop-blur border-2 border-blue-400/50 text-blue-300 font-bold hover:bg-blue-900/30">−</button>
+                      <div className="min-w-[50px] text-center px-3 py-2 bg-slate-800/50 border-2 border-blue-400/50 rounded-lg text-white font-bold text-lg">{formData.waterIntake}</div>
+                      <button type="button" aria-label="Increase water" onClick={() => adjustCount('waterIntake', 1)} className="w-9 h-9 rounded-lg bg-slate-800/50 backdrop-blur border-2 border-blue-400/50 text-blue-300 font-bold hover:bg-blue-900/30">+</button>
+                    </div>
+                  </div>
+
+                  {/* Caffeine */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/15 border border-amber-400/30 shadow-lg backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xl">☕</span>
+                        <span className="font-semibold text-white">Caffeine</span>
+                      </div>
+                      <span className="text-xs text-slate-400">drinks</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button type="button" aria-label="Decrease caffeine" onClick={() => adjustCount('caffeine', -1)} className="w-9 h-9 rounded-lg bg-slate-800/50 backdrop-blur border-2 border-amber-400/50 text-amber-300 font-bold hover:bg-amber-900/30">−</button>
+                      <div className="min-w-[50px] text-center px-3 py-2 bg-slate-800/50 border-2 border-amber-400/50 rounded-lg text-white font-bold text-lg">{formData.caffeine}</div>
+                      <button type="button" aria-label="Increase caffeine" onClick={() => adjustCount('caffeine', 1)} className="w-9 h-9 rounded-lg bg-slate-800/50 backdrop-blur border-2 border-amber-400/50 text-amber-300 font-bold hover:bg-amber-900/30">+</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2: Meals + Alcohol */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Meals */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-sky-500/15 border border-indigo-400/30 shadow-lg backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xl">🍱</span>
+                        <span className="font-semibold text-white">Meals</span>
+                      </div>
+                      <span className="text-xs text-slate-400">eaten</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button type="button" aria-label="Decrease meals" onClick={() => adjustCount('mealsEaten', -1)} className="w-9 h-9 rounded-lg bg-slate-800/50 backdrop-blur border-2 border-indigo-400/50 text-indigo-300 font-bold hover:bg-indigo-900/30">−</button>
+                      <div className="min-w-[50px] text-center px-3 py-2 bg-slate-800/50 border-2 border-indigo-400/50 rounded-lg text-white font-bold text-lg">{formData.mealsEaten}</div>
+                      <button type="button" aria-label="Increase meals" onClick={() => adjustCount('mealsEaten', 1)} className="w-9 h-9 rounded-lg bg-slate-800/50 backdrop-blur border-2 border-indigo-400/50 text-indigo-300 font-bold hover:bg-indigo-900/30">+</button>
+                    </div>
+                  </div>
+
+                  {/* Alcohol */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-br from-pink-500/20 to-rose-500/15 border border-pink-400/30 shadow-lg backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xl">🍷</span>
+                        <span className="font-semibold text-white">Alcohol</span>
+                      </div>
+                      <span className="text-xs text-slate-400">drinks</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button type="button" aria-label="Decrease alcohol" onClick={() => adjustCount('alcohol', -1)} className="w-9 h-9 rounded-lg bg-slate-800/50 backdrop-blur border-2 border-pink-400/50 text-pink-300 font-bold hover:bg-pink-900/30">−</button>
+                      <div className="min-w-[50px] text-center px-3 py-2 bg-slate-800/50 border-2 border-pink-400/50 rounded-lg text-white font-bold text-lg">{formData.alcohol}</div>
+                      <button type="button" aria-label="Increase alcohol" onClick={() => adjustCount('alcohol', 1)} className="w-9 h-9 rounded-lg bg-slate-800/50 backdrop-blur border-2 border-pink-400/50 text-pink-300 font-bold hover:bg-pink-900/30">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Quick Reflection Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: [0, -2, 0] }}
+            transition={{
+              opacity: { duration: 0.6, delay: 1.4 },
+              y: { duration: 4.0, repeat: Infinity, ease: "easeInOut" }
+            }}
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
+          >
+            {/* Glowing Edge Effect */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Quick Reflection</h3>
+                  <p className="text-sm text-slate-300 mt-1">Type or speak your thoughts</p>
+                </div>
+                {!isRecording ? (
+                  <button
+                    type="button"
+                    onClick={startVoiceRecording}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                    <span className="font-medium">Voice</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={stopVoiceRecording}
+                    className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 animate-pulse"
+                  >
+                    <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                    <span className="font-medium">Stop Recording</span>
+                  </button>
+                )}
+              </div>
+              
+              <div className="relative">
+                <textarea
+                  rows={4}
+                  value={reflection}
+                  onChange={(e) => setReflection(e.target.value)}
+                  className="w-full border border-slate-600 rounded-lg p-4 text-white bg-slate-800/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none placeholder-slate-400"
+                  placeholder={isRecording ? "Listening... Start speaking..." : "Type your thoughts or click the voice button to speak..."}
+                  disabled={isRecording}
+                />
+                {isRecording && (
+                  <div className="absolute bottom-4 left-4 flex items-center space-x-2 text-red-400">
+                    <div className="w-2 h-2 bg-red-400 rounded-full animate-ping"></div>
+                    <span className="text-sm font-medium">Recording...</span>
                   </div>
                 )}
-                
-                <p className="text-xs text-gray-500 mt-3">
-                  💡 This helps us personalize future suggestions based on your interests!
-                </p>
               </div>
-            ) : formData.activities.length > 0 ? (
-              <div className="text-center py-8">
-                <div className="text-6xl mb-4">🎉</div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">All Preferences Saved!</h4>
-                <p className="text-gray-600 mb-4">
-                  You've already saved preferences for all selected activities. 
-                  The AI will use these for personalized suggestions!
-                </p>
-                <div className="bg-green-100 rounded-lg p-4">
-                  <p className="text-sm text-green-800">
-                    ✅ Your preferences are cached and ready for AI personalization
-                  </p>
+              
+              {reflection && (
+                <div className="mt-3 flex items-center justify-between text-sm text-slate-300">
+                  <span>{reflection.length} characters</span>
+                  <button
+                    type="button"
+                    onClick={() => setReflection('')}
+                    className="text-red-400 hover:text-red-300 font-medium"
+                  >
+                    Clear
+                  </button>
                 </div>
-              </div>
-            ) : (
-              <p className="text-gray-600 text-center py-4">
-                Select activities above to help us learn your preferences!
-              </p>
-            )}
-          </Card>
-        )}
-
-        {/* Period Tracking - Only for females */}
-        {userInfo && userInfo.gender === 'female' && (
-          <Card className="p-6 bg-gradient-to-br from-pink-50 to-rose-50">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center">
-                <span className="mr-2">🩸</span>
-                Period Tracking
-              </h3>
-              <span className="text-xs text-gray-500">Optional</span>
+              )}
             </div>
+          </motion.div>
 
-            <div className="mt-4">
-              <button
-                type="button"
-                aria-pressed={formData.onPeriod}
-                onClick={() => handleChange('onPeriod', !formData.onPeriod)}
-                className={`w-full md:w-auto inline-flex items-center space-x-3 px-5 py-3 rounded-full transition-all border-2 shadow-sm
-                  ${formData.onPeriod
-                    ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white border-rose-300 hover:from-rose-600 hover:to-pink-600'
-                    : 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50'}
-                `}
-              >
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-lg shadow ${formData.onPeriod ? 'bg-white/20' : 'bg-rose-100 text-rose-600'}`}>🩸</span>
-                <div className="text-left">
-                  <div className="font-semibold">
-                    {formData.onPeriod ? 'On period today' : 'Mark period today'}
-                  </div>
-                  <div className={`text-xs ${formData.onPeriod ? 'text-white/90' : 'text-rose-600/80'}`}>
-                    Tap to {formData.onPeriod ? 'unset' : 'set'}
-                  </div>
-                </div>
-              </button>
-            </div>
-          </Card>
-        )}
-
-        {/* Meals & Drinks Tracking */}
-        <Card className="p-6 bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 relative overflow-hidden">
-          <div className="absolute -top-12 -right-12 w-56 h-56 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-16 -left-10 w-60 h-60 bg-gradient-to-tr from-purple-400/10 to-pink-400/10 rounded-full blur-3xl" />
-
-          <h3 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center">
-            <span className="mr-3 text-3xl">🍽️</span>
-            Meals & Drinks
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Row 1: Water + Caffeine */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Water */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-500/15 to-cyan-500/10 border border-blue-300/30 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xl">💧</span>
-                    <span className="font-semibold text-gray-900">Water</span>
-                  </div>
-                  <span className="text-xs text-gray-500">glasses</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button type="button" aria-label="Decrease water" onClick={() => adjustCount('waterIntake', -1)} className="w-9 h-9 rounded-lg bg-white/90 backdrop-blur border-2 border-blue-200 text-blue-700 font-bold hover:bg-blue-50">−</button>
-                  <div className="min-w-[50px] text-center px-3 py-2 bg-white/90 border-2 border-blue-200 rounded-lg text-gray-900 font-bold text-lg">{formData.waterIntake}</div>
-                  <button type="button" aria-label="Increase water" onClick={() => adjustCount('waterIntake', 1)} className="w-9 h-9 rounded-lg bg-white/90 backdrop-blur border-2 border-blue-200 text-blue-700 font-bold hover:bg-blue-50">+</button>
-                </div>
-              </div>
-
-              {/* Caffeine */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-300/30 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xl">☕</span>
-                    <span className="font-semibold text-gray-900">Caffeine</span>
-                  </div>
-                  <span className="text-xs text-gray-500">drinks</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button type="button" aria-label="Decrease caffeine" onClick={() => adjustCount('caffeine', -1)} className="w-9 h-9 rounded-lg bg-white/90 backdrop-blur border-2 border-amber-200 text-amber-700 font-bold hover:bg-amber-50">−</button>
-                  <div className="min-w-[50px] text-center px-3 py-2 bg-white/90 border-2 border-amber-200 rounded-lg text-gray-900 font-bold text-lg">{formData.caffeine}</div>
-                  <button type="button" aria-label="Increase caffeine" onClick={() => adjustCount('caffeine', 1)} className="w-9 h-9 rounded-lg bg-white/90 backdrop-blur border-2 border-amber-200 text-amber-700 font-bold hover:bg-amber-50">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Row 2: Meals + Alcohol */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Meals */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-sky-500/10 border border-indigo-300/30 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xl">🍱</span>
-                    <span className="font-semibold text-gray-900">Meals</span>
-                  </div>
-                  <span className="text-xs text-gray-500">eaten</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button type="button" aria-label="Decrease meals" onClick={() => adjustCount('mealsEaten', -1)} className="w-9 h-9 rounded-lg bg-white/90 backdrop-blur border-2 border-indigo-200 text-indigo-700 font-bold hover:bg-indigo-50">−</button>
-                  <div className="min-w-[50px] text-center px-3 py-2 bg-white/90 border-2 border-indigo-200 rounded-lg text-gray-900 font-bold text-lg">{formData.mealsEaten}</div>
-                  <button type="button" aria-label="Increase meals" onClick={() => adjustCount('mealsEaten', 1)} className="w-9 h-9 rounded-lg bg-white/90 backdrop-blur border-2 border-indigo-200 text-indigo-700 font-bold hover:bg-indigo-50">+</button>
-                </div>
-              </div>
-
-              {/* Alcohol */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-pink-500/15 to-rose-500/10 border border-pink-300/30 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xl">🍷</span>
-                    <span className="font-semibold text-gray-900">Alcohol</span>
-                  </div>
-                  <span className="text-xs text-gray-500">drinks</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button type="button" aria-label="Decrease alcohol" onClick={() => adjustCount('alcohol', -1)} className="w-9 h-9 rounded-lg bg-white/90 backdrop-blur border-2 border-pink-200 text-pink-700 font-bold hover:bg-pink-50">−</button>
-                  <div className="min-w-[50px] text-center px-3 py-2 bg-white/90 border-2 border-pink-200 rounded-lg text-gray-900 font-bold text-lg">{formData.alcohol}</div>
-                  <button type="button" aria-label="Increase alcohol" onClick={() => adjustCount('alcohol', 1)} className="w-9 h-9 rounded-lg bg-white/90 backdrop-blur border-2 border-pink-200 text-pink-700 font-bold hover:bg-pink-50">+</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900">Quick Reflection</h3>
-              <p className="text-sm text-gray-600 mt-1">Type or speak your thoughts</p>
-            </div>
-            {!isRecording ? (
-              <button
-                type="button"
-                onClick={startVoiceRecording}
-                className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
-                <span className="font-medium">Voice</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={stopVoiceRecording}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 animate-pulse"
-              >
-                <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-                <span className="font-medium">Stop Recording</span>
-              </button>
-            )}
-          </div>
-          
-          <div className="relative">
-            <textarea
-              rows={4}
-              value={reflection}
-              onChange={(e) => setReflection(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-4 text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-              placeholder={isRecording ? "Listening... Start speaking..." : "Type your thoughts or click the voice button to speak..."}
-              disabled={isRecording}
-            />
-            {isRecording && (
-              <div className="absolute bottom-4 left-4 flex items-center space-x-2 text-red-600">
-                <div className="w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
-                <span className="text-sm font-medium">Recording...</span>
-              </div>
-            )}
-          </div>
-          
-          {reflection && (
-            <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
-              <span>{reflection.length} characters</span>
-              <button
-                type="button"
-                onClick={() => setReflection('')}
-                className="text-red-600 hover:text-red-700 font-medium"
-              >
-                Clear
-              </button>
-            </div>
-          )}
-        </Card>
-
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save Entry"}
-          </Button>
-        </div>
-      </form>
+          {/* Submit Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: [0, -6, 0] }}
+            transition={{
+              opacity: { duration: 0.6, delay: 1.6 },
+              y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
+            }}
+            className="flex justify-end"
+          >
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Entry"}
+            </Button>
+          </motion.div>
+        </form>
+      </motion.div>
     </div>
   );
 }
