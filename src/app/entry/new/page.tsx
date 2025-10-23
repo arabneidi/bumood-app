@@ -494,8 +494,8 @@ export default function NewEntry() {
               key={i}
               className="absolute w-2 h-2 bg-purple-400/30 rounded-full"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
+                left: `${20 + Math.random() * 60}%`,
+                top: `${20 + Math.random() * 60}%`,
               }}
               animate={{
                 y: [0, -100, 0],
@@ -526,12 +526,11 @@ export default function NewEntry() {
             opacity: { duration: 0.6, delay: 0.2 },
             y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
           }}
-          className="text-center mb-12 relative overflow-hidden"
+          className="text-center mb-16"
         >
-          <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8">
+          <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-12 mx-8">
             {/* Glowing Edge Effect */}
             <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
-            
             <motion.h1
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
@@ -589,7 +588,7 @@ export default function NewEntry() {
               opacity: { duration: 0.6, delay: 0.2 },
               y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
             {/* Glowing Edge Effect */}
             <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
@@ -698,7 +697,7 @@ export default function NewEntry() {
               opacity: { duration: 0.6, delay: 0.4 },
               y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
             {/* Glowing Edge Effect */}
             <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
@@ -735,7 +734,7 @@ export default function NewEntry() {
               opacity: { duration: 0.6, delay: 0.6 },
               y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-6"
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-6 mx-8"
           >
             {/* Glowing Edge Effect */}
             <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
@@ -765,7 +764,7 @@ export default function NewEntry() {
                 opacity: { duration: 0.6, delay: 0.8 },
                 y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
               }}
-              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
+              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
             >
               {/* Glowing Edge Effect */}
               <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
@@ -1049,7 +1048,7 @@ export default function NewEntry() {
                 opacity: { duration: 0.6, delay: 1.0 },
                 y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" }
               }}
-              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
+              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
             >
               {/* Glowing Edge Effect */}
               <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
@@ -1103,14 +1102,11 @@ export default function NewEntry() {
               opacity: { duration: 0.6, delay: 1.2 },
               y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 overflow-hidden"
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8 overflow-hidden"
           >
             {/* Glowing Edge Effect */}
             <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
             
-            {/* Background Effects */}
-            <div className="absolute top-24 right-24 w-40 h-40 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-24 left-24 w-44 h-44 bg-gradient-to-tr from-purple-400/10 to-pink-400/10 rounded-full blur-3xl" />
 
             <div className="relative z-10">
               <h3 className="text-2xl font-extrabold text-white mb-6 flex items-center">
@@ -1206,7 +1202,7 @@ export default function NewEntry() {
               opacity: { duration: 0.6, delay: 1.4 },
               y: { duration: 4.0, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
             {/* Glowing Edge Effect */}
             <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
@@ -1215,27 +1211,26 @@ export default function NewEntry() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-xl font-bold text-white">Quick Reflection</h3>
-                  <p className="text-sm text-slate-300 mt-1">Type or speak your thoughts</p>
                 </div>
                 {!isRecording ? (
                   <button
                     type="button"
                     onClick={startVoiceRecording}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+                    className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl border border-cyan-400/30 backdrop-blur-sm"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                     </svg>
-                    <span className="font-medium">Voice</span>
+                    <span className="font-semibold">Voice</span>
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={stopVoiceRecording}
-                    className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 animate-pulse"
+                    className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300 animate-pulse shadow-lg hover:shadow-xl border border-blue-400/30 backdrop-blur-sm"
                   >
                     <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-                    <span className="font-medium">Stop Recording</span>
+                    <span className="font-semibold">Stop Recording</span>
                   </button>
                 )}
               </div>
@@ -1280,11 +1275,27 @@ export default function NewEntry() {
               opacity: { duration: 0.6, delay: 1.6 },
               y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="flex justify-end"
+            className="flex justify-center"
           >
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save Entry"}
-            </Button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-8 py-4 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-600 hover:from-purple-600 hover:via-indigo-600 hover:to-blue-700 disabled:from-gray-500 disabled:via-gray-600 disabled:to-gray-700 text-white rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl border border-purple-400/30 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Saving...</span>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Save Entry</span>
+                </div>
+              )}
+            </button>
           </motion.div>
         </form>
       </motion.div>
