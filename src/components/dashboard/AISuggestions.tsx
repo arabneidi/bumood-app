@@ -535,21 +535,16 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
     }
   };
 
-  const displayedSuggestions = showAll ? suggestions : suggestions.slice(0, 3);
+  const displayedSuggestions = suggestions.slice(0, 5); // Show all 5 suggestions
 
   if (suggestions.length === 0 && !loading) {
     return (
-      <div className="backdrop-blur-xl bg-white/20 border border-white/30 rounded-2xl p-6 shadow-2xl" style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1))',
-        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37), inset 0 1px 0 rgba(255,255,255,0.6)',
-        backdropFilter: 'blur(25px)',
-        WebkitBackdropFilter: 'blur(25px)'
-      }}>
+      <div className="bg-gradient-to-br from-blue-900/20 via-purple-900/10 to-indigo-900/20 backdrop-blur-xl border border-blue-400/30 rounded-2xl p-6 shadow-2xl">
         <div className="text-center">
-          <div className="text-4xl mb-4">🤖</div>
-          <h3 className="text-lg font-semibold text-white drop-shadow-lg mb-2">AI Suggestions</h3>
-          <p className="text-white/90 mb-4 drop-shadow-md">Add some mood entries to get personalized suggestions!</p>
-          <Button onClick={generateSuggestions} disabled={loading} className="backdrop-blur-sm bg-indigo-500/80 border-indigo-300 text-white hover:bg-indigo-600 shadow-lg font-semibold">
+          <div className="text-4xl mb-4">🧠</div>
+          <h3 className="text-lg font-semibold text-white drop-shadow-lg mb-2">Mood Helper</h3>
+          <p className="text-slate-300 mb-4 drop-shadow-md">Add some mood entries to get personalized suggestions!</p>
+          <Button onClick={generateSuggestions} disabled={loading} className="bg-gradient-to-r from-blue-500 to-purple-600 border-blue-400 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg font-semibold">
             {loading ? 'Generating...' : 'Generate Suggestions'}
           </Button>
         </div>
@@ -558,24 +553,19 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
   }
 
   return (
-    <div className="backdrop-blur-xl bg-white/20 border border-white/30 rounded-2xl p-6 shadow-2xl" style={{
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1))',
-      boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37), inset 0 1px 0 rgba(255,255,255,0.6)',
-      backdropFilter: 'blur(25px)',
-      WebkitBackdropFilter: 'blur(25px)'
-    }}>
+    <div className="bg-gradient-to-br from-blue-900/20 via-purple-900/10 to-indigo-900/20 backdrop-blur-xl border border-blue-400/30 rounded-2xl p-6 shadow-2xl">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="text-2xl">🤖</div>
+          <div className="text-2xl">🧠</div>
           <div>
-            <h3 className="text-lg font-semibold text-white drop-shadow-lg">AI Suggestions</h3>
+            <h3 className="text-lg font-semibold text-white drop-shadow-lg">Mood Helper</h3>
           </div>
         </div>
         <div className="flex space-x-2">
           <button
             onClick={generateSuggestions}
             disabled={loading}
-            className="group relative overflow-hidden backdrop-blur-sm bg-gradient-to-r from-blue-500 to-purple-600 border-2 border-blue-300 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg font-semibold w-12 h-12 rounded-full transition-all duration-300 transform hover:scale-110 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-purple-600 border-2 border-blue-400 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg font-semibold w-12 h-12 rounded-full transition-all duration-300 transform hover:scale-110 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative z-10 flex items-center justify-center">
@@ -585,18 +575,8 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
                 <div className="text-xl group-hover:rotate-180 transition-transform duration-500">✨</div>
               )}
             </div>
-            <div className="absolute inset-0 rounded-full border-2 border-white/30 group-hover:border-white/60 transition-all duration-300"></div>
+            <div className="absolute inset-0 rounded-full border-2 border-blue-300 group-hover:border-blue-200 transition-all duration-300"></div>
           </button>
-          {suggestions.length > 3 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAll(!showAll)}
-              className="backdrop-blur-sm bg-purple-500/80 border-purple-300 text-white hover:bg-purple-600 shadow-lg font-semibold"
-            >
-              {showAll ? 'Show Less' : `Show All (${suggestions.length})`}
-            </Button>
-          )}
         </div>
       </div>
 
@@ -604,123 +584,142 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
         <div className="text-center py-8">
           <div className="text-red-300 text-4xl mb-4">⚠️</div>
           <p className="text-red-200 mb-4 drop-shadow-md">{error}</p>
-          <Button onClick={generateSuggestions} variant="outline" className="backdrop-blur-sm bg-red-500/80 border-red-300 text-white hover:bg-red-600 shadow-lg font-semibold">
+          <Button onClick={generateSuggestions} variant="outline" className="bg-gradient-to-r from-red-500 to-red-600 border-red-400 text-white hover:from-red-600 hover:to-red-700 shadow-lg font-semibold">
             Try Again
           </Button>
         </div>
       ) : loading ? (
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/60 mx-auto mb-4"></div>
-          <p className="text-white/90 drop-shadow-md">AI is analyzing your mood patterns and generating personalized suggestions...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
+          <p className="text-slate-300 drop-shadow-md">AI is analyzing your mood patterns and generating personalized suggestions...</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {displayedSuggestions.map((suggestion, index) => (
-            <div
-              key={index}
-              className={`backdrop-blur-lg border border-white/30 rounded-xl p-4 shadow-lg transition-all hover:shadow-xl ${
-                suggestion.priority === 'high' ? 'bg-red-500/30 border-red-400/50' :
-                suggestion.priority === 'medium' ? 'bg-yellow-500/30 border-yellow-400/50' :
-                'bg-green-500/30 border-green-400/50'
-              }`} style={{
-                background: suggestion.priority === 'high' ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.1))' :
-                           suggestion.priority === 'medium' ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.1))' :
-                           'linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(22, 163, 74, 0.1))',
-                backdropFilter: 'blur(15px)',
-                WebkitBackdropFilter: 'blur(15px)'
-              }}
-            >
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0">
-                  <span className="text-2xl">{suggestion.icon}</span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-lg">{getTypeIcon(suggestion.type)}</span>
-                    <h4 className="font-semibold text-white drop-shadow-lg">{suggestion.title}</h4>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm ${
-                      suggestion.priority === 'high' ? 'bg-red-500 text-white border-2 border-red-300 shadow-lg' :
-                      suggestion.priority === 'medium' ? 'bg-yellow-500 text-white border-2 border-yellow-300 shadow-lg' :
-                      'bg-green-500 text-white border-2 border-green-300 shadow-lg'
-                    }`}>
-                      {suggestion.priority}
-                    </span>
+          {displayedSuggestions.map((suggestion, index) => {
+            // Create vibrant color schemes based on priority and type
+            const getSuggestionColors = (priority: string, type: string) => {
+              if (priority === 'high') {
+                return {
+                  background: 'bg-gradient-to-br from-red-500/30 via-pink-500/20 to-rose-500/30',
+                  border: 'border-red-400/60',
+                  glow: 'shadow-red-500/20',
+                  badge: 'bg-gradient-to-r from-red-500 to-pink-500 text-white border-red-300'
+                };
+              } else if (priority === 'medium') {
+                return {
+                  background: 'bg-gradient-to-br from-yellow-500/30 via-orange-500/20 to-amber-500/30',
+                  border: 'border-yellow-400/60',
+                  glow: 'shadow-yellow-500/20',
+                  badge: 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-yellow-300'
+                };
+              } else {
+                return {
+                  background: 'bg-gradient-to-br from-green-500/30 via-emerald-500/20 to-teal-500/30',
+                  border: 'border-green-400/60',
+                  glow: 'shadow-green-500/20',
+                  badge: 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-300'
+                };
+              }
+            };
+
+            const colors = getSuggestionColors(suggestion.priority, suggestion.type);
+            
+            return (
+              <div
+                key={index}
+                className={`backdrop-blur-lg border-2 rounded-2xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] ${colors.background} ${colors.border} ${colors.glow}`}
+              >
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl shadow-lg">
+                      {suggestion.icon}
+                    </div>
                   </div>
-                  <p className="text-white/90 text-sm mb-3 drop-shadow-md">{suggestion.description}</p>
-                  
-                  {suggestion.reasoning && (
-                    <div className="mb-3 p-2 backdrop-blur-sm bg-white/10 rounded text-xs text-white/80 border border-white/20">
-                      <strong>AI Reasoning:</strong> {suggestion.reasoning}
-                    </div>
-                  )}
-                  
-                  {suggestion.action && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-white/90 drop-shadow-md">
-                        💡 {suggestion.action}
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <span className="text-xl">{getTypeIcon(suggestion.type)}</span>
+                      <h4 className="font-bold text-white drop-shadow-lg text-lg">{suggestion.title}</h4>
+                      <span className={`px-4 py-1 rounded-full text-xs font-bold backdrop-blur-sm shadow-lg ${colors.badge}`}>
+                        {suggestion.priority}
                       </span>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="backdrop-blur-sm bg-green-500/80 border-green-300 text-white hover:bg-green-600 shadow-lg font-semibold"
-                          onClick={() => handleTryAction(suggestion)}
-                          disabled={actionStates[suggestion.suggestionId!]?.tried}
-                        >
-                          {actionStates[suggestion.suggestionId!]?.tried ? '✅ Tried' : 'Try It'}
-                        </Button>
-                        
-                        {actionStates[suggestion.suggestionId!]?.tried && actionStates[suggestion.suggestionId!]?.helpful === undefined && (
-                          <div className="flex space-x-1">
-                            <button
-                              onClick={() => handleRateHelpfulness(suggestion, true)}
-                              className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition-all transform hover:scale-110"
-                            >
-                              👍
-                            </button>
-                            <button
-                              onClick={() => handleRateHelpfulness(suggestion, false)}
-                              className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-all transform hover:scale-110"
-                            >
-                              👎
-                            </button>
-                          </div>
-                        )}
-                        
-                        {actionStates[suggestion.suggestionId!]?.tried && actionStates[suggestion.suggestionId!]?.helpful !== undefined && (
-                          <div className="flex items-center space-x-1">
-                            <span className="text-xs text-white/80">
-                              {actionStates[suggestion.suggestionId!]?.helpful ? '👍 Thanks!' : '👎 Noted!'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
                     </div>
-                  )}
+                    <p className="text-white/95 text-sm mb-4 drop-shadow-md leading-relaxed">{suggestion.description}</p>
+                    
+                    {suggestion.reasoning && (
+                      <div className="mb-4 p-4 bg-white/10 backdrop-blur-sm rounded-xl text-xs text-white/90 border border-white/20 shadow-lg">
+                        <strong className="text-white font-semibold">🧠 AI Reasoning:</strong> {suggestion.reasoning}
+                      </div>
+                    )}
+                    
+                    {suggestion.action && (
+                      <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                        <span className="text-sm font-medium text-white drop-shadow-md flex items-center">
+                          <span className="text-lg mr-2">💡</span>
+                          {suggestion.action}
+                        </span>
+                        <div className="flex items-center space-x-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 border-blue-400 text-white hover:from-blue-600 hover:via-purple-600 hover:to-indigo-600 shadow-lg font-semibold transform hover:scale-105 transition-all duration-300 px-4 py-2"
+                            onClick={() => handleTryAction(suggestion)}
+                            disabled={actionStates[suggestion.suggestionId!]?.tried}
+                          >
+                            {actionStates[suggestion.suggestionId!]?.tried ? '✅ Tried' : 'Try It'}
+                          </Button>
+                          
+                          {actionStates[suggestion.suggestionId!]?.tried && actionStates[suggestion.suggestionId!]?.helpful === undefined && (
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleRateHelpfulness(suggestion, true)}
+                                className="px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all transform hover:scale-110 shadow-lg font-semibold"
+                              >
+                                👍 Helpful
+                              </button>
+                              <button
+                                onClick={() => handleRateHelpfulness(suggestion, false)}
+                                className="px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all transform hover:scale-110 shadow-lg font-semibold"
+                              >
+                                👎 Not Helpful
+                              </button>
+                            </div>
+                          )}
+                          
+                          {actionStates[suggestion.suggestionId!]?.tried && actionStates[suggestion.suggestionId!]?.helpful !== undefined && (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm text-white/90 font-medium">
+                                {actionStates[suggestion.suggestionId!]?.helpful ? '👍 Thanks for the feedback!' : '👎 Thanks for the feedback!'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {suggestions.length > 0 && (
-        <div className="mt-6 pt-4 border-t border-white/20">
-          <div className="flex items-center justify-between text-sm text-white/80">
+        <div className="mt-6 pt-4 border-t border-blue-400/20">
+          <div className="flex items-center justify-between text-sm text-slate-300">
             <span>Based on your recent mood patterns and current state</span>
-            <span className="text-white/90 font-medium">
+            <span className="text-blue-300 font-medium">
               {suggestions.filter(s => s.priority === 'high').length} high priority
             </span>
           </div>
           <div className="mt-3">
             <button
               onClick={() => setShowPayload(v => !v)}
-              className="text-xs underline text-white/80 hover:text-white"
+              className="text-xs underline text-slate-400 hover:text-slate-300"
             >
               {showPayload ? 'Hide' : 'Show'} AI payload sent
             </button>
             {showPayload && lastPayload && (
-              <pre className="mt-2 max-h-64 overflow-auto text-xs text-white bg-black/30 p-3 rounded border border-white/20">
+              <pre className="mt-2 max-h-64 overflow-auto text-xs text-slate-300 bg-slate-800/50 p-3 rounded border border-blue-400/30">
 {JSON.stringify(lastPayload, null, 2)}
               </pre>
             )}

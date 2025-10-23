@@ -111,36 +111,36 @@ export default function ParameterSlider({
   );
 }
 
-// CSS for the range input thumb
-const style = document.createElement('style');
-style.textContent = `
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: transparent;
-    cursor: grab;
-  }
-  
-  input[type="range"]:active::-webkit-slider-thumb {
-    cursor: grabbing;
-  }
-  
-  input[type="range"]::-moz-range-thumb {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: transparent;
-    border: none;
-    cursor: grab;
-  }
-  
-  input[type="range"]:active::-moz-range-thumb {
-    cursor: grabbing;
-  }
-`;
+// CSS for the range input thumb - only run on client side
 if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: transparent;
+      cursor: grab;
+    }
+    
+    input[type="range"]:active::-webkit-slider-thumb {
+      cursor: grabbing;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      cursor: grab;
+    }
+    
+    input[type="range"]:active::-moz-range-thumb {
+      cursor: grabbing;
+    }
+  `;
   document.head.appendChild(style);
 }

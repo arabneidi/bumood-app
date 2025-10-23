@@ -19,6 +19,7 @@ interface ActivitySelectorProps {
 const activityCategories = {
   'Physical': {
     color: 'bg-red-500',
+    selectedColor: 'bg-red-600',
     activities: [
       { id: 'exercise', name: 'Exercise', icon: '💪', color: 'bg-red-100 text-red-800' },
       { id: 'walking', name: 'Walking', icon: '🚶', color: 'bg-red-100 text-red-800' },
@@ -30,6 +31,7 @@ const activityCategories = {
   },
   'Mental': {
     color: 'bg-blue-500',
+    selectedColor: 'bg-blue-600',
     activities: [
       { id: 'reading', name: 'Reading', icon: '📚', color: 'bg-blue-100 text-blue-800' },
       { id: 'learning', name: 'Learning', icon: '🎓', color: 'bg-blue-100 text-blue-800' },
@@ -41,6 +43,7 @@ const activityCategories = {
   },
   'Social': {
     color: 'bg-green-500',
+    selectedColor: 'bg-green-600',
     activities: [
       { id: 'socializing', name: 'Socializing', icon: '👥', color: 'bg-green-100 text-green-800' },
       { id: 'family_time', name: 'Family Time', icon: '👨‍👩‍👧‍👦', color: 'bg-green-100 text-green-800' },
@@ -52,6 +55,7 @@ const activityCategories = {
   },
   'Creative': {
     color: 'bg-purple-500',
+    selectedColor: 'bg-purple-600',
     activities: [
       { id: 'music', name: 'Music', icon: '🎵', color: 'bg-purple-100 text-purple-800' },
       { id: 'art', name: 'Art', icon: '🎨', color: 'bg-purple-100 text-purple-800' },
@@ -63,6 +67,7 @@ const activityCategories = {
   },
   'Relaxation': {
     color: 'bg-yellow-500',
+    selectedColor: 'bg-yellow-600',
     activities: [
       { id: 'sleeping', name: 'Sleeping', icon: '😴', color: 'bg-yellow-100 text-yellow-800' },
       { id: 'napping', name: 'Napping', icon: '💤', color: 'bg-yellow-100 text-yellow-800' },
@@ -74,6 +79,7 @@ const activityCategories = {
   },
   'Work': {
     color: 'bg-gray-500',
+    selectedColor: 'bg-gray-600',
     activities: [
       { id: 'working', name: 'Working', icon: '💼', color: 'bg-gray-100 text-gray-800' },
       { id: 'studying', name: 'Studying', icon: '📖', color: 'bg-gray-100 text-gray-800' },
@@ -133,7 +139,7 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
                 onClick={() => handleActivityClick(activity.id)}
                 className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                   isSelected
-                    ? 'border-indigo-500 bg-indigo-50 shadow-lg scale-105'
+                    ? 'border-blue-500 bg-blue-50 shadow-lg scale-105'
                     : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
                 }`}
                 whileHover={{ scale: isSelected ? 1.05 : 1.02 }}
@@ -145,7 +151,7 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
                 <div className="text-center">
                   <div className="text-3xl mb-2">{activity.icon}</div>
                   <div className={`text-sm font-medium ${
-                    isSelected ? 'text-indigo-700' : 'text-gray-700'
+                    isSelected ? 'text-blue-700' : 'text-gray-700'
                   }`}>
                     {activity.name}
                   </div>
@@ -153,7 +159,7 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="mt-2 text-indigo-600"
+                      className="mt-2 text-blue-600"
                     >
                       ✓
                     </motion.div>
@@ -170,9 +176,9 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="p-4 bg-indigo-50 rounded-xl border border-indigo-200"
+          className="p-4 bg-gray-100 rounded-xl border border-gray-200"
         >
-          <h4 className="text-sm font-medium text-indigo-800 mb-2">
+          <h4 className="text-sm font-medium text-gray-800 mb-2">
             Selected Activities ({selectedActivities.length})
           </h4>
           <div className="flex flex-wrap gap-2">
@@ -193,14 +199,14 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
                   key={activityId}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="inline-flex items-center space-x-1 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm"
+                  className="inline-flex items-center space-x-1 px-3 py-1 bg-white text-gray-800 rounded-full text-sm border border-gray-200"
                 >
                   <span>{activity.icon}</span>
                   <span>{activity.name}</span>
                   <button
                     type="button"
                     onClick={() => onActivityToggle(activityId)}
-                    className="ml-1 text-indigo-600 hover:text-indigo-800"
+                    className="ml-1 text-gray-600 hover:text-gray-800"
                   >
                     ×
                   </button>
