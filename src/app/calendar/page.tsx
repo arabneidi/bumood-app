@@ -17,10 +17,14 @@ export default function CalendarPage() {
       .then(data => {
         setMoodEntries(data);
         setLoading(false);
+        // Automatically select today's date when data is loaded
+        setSelectedDate(new Date());
       })
       .catch(err => {
         console.error(err);
         setLoading(false);
+        // Still select today's date even if there's an error
+        setSelectedDate(new Date());
       });
   }, []);
 
@@ -42,20 +46,49 @@ export default function CalendarPage() {
   };
 
   const getMoodForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    return moodEntries.find(entry => 
-      new Date(entry.createdAt).toISOString().split('T')[0] === dateStr
-    );
+    // Create date strings in local timezone to avoid timezone issues
+    const dateStr = date.getFullYear() + '-' + 
+      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(date.getDate()).padStart(2, '0');
+    
+    const entry = moodEntries.find(entry => {
+      const entryDate = new Date(entry.createdAt);
+      const entryDateStr = entryDate.getFullYear() + '-' + 
+        String(entryDate.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(entryDate.getDate()).padStart(2, '0');
+      return entryDateStr === dateStr;
+    });
+    
+    return entry;
   };
 
   const getMoodColor = (mood: MoodEntry | undefined) => {
-    if (!mood) return "bg-gray-100";
+    if (!mood) return "bg-slate-800/40 backdrop-blur-xl border border-slate-600/50";
     const valence = mood.valence;
     if (valence >= 8) return "bg-gradient-to-br from-green-400 to-emerald-500";
     if (valence >= 6) return "bg-gradient-to-br from-blue-400 to-cyan-500";
     if (valence >= 4) return "bg-gradient-to-br from-yellow-400 to-orange-400";
     if (valence >= 2) return "bg-gradient-to-br from-orange-400 to-red-400";
     return "bg-gradient-to-br from-red-500 to-pink-600";
+  };
+
+  const getMoodEmoji = (mood: MoodEntry | undefined) => {
+    if (!mood) return "";
+    const valence = mood.valence;
+    if (valence >= 9) return "😍";
+    if (valence >= 8) return "😊";
+    if (valence >= 7) return "🙂";
+    if (valence >= 6) return "😐";
+    if (valence >= 5) return "😕";
+    if (valence >= 4) return "😟";
+    if (valence >= 3) return "😰";
+    if (valence >= 2) return "😢";
+    return "😭";
+  };
+
+  const getMoodScore = (mood: MoodEntry | undefined) => {
+    if (!mood) return "";
+    return mood.valence;
   };
 
   if (loading) {
@@ -104,20 +137,28 @@ export default function CalendarPage() {
 
             <div className="grid grid-cols-7 gap-3">
               {days.map((day, index) => {
-                if (!day) return <div key={index} className="h-16"></div>;
+                if (!day) return <div key={index} className="h-20"></div>;
                 
                 const moodEntry = getMoodForDate(day);
                 const isSelected = selectedDate && day.toDateString() === selectedDate.toDateString();
+                const moodEmoji = getMoodEmoji(moodEntry);
+                const moodScore = getMoodScore(moodEntry);
                 
                 return (
                   <button
                     key={index}
                     onClick={() => setSelectedDate(day)}
-                    className={`h-16 relative rounded-2xl transition-all duration-300 ${
+                    className={`h-20 relative rounded-2xl transition-all duration-300 flex flex-col items-center justify-center p-2 ${
                       moodEntry ? getMoodColor(moodEntry) : 'bg-slate-800/40 backdrop-blur-xl border border-slate-600/50'
                     } ${isSelected ? 'ring-4 ring-blue-400' : ''}`}
                   >
-                    <span className="text-sm font-bold text-white">{day.getDate()}</span>
+                    <span className="text-sm font-bold text-white mb-1">{day.getDate()}</span>
+                    {moodEntry && (
+                      <div className="flex flex-col items-center">
+                        <span className="text-lg mb-1">{moodEmoji}</span>
+                        <span className="text-xs font-bold text-white/90">{moodScore}/10</span>
+                      </div>
+                    )}
                   </button>
                 );
               })}
