@@ -77,6 +77,10 @@ export default function ProfilePage() {
           favoriteArtists: data.favoriteArtists || '',
           favoritePhilosophers: data.favoritePhilosophers || ''
         });
+        // Load custom categories
+        if (data.customCategories) {
+          setCustomCategories(JSON.parse(data.customCategories));
+        }
       }
     } catch (error) {
       console.error('Error loading profile:', error);

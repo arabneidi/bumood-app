@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
         favoriteMusicians: true,
         favoriteArtists: true,
         favoriteMovies: true,
-        favoritePhilosophers: true
+        favoritePhilosophers: true,
+        customCategories: true
       }
     });
     
@@ -57,7 +58,7 @@ export async function PUT(request: NextRequest) {
     const { 
       userId = 'dummy-user', gender, name, age, height, weight, timezone, 
       interests, quoteStyle, favoriteAuthors,
-      favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers
+      favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers, customCategories
     } = body;
     
     console.log('Updating user:', userId);
@@ -78,7 +79,8 @@ export async function PUT(request: NextRequest) {
         ...(favoriteMusicians !== undefined && { favoriteMusicians }),
         ...(favoriteArtists !== undefined && { favoriteArtists }),
         ...(favoriteMovies !== undefined && { favoriteMovies }),
-        ...(favoritePhilosophers !== undefined && { favoritePhilosophers })
+        ...(favoritePhilosophers !== undefined && { favoritePhilosophers }),
+        ...(customCategories !== undefined && { customCategories })
       }
     });
     
