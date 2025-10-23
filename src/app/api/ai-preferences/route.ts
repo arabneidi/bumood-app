@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       messages: [
         {
           role: 'system',
-          content: `You are an expert personalization assistant. Generate ${preferenceType} based on user demographics, preferences, and activity context. Always return a JSON array of strings.`
+          content: `You are an expert personalization assistant. Generate ${preferenceType} based on user demographics, preferences, and activity context. Always return a JSON object with suggestions and DSS analysis.`
         },
         {
           role: 'user',
@@ -62,25 +62,25 @@ export async function POST(req: Request) {
     console.log(content);
     console.log('=====================================');
 
-    // Extract JSON object from response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    // Extract JSON from response (both objects {} and arrays [])
+    const jsonMatch = content.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
     if (!jsonMatch) {
-      throw new Error('No valid JSON object found in response');
+      throw new Error('No valid JSON found in response');
     }
 
-    const response = JSON.parse(jsonMatch[0]);
+    const parsedResponse = JSON.parse(jsonMatch[0]);
     
     // Handle both old format (array) and new format (object with suggestions and dssAnalysis)
     let suggestions;
     let dssAnalysis = null;
     
-    if (Array.isArray(response)) {
+    if (Array.isArray(parsedResponse)) {
       // Old format - just suggestions array
-      suggestions = response;
-    } else if (response.suggestions && response.dssAnalysis) {
+      suggestions = parsedResponse;
+    } else if (parsedResponse.suggestions && parsedResponse.dssAnalysis) {
       // New format - object with suggestions and dssAnalysis
-      suggestions = response.suggestions;
-      dssAnalysis = response.dssAnalysis;
+      suggestions = parsedResponse.suggestions;
+      dssAnalysis = parsedResponse.dssAnalysis;
     } else {
       throw new Error('Invalid response format');
     }
@@ -128,8 +128,26 @@ ${activity === 'studying' ? 'CRITICAL: For "studying", generate STUDY METHODS/TE
 
 ${getActivityGenreExamples(activity)}
 
-Return ONLY a JSON array of genre names (strings), like:
-["Genre 1", "Genre 2", "Genre 3", ...]
+Return a JSON object with two fields:
+1. "suggestions": an array of genre names (strings)
+2. "dssAnalysis": an object with DSS component analysis
+
+The DSS analysis should classify which Daily Success Score component this activity primarily relates to:
+- "LM" (Learning Momentum) - activities that build knowledge, skills, or cognitive abilities
+- "RI" (Recovery Index) - activities that promote rest, relaxation, or physical recovery
+- "CN" (Connection) - activities that involve social interaction, community, or relationships
+
+Format:
+{
+  "suggestions": ["Genre 1", "Genre 2", "Genre 3", ...],
+  "dssAnalysis": {
+    "primaryComponent": "LM|RI|CN",
+    "confidence": 0.0-1.0,
+    "reasoning": "Brief explanation of why this activity relates to this DSS component",
+    "secondaryComponents": ["LM|RI|CN" or null],
+    "activityType": "learning|recovery|social|mixed"
+  }
+}
 
 Make sure genres are:
 1. Age-appropriate for ${age} years old
@@ -138,7 +156,7 @@ Make sure genres are:
 4. Modern and current (not outdated)
 5. Appealing to ${gender} preferences
 
-Return only the JSON array, no other text.`;
+Return only the JSON object, no other text.`;
 }
 
 function createSpecificPrompt(activity: string, selectedGenres: string[], userInfo: any, existingFavorites: string[]): string {

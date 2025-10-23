@@ -100,6 +100,8 @@ model MoodEntry {
   notes       String?
   activities  String   // JSON string of activities
   selectedTimeSlots String? // JSON string of selected time slots (e.g., ["morning-7", "evening-19"])
+  selectedSubcategories String? // JSON string of selected subcategories (e.g., ["K-Pop", "Hip Hop"])
+  dssAnalysis String? // JSON string of DSS analysis for activities
   reflection  String?  // Micro-reflection
   voiceNote   String?  // AI-transcribed voice note
   aiSuggestion String? // AI-generated suggestion

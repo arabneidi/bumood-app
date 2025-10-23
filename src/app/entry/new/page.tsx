@@ -29,21 +29,8 @@ const getGenreSelectedStyle = (genre: string) => {
 };
 
 const getGenreUnselectedStyle = (genre: string) => {
-  const colorMap: { [key: string]: string } = {
-    'Pop': 'bg-gradient-to-r from-pink-500/15 to-rose-500/10 text-pink-200 hover:from-pink-500/25 hover:to-rose-500/15 border border-pink-400/20 hover:border-pink-300/40',
-    'Hip-Hop': 'bg-gradient-to-r from-purple-500/15 to-indigo-500/10 text-purple-200 hover:from-purple-500/25 hover:to-indigo-500/15 border border-purple-400/20 hover:border-purple-300/40',
-    'Dance': 'bg-gradient-to-r from-cyan-500/15 to-blue-500/10 text-cyan-200 hover:from-cyan-500/25 hover:to-blue-500/15 border border-cyan-400/20 hover:border-cyan-300/40',
-    'Electronic': 'bg-gradient-to-r from-green-500/15 to-emerald-500/10 text-green-200 hover:from-green-500/25 hover:to-emerald-500/15 border border-green-400/20 hover:border-green-300/40',
-    'Indie Pop': 'bg-gradient-to-r from-yellow-500/15 to-orange-500/10 text-yellow-200 hover:from-yellow-500/25 hover:to-orange-500/15 border border-yellow-400/20 hover:border-yellow-300/40',
-    'K-Pop': 'bg-gradient-to-r from-red-500/15 to-pink-500/10 text-red-200 hover:from-red-500/25 hover:to-pink-500/15 border border-red-400/20 hover:border-red-300/40',
-    'Reggaeton': 'bg-gradient-to-r from-orange-500/15 to-red-500/10 text-orange-200 hover:from-orange-500/25 hover:to-red-500/15 border border-orange-400/20 hover:border-orange-300/40',
-    'R&B': 'bg-gradient-to-r from-blue-500/15 to-purple-500/10 text-blue-200 hover:from-blue-500/25 hover:to-purple-500/15 border border-blue-400/20 hover:border-blue-300/40',
-    'Alternative': 'bg-gradient-to-r from-slate-500/15 to-gray-500/10 text-slate-200 hover:from-slate-500/25 hover:to-gray-500/15 border border-slate-400/20 hover:border-slate-300/40',
-    'Fitness Remix': 'bg-gradient-to-r from-emerald-500/15 to-teal-500/10 text-emerald-200 hover:from-emerald-500/25 hover:to-teal-500/15 border border-emerald-400/20 hover:border-emerald-300/40',
-    'Yoga Chill': 'bg-gradient-to-r from-teal-500/15 to-cyan-500/10 text-teal-200 hover:from-teal-500/25 hover:to-cyan-500/15 border border-teal-400/20 hover:border-teal-300/40',
-    'Motivational': 'bg-gradient-to-r from-amber-500/15 to-yellow-500/10 text-amber-200 hover:from-amber-500/25 hover:to-yellow-500/15 border border-amber-400/20 hover:border-amber-300/40'
-  };
-  return colorMap[genre] || 'bg-gradient-to-r from-slate-500/15 to-gray-500/10 text-slate-200 hover:from-slate-500/25 hover:to-gray-500/15 border border-slate-400/20 hover:border-slate-300/40';
+  // All unselected genres use the same muted styling
+  return 'bg-gradient-to-r from-slate-500/15 to-gray-500/10 text-slate-200 hover:from-slate-500/25 hover:to-gray-500/15 border border-slate-400/20 hover:border-slate-300/40';
 };
 
 // Time slot configuration
@@ -116,6 +103,8 @@ export default function NewEntry() {
     sleep: 8,
     activities: [] as string[],
     selectedTimeSlots: [] as string[],
+    selectedSubcategories: [] as string[],
+    dssAnalysis: null as any,
     onPeriod: false,
     waterIntake: 0,
     mealsEaten: 0,
@@ -235,10 +224,21 @@ export default function NewEntry() {
               console.log('=====================================');
             }
             
+            // Store DSS analysis for this activity
+            if (data.dssAnalysis) {
+              setFormData(prev => ({
+                ...prev,
+                dssAnalysis: {
+                  ...prev.dssAnalysis,
+                  [activity]: data.dssAnalysis
+                }
+              }));
+            }
+            
             return {
               activity,
-              title: `${activity.charAt(0).toUpperCase() + activity.slice(1)} Genres`,
-              description: `What ${activity} styles do you enjoy?`,
+              title: `${activity.charAt(0).toUpperCase() + activity.slice(1)} Styles`,
+              description: `What ${activity} styles did you do today?`,
               options: data.suggestions
             };
           }
@@ -543,6 +543,8 @@ export default function NewEntry() {
           notes: reflection, // Save reflection as notes
           activities: formData.activities,
           selectedTimeSlots: formData.selectedTimeSlots,
+          selectedSubcategories: formData.selectedSubcategories,
+          dssAnalysis: formData.dssAnalysis,
           onPeriod: formData.onPeriod,
           waterIntake: formData.waterIntake,
           mealsEaten: formData.mealsEaten,
@@ -604,66 +606,6 @@ export default function NewEntry() {
         transition={{ duration: 0.6 }}
         className="max-w-4xl mx-auto py-8 relative z-10"
       >
-        {/* Header Section */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: [0, -8, 0], opacity: 1 }}
-          transition={{
-            opacity: { duration: 0.6, delay: 0.2 },
-            y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
-          }}
-          className="text-center mb-16"
-        >
-          <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-12 mx-8">
-            {/* Glowing Edge Effect */}
-            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
-            <motion.h1
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-              className="text-5xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-4 flex items-center justify-center"
-            >
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="mr-4"
-              >
-                <span className="text-4xl">📝</span>
-              </motion.div>
-              New Mood Entry
-              <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="ml-4"
-              >
-                <span className="text-4xl">✨</span>
-              </motion.div>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="text-xl text-slate-300 flex items-center justify-center"
-            >
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="mr-2"
-              >
-                <span className="text-2xl">🎯</span>
-              </motion.div>
-              Track your mood and wellness metrics
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
-                className="ml-2"
-              >
-                <span className="text-2xl">💫</span>
-              </motion.div>
-            </motion.p>
-          </div>
-        </motion.div>
       
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Mood Parameters Section */}
@@ -859,8 +801,131 @@ export default function NewEntry() {
             </div>
           </motion.div>
 
-          {/* Time Slots Section */}
-          <motion.div
+          
+
+          {/* AI Preference Learning */}
+          {enablePreferenceLearning && formData.activities.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: [0, -3, 0] }}
+              transition={{
+                opacity: { duration: 0.6, delay: 0.5 },
+                y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
+              }}
+              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
+            >
+              {/* Glowing Edge Effect */}
+              <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+              
+              <div className="relative z-10">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                  <motion.span
+                    className="mr-2 text-2xl"
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    🎯
+                  </motion.span>
+                  Help Us Know You Better
+                </h3>
+            
+            
+                {preferencesLocked ? (
+                  <div className="text-center py-8">
+                    <div className="text-6xl mb-4">🎉</div>
+                    <h4 className="text-lg font-semibold text-white mb-2">All Preferences Saved!</h4>
+                    <p className="text-slate-300 mb-4">
+                      Your selections are saved and locked for this entry.
+                    </p>
+                    <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-400/30">
+                      <p className="text-sm text-blue-200">
+                        ✅ We will use them for AI personalization now.
+                      </p>
+                    </div>
+                  </div>
+                ) : isGeneratingPreferences ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-3 text-slate-300">Loading preference options...</span>
+                  </div>
+                ) : currentStep === 'genres' && genreOptions.length > 0 ? (
+                  <div className="space-y-6">
+                    {genreOptions.map((option, index) => (
+                      <div key={index} className="bg-slate-800/40 backdrop-blur-xl rounded-lg p-4 border-2 border-blue-400/30">
+                        <h4 className="font-semibold text-white mb-2">{option.title}</h4>
+                        <p className="text-sm text-slate-300 mb-4">{option.description}</p>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          {option.options.map((genre: string) => (
+                            <button
+                              key={genre}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (selectedGenres.includes(genre)) {
+                                  setSelectedGenres(prev => prev.filter(g => g !== genre));
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    selectedSubcategories: prev.selectedSubcategories.filter(g => g !== genre)
+                                  }));
+                                } else {
+                                  setSelectedGenres(prev => [...prev, genre]);
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    selectedSubcategories: [...prev.selectedSubcategories, genre]
+                                  }));
+                                }
+                              }}
+                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
+                                selectedGenres.includes(genre)
+                                  ? getGenreSelectedStyle(genre)
+                                  : getGenreUnselectedStyle(genre)
+                              }`}
+                            >
+                              {genre}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                
+                    {selectedGenres.length > 0 && (
+                      <div className="flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-purple-500/15 rounded-2xl p-5 border border-blue-400/30 shadow-lg backdrop-blur-sm">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">✅</span>
+                          <span className="text-sm font-semibold text-white">
+                            {selectedGenres.length} genre{selectedGenres.length !== 1 ? 's' : ''} selected
+                          </span>
+                        </div>
+                      </div>
+                    )}
+              </div>
+                ) : formData.activities.length > 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-6xl mb-4">🎉</div>
+                    <h4 className="text-lg font-semibold text-white mb-2">All Preferences Saved!</h4>
+                    <p className="text-slate-300 mb-4">
+                      You've already saved preferences for all selected activities. 
+                      The AI will use these for personalized suggestions!
+                    </p>
+                    <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-400/30">
+                      <p className="text-sm text-blue-200">
+                        ✅ We will use them for AI personalization now.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-slate-300 text-center py-4">
+                    Select activities above to help us learn your preferences!
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+{/* Time Slots Section */}
+<motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: [0, -5, 0] }}
             transition={{
@@ -949,323 +1014,6 @@ export default function NewEntry() {
               )}
             </div>
           </motion.div>
-
-          {/* AI Preference Learning */}
-          {enablePreferenceLearning && formData.activities.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: [0, -3, 0] }}
-              transition={{
-                opacity: { duration: 0.6, delay: 0.5 },
-                y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
-              }}
-              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
-            >
-              {/* Glowing Edge Effect */}
-              <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
-              
-              <div className="relative z-10">
-                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-                  <motion.span
-                    className="mr-2 text-2xl"
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    🎯
-                  </motion.span>
-                  Help Us Know You Better
-                </h3>
-            
-                {/* Step Indicator */}
-                <div className="flex items-center justify-center mb-6">
-                  <div className="flex items-center space-x-4">
-                    <div className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
-                      currentStep === 'genres' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
-                    }`}>
-                      <span className="w-6 h-6 rounded-full bg-white text-blue-600 font-bold text-sm flex items-center justify-center">1</span>
-                      <span className="font-semibold">Choose Genres</span>
-                    </div>
-                    <div className="w-8 h-0.5 bg-slate-600"></div>
-                    <div className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
-                      currentStep === 'specifics' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
-                    }`}>
-                      <span className="w-6 h-6 rounded-full bg-white text-blue-600 font-bold text-sm flex items-center justify-center">2</span>
-                      <span className="font-semibold">Pick Favorites</span>
-                    </div>
-                  </div>
-                </div>
-            
-                {preferencesLocked ? (
-                  <div className="text-center py-8">
-                    <div className="text-6xl mb-4">🎉</div>
-                    <h4 className="text-lg font-semibold text-white mb-2">All Preferences Saved!</h4>
-                    <p className="text-slate-300 mb-4">
-                      Your selections are saved and locked for this entry.
-                    </p>
-                    <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-400/30">
-                      <p className="text-sm text-blue-200">
-                        ✅ We will use them for AI personalization now.
-                      </p>
-                    </div>
-                  </div>
-                ) : isGeneratingPreferences ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <span className="ml-3 text-slate-300">Loading preference options...</span>
-                  </div>
-                ) : currentStep === 'genres' && genreOptions.length > 0 ? (
-                  <div className="space-y-6">
-                    {genreOptions.map((option, index) => (
-                      <div key={index} className="bg-slate-800/40 backdrop-blur-xl rounded-lg p-4 border-2 border-blue-400/30">
-                        <h4 className="font-semibold text-white mb-2">{option.title}</h4>
-                        <p className="text-sm text-slate-300 mb-4">{option.description}</p>
-                        
-                        <div className="flex flex-wrap gap-2">
-                          {option.options.map((genre: string) => (
-                            <button
-                              key={genre}
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (selectedGenres.includes(genre)) {
-                                  setSelectedGenres(prev => prev.filter(g => g !== genre));
-                                } else {
-                                  setSelectedGenres(prev => [...prev, genre]);
-                                }
-                              }}
-                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
-                                selectedGenres.includes(genre)
-                                  ? getGenreSelectedStyle(genre)
-                                  : getGenreUnselectedStyle(genre)
-                              }`}
-                            >
-                              {genre}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                
-                    {selectedGenres.length > 0 && (
-                      <div className="flex items-center justify-between bg-gradient-to-br from-blue-500/20 to-purple-500/15 rounded-2xl p-5 border border-blue-400/30 shadow-lg backdrop-blur-sm">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-2xl">✅</span>
-                          <span className="text-sm font-semibold text-white">
-                            {selectedGenres.length} genre{selectedGenres.length !== 1 ? 's' : ''} selected
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            generateSpecificOptions(selectedGenres);
-                          }}
-                          className="px-6 py-3 bg-gradient-to-r from-blue-500/30 to-purple-500/20 text-white rounded-xl font-semibold hover:from-blue-600/40 hover:to-purple-600/30 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-400/50 backdrop-blur-sm"
-                        >
-                          Next: Get Specific Suggestions
-                        </button>
-                      </div>
-                    )}
-              </div>
-                ) : currentStep === 'specifics' && preferenceOptions.length > 0 ? (
-                  <div className="space-y-6">
-                    {/* Back Button */}
-                    <div className="flex items-center justify-between">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setCurrentStep('genres');
-                          setSelectedPreferences([]);
-                        }}
-                        className="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:text-white transition-colors"
-                      >
-                        <span>←</span>
-                        <span>Back to Genres</span>
-                      </button>
-                      <div className="text-sm text-slate-400">
-                        Selected genres: {selectedGenres.join(', ')}
-                      </div>
-                    </div>
-
-                    {/* DSS Analysis Display */}
-                    {dssAnalysis && (
-                      <div className="mb-6 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-400/30">
-                        <div className="flex items-center space-x-2 mb-3">
-                          <span className="text-2xl">🧠</span>
-                          <h3 className="text-lg font-bold text-white">Activity Analysis</h3>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium text-slate-300">Primary Component:</span>
-                            <span className={`px-2 py-1 rounded text-sm font-bold ${
-                              dssAnalysis.primaryComponent === 'LM' ? 'bg-blue-500/30 text-blue-200' :
-                              dssAnalysis.primaryComponent === 'RI' ? 'bg-green-500/30 text-green-200' :
-                              'bg-purple-500/30 text-purple-200'
-                            }`}>
-                              {dssAnalysis.primaryComponent} ({dssAnalysis.primaryComponent === 'LM' ? 'Learning Momentum' : 
-                                                               dssAnalysis.primaryComponent === 'RI' ? 'Recovery Index' : 'Connection'})
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium text-slate-300">Confidence:</span>
-                            <span className="text-sm text-white font-bold">
-                              {Math.round(dssAnalysis.confidence * 100)}%
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mt-3 p-3 bg-slate-700/30 rounded-lg">
-                          <p className="text-sm text-slate-300 italic">"{dssAnalysis.reasoning}"</p>
-                        </div>
-                      </div>
-                    )}
-                
-                    {preferenceOptions.map((option, index) => (
-                      <div key={index} className="bg-slate-800/40 backdrop-blur-xl rounded-lg p-4 border-2 border-blue-400/30">
-                        <h4 className="font-semibold text-white mb-2">{option.title}</h4>
-                        <p className="text-sm text-slate-300 mb-4">{option.description}</p>
-                        
-                        {option.currentCount > 0 && (
-                          <div className="mb-4 p-3 bg-blue-900/30 rounded-lg border border-blue-400/30">
-                            <p className="text-sm text-blue-200">
-                              <span className="font-semibold">Already saved:</span> {option.currentCount} preference{option.currentCount !== 1 ? 's' : ''}
-                            </p>
-                          </div>
-                        )}
-                    
-                        <div className="flex flex-wrap gap-2">
-                          {option.options.map((pref: string) => (
-                            <button
-                              key={pref}
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (selectedPreferences.includes(pref)) {
-                                  setSelectedPreferences(prev => prev.filter(p => p !== pref));
-                                } else {
-                                  setSelectedPreferences(prev => [...prev, pref]);
-                                }
-                              }}
-                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                                selectedPreferences.includes(pref)
-                                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
-                                  : 'bg-gradient-to-r from-slate-700 to-slate-600 text-slate-300 hover:from-slate-600 hover:to-slate-500 border border-slate-500'
-                              }`}
-                            >
-                              {pref}
-                            </button>
-                          ))}
-                        </div>
-                    
-                        {/* Custom Input Section */}
-                        <div className="mt-4 pt-4 border-t border-slate-600">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setShowCustomInput(!showCustomInput);
-                              }}
-                              className="flex items-center space-x-1 px-3 py-1 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                            >
-                              <span>{showCustomInput ? '−' : '+'}</span>
-                              <span>Add Custom {option.title.split('/')[0]}</span>
-                            </button>
-                          </div>
-                          
-                          {showCustomInput && (
-                            <div className="flex space-x-2 p-4 bg-blue-900/30 rounded-lg border-2 border-blue-400/30">
-                              <input
-                                type="text"
-                                value={customInput}
-                                onChange={(e) => setCustomInput(e.target.value)}
-                                placeholder={`Enter custom ${option.title.toLowerCase()}`}
-                                className="flex-1 px-4 py-3 border-2 border-blue-400/50 rounded-lg text-base font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-800/50 shadow-sm text-white placeholder-slate-400 caret-blue-400"
-                                onKeyPress={(e) => {
-                                  if (e.key === 'Enter' && customInput.trim()) {
-                                    e.preventDefault();
-                                    if (!selectedPreferences.includes(customInput.trim())) {
-                                      setSelectedPreferences(prev => [...prev, customInput.trim()]);
-                                    }
-                                    setCustomInput('');
-                                  }
-                                }}
-                              />
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  if (customInput.trim() && !selectedPreferences.includes(customInput.trim())) {
-                                    setSelectedPreferences(prev => [...prev, customInput.trim()]);
-                                    setCustomInput('');
-                                  }
-                                }}
-                                disabled={!customInput.trim()}
-                                className="px-6 py-3 bg-blue-600 text-white rounded-lg text-base font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-                              >
-                                Add
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                  </div>
-                ))}
-                
-                    {selectedPreferences.length > 0 && (
-                      <div className="flex items-center justify-between bg-blue-900/30 rounded-lg p-4 border border-blue-400/30">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-blue-400">✅</span>
-                          <span className="text-sm font-medium text-blue-200">
-                            {selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''} selected
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            savePreferences();
-                          }}
-                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-                        >
-                          Save Preferences
-                        </button>
-                      </div>
-                    )}
-                    
-                    <p className="text-xs text-slate-400 mt-3">
-                      💡 This helps us personalize future suggestions based on your interests!
-                    </p>
-              </div>
-                ) : formData.activities.length > 0 ? (
-                  <div className="text-center py-8">
-                    <div className="text-6xl mb-4">🎉</div>
-                    <h4 className="text-lg font-semibold text-white mb-2">All Preferences Saved!</h4>
-                    <p className="text-slate-300 mb-4">
-                      You've already saved preferences for all selected activities. 
-                      The AI will use these for personalized suggestions!
-                    </p>
-                    <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-400/30">
-                      <p className="text-sm text-blue-200">
-                        ✅ Your preferences are cached and ready for AI personalization
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-slate-300 text-center py-4">
-                    Select activities above to help us learn your preferences!
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          )}
-
           {/* Period Tracking - Only for females */}
           {userInfo && userInfo.gender === 'female' && (
             <motion.div
