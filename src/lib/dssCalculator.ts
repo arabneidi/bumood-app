@@ -97,13 +97,28 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
   const riHistory = historicalData.map(entry => calculateRecoveryIndex(entry));
   const cnHistory = historicalData.map(entry => calculateConnectionScore(entry));
 
-  // Calculate z-scores
-  const zLM = calculateZScore(todayLM, lmHistory);
-  const zRI = calculateZScore(todayRI, riHistory);
-  const zCN = calculateZScore(todayCN, cnHistory);
-
-  // Calculate DSS score
-  const dssScore = 0.5 * zLM + 0.3 * zRI + 0.2 * zCN;
+  // Calculate z-scores only if we have enough historical data
+  let zLM = 0, zRI = 0, zCN = 0;
+  let dssScore = 0;
+  
+  // If we have less than 5 days of historical data, use raw scores instead of z-scores
+  if (lmHistory.length >= 5 && riHistory.length >= 5 && cnHistory.length >= 5) {
+    zLM = calculateZScore(todayLM, lmHistory);
+    zRI = calculateZScore(todayRI, riHistory);
+    zCN = calculateZScore(todayCN, cnHistory);
+    dssScore = 0.5 * zLM + 0.3 * zRI + 0.2 * zCN;
+  } else {
+    // For new users with insufficient data, use normalized raw scores
+    const maxLM = Math.max(todayLM, ...lmHistory);
+    const maxRI = Math.max(todayRI, ...riHistory);
+    const maxCN = Math.max(todayCN, ...cnHistory);
+    
+    zLM = maxLM > 0 ? todayLM / maxLM : 0;
+    zRI = maxRI > 0 ? todayRI / maxRI : 0;
+    zCN = maxCN > 0 ? todayCN / maxCN : 0;
+    
+    dssScore = 0.5 * zLM + 0.3 * zRI + 0.2 * zCN;
+  }
 
   return {
     dssScore,
