@@ -14,7 +14,7 @@ import { getRandomQuote, generateAIMotivationalQuote } from "@/lib/inspirational
 export default function Home() {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [userPreferences, setUserPreferences] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [inspirationalQuote, setInspirationalQuote] = useState("");
   const [achievements, setAchievements] = useState<any[]>([]);
   const [showAllBadges, setShowAllBadges] = useState(false);
