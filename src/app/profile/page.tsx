@@ -57,6 +57,11 @@ export default function ProfilePage() {
     loadProfile();
   }, []);
 
+  // Debug custom categories changes
+  useEffect(() => {
+    console.log('customCategories changed:', customCategories);
+  }, [customCategories]);
+
   const loadProfile = async () => {
     try {
       const response = await fetch('/api/user?userId=dummy-user');
@@ -89,6 +94,7 @@ export default function ProfilePage() {
 
   const addCustomCategory = () => {
     console.log('addCustomCategory called', { newCategoryName, newCategoryValue });
+    console.log('Current customCategories:', customCategories);
     if (newCategoryName.trim() && newCategoryValue.trim()) {
       const newCategory = {
         id: Date.now().toString(),
@@ -96,9 +102,12 @@ export default function ProfilePage() {
         value: newCategoryValue.trim()
       };
       console.log('Adding new category:', newCategory);
-      setCustomCategories([...customCategories, newCategory]);
+      const updatedCategories = [...customCategories, newCategory];
+      console.log('Updated categories:', updatedCategories);
+      setCustomCategories(updatedCategories);
       setNewCategoryName('');
       setNewCategoryValue('');
+      console.log('Fields cleared, new state should be:', { newCategoryName: '', newCategoryValue: '' });
     } else {
       console.log('Validation failed - empty fields');
     }
