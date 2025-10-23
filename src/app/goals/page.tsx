@@ -286,8 +286,8 @@ export default function GoalsPage() {
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
                   }}
                 >
-                  {/* Edge glow effect */}
-                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  {/* Edge glow effect - always visible */}
+                  <div className="absolute inset-0 rounded-2xl"
                     style={{
                       background: 'linear-gradient(45deg, transparent, rgba(6, 182, 212, 0.1), transparent)',
                       border: '1px solid rgba(6, 182, 212, 0.3)',
