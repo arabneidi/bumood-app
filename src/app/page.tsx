@@ -205,6 +205,40 @@ export default function Home() {
   
   const recentEntry = moodEntries[0];
 
+  // Mood coloring functions (same as calendar)
+  const getMoodColor = (mood: MoodEntry) => {
+    // Use the same calculation as dashboard: Life Rhythm Score (0-100)
+    const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
+    // Life Rhythm Score ranges from 0 to 100
+    if (lifeRhythmScore >= 80) return "bg-gradient-to-br from-green-400 to-emerald-500";  // 80%+
+    if (lifeRhythmScore >= 60) return "bg-gradient-to-br from-blue-400 to-cyan-500";      // 60%+
+    if (lifeRhythmScore >= 40) return "bg-gradient-to-br from-yellow-400 to-orange-400";  // 40%+
+    if (lifeRhythmScore >= 20) return "bg-gradient-to-br from-orange-400 to-red-400";     // 20%+
+    return "bg-gradient-to-br from-red-500 to-pink-600";  // Below 20%
+  };
+
+  const getMoodEmoji = (mood: MoodEntry) => {
+    // Use the same calculation as dashboard: Life Rhythm Score (0-100)
+    const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
+    // Life Rhythm Score ranges from 0 to 100
+    if (lifeRhythmScore >= 90) return "😍";  // 90%+
+    if (lifeRhythmScore >= 80) return "😊";  // 80%+
+    if (lifeRhythmScore >= 70) return "🙂";  // 70%+
+    if (lifeRhythmScore >= 60) return "😐";  // 60%+
+    if (lifeRhythmScore >= 50) return "😕";  // 50%+
+    if (lifeRhythmScore >= 40) return "😟";  // 40%+
+    if (lifeRhythmScore >= 30) return "😰";  // 30%+
+    if (lifeRhythmScore >= 20) return "😢";  // 20%+
+    return "😭";  // Below 20%
+  };
+
+  const getMoodScore = (mood: MoodEntry) => {
+    // Use the same calculation as dashboard: Life Rhythm Score
+    // (valence + energy + focus + (sleep / 2)) / 3.5 * 10
+    const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
+    return lifeRhythmScore;
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white">
       {/* Futuristic Background */}
@@ -724,6 +758,19 @@ export default function Home() {
                           <div className="text-center p-2 bg-red-900/30 rounded-lg border border-red-500/20">
                             <div className="text-2xl font-bold text-red-400">{entry.stress}</div>
                             <div className="text-xs text-slate-300">😰 Stress</div>
+                          </div>
+                        </div>
+                        
+                        {/* Life Rhythm Score Display */}
+                        <div className="mb-4">
+                          <div className={`text-center p-3 rounded-lg ${getMoodColor(entry)} shadow-lg`}>
+                            <div className="text-3xl font-bold text-white drop-shadow-lg">
+                              {getMoodScore(entry)}/100
+                            </div>
+                            <div className="text-sm text-white font-semibold opacity-90 flex items-center justify-center">
+                              <span className="mr-2">{getMoodEmoji(entry)}</span>
+                              Life Rhythm Score
+                            </div>
                           </div>
                         </div>
                         
