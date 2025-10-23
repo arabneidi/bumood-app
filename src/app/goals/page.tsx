@@ -683,13 +683,25 @@ export default function GoalsPage() {
                   <label className="block text-lg font-semibold text-slate-200 mb-3">Choose Your Goal Category</label>
                   <div className="space-y-6">
                     {goalCategories.map((category) => (
-                      <div key={category.id} className="bg-slate-700/30 rounded-xl p-4 border border-slate-600/50">
+                      <div key={category.id} className="relative overflow-hidden group rounded-xl p-4 border backdrop-blur-sm"
+                           style={{
+                             background: 'rgba(30, 41, 59, 0.2)',
+                             backdropFilter: 'blur(20px)',
+                             border: '1px solid rgba(6, 182, 212, 0.3)',
+                             boxShadow: 'inset 0 0 20px rgba(6, 182, 212, 0.2), 0 0 40px rgba(6, 182, 212, 0.3)'
+                           }}>
                         <h3 className="text-lg font-bold text-white mb-4">{category.name}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {category.subcategories.map((subcategory) => (
                             <div
                               key={subcategory.id}
-                              className="p-4 rounded-lg border-2 border-slate-600/50 bg-slate-700/30 transition-all duration-300"
+                              className="relative overflow-hidden p-4 rounded-lg border-2 transition-all duration-300"
+                              style={{
+                                background: 'rgba(30, 41, 59, 0.3)',
+                                backdropFilter: 'blur(20px)',
+                                border: '1px solid rgba(6, 182, 212, 0.3)',
+                                boxShadow: 'inset 0 0 15px rgba(6, 182, 212, 0.15), 0 0 30px rgba(6, 182, 212, 0.25)'
+                              }}
                             >
                               <h4 className="text-lg font-bold text-white mb-4">{subcategory.name}</h4>
                               
@@ -709,11 +721,31 @@ export default function GoalsPage() {
                                         subcategory: example
                                       });
                                     }}
-                                    className={`p-3 rounded-lg border transition-all duration-300 text-left ${
-                                      selectedGoal === example
-                                        ? 'border-cyan-400/70 bg-cyan-500/20'
-                                        : 'border-slate-600/50 bg-slate-700/30 hover:border-cyan-400/50 hover:bg-cyan-500/10'
-                                    }`}
+                                    className="relative overflow-hidden p-3 rounded-lg border transition-all duration-300 text-left"
+                                    style={{
+                                      backdropFilter: 'blur(10px)',
+                                      background: selectedGoal === example 
+                                        ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2))'
+                                        : 'rgba(30, 41, 59, 0.3)',
+                                      border: selectedGoal === example 
+                                        ? '1px solid rgba(6, 182, 212, 0.7)'
+                                        : '1px solid rgba(148, 163, 184, 0.3)',
+                                      boxShadow: selectedGoal === example
+                                        ? '0 0 20px rgba(6, 182, 212, 0.5)'
+                                        : '0 4px 16px rgba(0, 0, 0, 0.1)'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      if (selectedGoal !== example) {
+                                        e.currentTarget.style.border = '1px solid rgba(6, 182, 212, 0.5)';
+                                        e.currentTarget.style.boxShadow = '0 0 15px rgba(6, 182, 212, 0.3)';
+                                      }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      if (selectedGoal !== example) {
+                                        e.currentTarget.style.border = '1px solid rgba(148, 163, 184, 0.3)';
+                                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1)';
+                                      }
+                                    }}
                                   >
                                     <h5 className="text-sm font-medium text-white mb-1">{example}</h5>
                                     <p className="text-xs text-slate-400">Click to use this goal</p>
