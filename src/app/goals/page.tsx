@@ -185,18 +185,54 @@ export default function GoalsPage() {
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_24%,rgba(59,130,246,0.1)_25%,rgba(59,130,246,0.1)_26%,transparent_27%,transparent_74%,rgba(59,130,246,0.1)_75%,rgba(59,130,246,0.1)_76%,transparent_77%)] bg-[length:50px_50px] animate-pulse"></div>
         <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
+          {[...Array(30)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-2 h-2 bg-blue-400/30 rounded-full"
+              className="absolute w-2 h-2 bg-blue-400/30 rounded-full animate-pulse"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
+                animation: `float ${2 + Math.random() * 4}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 2}s`
+              }}
+            />
+          ))}
+          {[...Array(15)].map((_, i) => (
+            <div
+              key={`large-${i}`}
+              className="absolute w-4 h-4 bg-cyan-400/20 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animation: `drift ${5 + Math.random() * 5}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 3}s`
               }}
             />
           ))}
         </div>
       </div>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          25% { transform: translateY(-10px) rotate(1deg); }
+          50% { transform: translateY(-5px) rotate(0deg); }
+          75% { transform: translateY(-15px) rotate(-1deg); }
+        }
+        
+        @keyframes drift {
+          0%, 100% { transform: translate(0px, 0px) rotate(0deg); }
+          25% { transform: translate(10px, -15px) rotate(90deg); }
+          50% { transform: translate(-5px, -10px) rotate(180deg); }
+          75% { transform: translate(-15px, 5px) rotate(270deg); }
+        }
+        
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.3); }
+          50% { box-shadow: 0 0 40px rgba(6, 182, 212, 0.6), 0 0 60px rgba(59, 130, 246, 0.4); }
+        }
+      `}</style>
 
       <div className="relative z-10 container mx-auto px-6 py-12">
         <h1
@@ -242,8 +278,18 @@ export default function GoalsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {goals.map((goal) => (
-                <div key={goal.id} className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 shadow-2xl">
+              {goals.map((goal, index) => (
+                <div 
+                  key={goal.id} 
+                  className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden group hover:scale-105 transition-all duration-500"
+                  style={{
+                    animation: `float ${3 + (index * 0.5)}s ease-in-out infinite`,
+                    animationDelay: `${index * 0.2}s`
+                  }}
+                >
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="absolute inset-0 rounded-2xl shadow-[0_0_30px_rgba(6,182,212,0.3)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mr-4">
                       <Target className="w-6 h-6 text-white" />
@@ -318,9 +364,16 @@ export default function GoalsPage() {
               <h3 className="text-3xl font-black bg-gradient-to-r from-green-500 via-emerald-500 to-cyan-500 bg-clip-text text-transparent">✅ Achieved Badges</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {achievements.achieved.map((badge) => (
-                <div key={badge.id} className="relative p-6 rounded-2xl border-2 shadow-2xl transition-all duration-300 bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-400/50">
-                  <div className="absolute inset-0 rounded-2xl border-2 border-green-400/50 shadow-[0_0_25px_rgba(34,197,94,0.8)] animate-pulse"></div>
+              {achievements.achieved.map((badge, index) => (
+                <div 
+                  key={badge.id} 
+                  className="relative p-6 rounded-2xl border-2 shadow-2xl transition-all duration-300 bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-400/50 group hover:scale-105"
+                  style={{
+                    animation: `float ${4 + (index * 0.3)}s ease-in-out infinite`,
+                    animationDelay: `${index * 0.4}s`
+                  }}
+                >
+                  <div className="absolute inset-0 rounded-2xl border-2 border-green-400/50 shadow-[0_0_25px_rgba(34,197,94,0.8)] animate-pulse group-hover:shadow-[0_0_40px_rgba(34,197,94,1)] transition-all duration-500"></div>
                   <div className="relative text-center">
                     <div className="text-6xl mb-4">{badge.icon}</div>
                     <h4 className="text-xl font-black mb-2 text-green-300">{badge.title}</h4>
@@ -348,8 +401,15 @@ export default function GoalsPage() {
               <h3 className="text-3xl font-black bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 bg-clip-text text-transparent">🔒 Locked Badges</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {achievements.locked.map((badge) => (
-                <div key={badge.id} className="relative p-6 rounded-2xl border shadow-2xl transition-all duration-300 bg-slate-800/20 border-slate-700/30 opacity-60">
+              {achievements.locked.map((badge, index) => (
+                <div 
+                  key={badge.id} 
+                  className="relative p-6 rounded-2xl border shadow-2xl transition-all duration-300 bg-slate-800/20 border-slate-700/30 opacity-60 group hover:opacity-80 hover:scale-105"
+                  style={{
+                    animation: `float ${5 + (index * 0.4)}s ease-in-out infinite`,
+                    animationDelay: `${index * 0.6}s`
+                  }}
+                >
                   <div className="absolute inset-0 rounded-2xl border border-slate-400/30 shadow-[0_0_15px_rgba(148,163,184,0.4)]"></div>
                   <div className="text-center">
                     <div className="text-6xl mb-4 grayscale opacity-50">{badge.icon}</div>
