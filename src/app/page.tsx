@@ -206,37 +206,38 @@ export default function Home() {
   const recentEntry = moodEntries[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
-      {/* Hero Section - Floating Rounded Rectangle */}
-      <div className="relative overflow-hidden py-12">
-        {/* Animated Background Particles */}
-        <div className="absolute inset-0 overflow-hidden -z-10">
-          {[...Array(15)].map((_, i) => (
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white">
+      {/* Futuristic Background */}
+      <div className="absolute inset-0">
+        {/* Animated Grid Pattern */}
+        <div className="absolute top-24 left-0 right-0 bottom-0 z-0 bg-[linear-gradient(90deg,transparent_24%,rgba(147,51,234,0.1)_25%,rgba(147,51,234,0.1)_26%,transparent_27%,transparent_74%,rgba(59,130,246,0.1)_75%,rgba(59,130,246,0.1)_76%,transparent_77%)] bg-[length:50px_50px] animate-pulse"></div>
+        {/* Floating Particles */}
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
             <motion.div
               key={i}
-              className={`absolute rounded-full ${
-                i % 3 === 0 ? 'bg-yellow-400' : i % 3 === 1 ? 'bg-pink-400' : 'bg-purple-400'
-              } opacity-20`}
+              className="absolute w-2 h-2 bg-purple-400/30 rounded-full"
               style={{
-                width: Math.random() * 100 + 50,
-                height: Math.random() * 100 + 50,
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
               }}
               animate={{
-                y: [0, -30, 0],
-                x: [0, Math.random() * 20 - 10, 0],
-                scale: [1, 1.2, 1],
-                rotate: [0, 180, 360],
+                y: [0, -100, 0],
+                x: [0, Math.random() * 50 - 25, 0],
+                opacity: [0, 1, 0],
               }}
               transition={{
-                duration: Math.random() * 5 + 5,
+                duration: 3 + Math.random() * 2,
                 repeat: Infinity,
-                ease: "easeInOut",
+                delay: Math.random() * 2,
               }}
             />
           ))}
         </div>
+      </div>
+
+      {/* Hero Section - Floating Rounded Rectangle */}
+      <div className="relative overflow-hidden py-12">
 
         {/* Quote Box - Rounded Rectangle with Float */}
         <motion.div 
@@ -246,23 +247,20 @@ export default function Home() {
           className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
         >
           <motion.div
-            animate={{
-              y: [0, -8, 0],
-            }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: [0, -8, 0] }}
             transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut",
+              opacity: { duration: 0.6, delay: 0.2 },
+              y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative backdrop-blur-xl bg-gradient-to-r from-yellow-100/60 via-pink-100/60 to-purple-100/60 rounded-3xl p-8 md:p-12 shadow-2xl border-2 border-white/50 overflow-hidden" style={{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1))',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)'
-            }}
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 md:p-12 overflow-hidden"
           >
+            {/* Glowing Edge Effect */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            
             {/* Shimmer Effect */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30"
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent opacity-30"
               animate={{
                 x: ['-100%', '200%'],
               }}
@@ -293,7 +291,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.8 }}
-              className="text-xl md:text-3xl font-bold text-center bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent leading-relaxed relative z-10"
+              className="text-xl md:text-3xl font-bold text-center bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-relaxed relative z-10"
             >
               {inspirationalQuote || "Your mental wellness journey starts here."}
             </motion.h2>
@@ -305,30 +303,24 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+            <p className="mt-4 text-slate-300">Loading your dashboard...</p>
           </div>
         ) : (
           <>
             {/* Life Rhythm Score - Heartbeat Pulse Animation */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6, type: "spring" }}
-              whileHover={{ scale: 1.02, y: -5 }}
+              animate={{ opacity: 1, y: [0, -6, 0] }}
+              transition={{
+                opacity: { duration: 0.6, delay: 0.2 },
+                y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
+              }}
               className="mb-16"
             >
-              <motion.div
-                animate={{
-                  y: [0, -8, 0],
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="relative bg-gradient-to-br from-rose-100 via-red-100 to-pink-100 p-10 rounded-2xl shadow-2xl overflow-hidden border-2 border-white"
-              >
+              <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-10 overflow-hidden">
+                {/* Glowing Edge Effect */}
+                <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
                 {/* Heartbeat SVG Animation */}
                 <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
                   <svg className="w-full h-full opacity-20" viewBox="0 0 1000 200">
@@ -337,7 +329,7 @@ export default function Home() {
                       stroke="currentColor"
                       strokeWidth="3"
                       fill="none"
-                      className="text-rose-400"
+                      className="text-blue-400"
                       initial={{ pathLength: 0, pathOffset: 0 }}
                       animate={{
                         pathLength: [0, 1, 0],
@@ -388,11 +380,11 @@ export default function Home() {
                         x: [0, 3, 0]
                       }}
                       transition={{ duration: 1.5, repeat: Infinity }}
-                      className="text-4xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-3 drop-shadow-lg"
+                      className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-3 drop-shadow-lg"
                     >
                       💓 Life Rhythm Score
                     </motion.h2>
-                    <p className="text-gray-700 text-lg font-medium">
+                    <p className="text-slate-300 text-lg font-medium">
                       Your heartbeat of wellbeing
                     </p>
                   </motion.div>
@@ -416,7 +408,7 @@ export default function Home() {
                       }}
                       className="relative"
                     >
-                      <div className="w-40 h-40 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shadow-2xl">
+                      <div className="w-40 h-40 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-2xl">
                         <motion.div
                           animate={{ 
                             scale: [1, 1.1, 1]
@@ -440,7 +432,7 @@ export default function Home() {
                       {[...Array(3)].map((_, i) => (
                         <motion.div
                           key={i}
-                          className="absolute inset-0 rounded-full border-4 border-rose-400"
+                          className="absolute inset-0 rounded-full border-4 border-blue-400"
                           animate={{
                             scale: [1, 1.5, 2],
                             opacity: [0.6, 0.3, 0]
@@ -455,7 +447,7 @@ export default function Home() {
                     </motion.div>
                   </motion.div>
                 </div>
-              </motion.div>
+              </div>
             </motion.div>
 
             {/* Achievements Section - Separate card with Show All toggle */}
@@ -466,64 +458,72 @@ export default function Home() {
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                   className="inline-block"
                 >
-                  <div className="rounded-full h-16 w-16 border-4 border-yellow-400 border-t-transparent mx-auto"></div>
+                  <div className="rounded-full h-16 w-16 border-4 border-blue-400 border-t-transparent mx-auto"></div>
                 </motion.div>
-                <p className="mt-4 text-gray-600 text-lg">Loading achievements...</p>
+                <p className="mt-4 text-slate-300 text-lg">Loading achievements...</p>
               </div>
             ) : achievements.length > 0 ? (
               <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.6 }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: [0, -5, 0] }}
+                transition={{
+                  opacity: { duration: 0.6, delay: 0.2 },
+                  y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+                }}
                 className="mb-16"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-                    <span className="mr-2">🏅</span>
-                    Achievements
-                  </h2>
-                  <button
-                    onClick={() => setShowAllBadges(v => !v)}
-                    className="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow hover:from-indigo-700 hover:to-purple-700"
-                  >
-                    {showAllBadges ? 'Show Last 4' : 'Show All'}
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 overflow-visible">
-                  {(showAllBadges ? achievements : achievements.slice(0, 4)).map((achievement, index) => (
-                    <motion.div
-                      key={achievement.id}
-                      initial={{ opacity: 0, y: 30, scale: 0.5, rotate: -10 }}
-                      animate={{ 
-                        opacity: 1, 
-                        y: 0, 
-                        scale: 1, 
-                        rotate: 0 
-                      }}
-                      transition={{ 
-                        delay: 0.1 + index * 0.05, 
-                        duration: 0.5,
-                        type: "spring",
-                        stiffness: 150
-                      }}
-                      whileHover={{ 
-                        scale: 1.2, 
-                        rotate: 8,
-                        y: -15,
-                        transition: { duration: 0.3, type: "spring" }
-                      }}
+                <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8">
+                  {/* Glowing Edge Effect */}
+                  <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+                  
+                  <div className="flex items-center justify-between mb-4 relative z-10">
+                    <h2 className="text-2xl font-bold text-white flex items-center">
+                      <span className="mr-2">🏅</span>
+                      Achievements
+                    </h2>
+                    <button
+                      onClick={() => setShowAllBadges(v => !v)}
+                      className="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow hover:from-blue-600 hover:to-purple-600"
                     >
-                      <AchievementBadge
-                        title={achievement.title}
-                        type={achievement.type}
-                        stars={achievement.stars}
-                        unlocked={!!achievement.unlockedAt}
-                        size="md"
-                        description={achievement.description}
-                        icon={achievement.icon}
-                      />
-                    </motion.div>
-                  ))}
+                      {showAllBadges ? 'Show Last 4' : 'Show All'}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 overflow-visible">
+                    {(showAllBadges ? achievements : achievements.slice(0, 4)).map((achievement, index) => (
+                      <motion.div
+                        key={achievement.id}
+                        initial={{ opacity: 0, y: 30, scale: 0.5, rotate: -10 }}
+                        animate={{ 
+                          opacity: 1, 
+                          y: 0, 
+                          scale: 1, 
+                          rotate: 0 
+                        }}
+                        transition={{ 
+                          delay: 0.1 + index * 0.05, 
+                          duration: 0.5,
+                          type: "spring",
+                          stiffness: 150
+                        }}
+                        whileHover={{ 
+                          scale: 1.2, 
+                          rotate: 8,
+                          y: -15,
+                          transition: { duration: 0.3, type: "spring" }
+                        }}
+                      >
+                        <AchievementBadge
+                          title={achievement.title}
+                          type={achievement.type}
+                          stars={achievement.stars}
+                          unlocked={!!achievement.unlockedAt}
+                          size="md"
+                          description={achievement.description}
+                          icon={achievement.icon}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             ) : null}
@@ -532,11 +532,17 @@ export default function Home() {
             {/* Time Range Selector */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35, duration: 0.5 }}
+              animate={{ opacity: 1, y: [0, -4, 0] }}
+              transition={{
+                opacity: { duration: 0.5, delay: 0.35 },
+                y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" }
+              }}
               className="mb-8 flex justify-center"
             >
-              <div className="inline-flex bg-white rounded-full shadow-lg p-1 border-2 border-gray-200">
+              <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-full shadow-2xl border border-blue-400/30 p-1">
+                {/* Glowing Edge Effect */}
+                <div className="absolute inset-0 rounded-full border-2 border-purple-400/50 shadow-[0_0_20px_rgba(147,51,234,0.3)] animate-pulse"></div>
+                
                 {[
                   { value: 'daily', label: 'Today', icon: '📅' },
                   { value: 'weekly', label: 'Week', icon: '📊' },
@@ -545,10 +551,10 @@ export default function Home() {
                   <button
                     key={option.value}
                     onClick={() => setTimeRange(option.value as any)}
-                    className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${
+                    className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 relative z-10 ${
                       timeRange === option.value
-                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg scale-105'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105'
+                        : 'text-slate-300 hover:text-white hover:bg-blue-500/20'
                     }`}
                   >
                     <span className="mr-2">{option.icon}</span>
@@ -561,95 +567,88 @@ export default function Home() {
             {/* Quick Stats - Floating Rounded Rectangles */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.6, type: "spring" }}
-              whileHover={{ scale: 1.02, y: -5 }}
+              animate={{ opacity: 1, y: [0, -6, 0] }}
+              transition={{
+                opacity: { duration: 0.6, delay: 0.4, type: "spring" },
+                y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
+              }}
               className="mb-16"
             >
-            {/* Quick Stats - Floating Rounded Rectangles */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-              {[
-                { value: averageStress.toFixed(1), label: `Avg Stress (${timeRange === 'daily' ? 'Today' : timeRange === 'weekly' ? 'Week' : 'Month'})`, color: "from-orange-400 to-red-500", icon: "😰", delay: 0.1 },
-                { value: averageValence.toFixed(1), label: `Avg Valence (${timeRange === 'daily' ? 'Today' : timeRange === 'weekly' ? 'Week' : 'Month'})`, color: "from-green-400 to-emerald-500", icon: "😊", delay: 0.2 },
-                { value: averageEnergy.toFixed(1), label: `Avg Energy (${timeRange === 'daily' ? 'Today' : timeRange === 'weekly' ? 'Week' : 'Month'})`, color: "from-orange-400 to-amber-500", icon: "⚡", delay: 0.3 },
-                { value: averageFocus.toFixed(1), label: `Avg Focus (${timeRange === 'daily' ? 'Today' : timeRange === 'weekly' ? 'Week' : 'Month'})`, color: "from-purple-400 to-violet-500", icon: "🎯", delay: 0.4 }
-              ].map((stat, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 50, scale: 0.8 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ 
-                    delay: stat.delay, 
-                    duration: 0.6,
-                    type: "spring",
-                    stiffness: 120
-                  }}
-                  whileHover={{ 
-                    scale: 1.05, 
-                    y: -10,
-                    transition: { duration: 0.3 }
-                  }}
-                  className="relative group"
-                >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {[
+                  { value: averageStress.toFixed(1), label: `Avg Stress (${timeRange === 'daily' ? 'Today' : timeRange === 'weekly' ? 'Week' : 'Month'})`, color: "from-red-500 to-orange-500", icon: "😰", delay: 0.1 },
+                  { value: averageValence.toFixed(1), label: `Avg Valence (${timeRange === 'daily' ? 'Today' : timeRange === 'weekly' ? 'Week' : 'Month'})`, color: "from-green-500 to-emerald-500", icon: "😊", delay: 0.2 },
+                  { value: averageEnergy.toFixed(1), label: `Avg Energy (${timeRange === 'daily' ? 'Today' : timeRange === 'weekly' ? 'Week' : 'Month'})`, color: "from-yellow-500 to-amber-500", icon: "⚡", delay: 0.3 },
+                  { value: averageFocus.toFixed(1), label: `Avg Focus (${timeRange === 'daily' ? 'Today' : timeRange === 'weekly' ? 'Week' : 'Month'})`, color: "from-blue-500 to-purple-500", icon: "🎯", delay: 0.4 }
+                ].map((stat, index) => (
                   <motion.div
-                    animate={{
-                      y: [0, -6, 0],
+                    key={index}
+                    initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                    animate={{ opacity: 1, y: [0, -8, 0], scale: 1 }}
+                    transition={{ 
+                      opacity: { delay: stat.delay, duration: 0.6, type: "spring", stiffness: 120 },
+                      y: { duration: 3.5 + index * 0.3, repeat: Infinity, ease: "easeInOut" },
+                      scale: { delay: stat.delay, duration: 0.6, type: "spring", stiffness: 120 }
                     }}
-                    transition={{
-                      duration: 3 + index * 0.5,
-                      repeat: Infinity,
-                      ease: "easeInOut"
+                    whileHover={{ 
+                      scale: 1.05, 
+                      y: -10,
+                      transition: { duration: 0.3 }
                     }}
-                    className={`relative bg-gradient-to-br ${stat.color} p-8 rounded-2xl shadow-2xl overflow-hidden border-2 border-white`}
+                    className="relative group"
                   >
-                    {/* Shimmer Effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
-                      animate={{
-                        x: ['-100%', '200%'],
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        delay: index * 0.5,
-                        ease: "linear"
-                      }}
-                    />
-                    
-                    {/* Icon */}
-                    <motion.div 
-                      className="text-5xl mb-3 text-center relative z-10"
-                      animate={{ 
-                        scale: [1, 1.2, 1],
-                        rotate: [0, 10, -10, 0]
-                      }}
-                      transition={{ 
-                        duration: 2, 
-                        repeat: Infinity,
-                        delay: index * 0.2
-                      }}
-                    >
-                      {stat.icon}
-                    </motion.div>
-                    
-                    {/* Value */}
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: stat.delay + 0.3, type: "spring", stiffness: 200 }}
-                      className="text-5xl font-bold text-white mb-2 text-center drop-shadow-lg relative z-10"
-                    >
-                      {stat.value}
-                    </motion.div>
-                    
-                    {/* Label */}
-                    <div className="text-white text-center font-semibold text-lg opacity-90 relative z-10">
-                      {stat.label}
+                    <div className="relative bg-slate-800/40 backdrop-blur-sm rounded-2xl shadow-2xl border border-blue-500/20 p-8 overflow-hidden">
+                      {/* Glowing Edge Effect */}
+                      <div className="absolute inset-0 rounded-2xl border-2 border-purple-400/30 shadow-[0_0_20px_rgba(147,51,234,0.2)] animate-pulse"></div>
+                      
+                      {/* Shimmer Effect */}
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/10 to-transparent opacity-20"
+                        animate={{
+                          x: ['-100%', '200%'],
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          delay: index * 0.5,
+                          ease: "linear"
+                        }}
+                      />
+                      
+                      {/* Icon */}
+                      <motion.div 
+                        className="text-5xl mb-3 text-center relative z-10"
+                        animate={{ 
+                          scale: [1, 1.2, 1],
+                          rotate: [0, 10, -10, 0]
+                        }}
+                        transition={{ 
+                          duration: 2, 
+                          repeat: Infinity,
+                          delay: index * 0.2
+                        }}
+                      >
+                        {stat.icon}
+                      </motion.div>
+                      
+                      {/* Value */}
+                      <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: stat.delay + 0.3, type: "spring", stiffness: 200 }}
+                        className="text-5xl font-bold text-white mb-2 text-center drop-shadow-lg relative z-10"
+                      >
+                        {stat.value}
+                      </motion.div>
+                      
+                      {/* Label */}
+                      <div className="text-slate-300 text-center font-semibold text-lg relative z-10">
+                        {stat.label}
+                      </div>
                     </div>
                   </motion.div>
-                </motion.div>
-              ))}
-            </div>
+                ))}
+              </div>
             </motion.div>
 
             {/* Today's Entries Section */}
@@ -664,90 +663,98 @@ export default function Home() {
             })() && (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45, duration: 0.6, type: "spring" }}
+                animate={{ opacity: 1, y: [0, -5, 0] }}
+                transition={{
+                  opacity: { duration: 0.6, delay: 0.45, type: "spring" },
+                  y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
+                }}
                 className="mb-16"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-                    <span className="mr-2">📝</span>
-                    Today's Entries ({filteredEntries.length})
-                  </h2>
-                  <button
-                    onClick={() => setShowAllEntries(v => !v)}
-                    className="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow hover:from-indigo-700 hover:to-purple-700"
-                  >
-                    {showAllEntries ? 'Show Last 4' : 'Show All'}
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {(showAllEntries ? filteredEntries : filteredEntries.slice(0, 4)).map((entry, index) => (
-                    <motion.div
-                      key={entry.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.5 + index * 0.1 }}
-                      whileHover={{ scale: 1.05, y: -5 }}
-                      className="bg-white rounded-xl shadow-lg p-6 border-2 border-indigo-100 hover:border-indigo-300 transition-all"
+                <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8">
+                  {/* Glowing Edge Effect */}
+                  <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+                  
+                  <div className="flex items-center justify-between mb-6 relative z-10">
+                    <h2 className="text-2xl font-bold text-white flex items-center">
+                      <span className="mr-2">📝</span>
+                      Today's Entries ({filteredEntries.length})
+                    </h2>
+                    <button
+                      onClick={() => setShowAllEntries(v => !v)}
+                      className="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow hover:from-blue-600 hover:to-purple-600"
                     >
-                      <div className="flex justify-between items-start mb-4">
-                        <span className="text-sm font-semibold text-gray-500">
-                          {new Date(entry.createdAt).toLocaleTimeString('en-US', { 
-                            hour: 'numeric', 
-                            minute: '2-digit',
-                            hour12: true 
-                          })}
-                        </span>
-                        {entry.onPeriod && <span className="text-xl">🩸</span>}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="text-center p-2 bg-green-50 rounded-lg">
-                          <div className="text-2xl font-bold text-green-600">{entry.valence}</div>
-                          <div className="text-xs text-gray-600">😊 Happy</div>
+                      {showAllEntries ? 'Show Last 4' : 'Show All'}
+                    </button>
+                  </div>
+                
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                    {(showAllEntries ? filteredEntries : filteredEntries.slice(0, 4)).map((entry, index) => (
+                      <motion.div
+                        key={entry.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.5 + index * 0.1 }}
+                        whileHover={{ scale: 1.05, y: -5 }}
+                        className="bg-slate-800/40 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-blue-500/20 hover:border-blue-400/40 transition-all"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <span className="text-sm font-semibold text-slate-400">
+                            {new Date(entry.createdAt).toLocaleTimeString('en-US', { 
+                              hour: 'numeric', 
+                              minute: '2-digit',
+                              hour12: true 
+                            })}
+                          </span>
+                          {entry.onPeriod && <span className="text-xl">🩸</span>}
                         </div>
-                        <div className="text-center p-2 bg-orange-50 rounded-lg">
-                          <div className="text-2xl font-bold text-orange-600">{entry.energy}</div>
-                          <div className="text-xs text-gray-600">⚡ Energy</div>
+                        
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div className="text-center p-2 bg-green-900/30 rounded-lg border border-green-500/20">
+                            <div className="text-2xl font-bold text-green-400">{entry.valence}</div>
+                            <div className="text-xs text-slate-300">😊 Happy</div>
+                          </div>
+                          <div className="text-center p-2 bg-orange-900/30 rounded-lg border border-orange-500/20">
+                            <div className="text-2xl font-bold text-orange-400">{entry.energy}</div>
+                            <div className="text-xs text-slate-300">⚡ Energy</div>
+                          </div>
+                          <div className="text-center p-2 bg-purple-900/30 rounded-lg border border-purple-500/20">
+                            <div className="text-2xl font-bold text-purple-400">{entry.focus}</div>
+                            <div className="text-xs text-slate-300">🎯 Focus</div>
+                          </div>
+                          <div className="text-center p-2 bg-red-900/30 rounded-lg border border-red-500/20">
+                            <div className="text-2xl font-bold text-red-400">{entry.stress}</div>
+                            <div className="text-xs text-slate-300">😰 Stress</div>
+                          </div>
                         </div>
-                        <div className="text-center p-2 bg-purple-50 rounded-lg">
-                          <div className="text-2xl font-bold text-purple-600">{entry.focus}</div>
-                          <div className="text-xs text-gray-600">🎯 Focus</div>
-                        </div>
-                        <div className="text-center p-2 bg-red-50 rounded-lg">
-                          <div className="text-2xl font-bold text-red-600">{entry.stress}</div>
-                          <div className="text-xs text-gray-600">😰 Stress</div>
-                        </div>
-                      </div>
-                      
-                      {entry.waterIntake || entry.mealsEaten || entry.caffeine ? (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {entry.waterIntake > 0 && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                              💧 {entry.waterIntake} glasses
-                            </span>
-                          )}
-                          {entry.mealsEaten > 0 && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                              🍽️ {entry.mealsEaten} meals
-                            </span>
-                          )}
-                          {entry.caffeine > 0 && (
-                            <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
-                              ☕ {entry.caffeine} caffeine
-                            </span>
-                          )}
-                        </div>
-                      ) : null}
-                      
-                      {entry.notes && (
-                        <p className="text-sm text-gray-600 italic line-clamp-2">
-                          "{entry.notes}"
-                        </p>
-                      )}
-                    </motion.div>
-                  ))}
+                        
+                        {entry.waterIntake || entry.mealsEaten || entry.caffeine ? (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {entry.waterIntake > 0 && (
+                              <span className="text-xs bg-blue-900/30 text-blue-300 px-2 py-1 rounded-full border border-blue-500/20">
+                                💧 {entry.waterIntake} glasses
+                              </span>
+                            )}
+                            {entry.mealsEaten > 0 && (
+                              <span className="text-xs bg-green-900/30 text-green-300 px-2 py-1 rounded-full border border-green-500/20">
+                                🍽️ {entry.mealsEaten} meals
+                              </span>
+                            )}
+                            {entry.caffeine > 0 && (
+                              <span className="text-xs bg-amber-900/30 text-amber-300 px-2 py-1 rounded-full border border-amber-500/20">
+                                ☕ {entry.caffeine} caffeine
+                              </span>
+                            )}
+                          </div>
+                        ) : null}
+                        
+                        {entry.notes && (
+                          <p className="text-sm text-slate-300 italic line-clamp-2">
+                            "{entry.notes}"
+                          </p>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -756,22 +763,16 @@ export default function Home() {
             {moodEntries.length > 0 && (
               <motion.div 
                 initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.6, type: "spring" }}
-                whileHover={{ scale: 1.02, y: -5 }}
+                animate={{ opacity: 1, y: [0, -6, 0] }}
+                transition={{
+                  opacity: { duration: 0.6, delay: 0.5, type: "spring" },
+                  y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" }
+                }}
                 className="mb-16"
               >
-                <motion.div
-                  animate={{
-                    y: [0, -8, 0],
-                  }}
-                  transition={{
-                    duration: 5,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className="relative bg-gradient-to-br from-purple-600 via-indigo-600 to-cyan-500 p-10 rounded-2xl shadow-2xl overflow-hidden border-2 border-cyan-300"
-                >
+                <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-10 overflow-hidden">
+                  {/* Glowing Edge Effect */}
+                  <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
                   {/* Neural Network Background Pattern */}
                   <div className="absolute inset-0 opacity-20">
                     <svg className="w-full h-full" viewBox="0 0 400 300">
@@ -782,7 +783,7 @@ export default function Home() {
                           cy={Math.random() * 300}
                           r="2"
                           fill="currentColor"
-                          className="text-cyan-300"
+                          className="text-blue-400"
                           animate={{
                             opacity: [0.3, 1, 0.3],
                             scale: [1, 1.5, 1]
@@ -803,7 +804,7 @@ export default function Home() {
                           y2={Math.random() * 300}
                           stroke="currentColor"
                           strokeWidth="1"
-                          className="text-cyan-300"
+                          className="text-blue-400"
                           animate={{
                             opacity: [0.2, 0.8, 0.2]
                           }}
@@ -843,7 +844,7 @@ export default function Home() {
 
                   {/* Data Stream Animation */}
                   <motion.div
-                    className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent"
+                    className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent"
                     animate={{
                       x: ['-100%', '200%'],
                     }}
@@ -853,28 +854,12 @@ export default function Home() {
                       ease: "linear"
                     }}
                   />
-
-                  {/* Glowing Border Effect */}
-                  <motion.div
-                    className="absolute inset-0 rounded-2xl border-2 border-cyan-300"
-                    animate={{
-                      boxShadow: [
-                        '0 0 20px rgba(34, 211, 238, 0.3)',
-                        '0 0 40px rgba(34, 211, 238, 0.6)',
-                        '0 0 20px rgba(34, 211, 238, 0.3)'
-                      ]
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity
-                    }}
-                  />
                   
                   {/* AI Suggestions Content */}
                   <div className="relative z-10">
                     <AISuggestions moodEntries={moodEntries} />
                   </div>
-                </motion.div>
+                </div>
               </motion.div>
             )}
 
@@ -883,25 +868,19 @@ export default function Home() {
             {recentEntry && (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, duration: 0.6, type: "spring" }}
-                whileHover={{ scale: 1.02, y: -5 }}
+                animate={{ opacity: 1, y: [0, -6, 0] }}
+                transition={{
+                  opacity: { duration: 0.6, delay: 0.8, type: "spring" },
+                  y: { duration: 5.2, repeat: Infinity, ease: "easeInOut" }
+                }}
                 className="mb-16"
               >
-                <motion.div
-                  animate={{
-                    y: [0, -8, 0],
-                  }}
-                  transition={{
-                    duration: 5.5,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className="relative bg-gradient-to-br from-yellow-100 via-pink-100 to-purple-100 p-8 rounded-2xl shadow-2xl overflow-hidden border-2 border-white"
-                >
+                <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 overflow-hidden">
+                  {/* Glowing Edge Effect */}
+                  <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
                   {/* Shimmer Effect */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30"
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent opacity-30"
                     animate={{
                       x: ['-100%', '200%'],
                     }}
@@ -917,29 +896,29 @@ export default function Home() {
                   <motion.div
                     animate={{ x: [0, 20, 0], y: [0, -20, 0], rotate: [0, 90, 0] }}
                     transition={{ duration: 8, repeat: Infinity }}
-                    className="absolute top-10 right-10 w-24 h-24 bg-yellow-300 rounded-full opacity-20"
+                    className="absolute top-10 right-10 w-24 h-24 bg-blue-400/30 rounded-full opacity-20"
                   />
                   <motion.div
                     animate={{ x: [0, -15, 0], y: [0, 15, 0], rotate: [0, -90, 0] }}
                     transition={{ duration: 7, repeat: Infinity }}
-                    className="absolute bottom-10 left-10 w-32 h-32 bg-pink-300 rounded-full opacity-20"
+                    className="absolute bottom-10 left-10 w-32 h-32 bg-purple-400/30 rounded-full opacity-20"
                   />
 
                   <motion.h3 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.0, duration: 0.5 }}
-                    className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent"
+                    className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent relative z-10"
                   >
                     📝 Latest Entry
                   </motion.h3>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
                     {[
-                      { value: recentEntry.valence, label: "Valence", color: "from-indigo-400 to-purple-500", icon: "😊", delay: 1.1 },
-                      { value: recentEntry.energy, label: "Energy", color: "from-green-400 to-teal-500", icon: "⚡", delay: 1.2 },
-                      { value: recentEntry.focus, label: "Focus", color: "from-blue-400 to-cyan-500", icon: "🎯", delay: 1.3 },
-                      { value: recentEntry.stress, label: "Stress", color: "from-orange-400 to-red-500", icon: "😰", delay: 1.4 }
+                      { value: recentEntry.valence, label: "Valence", color: "from-blue-500 to-purple-500", icon: "😊", delay: 1.1 },
+                      { value: recentEntry.energy, label: "Energy", color: "from-green-500 to-emerald-500", icon: "⚡", delay: 1.2 },
+                      { value: recentEntry.focus, label: "Focus", color: "from-cyan-500 to-blue-500", icon: "🎯", delay: 1.3 },
+                      { value: recentEntry.stress, label: "Stress", color: "from-red-500 to-orange-500", icon: "😰", delay: 1.4 }
                     ].map((item, index) => (
                       <motion.div 
                         key={index}
@@ -968,7 +947,7 @@ export default function Home() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 1.5, duration: 0.5 }}
                       whileHover={{ scale: 1.02 }}
-                      className="mt-8 p-6 bg-white rounded-3xl shadow-lg relative overflow-hidden"
+                      className="mt-8 p-6 bg-slate-800/40 backdrop-blur-sm rounded-3xl shadow-lg border border-blue-500/20 relative overflow-hidden"
                     >
                       <motion.div
                         className="absolute top-2 right-2 text-2xl"
@@ -977,10 +956,10 @@ export default function Home() {
                       >
                         💭
                       </motion.div>
-                      <p className="text-gray-700 italic text-lg relative">"{recentEntry.notes}"</p>
+                      <p className="text-slate-300 italic text-lg relative">"{recentEntry.notes}"</p>
                     </motion.div>
                   )}
-                </motion.div>
+                </div>
               </motion.div>
             )}
 
