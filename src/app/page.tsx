@@ -921,7 +921,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {/* AI Suggestions - Blue Background with Glass Center */}
+            {/* AI Suggestions - Modern Futuristic Design */}
             {moodEntries.length > 0 && (
               <motion.div 
                 initial={{ opacity: 0, y: 30 }}
@@ -932,43 +932,24 @@ export default function Home() {
                 }}
                 className="mb-16"
               >
-                <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-10 overflow-hidden">
+                <div className="relative bg-gradient-to-br from-blue-900/30 via-purple-900/20 to-indigo-900/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/40 p-8 overflow-hidden">
                   {/* Glowing Edge Effect */}
-                  <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+                  <div className="absolute inset-0 rounded-3xl border-2 border-blue-400/60 shadow-[0_0_40px_rgba(59,130,246,0.3)] animate-pulse"></div>
+                  
                   {/* Neural Network Background Pattern */}
-                  <div className="absolute inset-0 opacity-20">
+                  <div className="absolute inset-0 opacity-10">
                     <svg className="w-full h-full" viewBox="0 0 400 300">
-                      {[...Array(20)].map((_, i) => (
+                      {[...Array(15)].map((_, i) => (
                         <motion.circle
                           key={i}
                           cx={Math.random() * 400}
                           cy={Math.random() * 300}
-                          r="2"
+                          r="1.5"
                           fill="currentColor"
                           className="text-blue-400"
                           animate={{
-                            opacity: [0.3, 1, 0.3],
-                            scale: [1, 1.5, 1]
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            delay: i * 0.1
-                          }}
-                        />
-                      ))}
-                      {[...Array(15)].map((_, i) => (
-                        <motion.line
-                          key={`line-${i}`}
-                          x1={Math.random() * 400}
-                          y1={Math.random() * 300}
-                          x2={Math.random() * 400}
-                          y2={Math.random() * 300}
-                          stroke="currentColor"
-                          strokeWidth="1"
-                          className="text-blue-400"
-                          animate={{
-                            opacity: [0.2, 0.8, 0.2]
+                            opacity: [0.2, 0.8, 0.2],
+                            scale: [1, 1.2, 1]
                           }}
                           transition={{
                             duration: 3,
@@ -977,41 +958,37 @@ export default function Home() {
                           }}
                         />
                       ))}
+                      {[...Array(10)].map((_, i) => (
+                        <motion.line
+                          key={`line-${i}`}
+                          x1={Math.random() * 400}
+                          y1={Math.random() * 300}
+                          x2={Math.random() * 400}
+                          y2={Math.random() * 300}
+                          stroke="currentColor"
+                          strokeWidth="0.5"
+                          className="text-blue-400"
+                          animate={{
+                            opacity: [0.1, 0.4, 0.1]
+                          }}
+                          transition={{
+                            duration: 4,
+                            repeat: Infinity,
+                            delay: i * 0.3
+                          }}
+                        />
+                      ))}
                     </svg>
                   </div>
 
-                  {/* Floating AI Elements */}
-                  {[...Array(6)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="absolute text-4xl"
-                      style={{
-                        left: `${15 + i * 15}%`,
-                        top: `${20 + (i % 2) * 60}%`,
-                      }}
-                      animate={{
-                        y: [0, -30, 0],
-                        rotate: [0, 180, 360],
-                        scale: [1, 1.3, 1]
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        delay: i * 0.5,
-                      }}
-                    >
-                      {['🤖', '🧠', '⚡', '🔮', '💫', '🌟'][i]}
-                    </motion.div>
-                  ))}
-
                   {/* Data Stream Animation */}
                   <motion.div
-                    className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent"
+                    className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent"
                     animate={{
                       x: ['-100%', '200%'],
                     }}
                     transition={{
-                      duration: 2,
+                      duration: 3,
                       repeat: Infinity,
                       ease: "linear"
                     }}
@@ -1058,12 +1035,12 @@ export default function Home() {
                   <motion.div
                     animate={{ x: [0, 20, 0], y: [0, -20, 0], rotate: [0, 90, 0] }}
                     transition={{ duration: 8, repeat: Infinity }}
-                    className="absolute top-10 right-10 w-24 h-24 bg-blue-400/30 rounded-full opacity-20"
+                    className="absolute top-16 right-16 w-24 h-24 bg-blue-400/30 rounded-full opacity-20"
                   />
                   <motion.div
                     animate={{ x: [0, -15, 0], y: [0, 15, 0], rotate: [0, -90, 0] }}
                     transition={{ duration: 7, repeat: Infinity }}
-                    className="absolute bottom-10 left-10 w-32 h-32 bg-purple-400/30 rounded-full opacity-20"
+                    className="absolute bottom-16 left-16 w-32 h-32 bg-purple-400/30 rounded-full opacity-20"
                   />
 
                   <motion.h3 
