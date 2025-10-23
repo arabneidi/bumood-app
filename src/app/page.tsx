@@ -874,7 +874,8 @@ export default function Home() {
             )}
 
             {/* AI Suggestions - Modern Futuristic Design */}
-            <motion.div 
+            {moodEntries.length > 0 && (
+              <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: [0, -6, 0] }}
                 transition={{
