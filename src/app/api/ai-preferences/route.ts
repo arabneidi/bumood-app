@@ -62,21 +62,35 @@ export async function POST(req: Request) {
     console.log(content);
     console.log('=====================================');
 
-    // Extract JSON array from response
-    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    // Extract JSON object from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error('No valid JSON array found in response');
+      throw new Error('No valid JSON object found in response');
     }
 
-    const suggestions = JSON.parse(jsonMatch[0]);
+    const response = JSON.parse(jsonMatch[0]);
     
-    if (!Array.isArray(suggestions)) {
-      throw new Error('Response is not an array');
+    // Handle both old format (array) and new format (object with suggestions and dssAnalysis)
+    let suggestions;
+    let dssAnalysis = null;
+    
+    if (Array.isArray(response)) {
+      // Old format - just suggestions array
+      suggestions = response;
+    } else if (response.suggestions && response.dssAnalysis) {
+      // New format - object with suggestions and dssAnalysis
+      suggestions = response.suggestions;
+      dssAnalysis = response.dssAnalysis;
+    } else {
+      throw new Error('Invalid response format');
     }
 
     console.log('✅ Generated suggestions:', suggestions);
+    console.log('✅ DSS Analysis:', dssAnalysis);
+    
     return NextResponse.json({ 
       suggestions,
+      dssAnalysis,
       debug: {
         prompt,
         aiResponse: content,
@@ -160,7 +174,34 @@ Make sure to:
 - Avoid duplicates with existing favorites
 - Keep names concise and recognizable
 
-Return only the JSON array, no other text.`;
+ALSO, analyze which DSS (Daily Success Score) component this activity primarily relates to:
+
+DSS Components:
+- LM (Learning Momentum): Activities that involve deep work, focused learning, skill building, and task completion
+- RI (Recovery Index): Activities that promote rest, recovery, sleep, relaxation, and physical/mental restoration  
+- CN (Connection): Activities that involve social interaction, communication, relationship building, and community engagement
+
+Return a JSON object with:
+{
+  "suggestions": ["array of specific suggestions"],
+  "dssAnalysis": {
+    "primaryComponent": "LM" | "RI" | "CN",
+    "confidence": 0.0-1.0,
+    "reasoning": "Brief explanation of why this activity relates to the primary component",
+    "secondaryComponents": ["LM" | "RI" | "CN" | null],
+    "activityType": "deep_work" | "social" | "recovery" | "learning" | "physical" | "creative" | "other"
+  }
+}
+
+Examples:
+- "studying" → LM (Learning Momentum) - involves focused learning and skill building
+- "sleeping" → RI (Recovery Index) - promotes rest and recovery
+- "socializing" → CN (Connection) - involves social interaction and relationship building
+- "exercise" → RI (Recovery Index) - promotes physical recovery and health
+- "reading" → LM (Learning Momentum) - involves learning and knowledge acquisition
+- "dancing" → CN (Connection) - often social and community-oriented
+
+Return only the JSON object, no other text.`;
 }
 
 function getActivityGenreExamples(activity: string): string {

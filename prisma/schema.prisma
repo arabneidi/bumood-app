@@ -99,6 +99,7 @@ model MoodEntry {
   sleep       Float?   // hours of sleep
   notes       String?
   activities  String   // JSON string of activities
+  selectedTimeSlots String? // JSON string of selected time slots (e.g., ["morning-7", "evening-19"])
   reflection  String?  // Micro-reflection
   voiceNote   String?  // AI-transcribed voice note
   aiSuggestion String? // AI-generated suggestion

@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { 
       valence, energy, focus, stress, sleep, 
-      notes, activities, reflection, voiceNote, aiSuggestion,
+      notes, activities, selectedTimeSlots, reflection, voiceNote, aiSuggestion,
       onPeriod, waterIntake, mealsEaten, mealQuality, caffeine, alcohol 
     } = body;
 
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
         sleep: sleep ? parseFloat(sleep) : null,
         notes: notes || null,
         activities: JSON.stringify(activities),
+        selectedTimeSlots: selectedTimeSlots ? JSON.stringify(selectedTimeSlots) : null,
         reflection: reflection || null,
         voiceNote: voiceNote || null,
         aiSuggestion: aiSuggestion || null,

@@ -46,6 +46,46 @@ const getGenreUnselectedStyle = (genre: string) => {
   return colorMap[genre] || 'bg-gradient-to-r from-slate-500/15 to-gray-500/10 text-slate-200 hover:from-slate-500/25 hover:to-gray-500/15 border border-slate-400/20 hover:border-slate-300/40';
 };
 
+// Time slot configuration
+const timeSlots = [
+  {
+    id: 'morning',
+    name: 'Morning',
+    hours: [5, 6, 7, 8, 9, 10],
+    color: 'from-orange-500/30 to-yellow-500/20',
+    borderColor: 'border-orange-400/50',
+    textColor: 'text-orange-200',
+    icon: '🌅'
+  },
+  {
+    id: 'midday',
+    name: 'Midday',
+    hours: [11, 12, 13, 14, 15, 16],
+    color: 'from-blue-500/30 to-cyan-500/20',
+    borderColor: 'border-blue-400/50',
+    textColor: 'text-blue-200',
+    icon: '☀️'
+  },
+  {
+    id: 'evening',
+    name: 'Evening',
+    hours: [17, 18, 19, 20, 21, 22],
+    color: 'from-purple-500/30 to-pink-500/20',
+    borderColor: 'border-purple-400/50',
+    textColor: 'text-purple-200',
+    icon: '🌆'
+  },
+  {
+    id: 'night',
+    name: 'Night',
+    hours: [23, 0, 1, 2, 3, 4],
+    color: 'from-indigo-500/30 to-slate-500/20',
+    borderColor: 'border-indigo-400/50',
+    textColor: 'text-indigo-200',
+    icon: '🌙'
+  }
+];
+
 export default function NewEntry() {
   const router = useRouter();
   const [reflection, setReflection] = useState("");
@@ -56,6 +96,7 @@ export default function NewEntry() {
   
   // AI Preference Learning state
   const [preferenceOptions, setPreferenceOptions] = useState<any[]>([]);
+  const [dssAnalysis, setDssAnalysis] = useState<any>(null);
   const [isGeneratingPreferences, setIsGeneratingPreferences] = useState(false);
   const [userPreferences, setUserPreferences] = useState<any>(null);
   const [userInfo, setUserInfo] = useState<any>(null);
@@ -74,6 +115,7 @@ export default function NewEntry() {
     stress: 5,
     sleep: 8,
     activities: [] as string[],
+    selectedTimeSlots: [] as string[],
     onPeriod: false,
     waterIntake: 0,
     mealsEaten: 0,
@@ -276,12 +318,19 @@ export default function NewEntry() {
             }
             
             const category = getCategoryForActivity(activity);
+            
+            // Store DSS analysis for the first activity (we'll show it for the primary activity)
+            if (data.dssAnalysis && !dssAnalysis) {
+              setDssAnalysis(data.dssAnalysis);
+            }
+            
             return {
               category,
               title: getTitleForActivity(activity),
               description: `Select ${activity} favorites based on your chosen genres (${selectedGenres.join(', ')})`,
               options: data.suggestions,
-              currentCount: getCurrentCountForCategory(category, userInfo)
+              currentCount: getCurrentCountForCategory(category, userInfo),
+              dssAnalysis: data.dssAnalysis
             };
           }
         } catch (error) {
@@ -493,6 +542,7 @@ export default function NewEntry() {
           sleep: formData.sleep,
           notes: reflection, // Save reflection as notes
           activities: formData.activities,
+          selectedTimeSlots: formData.selectedTimeSlots,
           onPeriod: formData.onPeriod,
           waterIntake: formData.waterIntake,
           mealsEaten: formData.mealsEaten,
@@ -619,77 +669,34 @@ export default function NewEntry() {
           {/* Mood Parameters Section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: [0, -6, 0] }}
+            animate={{ opacity: 1, y: [0, -5, 0] }}
             transition={{
               opacity: { duration: 0.6, delay: 0.2 },
-              y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
+              y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-gradient-to-br from-slate-900/80 via-slate-800/60 to-slate-900/80 backdrop-blur-2xl rounded-3xl p-8 mx-8 border border-cyan-400/20 shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 overflow-hidden"
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
-            {/* Futuristic Grid Background */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_24%,rgba(6,182,212,0.1)_25%,rgba(6,182,212,0.1)_26%,transparent_27%,transparent_74%,rgba(147,51,234,0.1)_75%,rgba(147,51,234,0.1)_76%,transparent_77%)] bg-[length:20px_20px]"></div>
-            </div>
-            
-            {/* Neon Glow Effects */}
-            <div className="absolute inset-0 rounded-3xl border-2 border-cyan-400/30 shadow-[0_0_30px_rgba(6,182,212,0.4)]"></div>
-            <div className="absolute inset-0 rounded-3xl border border-purple-400/20 shadow-[0_0_60px_rgba(147,51,234,0.3)]"></div>
-            
-            {/* Scanning Line Effect */}
-            <motion.div
-              className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
-              animate={{ x: ['-100%', '100%'] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            />
+            {/* Glowing Edge Effect */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
             
             <div className="relative z-10">
-              <div className="text-center mb-8">
-                <motion.h2 
-                  className="text-3xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-2 drop-shadow-lg"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.6 }}
-                >
+              <div className="flex items-center justify-center mb-6">
+                <h2 className="text-2xl font-bold text-white flex items-center">
+                  <motion.span
+                    className="mr-2 text-3xl"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    🎭
+                  </motion.span>
                   Mood Parameters
-                </motion.h2>
-                <motion.p 
-                  className="text-cyan-300 text-sm font-medium tracking-wider uppercase"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.6 }}
-                >
-                  Rate how you're feeling across different dimensions
-                </motion.p>
-                <motion.div
-                  className="flex justify-center mt-4"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.7, duration: 0.6 }}
-                >
-                  <div className="flex space-x-2">
-                    <motion.div 
-                      className="w-3 h-3 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full"
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                    <motion.div 
-                      className="w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
-                    />
-                    <motion.div 
-                      className="w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
-                    />
-                  </div>
-                </motion.div>
+                </h2>
               </div>
               
-              <div className="space-y-8">
+              <div className="space-y-4">
                 {/* Parameter Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <ParameterSlider
                   label="Valence"
                   value={formData.valence}
@@ -739,7 +746,7 @@ export default function NewEntry() {
                     />
                   </div>
 
-                  <div className="space-y-8">
+                  <div className="space-y-4">
                     <ParameterSlider
                       label="Stress"
                       value={formData.stress}
@@ -777,7 +784,82 @@ export default function NewEntry() {
             </div>
           </motion.div>
 
+
           {/* Activities Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: [0, -5, 0] }}
+            transition={{
+              opacity: { duration: 0.6, delay: 0.3 },
+              y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+            }}
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
+          >
+            {/* Glowing Edge Effect */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white flex items-center">
+                  <motion.span
+                    className="mr-2 text-3xl"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    🎯
+                  </motion.span>
+                  Activities
+                </h2>
+                
+                {/* AI Toggle Button */}
+                <motion.button
+                  type="button"
+                  onClick={() => setEnablePreferenceLearning(!enablePreferenceLearning)}
+                  className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                    enablePreferenceLearning
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/30 border border-cyan-400/50'
+                      : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 border border-slate-500/50'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="flex items-center space-x-2">
+                    <motion.span
+                      className="text-lg"
+                      animate={{ rotate: enablePreferenceLearning ? 360 : 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      🤖
+                    </motion.span>
+                    <span className="hidden sm:inline">
+                      {enablePreferenceLearning ? 'AI Enabled' : 'AI Disabled'}
+                    </span>
+                  </div>
+                  
+                  {/* Glow effect when enabled */}
+                  {enablePreferenceLearning && (
+                    <motion.div
+                      className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 blur-sm"
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  )}
+                </motion.button>
+              </div>
+              
+              <ActivitySelector
+                selectedActivities={formData.activities}
+                onActivityToggle={(activity) => {
+                  const newActivities = formData.activities.includes(activity)
+                    ? formData.activities.filter(a => a !== activity)
+                    : [...formData.activities, activity];
+                  handleChange("activities", newActivities);
+                }}
+              />
+            </div>
+          </motion.div>
+
+          {/* Time Slots Section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: [0, -5, 0] }}
@@ -797,49 +879,74 @@ export default function NewEntry() {
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
-                  🎯
+                  ⏰
                 </motion.span>
-                Activities
+                Time Slots
               </h2>
               
-              <ActivitySelector
-                selectedActivities={formData.activities}
-                onActivityToggle={(activity) => {
-                  const newActivities = formData.activities.includes(activity)
-                    ? formData.activities.filter(a => a !== activity)
-                    : [...formData.activities, activity];
-                  handleChange("activities", newActivities);
-                }}
-              />
-            </div>
-          </motion.div>
+              <p className="text-slate-300 mb-6 text-sm">
+                Select the hours when you performed these activities. You can select multiple hours across different time slots.
+              </p>
 
-          {/* AI Preference Learning Toggle */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: [0, -4, 0] }}
-            transition={{
-              opacity: { duration: 0.6, delay: 0.6 },
-              y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" }
-            }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-6 mx-8"
-          >
-            {/* Glowing Edge Effect */}
-            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
-            
-            <div className="relative z-10">
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={enablePreferenceLearning}
-                  onChange={(e) => setEnablePreferenceLearning(e.target.checked)}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 bg-blue-900/30 border-blue-400/50"
-                />
-                <div className="flex-1">
-                  <span className="font-semibold text-white">Enable AI to learn my preferences during this entry</span>
-                  <p className="text-sm text-slate-300">Uncheck if you don't want to see AI suggestions for genres and favorites right now.</p>
-                </div>
-              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {timeSlots.map((slot, slotIndex) => (
+                  <motion.div
+                    key={slot.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: slotIndex * 0.1 }}
+                    className={`p-4 rounded-2xl bg-gradient-to-r ${slot.color} border ${slot.borderColor} backdrop-blur-sm`}
+                  >
+                    <div className="flex items-center mb-4">
+                      <span className="text-2xl mr-3">{slot.icon}</span>
+                      <h3 className={`text-lg font-bold ${slot.textColor}`}>
+                        {slot.name}
+                      </h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2">
+                      {slot.hours.map((hour) => {
+                        const hourKey = `${slot.id}-${hour}`;
+                        const isSelected = formData.selectedTimeSlots.includes(hourKey);
+                        
+                        return (
+                          <motion.button
+                            key={hourKey}
+                            type="button"
+                            onClick={() => {
+                              const newTimeSlots = isSelected
+                                ? formData.selectedTimeSlots.filter(ts => ts !== hourKey)
+                                : [...formData.selectedTimeSlots, hourKey];
+                              handleChange("selectedTimeSlots", newTimeSlots);
+                            }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                              isSelected
+                                ? `bg-white/20 text-white shadow-lg border-2 ${slot.borderColor}`
+                                : `bg-white/10 ${slot.textColor} hover:bg-white/15 border border-transparent hover:border-white/20`
+                            }`}
+                          >
+                            {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {formData.selectedTimeSlots.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 p-3 bg-slate-700/30 rounded-lg"
+                >
+                  <p className="text-slate-300 text-sm">
+                    <span className="font-semibold">Selected hours:</span> {formData.selectedTimeSlots.length} hour{formData.selectedTimeSlots.length !== 1 ? 's' : ''}
+                  </p>
+                </motion.div>
+              )}
             </div>
           </motion.div>
 
@@ -849,7 +956,7 @@ export default function NewEntry() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: [0, -3, 0] }}
               transition={{
-                opacity: { duration: 0.6, delay: 0.8 },
+                opacity: { duration: 0.6, delay: 0.5 },
                 y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
               }}
               className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
@@ -983,6 +1090,38 @@ export default function NewEntry() {
                         Selected genres: {selectedGenres.join(', ')}
                       </div>
                     </div>
+
+                    {/* DSS Analysis Display */}
+                    {dssAnalysis && (
+                      <div className="mb-6 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-400/30">
+                        <div className="flex items-center space-x-2 mb-3">
+                          <span className="text-2xl">🧠</span>
+                          <h3 className="text-lg font-bold text-white">Activity Analysis</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-slate-300">Primary Component:</span>
+                            <span className={`px-2 py-1 rounded text-sm font-bold ${
+                              dssAnalysis.primaryComponent === 'LM' ? 'bg-blue-500/30 text-blue-200' :
+                              dssAnalysis.primaryComponent === 'RI' ? 'bg-green-500/30 text-green-200' :
+                              'bg-purple-500/30 text-purple-200'
+                            }`}>
+                              {dssAnalysis.primaryComponent} ({dssAnalysis.primaryComponent === 'LM' ? 'Learning Momentum' : 
+                                                               dssAnalysis.primaryComponent === 'RI' ? 'Recovery Index' : 'Connection'})
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-slate-300">Confidence:</span>
+                            <span className="text-sm text-white font-bold">
+                              {Math.round(dssAnalysis.confidence * 100)}%
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-3 p-3 bg-slate-700/30 rounded-lg">
+                          <p className="text-sm text-slate-300 italic">"{dssAnalysis.reasoning}"</p>
+                        </div>
+                      </div>
+                    )}
                 
                     {preferenceOptions.map((option, index) => (
                       <div key={index} className="bg-slate-800/40 backdrop-blur-xl rounded-lg p-4 border-2 border-blue-400/30">

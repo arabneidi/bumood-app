@@ -8,6 +8,8 @@ import TagsNetworkGraph from '@/components/dashboard/TagsNetworkGraph';
 import PeriodInsights from '@/components/dashboard/PeriodInsights';
 import DSSRadar from '@/components/dashboard/DSSRadar';
 import DriversCard from '@/components/dashboard/DriversCard';
+import PowerHoursHeatmap from '@/components/charts/PowerHoursHeatmap';
+import ProTipsCard from '@/components/dashboard/ProTipsCard';
 
 interface MoodEntry {
   id: string;
@@ -46,6 +48,10 @@ export default function StatsPage() {
   // Drivers states
   const [driversData, setDriversData] = useState<any>(null);
   const [driversLoading, setDriversLoading] = useState(true);
+  
+  // Power Hours states
+  const [powerHoursData, setPowerHoursData] = useState<any>(null);
+  const [powerHoursLoading, setPowerHoursLoading] = useState(true);
   
 
   useEffect(() => {
@@ -98,6 +104,19 @@ export default function StatsPage() {
           console.error('Error fetching drivers data:', driversError);
         } finally {
           setDriversLoading(false);
+        }
+
+        // Fetch Power Hours data
+        try {
+          const powerHoursResponse = await fetch('/api/power-hours?userId=dummy-user&days=14');
+          if (powerHoursResponse.ok) {
+            const powerHoursData = await powerHoursResponse.json();
+            setPowerHoursData(powerHoursData);
+          }
+        } catch (powerHoursError) {
+          console.error('Error fetching power hours data:', powerHoursError);
+        } finally {
+          setPowerHoursLoading(false);
         }
 
 
@@ -204,11 +223,38 @@ export default function StatsPage() {
           </motion.div>
         </motion.div>
 
-        {/* Activity Drivers Section */}
+        {/* Power Hours Heatmap Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
+          className="mb-12"
+        >
+          <PowerHoursHeatmap 
+            data={powerHoursData?.data || []} 
+            loading={powerHoursLoading} 
+          />
+        </motion.div>
+
+        {/* Pro Tips Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
+          className="mb-12"
+        >
+          <ProTipsCard 
+            powerHoursData={powerHoursData} 
+            userInfo={userInfo}
+            loading={powerHoursLoading} 
+          />
+        </motion.div>
+
+        {/* Activity Drivers Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
           className="mb-12"
         >
           <DriversCard data={driversData} loading={driversLoading} />
@@ -218,7 +264,7 @@ export default function StatsPage() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
           className="mb-12"
         >
           <div className="relative bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-purple-500/20 p-6 shadow-lg">
