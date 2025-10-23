@@ -7,6 +7,7 @@ import AnalyticsDashboard from '@/components/dashboard/AnalyticsDashboard';
 import TagsNetworkGraph from '@/components/dashboard/TagsNetworkGraph';
 import PeriodInsights from '@/components/dashboard/PeriodInsights';
 import DSSRadar from '@/components/dashboard/DSSRadar';
+import DriversCard from '@/components/dashboard/DriversCard';
 
 interface MoodEntry {
   id: string;
@@ -41,6 +42,10 @@ export default function StatsPage() {
   // DSS states
   const [dssData, setDssData] = useState<any>(null);
   const [dssLoading, setDssLoading] = useState(true);
+  
+  // Drivers states
+  const [driversData, setDriversData] = useState<any>(null);
+  const [driversLoading, setDriversLoading] = useState(true);
   
 
   useEffect(() => {
@@ -80,6 +85,19 @@ export default function StatsPage() {
           console.error('Error fetching DSS data:', dssError);
         } finally {
           setDssLoading(false);
+        }
+
+        // Fetch Drivers data
+        try {
+          const driversResponse = await fetch('/api/drivers');
+          if (driversResponse.ok) {
+            const driversData = await driversResponse.json();
+            setDriversData(driversData);
+          }
+        } catch (driversError) {
+          console.error('Error fetching drivers data:', driversError);
+        } finally {
+          setDriversLoading(false);
         }
 
 
@@ -186,6 +204,15 @@ export default function StatsPage() {
           </motion.div>
         </motion.div>
 
+        {/* Activity Drivers Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="mb-12"
+        >
+          <DriversCard data={driversData} loading={driversLoading} />
+        </motion.div>
 
         {/* Network Graph Section */}
         <motion.div

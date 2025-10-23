@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
         height: true,
         weight: true,
         timezone: true,
+        personality: true,
+        universityLevel: true,
+        fieldOfStudy: true,
         interests: true,
         quoteStyle: true,
         favoriteAuthors: true,
@@ -56,6 +59,7 @@ export async function PUT(request: NextRequest) {
     
     const { 
       userId = 'dummy-user', gender, name, age, height, weight, timezone, 
+      personality, universityLevel, fieldOfStudy,
       interests, quoteStyle, favoriteAuthors,
       favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers
     } = body;
@@ -70,6 +74,9 @@ export async function PUT(request: NextRequest) {
         ...(height !== undefined && { height }),
         ...(weight !== undefined && { weight }),
         ...(timezone !== undefined && { timezone }),
+        ...(personality !== undefined && { personality }),
+        ...(universityLevel !== undefined && { universityLevel }),
+        ...(fieldOfStudy !== undefined && { fieldOfStudy }),
         ...(interests !== undefined && { interests }),
         ...(quoteStyle !== undefined && { quoteStyle }),
         ...(favoriteAuthors !== undefined && { favoriteAuthors }),

@@ -175,6 +175,24 @@ export default function NewEntry() {
           
           if (response.ok) {
             const data = await response.json();
+            
+            // Debug: Show the AI prompt and response
+            if (data.debug) {
+              console.log('🔍 AI DEBUG INFO:');
+              console.log('Activity:', data.debug.activity);
+              console.log('Preference Type:', data.debug.preferenceType);
+              console.log('Selected Genres:', data.debug.selectedGenres);
+              console.log('User Info:', data.debug.userInfo);
+              console.log('FULL PROMPT:');
+              console.log('=====================================');
+              console.log(data.debug.prompt);
+              console.log('=====================================');
+              console.log('AI RESPONSE:');
+              console.log('=====================================');
+              console.log(data.debug.aiResponse);
+              console.log('=====================================');
+            }
+            
             return {
               activity,
               title: `${activity.charAt(0).toUpperCase() + activity.slice(1)} Genres`,
@@ -239,6 +257,24 @@ export default function NewEntry() {
           
           if (response.ok) {
             const data = await response.json();
+            
+            // Debug: Show the AI prompt and response
+            if (data.debug) {
+              console.log('🔍 AI DEBUG INFO (SPECIFICS):');
+              console.log('Activity:', data.debug.activity);
+              console.log('Preference Type:', data.debug.preferenceType);
+              console.log('Selected Genres:', data.debug.selectedGenres);
+              console.log('User Info:', data.debug.userInfo);
+              console.log('FULL PROMPT:');
+              console.log('=====================================');
+              console.log(data.debug.prompt);
+              console.log('=====================================');
+              console.log('AI RESPONSE:');
+              console.log('=====================================');
+              console.log(data.debug.aiResponse);
+              console.log('=====================================');
+            }
+            
             const category = getCategoryForActivity(activity);
             return {
               category,
@@ -921,7 +957,7 @@ export default function NewEntry() {
                           }}
                           className="px-6 py-3 bg-gradient-to-r from-blue-500/30 to-purple-500/20 text-white rounded-xl font-semibold hover:from-blue-600/40 hover:to-purple-600/30 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-400/50 backdrop-blur-sm"
                         >
-                          Next: Choose Specific Favorites
+                          Next: Get Specific Suggestions
                         </button>
                       </div>
                     )}

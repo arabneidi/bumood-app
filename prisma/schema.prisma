@@ -49,6 +49,11 @@ model User {
   height        Float?    // in cm
   weight        Float?    // in kg
   timezone      String?   // user's timezone
+  personality   String?   // JSON array: ["INTJ", "ENFP", "ISTP"] (Myers-Briggs personality types)
+  
+  // University Information
+  universityLevel String? // undergraduate, master, phd, other
+  fieldOfStudy   String?  // Computer Science, Engineering, Medicine, etc.
   
   // Interests & Preferences (for AI personalization)
   interests     String?   // JSON array: gym, sports, poetry, art, music, science, etc.

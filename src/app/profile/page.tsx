@@ -15,6 +15,10 @@ export default function ProfilePage() {
     age: '',
     height: '',
     weight: '',
+    personality: [] as string[],
+    showPersonalityDropdown: false,
+    universityLevel: '',
+    fieldOfStudy: '',
     interests: [] as string[],
     quoteStyle: [] as string[],
     favoriteAuthors: '',
@@ -75,6 +79,9 @@ export default function ProfilePage() {
           age: data.age?.toString() || '',
           height: data.height?.toString() || '',
           weight: data.weight?.toString() || '',
+          personality: data.personality ? JSON.parse(data.personality) : [],
+          universityLevel: data.universityLevel || '',
+          fieldOfStudy: data.fieldOfStudy || '',
           interests: data.interests ? JSON.parse(data.interests) : [],
           quoteStyle: data.quoteStyle ? JSON.parse(data.quoteStyle) : [],
           favoriteAuthors: data.favoriteAuthors || '',
@@ -126,6 +133,9 @@ export default function ProfilePage() {
           age: profile.age ? parseInt(profile.age) : null,
           height: profile.height ? parseFloat(profile.height) : null,
           weight: profile.weight ? parseFloat(profile.weight) : null,
+          personality: JSON.stringify(profile.personality),
+          universityLevel: profile.universityLevel || null,
+          fieldOfStudy: profile.fieldOfStudy || null,
           interests: JSON.stringify(profile.interests), // For AI personalization
           quoteStyle: JSON.stringify(profile.quoteStyle), // For AI quote generation
           favoriteAuthors: profile.favoriteAuthors || null,
@@ -443,6 +453,390 @@ export default function ProfilePage() {
                       <Plus className="w-5 h-5" />
                     </motion.button>
                   </div>
+                </motion.div>
+
+                {/* Personality Types */}
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: 1 }}
+                  className="group"
+                >
+                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
+                    <span className="text-2xl mr-2">🧠</span>
+                    Personality Types
+                  </label>
+                  
+                  {/* Selected Types Display */}
+                  {profile.personality.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {profile.personality.map((type) => (
+                        <motion.span
+                          key={type}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="px-3 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-sm font-medium rounded-full"
+                        >
+                          {type}
+                        </motion.span>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Dropdown Button */}
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setProfile({...profile, showPersonalityDropdown: !profile.showPersonalityDropdown})}
+                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-violet-500/10 flex items-center justify-between"
+                  >
+                    <span>
+                      {profile.personality.length === 0 
+                        ? 'Choose your personality types' 
+                        : `${profile.personality.length} type${profile.personality.length > 1 ? 's' : ''} selected`
+                      }
+                    </span>
+                    <motion.span
+                      animate={{ rotate: profile.showPersonalityDropdown ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-violet-400"
+                    >
+                      ▼
+                    </motion.span>
+                  </motion.button>
+                  
+                  {/* Dropdown Options */}
+                  <AnimatePresence>
+                    {profile.showPersonalityDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-2 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl p-4 max-h-64 overflow-y-auto scrollbar-thin personality-scrollbar"
+                      >
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { value: 'INTJ', label: 'INTJ - The Architect' },
+                            { value: 'INTP', label: 'INTP - The Thinker' },
+                            { value: 'ENTJ', label: 'ENTJ - The Commander' },
+                            { value: 'ENTP', label: 'ENTP - The Debater' },
+                            { value: 'INFJ', label: 'INFJ - The Advocate' },
+                            { value: 'INFP', label: 'INFP - The Mediator' },
+                            { value: 'ENFJ', label: 'ENFJ - The Protagonist' },
+                            { value: 'ENFP', label: 'ENFP - The Campaigner' },
+                            { value: 'ISTJ', label: 'ISTJ - The Logistician' },
+                            { value: 'ISFJ', label: 'ISFJ - The Protector' },
+                            { value: 'ESTJ', label: 'ESTJ - The Executive' },
+                            { value: 'ESFJ', label: 'ESFJ - The Consul' },
+                            { value: 'ISTP', label: 'ISTP - The Virtuoso' },
+                            { value: 'ISFP', label: 'ISFP - The Adventurer' },
+                            { value: 'ESTP', label: 'ESTP - The Entrepreneur' },
+                            { value: 'ESFP', label: 'ESFP - The Entertainer' }
+                          ].map((type, index) => {
+                            // Color mapping for each personality type
+                            const getPersonalityColor = (typeValue: string) => {
+                              const colorMap: { [key: string]: { 
+                                selectedBg: string, 
+                                selectedBorder: string, 
+                                selectedShadow: string,
+                                hoverBg: string,
+                                hoverText: string,
+                                hoverBorder: string,
+                                hoverShadow: string,
+                                glowColor: string,
+                                indicatorBg: string
+                              } } = {
+                                'INTJ': { 
+                                  selectedBg: 'bg-gradient-to-r from-blue-500/30 via-cyan-500/30 to-blue-600/30',
+                                  selectedBorder: 'border-blue-400/50',
+                                  selectedShadow: 'shadow-blue-500/20',
+                                  hoverBg: 'hover:bg-blue-500/10',
+                                  hoverText: 'hover:text-blue-200',
+                                  hoverBorder: 'hover:border-blue-400/50',
+                                  hoverShadow: 'hover:shadow-blue-500/10',
+                                  glowColor: 'rgba(59, 130, 246, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-blue-400 to-cyan-400'
+                                },
+                                'INTP': { 
+                                  selectedBg: 'bg-gradient-to-r from-purple-500/30 via-violet-500/30 to-purple-600/30',
+                                  selectedBorder: 'border-purple-400/50',
+                                  selectedShadow: 'shadow-purple-500/20',
+                                  hoverBg: 'hover:bg-purple-500/10',
+                                  hoverText: 'hover:text-purple-200',
+                                  hoverBorder: 'hover:border-purple-400/50',
+                                  hoverShadow: 'hover:shadow-purple-500/10',
+                                  glowColor: 'rgba(147, 51, 234, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-purple-400 to-violet-400'
+                                },
+                                'ENTJ': { 
+                                  selectedBg: 'bg-gradient-to-r from-orange-500/30 via-amber-500/30 to-orange-600/30',
+                                  selectedBorder: 'border-orange-400/50',
+                                  selectedShadow: 'shadow-orange-500/20',
+                                  hoverBg: 'hover:bg-orange-500/10',
+                                  hoverText: 'hover:text-orange-200',
+                                  hoverBorder: 'hover:border-orange-400/50',
+                                  hoverShadow: 'hover:shadow-orange-500/10',
+                                  glowColor: 'rgba(249, 115, 22, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-orange-400 to-amber-400'
+                                },
+                                'ENTP': { 
+                                  selectedBg: 'bg-gradient-to-r from-green-500/30 via-emerald-500/30 to-green-600/30',
+                                  selectedBorder: 'border-green-400/50',
+                                  selectedShadow: 'shadow-green-500/20',
+                                  hoverBg: 'hover:bg-green-500/10',
+                                  hoverText: 'hover:text-green-200',
+                                  hoverBorder: 'hover:border-green-400/50',
+                                  hoverShadow: 'hover:shadow-green-500/10',
+                                  glowColor: 'rgba(34, 197, 94, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-green-400 to-emerald-400'
+                                },
+                                'INFJ': { 
+                                  selectedBg: 'bg-gradient-to-r from-pink-500/30 via-rose-500/30 to-pink-600/30',
+                                  selectedBorder: 'border-pink-400/50',
+                                  selectedShadow: 'shadow-pink-500/20',
+                                  hoverBg: 'hover:bg-pink-500/10',
+                                  hoverText: 'hover:text-pink-200',
+                                  hoverBorder: 'hover:border-pink-400/50',
+                                  hoverShadow: 'hover:shadow-pink-500/10',
+                                  glowColor: 'rgba(236, 72, 153, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-pink-400 to-rose-400'
+                                },
+                                'INFP': { 
+                                  selectedBg: 'bg-gradient-to-r from-cyan-500/30 via-sky-500/30 to-cyan-600/30',
+                                  selectedBorder: 'border-cyan-400/50',
+                                  selectedShadow: 'shadow-cyan-500/20',
+                                  hoverBg: 'hover:bg-cyan-500/10',
+                                  hoverText: 'hover:text-cyan-200',
+                                  hoverBorder: 'hover:border-cyan-400/50',
+                                  hoverShadow: 'hover:shadow-cyan-500/10',
+                                  glowColor: 'rgba(6, 182, 212, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-cyan-400 to-sky-400'
+                                },
+                                'ENFJ': { 
+                                  selectedBg: 'bg-gradient-to-r from-yellow-500/30 via-amber-500/30 to-yellow-600/30',
+                                  selectedBorder: 'border-yellow-400/50',
+                                  selectedShadow: 'shadow-yellow-500/20',
+                                  hoverBg: 'hover:bg-yellow-500/10',
+                                  hoverText: 'hover:text-yellow-200',
+                                  hoverBorder: 'hover:border-yellow-400/50',
+                                  hoverShadow: 'hover:shadow-yellow-500/10',
+                                  glowColor: 'rgba(234, 179, 8, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-yellow-400 to-amber-400'
+                                },
+                                'ENFP': { 
+                                  selectedBg: 'bg-gradient-to-r from-indigo-500/30 via-blue-500/30 to-indigo-600/30',
+                                  selectedBorder: 'border-indigo-400/50',
+                                  selectedShadow: 'shadow-indigo-500/20',
+                                  hoverBg: 'hover:bg-indigo-500/10',
+                                  hoverText: 'hover:text-indigo-200',
+                                  hoverBorder: 'hover:border-indigo-400/50',
+                                  hoverShadow: 'hover:shadow-indigo-500/10',
+                                  glowColor: 'rgba(99, 102, 241, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-indigo-400 to-blue-400'
+                                },
+                                'ISTJ': { 
+                                  selectedBg: 'bg-gradient-to-r from-red-500/30 via-rose-500/30 to-red-600/30',
+                                  selectedBorder: 'border-red-400/50',
+                                  selectedShadow: 'shadow-red-500/20',
+                                  hoverBg: 'hover:bg-red-500/10',
+                                  hoverText: 'hover:text-red-200',
+                                  hoverBorder: 'hover:border-red-400/50',
+                                  hoverShadow: 'hover:shadow-red-500/10',
+                                  glowColor: 'rgba(239, 68, 68, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-red-400 to-rose-400'
+                                },
+                                'ISFJ': { 
+                                  selectedBg: 'bg-gradient-to-r from-teal-500/30 via-cyan-500/30 to-teal-600/30',
+                                  selectedBorder: 'border-teal-400/50',
+                                  selectedShadow: 'shadow-teal-500/20',
+                                  hoverBg: 'hover:bg-teal-500/10',
+                                  hoverText: 'hover:text-teal-200',
+                                  hoverBorder: 'hover:border-teal-400/50',
+                                  hoverShadow: 'hover:shadow-teal-500/10',
+                                  glowColor: 'rgba(20, 184, 166, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-teal-400 to-cyan-400'
+                                },
+                                'ESTJ': { 
+                                  selectedBg: 'bg-gradient-to-r from-amber-500/30 via-yellow-500/30 to-amber-600/30',
+                                  selectedBorder: 'border-amber-400/50',
+                                  selectedShadow: 'shadow-amber-500/20',
+                                  hoverBg: 'hover:bg-amber-500/10',
+                                  hoverText: 'hover:text-amber-200',
+                                  hoverBorder: 'hover:border-amber-400/50',
+                                  hoverShadow: 'hover:shadow-amber-500/10',
+                                  glowColor: 'rgba(245, 158, 11, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-amber-400 to-yellow-400'
+                                },
+                                'ESFJ': { 
+                                  selectedBg: 'bg-gradient-to-r from-emerald-500/30 via-green-500/30 to-emerald-600/30',
+                                  selectedBorder: 'border-emerald-400/50',
+                                  selectedShadow: 'shadow-emerald-500/20',
+                                  hoverBg: 'hover:bg-emerald-500/10',
+                                  hoverText: 'hover:text-emerald-200',
+                                  hoverBorder: 'hover:border-emerald-400/50',
+                                  hoverShadow: 'hover:shadow-emerald-500/10',
+                                  glowColor: 'rgba(16, 185, 129, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-emerald-400 to-green-400'
+                                },
+                                'ISTP': { 
+                                  selectedBg: 'bg-gradient-to-r from-violet-500/30 via-purple-500/30 to-violet-600/30',
+                                  selectedBorder: 'border-violet-400/50',
+                                  selectedShadow: 'shadow-violet-500/20',
+                                  hoverBg: 'hover:bg-violet-500/10',
+                                  hoverText: 'hover:text-violet-200',
+                                  hoverBorder: 'hover:border-violet-400/50',
+                                  hoverShadow: 'hover:shadow-violet-500/10',
+                                  glowColor: 'rgba(139, 92, 246, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-violet-400 to-purple-400'
+                                },
+                                'ISFP': { 
+                                  selectedBg: 'bg-gradient-to-r from-rose-500/30 via-pink-500/30 to-rose-600/30',
+                                  selectedBorder: 'border-rose-400/50',
+                                  selectedShadow: 'shadow-rose-500/20',
+                                  hoverBg: 'hover:bg-rose-500/10',
+                                  hoverText: 'hover:text-rose-200',
+                                  hoverBorder: 'hover:border-rose-400/50',
+                                  hoverShadow: 'hover:shadow-rose-500/10',
+                                  glowColor: 'rgba(244, 63, 94, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-rose-400 to-pink-400'
+                                },
+                                'ESTP': { 
+                                  selectedBg: 'bg-gradient-to-r from-sky-500/30 via-blue-500/30 to-sky-600/30',
+                                  selectedBorder: 'border-sky-400/50',
+                                  selectedShadow: 'shadow-sky-500/20',
+                                  hoverBg: 'hover:bg-sky-500/10',
+                                  hoverText: 'hover:text-sky-200',
+                                  hoverBorder: 'hover:border-sky-400/50',
+                                  hoverShadow: 'hover:shadow-sky-500/10',
+                                  glowColor: 'rgba(14, 165, 233, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-sky-400 to-blue-400'
+                                },
+                                'ESFP': { 
+                                  selectedBg: 'bg-gradient-to-r from-lime-500/30 via-green-500/30 to-lime-600/30',
+                                  selectedBorder: 'border-lime-400/50',
+                                  selectedShadow: 'shadow-lime-500/20',
+                                  hoverBg: 'hover:bg-lime-500/10',
+                                  hoverText: 'hover:text-lime-200',
+                                  hoverBorder: 'hover:border-lime-400/50',
+                                  hoverShadow: 'hover:shadow-lime-500/10',
+                                  glowColor: 'rgba(132, 204, 22, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-lime-400 to-green-400'
+                                }
+                              };
+                              return colorMap[typeValue] || { 
+                                selectedBg: 'bg-gradient-to-r from-gray-500/30 via-slate-500/30 to-gray-600/30',
+                                selectedBorder: 'border-gray-400/50',
+                                selectedShadow: 'shadow-gray-500/20',
+                                hoverBg: 'hover:bg-gray-500/10',
+                                hoverText: 'hover:text-gray-200',
+                                hoverBorder: 'hover:border-gray-400/50',
+                                hoverShadow: 'hover:shadow-gray-500/10',
+                                glowColor: 'rgba(107, 114, 128, 0.6)',
+                                indicatorBg: 'bg-gradient-to-r from-gray-400 to-slate-400'
+                              };
+                            };
+
+                            const colors = getPersonalityColor(type.value);
+                            const isSelected = profile.personality.includes(type.value);
+
+                            return (
+                              <motion.button
+                                key={type.value}
+                                type="button"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: index * 0.03 }}
+                                whileHover={{ 
+                                  scale: 1.08,
+                                  boxShadow: `0 0 20px ${colors.glowColor}, 0 0 40px ${colors.glowColor.replace('0.6', '0.3')}`
+                                }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => {
+                                  if (profile.personality.includes(type.value)) {
+                                    setProfile({
+                                      ...profile,
+                                      personality: profile.personality.filter(p => p !== type.value)
+                                    });
+                                  } else {
+                                    setProfile({
+                                      ...profile,
+                                      personality: [...profile.personality, type.value]
+                                    });
+                                  }
+                                }}
+                                className={`relative px-3 py-2 rounded-lg text-xs font-bold transition-all duration-300 backdrop-blur-sm border ${
+                                  isSelected
+                                    ? `${colors.selectedBg} text-white ${colors.selectedBorder} shadow-lg ${colors.selectedShadow}`
+                                    : `${colors.hoverBg} ${colors.hoverText} ${colors.hoverBorder} hover:shadow-lg ${colors.hoverShadow}`
+                                }`}
+                              >
+                                {/* Glass glow effect */}
+                                <motion.div
+                                  className="absolute inset-0 rounded-lg bg-gradient-to-r from-violet-400/10 via-purple-400/10 to-pink-400/10 opacity-0 group-hover:opacity-100"
+                                  whileHover={{ opacity: 1 }}
+                                  transition={{ duration: 0.3 }}
+                                />
+                                
+                                {/* Content */}
+                                <span className="relative z-10">
+                                  {type.label}
+                                </span>
+                                
+                                {/* Glow indicator for selected */}
+                                {isSelected && (
+                                  <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className={`absolute -top-1 -right-1 w-2 h-2 ${colors.indicatorBg} rounded-full shadow-lg`}
+                                  />
+                                )}
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+
+                {/* University Level */}
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: -1 }}
+                  className="group"
+                >
+                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
+                    <span className="text-2xl mr-2">🎓</span>
+                    University Level
+                  </label>
+                  <select
+                    value={profile.universityLevel}
+                    onChange={(e) => setProfile({...profile, universityLevel: e.target.value})}
+                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-blue-500/10"
+                  >
+                    <option value="">Choose your level</option>
+                    <option value="undergraduate">Undergraduate</option>
+                    <option value="master">Master's</option>
+                    <option value="phd">PhD</option>
+                    <option value="other">Other</option>
+                  </select>
+                </motion.div>
+
+                {/* Field of Study */}
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: 1 }}
+                  className="group"
+                >
+                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
+                    <span className="text-2xl mr-2">📚</span>
+                    Field of Study
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.fieldOfStudy}
+                    onChange={(e) => setProfile({...profile, fieldOfStudy: e.target.value})}
+                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-indigo-500/10"
+                    placeholder="e.g., Computer Science, Engineering, Medicine"
+                  />
                 </motion.div>
               </div>
             </motion.div>
