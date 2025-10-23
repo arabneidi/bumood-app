@@ -884,39 +884,26 @@ export default function ProfilePage() {
               <motion.button
                 onClick={saveProfile}
                 disabled={loading}
-                whileHover={{ scale: 1.15, rotate: 3, y: -5 }}
-                whileTap={{ scale: 0.9 }}
-                className="relative overflow-hidden px-16 py-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-3xl font-black text-3xl shadow-2xl transition-all duration-500 disabled:opacity-50"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative overflow-hidden px-8 py-4 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 border border-slate-600"
               >
-                <div className="absolute inset-0 rounded-3xl border-2 border-white/30 shadow-[0_0_50px_rgba(255,255,255,0.3)] animate-pulse"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
-                <motion.div
-                  animate={{ x: [-200, 200] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-40"
-                />
-                <div className="relative flex items-center justify-center space-x-4">
+                <div className="flex items-center justify-center space-x-3">
                   {loading ? (
                     <>
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="p-2 bg-white/20 rounded-full"
+                        className="w-5 h-5"
                       >
-                        <Save className="w-10 h-10" />
+                        <Save className="w-5 h-5" />
                       </motion.div>
-                      <span className="text-2xl">Saving Your Magic...</span>
+                      <span>Saving...</span>
                     </>
                   ) : (
                     <>
-                      <motion.div
-                        whileHover={{ rotate: 360 }}
-                        transition={{ duration: 0.5 }}
-                        className="p-2 bg-white/20 rounded-full"
-                      >
-                        <Save className="w-10 h-10" />
-                      </motion.div>
-                      <span className="text-2xl">Save Your Amazing Profile!</span>
+                      <Save className="w-5 h-5" />
+                      <span>Save Profile</span>
                     </>
                   )}
                 </div>
