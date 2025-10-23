@@ -684,9 +684,48 @@ export default function ProfilePage() {
                     placeholder="e.g., Frida Kahlo, Van Gogh, Banksy"
                   />
                 </motion.div>
+
+                {/* Custom Categories */}
+                {customCategories.map((category, index) => (
+                  <motion.div
+                    key={category.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    whileHover={{ scale: 1.05, rotate: index % 2 === 0 ? 2 : -2 }}
+                    className="group"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="block text-lg font-bold text-slate-200 flex items-center">
+                        <span className="text-2xl mr-2">⭐</span>
+                        {category.name}
+                      </label>
+                      <motion.button
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => removeCustomCategory(category.id)}
+                        className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
+                      >
+                        ✕
+                      </motion.button>
+                    </div>
+                    <input
+                      type="text"
+                      value={category.value}
+                      onChange={(e) => {
+                        const updatedCategories = customCategories.map(cat => 
+                          cat.id === category.id ? { ...cat, value: e.target.value } : cat
+                        );
+                        setCustomCategories(updatedCategories);
+                      }}
+                      className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-cyan-500/10"
+                      placeholder={`Enter your favorite ${category.name.toLowerCase()}`}
+                    />
+                  </motion.div>
+                ))}
               </div>
 
-              {/* Custom Categories */}
+              {/* Add Custom Category */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -694,7 +733,7 @@ export default function ProfilePage() {
                 className="mt-12"
               >
                 <h3 className="text-2xl font-black bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent mb-6">
-                  Custom Categories
+                  Add Custom Category
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -740,36 +779,6 @@ export default function ProfilePage() {
                 >
                   Add Custom Category
                 </motion.button>
-                
-                {/* Display Custom Categories */}
-                {customCategories.length > 0 && (
-                  <div className="mt-8">
-                    <h4 className="text-lg font-bold text-slate-200 mb-4">Your Custom Categories:</h4>
-                    <div className="space-y-3">
-                      {customCategories.map((category) => (
-                        <motion.div
-                          key={category.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="flex items-center justify-between p-4 bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-600/50"
-                        >
-                          <div>
-                            <span className="font-bold text-blue-300">{category.name}:</span>
-                            <span className="ml-2 text-slate-300">{category.value}</span>
-                          </div>
-                          <motion.button
-                            whileHover={{ scale: 1.1, rotate: 5 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => removeCustomCategory(category.id)}
-                            className="px-3 py-1 bg-red-500 text-white rounded-lg font-bold hover:bg-red-600 transition-all duration-300"
-                          >
-                            Remove
-                          </motion.button>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </motion.div>
             </motion.div>
 
