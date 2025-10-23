@@ -755,7 +755,10 @@ export default function ProfilePage() {
                     <input
                       type="text"
                       value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      onChange={(e) => {
+                        console.log('Category name changed:', e.target.value);
+                        setNewCategoryName(e.target.value);
+                      }}
                       className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-blue-500/10"
                       placeholder="e.g., Movies, Podcasts, YouTube"
                     />
@@ -771,7 +774,10 @@ export default function ProfilePage() {
                     <input
                       type="text"
                       value={newCategoryValue}
-                      onChange={(e) => setNewCategoryValue(e.target.value)}
+                      onChange={(e) => {
+                        console.log('Category value changed:', e.target.value);
+                        setNewCategoryValue(e.target.value);
+                      }}
                       className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-indigo-500/10"
                       placeholder="e.g., Christopher Nolan, Joe Rogan, TED Talks"
                     />
@@ -779,18 +785,16 @@ export default function ProfilePage() {
                 </div>
                 
                 <div className="text-center">
-                  <motion.button
-                    whileHover={{ scale: 1.05, rotate: 2 }}
-                    whileTap={{ scale: 0.95 }}
+                  <button
                     onClick={() => {
                       console.log('Button clicked!', { newCategoryName, newCategoryValue });
                       addCustomCategory();
                     }}
                     disabled={!newCategoryName.trim() || !newCategoryValue.trim()}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
                   >
                     Add Custom Category
-                  </motion.button>
+                  </button>
                   {(!newCategoryName.trim() || !newCategoryValue.trim()) && (
                     <p className="text-sm text-slate-400 mt-2">
                       Please fill in both fields to add a custom category
