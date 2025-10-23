@@ -42,6 +42,7 @@ export default function GoalsPage() {
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [selectedGoal, setSelectedGoal] = useState("");
   const [newGoal, setNewGoal] = useState({
     title: "",
     category: "",
@@ -172,6 +173,7 @@ export default function GoalsPage() {
         setShowAddGoal(false);
         setSelectedCategory("");
         setSelectedSubcategory("");
+        setSelectedGoal("");
       }
     } catch (error) {
       console.error("Error creating goal:", error);
@@ -687,11 +689,7 @@ export default function GoalsPage() {
                           {category.subcategories.map((subcategory) => (
                             <div
                               key={subcategory.id}
-                              className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                                selectedSubcategory === subcategory.id
-                                  ? 'border-cyan-400/70 bg-cyan-500/20'
-                                  : 'border-slate-600/50 bg-slate-700/30 hover:border-slate-500/70'
-                              }`}
+                              className="p-4 rounded-lg border-2 border-slate-600/50 bg-slate-700/30 transition-all duration-300"
                             >
                               <h4 className="text-lg font-bold text-white mb-4">{subcategory.name}</h4>
                               
@@ -703,6 +701,7 @@ export default function GoalsPage() {
                                     onClick={() => {
                                       setSelectedCategory(category.id);
                                       setSelectedSubcategory(subcategory.id);
+                                      setSelectedGoal(example);
                                       setNewGoal({ 
                                         ...newGoal, 
                                         title: example,
@@ -710,7 +709,11 @@ export default function GoalsPage() {
                                         subcategory: example
                                       });
                                     }}
-                                    className="p-3 rounded-lg border border-slate-600/50 bg-slate-700/30 hover:border-cyan-400/50 hover:bg-cyan-500/10 transition-all duration-300 text-left"
+                                    className={`p-3 rounded-lg border transition-all duration-300 text-left ${
+                                      selectedGoal === example
+                                        ? 'border-cyan-400/70 bg-cyan-500/20'
+                                        : 'border-slate-600/50 bg-slate-700/30 hover:border-cyan-400/50 hover:bg-cyan-500/10'
+                                    }`}
                                   >
                                     <h5 className="text-sm font-medium text-white mb-1">{example}</h5>
                                     <p className="text-xs text-slate-400">Click to use this goal</p>
@@ -726,7 +729,7 @@ export default function GoalsPage() {
                 </div>
 
                 {/* Days and Difficulty */}
-                {selectedSubcategory && (
+                {selectedGoal && (
                   <div className="space-y-6">
                     {/* Editable Category and Subcategory */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
