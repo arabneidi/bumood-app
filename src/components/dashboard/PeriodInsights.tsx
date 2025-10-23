@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
+import { Droplets } from "lucide-react";
 
 interface PeriodInsightsProps {
   moodEntries: any[];
@@ -119,8 +120,8 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
   return (
     <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-pink-500/20">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-400 via-rose-400 to-pink-500 bg-clip-text text-transparent flex items-center">
-          <span className="mr-3 text-3xl animate-pulse">🩸</span>
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent flex items-center">
+          <Droplets className="w-6 h-6 mr-2 text-pink-500" />
           Period Insights
         </h3>
         <div className="text-sm text-slate-300">

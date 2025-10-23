@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, Sparkles } from 'lucide-react';
+import { BarChart3, TrendingUp, Sparkles, Target } from 'lucide-react';
 import AnalyticsDashboard from '@/components/dashboard/AnalyticsDashboard';
 import TagsNetworkGraph from '@/components/dashboard/TagsNetworkGraph';
 import PeriodInsights from '@/components/dashboard/PeriodInsights';
@@ -192,6 +192,15 @@ export default function StatsPage() {
             transition={{ type: "spring", stiffness: 300 }}
             className="relative bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
           >
+            <motion.h3 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.9 }}
+              className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 flex items-center"
+            >
+              <Target className="w-6 h-6 mr-2 text-purple-500" />
+              DSS Radar
+            </motion.h3>
             <DSSRadar data={dssData} loading={dssLoading} />
           </motion.div>
         </motion.div>

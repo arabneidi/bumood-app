@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import MoodChart from '../charts/MoodChart';
-import RadarChart from '../charts/RadarChart';
+import ModernRadarChart from '../charts/ModernRadarChart';
 import ActivityChart from '../charts/ActivityChart';
 import HeatmapChart from '../charts/HeatmapChart';
 import ProgressCircle from '../ui/ProgressCircle';
@@ -441,40 +441,17 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
           whileHover={{ scale: 1.02, y: -5 }}
           transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
         >
-          <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-blue-500/20 hover:shadow-xl transition-all duration-300">
-            {/* Modernized Wellness Radar Header */}
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-center mb-6"
+          <Card className="p-6 bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <motion.h3 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.9 }}
+              className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-4 flex items-center"
             >
-              <motion.div 
-                animate={{ 
-                  scale: [1, 1.05, 1],
-                  rotate: [0, 2, -2, 0]
-                }}
-                transition={{ 
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="text-2xl font-bold text-white mb-2"
-              >
-                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  Wellness Radar
-                </span>
-              </motion.div>
-              <motion.p 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="text-sm text-slate-300 font-medium"
-              >
-                Comprehensive wellness overview
-              </motion.p>
-            </motion.div>
-            <RadarChart data={data} height={250} />
+              <Target className="w-6 h-6 mr-2 text-blue-500" />
+              Wellness Radar
+            </motion.h3>
+            <ModernRadarChart data={data} height={250} />
           </Card>
         </motion.div>
       </motion.div>
