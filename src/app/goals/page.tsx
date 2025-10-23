@@ -1,0 +1,452 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Target, Plus, X, Star, Trophy, Minus } from "lucide-react";
+
+export default function GoalsPage() {
+  const [goals, setGoals] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showAddGoal, setShowAddGoal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [newGoal, setNewGoal] = useState({
+    title: "",
+    category: "",
+    subcategory: "",
+    targetValue: 30,
+    currentValue: 0,
+    difficulty: "medium"
+  });
+
+  const goalCategories = [
+    {
+      id: "health",
+      name: "Health & Fitness",
+      subcategories: [
+        { id: "exercise", name: "Exercise", examples: ["Run 5K", "Gym 3x/week", "Daily yoga"] },
+        { id: "nutrition", name: "Nutrition", examples: ["Drink 8 glasses water", "Eat 5 veggies", "No sugar"] },
+        { id: "sleep", name: "Sleep", examples: ["Sleep 8 hours", "Bed by 10pm", "No phone before bed"] },
+      ]
+    },
+    {
+      id: "mental",
+      name: "Mental Wellness",
+      subcategories: [
+        { id: "meditation", name: "Meditation", examples: ["Meditate 10 min", "Morning mindfulness", "Evening reflection"] },
+        { id: "breaking-bad-habits", name: "Break Bad Habits", examples: ["Quit smoking", "No alcohol", "Reduce caffeine"] },
+        { id: "learning", name: "Learning", examples: ["Read 30 min", "Learn new skill", "Take course"] },
+      ]
+    },
+    {
+      id: "productivity",
+      name: "Productivity",
+      subcategories: [
+        { id: "work", name: "Work", examples: ["Complete project", "Learn new tool", "Networking"] },
+        { id: "organization", name: "Organization", examples: ["Clean desk daily", "Plan tomorrow", "Declutter"] },
+      ]
+    },
+    {
+      id: "relationships",
+      name: "Relationships",
+      subcategories: [
+        { id: "family", name: "Family", examples: ["Call parents weekly", "Family dinner", "Quality time"] },
+        { id: "friends", name: "Friends", examples: ["Meet friend weekly", "Message friends", "Plan outing"] },
+      ]
+    }
+  ];
+
+  const achievements = {
+    achieved: [
+      { id: 1, title: "First Steps", description: "Complete your first goal", icon: "🎯", stars: 1 },
+      { id: 2, title: "3-Day Streak", description: "Complete goals for 3 consecutive days", icon: "🔥", stars: 1 },
+      { id: 3, title: "Easy Rider", description: "Complete 10 easy goals", icon: "🌱", stars: 1 },
+      { id: 4, title: "Early Bird", description: "Complete a goal before 6 AM", icon: "🌅", stars: 1 },
+    ],
+    locked: [
+      { id: 5, title: "Week Warrior", description: "Complete goals for 7 consecutive days", icon: "⚡", stars: 2 },
+      { id: 6, title: "Goal Getter", description: "Complete 5 goals", icon: "🎪", stars: 2 },
+      { id: 7, title: "Monthly Master", description: "Complete goals for 30 consecutive days", icon: "🏆", stars: 3 },
+      { id: 8, title: "Legend", description: "Complete 100 goals total", icon: "🌟", stars: 3 },
+    ]
+  };
+
+  useEffect(() => {
+    fetch("/api/goals")
+      .then((res) => res.json())
+      .then((data) => {
+        setGoals(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching goals:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleCreateGoal = async () => {
+    if (!newGoal.title.trim()) return;
+
+    try {
+      const response = await fetch("/api/goals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...newGoal,
+          userId: 1,
+        }),
+      });
+
+      if (response.ok) {
+        const createdGoal = await response.json();
+        setGoals([...goals, createdGoal]);
+        setNewGoal({
+          title: "",
+          category: "",
+          subcategory: "",
+          targetValue: 30,
+          currentValue: 0,
+          difficulty: "medium"
+        });
+        setShowAddGoal(false);
+        setSelectedCategory("");
+        setSelectedSubcategory("");
+      }
+    } catch (error) {
+      console.error("Error creating goal:", error);
+    }
+  };
+
+  const updateProgress = (goalId, change) => {
+    setGoals(prevGoals =>
+      prevGoals.map(goal => {
+        if (goal.id === goalId) {
+          const newValue = Math.max(0, Math.min(goal.currentValue + change, goal.targetValue));
+          return { ...goal, currentValue: newValue };
+        }
+        return goal;
+      })
+    );
+  };
+
+  const getSelectedCategory = () => {
+    return goalCategories.find(cat => cat.id === selectedCategory);
+  };
+
+  const getSelectedSubcategory = () => {
+    const category = getSelectedCategory();
+    return category?.subcategories.find(sub => sub.id === selectedSubcategory);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+        <div className="w-16 h-16 border-4 border-blue-400/50 border-t-blue-400 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_24%,rgba(59,130,246,0.1)_25%,rgba(59,130,246,0.1)_26%,transparent_27%,transparent_74%,rgba(59,130,246,0.1)_75%,rgba(59,130,246,0.1)_76%,transparent_77%)] bg-[length:50px_50px] animate-pulse"></div>
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-blue-400/30 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="relative z-10 container mx-auto px-6 py-12">
+        <h1
+          className="text-6xl font-bold text-center mb-12"
+          style={{
+            background: 'linear-gradient(45deg, #06b6d4, #3b82f6, #6366f1, #8b5cf6)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}
+        >
+          Goals & Achievements
+        </h1>
+
+        {/* Create New Goal Button */}
+        <div className="text-center mb-8">
+          <button
+            onClick={() => {
+              console.log("Button clicked, setting showAddGoal to true");
+              setShowAddGoal(true);
+            }}
+            className="px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white rounded-2xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300"
+          >
+            <Plus className="w-6 h-6 inline-block mr-2" />
+            Create New Goal
+          </button>
+        </div>
+
+        {/* Goals List */}
+        <div className="mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-5xl font-black mb-4" style={{
+              background: 'linear-gradient(45deg, #06b6d4, #3b82f6, #6366f1, #8b5cf6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
+              Your Active Goals
+            </h2>
+            <p className="text-slate-300 text-lg">Keep pushing towards your aspirations!</p>
+          </div>
+
+          {goals.length === 0 ? (
+            <div className="text-center py-20 bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
+              <Target className="w-20 h-20 text-blue-400 mx-auto mb-6" />
+              <h3 className="text-3xl font-bold text-white mb-4">No Goals Yet</h3>
+              <p className="text-slate-300 text-lg font-medium">Create your first goal to get started on your journey!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {goals.map((goal) => (
+                <div key={goal.id} className="relative p-6 rounded-2xl border border-slate-600/50 bg-slate-800/60 backdrop-blur-xl shadow-2xl">
+                  <h3 className="text-xl font-bold text-white mb-2">{goal.title}</h3>
+                  <div className="w-full bg-slate-700 rounded-full h-2 mb-4">
+                    <div
+                      className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full"
+                      style={{ width: `${(goal.currentValue / goal.targetValue) * 100}%` }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-300">{goal.currentValue} / {goal.targetValue} days</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => updateProgress(goal.id, -1)}
+                        className="p-2 rounded-full bg-slate-700/60 hover:bg-slate-600/60 transition-colors"
+                      >
+                        <Minus className="w-4 h-4 text-white" />
+                      </button>
+                      <button
+                        onClick={() => updateProgress(goal.id, 1)}
+                        className="p-2 rounded-full bg-slate-700/60 hover:bg-slate-600/60 transition-colors"
+                      >
+                        <Plus className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Achievements */}
+        <div className="mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-5xl font-black mb-4" style={{
+              background: 'linear-gradient(45deg, #f59e0b, #eab308, #84cc16, #22c55e)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
+              Achievement Badges
+            </h2>
+            <p className="text-slate-300 text-lg">Unlock badges by completing goals and building streaks</p>
+          </div>
+
+          {/* Achieved Badges */}
+          <div className="mb-12">
+            <div className="flex items-center mb-8">
+              <div className="mr-4">
+                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl">
+                  <Trophy className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              <h3 className="text-3xl font-black bg-gradient-to-r from-green-500 via-emerald-500 to-cyan-500 bg-clip-text text-transparent">✅ Achieved Badges</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {achievements.achieved.map((badge) => (
+                <div key={badge.id} className="relative p-6 rounded-2xl border-2 shadow-2xl transition-all duration-300 bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-400/50">
+                  <div className="absolute inset-0 rounded-2xl border-2 border-green-400/50 shadow-[0_0_25px_rgba(34,197,94,0.8)] animate-pulse"></div>
+                  <div className="relative text-center">
+                    <div className="text-6xl mb-4">{badge.icon}</div>
+                    <h4 className="text-xl font-black mb-2 text-green-300">{badge.title}</h4>
+                    <p className="text-sm mb-4 text-green-200">{badge.description}</p>
+                    <div className="flex justify-center space-x-1">
+                      {[...Array(3)].map((_, i) => (
+                        <Star key={i} className={`w-4 h-4 ${i < badge.stars ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                      ))}
+                    </div>
+                    <div className="mt-4 text-green-300 font-bold">✅ Achieved!</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Locked Badges */}
+          <div>
+            <div className="flex items-center mb-8">
+              <div className="mr-4">
+                <div className="p-3 bg-gradient-to-r from-slate-500 to-slate-600 rounded-2xl">
+                  <Trophy className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              <h3 className="text-3xl font-black bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 bg-clip-text text-transparent">🔒 Locked Badges</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {achievements.locked.map((badge) => (
+                <div key={badge.id} className="relative p-6 rounded-2xl border shadow-2xl transition-all duration-300 bg-slate-800/20 border-slate-700/30 opacity-60">
+                  <div className="absolute inset-0 rounded-2xl border border-slate-400/30 shadow-[0_0_15px_rgba(148,163,184,0.4)]"></div>
+                  <div className="text-center">
+                    <div className="text-6xl mb-4 grayscale opacity-50">{badge.icon}</div>
+                    <h4 className="text-xl font-black mb-2 text-slate-400">{badge.title}</h4>
+                    <p className="text-sm mb-4 text-slate-500">{badge.description}</p>
+                    <div className="flex justify-center space-x-1">
+                      {[...Array(3)].map((_, i) => (
+                        <Star key={i} className={`w-4 h-4 ${i < badge.stars ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                      ))}
+                    </div>
+                    <div className="mt-4 text-slate-500 font-bold">🔒 Locked</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Create Goal Modal */}
+      {showAddGoal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowAddGoal(false)}>
+          <div className="relative w-[95vw] h-[95vh] mx-4 bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute inset-0 rounded-3xl border-2 border-cyan-400/50 shadow-[0_0_25px_rgba(6,182,212,0.6)] animate-pulse pointer-events-none"></div>
+            
+            <div className="relative z-10">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-3xl font-bold text-white">Create New Goal</h3>
+                <button
+                  onClick={() => setShowAddGoal(false)}
+                  className="p-2 rounded-full bg-slate-700/60 hover:bg-slate-600/60 transition-colors"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Categories */}
+                <div>
+                  <label className="block text-lg font-semibold text-slate-200 mb-3">Choose Your Goal Category</label>
+                  <div className="space-y-6">
+                    {goalCategories.map((category) => (
+                      <div key={category.id} className="bg-slate-700/30 rounded-xl p-4 border border-slate-600/50">
+                        <h3 className="text-lg font-bold text-white mb-4">{category.name}</h3>
+                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                          {category.subcategories.map((subcategory) => (
+                            <button
+                              key={subcategory.id}
+                              onClick={() => {
+                                setSelectedCategory(category.id);
+                                setSelectedSubcategory(subcategory.id);
+                                setNewGoal({ ...newGoal, category: category.id, subcategory: subcategory.id });
+                              }}
+                              className={`p-3 rounded-lg border-2 transition-all duration-300 text-left ${
+                                selectedSubcategory === subcategory.id
+                                  ? 'border-cyan-400/70 bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                                  : 'border-slate-600/50 bg-slate-700/30 hover:border-slate-500/70'
+                              }`}
+                            >
+                              <h4 className="text-sm font-bold text-white mb-1">{subcategory.name}</h4>
+                              <p className="text-xs text-slate-400">Click to select</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Examples and Customization */}
+                {selectedSubcategory && (
+                  <div className="space-y-6">
+                    {/* Examples */}
+                    <div>
+                      <label className="block text-lg font-semibold text-slate-200 mb-3">Choose Your Goal</label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {getSelectedSubcategory()?.examples.map((example, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setNewGoal({ ...newGoal, title: example })}
+                            className={`p-4 rounded-lg border-2 transition-all duration-300 text-left ${
+                              newGoal.title === example
+                                ? 'border-cyan-400/70 bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                                : 'border-slate-600/50 bg-slate-700/30 hover:border-slate-500/70'
+                            }`}
+                          >
+                            <span className="text-slate-300 font-medium">{example}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Days and Difficulty */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-lg font-semibold text-slate-200 mb-3">Target Days</label>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={() => setNewGoal({ ...newGoal, targetValue: Math.max(1, newGoal.targetValue - 1) })}
+                            className="p-2 rounded-full bg-slate-700/60 hover:bg-slate-600/60 transition-colors"
+                          >
+                            <Minus className="w-4 h-4 text-white" />
+                          </button>
+                          <input
+                            type="number"
+                            value={newGoal.targetValue}
+                            onChange={(e) => setNewGoal({ ...newGoal, targetValue: parseInt(e.target.value) || 1 })}
+                            min="1"
+                            className="w-20 p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white text-center focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
+                          />
+                          <button
+                            onClick={() => setNewGoal({ ...newGoal, targetValue: newGoal.targetValue + 1 })}
+                            className="p-2 rounded-full bg-slate-700/60 hover:bg-slate-600/60 transition-colors"
+                          >
+                            <Plus className="w-4 h-4 text-white" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-lg font-semibold text-slate-200 mb-3">Difficulty</label>
+                        <select
+                          value={newGoal.difficulty}
+                          onChange={(e) => setNewGoal({ ...newGoal, difficulty: e.target.value })}
+                          className="w-full p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
+                        >
+                          <option value="easy">Easy</option>
+                          <option value="medium">Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Save Button */}
+                    <button
+                      onClick={handleCreateGoal}
+                      disabled={!newGoal.title.trim()}
+                      className="w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white rounded-2xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Create Goal
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

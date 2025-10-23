@@ -1,0 +1,981 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import ProgressCircle from "@/components/ui/ProgressCircle";
+import { goalCategories, getCategoryById, getSubcategoryById } from "@/lib/goalCategories";
+import { Target, CheckCircle, Plus, Calendar, TrendingUp, Star, Trophy, Flame, Sparkles, Zap, Heart, Rocket, Award, Crown } from "lucide-react";
+import AchievementBadge from "@/components/ui/AchievementBadge";
+
+interface Goal {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  subcategory: string;
+  difficulty: string;
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  streak: number;
+  bestStreak: number;
+  completed: boolean;
+  createdAt: string;
+}
+
+
+export default function GoalsPage() {
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [goalsLoading, setGoalsLoading] = useState(true);
+  const [showAddGoal, setShowAddGoal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  const [newGoal, setNewGoal] = useState({
+    title: "",
+    difficulty: "medium",
+    targetValue: 30,
+  });
+  const [customGoalText, setCustomGoalText] = useState("");
+  const [allBadges, setAllBadges] = useState<any[]>([]);
+  const [floatingElements, setFloatingElements] = useState<Array<{id: number, x: number, y: number, emoji: string}>>([]);
+
+
+  // Create floating elements
+  useEffect(() => {
+    const elements = Array.from({ length: 25 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      emoji: ['🎯', '🏆', '⭐', '🔥', '💪', '🚀', '🌟', '💫', '🎊', '🎉', '💖', '🌈', '🦄', '✨', '🎈', '🏅', '👑', '💎', '🎪', '🎨'][Math.floor(Math.random() * 20)]
+    }));
+    setFloatingElements(elements);
+  }, []);
+
+  useEffect(() => {
+    async function fetchGoals() {
+      try {
+        const response = await fetch("/api/goals");
+        if (response.ok) {
+          const data = await response.json();
+          setGoals(data);
+        }
+      } catch (error) {
+        console.error("Error fetching goals:", error);
+      } finally {
+        setGoalsLoading(false);
+      }
+    }
+    fetchGoals();
+    // Load all achievements for showcase
+    (async () => {
+      try {
+        const res = await fetch('/api/achievements');
+        if (res.ok) {
+          const data = await res.json();
+          setAllBadges(data);
+        }
+      } catch (e) {
+        console.error('Error loading achievements:', e);
+      }
+    })();
+  }, []);
+
+  const addGoal = async () => {
+    if (newGoal.title && selectedCategory && selectedSubcategory) {
+      const category = getCategoryById(selectedCategory);
+      const subcategory = getSubcategoryById(selectedCategory, selectedSubcategory);
+      
+      if (category && subcategory) {
+        try {
+          const response = await fetch("/api/goals", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              title: newGoal.title,
+              description: "",
+              category: selectedCategory,
+              subcategory: selectedSubcategory,
+              difficulty: newGoal.difficulty,
+              targetValue: newGoal.targetValue,
+              unit: subcategory.unit,
+            }),
+          });
+
+          if (response.ok) {
+            const newGoalData = await response.json();
+            setGoals([newGoalData, ...goals]);
+            setNewGoal({ title: "", difficulty: "medium", targetValue: 30 });
+            setCustomGoalText("");
+            setSelectedCategory("");
+            setSelectedSubcategory("");
+            setShowAddGoal(false);
+          } else {
+            console.error("Failed to create goal");
+            alert("Failed to create goal. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error creating goal:", error);
+          alert("Failed to create goal. Please try again.");
+        }
+      }
+    }
+  };
+
+  const updateGoalProgress = async (id: string, increment: boolean = true) => {
+    const goal = goals.find(g => g.id === id);
+    if (!goal) return;
+
+    const newCurrent = increment ? Math.min(goal.currentValue + 1, goal.targetValue) : Math.max(goal.currentValue - 1, 0);
+    const newStreak = increment ? goal.streak + 1 : Math.max(goal.streak - 1, 0);
+    const newBestStreak = Math.max(goal.bestStreak, newStreak);
+    const isCompleted = newCurrent >= goal.targetValue;
+
+    try {
+      const response = await fetch(`/api/goals/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentValue: newCurrent,
+          streak: newStreak,
+          bestStreak: newBestStreak,
+          completed: isCompleted,
+        }),
+      });
+
+      if (response.ok) {
+        setGoals(goals.map(g => 
+          g.id === id 
+            ? { ...g, currentValue: newCurrent, streak: newStreak, bestStreak: newBestStreak, completed: isCompleted }
+            : g
+        ));
+      } else {
+        console.error("Failed to update goal");
+        alert("Failed to update goal. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error updating goal:", error);
+      alert("Failed to update goal. Please try again.");
+    }
+  };
+
+  const deleteGoal = async (id: string) => {
+    try {
+      const response = await fetch(`/api/goals/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setGoals(goals.filter(goal => goal.id !== id));
+      } else {
+        console.error("Failed to delete goal");
+        alert("Failed to delete goal. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+      alert("Failed to delete goal. Please try again.");
+    }
+  };
+
+  const getProgressPercentage = (goal: Goal) => {
+    return Math.round((goal.currentValue / goal.targetValue) * 100);
+  };
+
+  const getCategoryColor = (categoryId: string) => {
+    const category = getCategoryById(categoryId);
+    return category?.color || "bg-gray-100 text-gray-800";
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    const colors = {
+      easy: "bg-green-100 text-green-800",
+      medium: "bg-yellow-100 text-yellow-800",
+      hard: "bg-red-100 text-red-800"
+    };
+    return colors[difficulty as keyof typeof colors] || colors.medium;
+  };
+
+  const getStars = (stars: number) => {
+    return Array.from({ length: 3 }, (_, i) => (
+      <Star
+        key={i}
+        className={`w-4 h-4 ${i < stars ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+      />
+    ));
+  };
+
+  return (
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-100 via-pink-50 to-purple-100">
+        {/* Floating Elements */}
+        <AnimatePresence>
+          {floatingElements.map((element) => (
+            <motion.div
+              key={element.id}
+              className="absolute text-2xl pointer-events-none"
+              style={{
+                left: `${element.x}%`,
+                top: `${element.y}%`,
+              }}
+              animate={{
+                y: [0, -30, 0],
+                rotate: [0, 15, -15, 0],
+                scale: [1, 1.3, 1],
+              }}
+              transition={{
+                duration: 4 + Math.random() * 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              {element.emoji}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        
+        {/* Gradient Orbs */}
+        <div className="absolute top-20 left-20 w-40 h-40 bg-gradient-to-r from-orange-400 to-red-400 rounded-full opacity-20 blur-2xl animate-pulse"></div>
+        <div className="absolute top-40 right-32 w-32 h-32 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full opacity-25 blur-xl animate-bounce"></div>
+        <div className="absolute bottom-32 left-1/3 w-48 h-48 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-36 h-36 bg-gradient-to-r from-green-400 to-teal-400 rounded-full opacity-25 blur-xl animate-bounce"></div>
+        <div className="absolute top-1/2 left-10 w-28 h-28 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full opacity-30 blur-lg animate-pulse"></div>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto p-6">
+        {/* Animated Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -50, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+          className="text-center mb-12"
+        >
+          <motion.div
+            animate={{ rotate: [0, 15, -15, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            className="inline-block mb-6"
+          >
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 rounded-full blur-lg opacity-75 animate-pulse"></div>
+              <div className="relative bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 p-6 rounded-full">
+                <Target className="w-16 h-16 text-white" />
+              </div>
+            </div>
+          </motion.div>
+          
+          <motion.h1 
+            className="text-6xl font-black mb-4"
+            animate={{ 
+              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+            }}
+            transition={{ duration: 4, repeat: Infinity }}
+            style={{
+              background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57, #ff9ff3, #54a0ff, #ff6b6b)',
+              backgroundSize: '400% 400%',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Your Amazing Goals
+          </motion.h1>
+          
+          <motion.p 
+            className="text-xl text-gray-600 font-medium"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            🎯 Dream big, achieve bigger! Let's make your goals come alive! 🎯
+          </motion.p>
+        </motion.div>
+
+        {/* Create Goal Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-center mb-12"
+        >
+          <motion.button
+            onClick={() => setShowAddGoal(true)}
+            whileHover={{ scale: 1.1, rotate: 2 }}
+            whileTap={{ scale: 0.95 }}
+            className="relative overflow-hidden px-12 py-6 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white rounded-2xl font-black text-2xl shadow-2xl transition-all duration-300"
+          >
+            <motion.div
+              animate={{ x: [-100, 100] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30"
+            />
+            <div className="relative flex items-center justify-center space-x-3">
+              <Rocket className="w-8 h-8" />
+              <span>Create Your Dream Goal!</span>
+            </div>
+          </motion.button>
+        </motion.div>
+
+        {/* Add Goal Modal */}
+        <AnimatePresence>
+          {showAddGoal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 50 }}
+                className="relative max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              >
+                {/* Modal Background Effects */}
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 rounded-3xl blur-xl opacity-20 transform rotate-1"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 rounded-3xl blur-lg opacity-15 transform -rotate-1"></div>
+                
+                <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border-4 border-white/50 p-8">
+                  <motion.div 
+                    className="text-center mb-8"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <motion.div
+                      animate={{ rotate: [0, 360] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                      className="inline-block mb-4"
+                    >
+                      <div className="p-4 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 rounded-2xl">
+                        <Sparkles className="w-12 h-12 text-white" />
+                      </div>
+                    </motion.div>
+                    <h2 className="text-4xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent mb-2">
+                      ✨ Create Your Dream Goal ✨
+                    </h2>
+                    <p className="text-lg text-gray-600 font-medium">Choose your challenge and start your amazing journey!</p>
+                  </motion.div>
+            
+                  <motion.div 
+                    className="space-y-8"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    {/* Category Selection */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <div className="flex items-center mb-6">
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="mr-4"
+                        >
+                          <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl">
+                            <Target className="w-8 h-8 text-white" />
+                          </div>
+                        </motion.div>
+                        <h3 className="text-3xl font-black bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 bg-clip-text text-transparent">
+                          🎯 Choose Your Category
+                        </h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {goalCategories.map((category, index) => (
+                          <motion.button
+                            key={category.id}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.8 + index * 0.1 }}
+                            whileHover={{ scale: 1.05, rotate: 2 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                              setSelectedCategory(category.id);
+                              setSelectedSubcategory("");
+                            }}
+                            className={`p-6 rounded-2xl border-4 text-left transition-all duration-300 ${
+                              selectedCategory === category.id
+                                ? 'border-pink-500 bg-gradient-to-br from-pink-100 to-purple-100 shadow-2xl transform scale-105'
+                                : 'border-gray-200 hover:border-pink-300 bg-white hover:shadow-xl'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-4">
+                              <span className="text-4xl">{category.icon}</span>
+                              <div>
+                                <h3 className="font-black text-gray-900 text-xl">{category.name}</h3>
+                                <p className="text-sm text-gray-600 font-medium">{category.description}</p>
+                              </div>
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </motion.div>
+
+              {/* Subcategory Selection */}
+              {selectedCategory && (
+                <div>
+                  <label className="block text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <span className="text-xl mr-2">⚡</span>
+                    Select Challenge Type
+                  </label>
+                  <div className="space-y-3">
+                    {getCategoryById(selectedCategory)?.subcategories.map((subcategory) => (
+                    <button
+                      key={subcategory.id}
+                      onClick={() => {
+                        setSelectedSubcategory(subcategory.id);
+                        setNewGoal({...newGoal, targetValue: subcategory.targetValue});
+                      }}
+                      className={`w-full p-6 rounded-xl border-2 text-left transition-all hover:scale-105 shadow-lg ${
+                        selectedSubcategory === subcategory.id
+                          ? 'border-blue-500 bg-gradient-to-br from-blue-100 to-cyan-100 shadow-blue-200'
+                          : 'border-gray-200 hover:border-blue-300 bg-white hover:shadow-xl'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-900 text-lg mb-2">{subcategory.name}</h4>
+                          <p className="text-sm text-gray-600 mb-3">{subcategory.description}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {subcategory.examples.slice(0, 3).map((example, index) => (
+                              <span key={index} className="text-xs bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-3 py-1 rounded-full font-medium">
+                                {example}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end space-y-2 ml-4">
+                          <span className={`text-xs px-3 py-1 rounded-full font-bold ${getDifficultyColor(subcategory.difficulty)}`}>
+                            {subcategory.difficulty}
+                          </span>
+                          <span className="text-sm font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-full">
+                            {subcategory.targetValue} {subcategory.unit}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Specific Habit Selection */}
+              {selectedSubcategory && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Choose Your Specific Goal</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {getSubcategoryById(selectedCategory, selectedSubcategory)?.examples.map((example, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setNewGoal({...newGoal, title: example})}
+                        className={`p-4 rounded-lg border-2 text-left transition-all ${
+                          newGoal.title === example
+                            ? 'border-indigo-500 bg-indigo-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <span className="font-medium text-gray-900">{example}</span>
+                      </button>
+                    ))}
+                    
+                    {/* Custom Goal Option */}
+                    <button
+                      onClick={() => setNewGoal({...newGoal, title: 'CUSTOM'})}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${
+                        newGoal.title === 'CUSTOM'
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="font-medium text-gray-900">+ Create Custom Goal</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Goal Details */}
+              {selectedSubcategory && (
+                <div className="space-y-4">
+                  {/* Custom Goal Input */}
+                  {newGoal.title === 'CUSTOM' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Your Custom Goal</label>
+                      <input
+                        type="text"
+                        value={customGoalText}
+                        onChange={(e) => setCustomGoalText(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                        placeholder="e.g., Learn to play guitar, Read 50 books this year, Master French cooking..."
+                        autoFocus
+                      />
+                      {/* Debug display */}
+                      {customGoalText && (
+                        <div className="mt-2 text-sm text-gray-600">
+                          You typed: "{customGoalText}"
+                        </div>
+                      )}
+                      {customGoalText && (
+                        <div className="mt-3">
+                          <button
+                            type="button"
+                            onClick={() => setNewGoal({...newGoal, title: customGoalText})}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                          >
+                            Use This Goal
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Selected Goal Display */}
+                  {newGoal.title && newGoal.title !== 'CUSTOM' && newGoal.title !== '' && (
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-indigo-900 mb-2">Selected Goal</h4>
+                      <p className="text-indigo-800">{newGoal.title}</p>
+                    </div>
+                  )}
+
+                  {/* Target Duration */}
+                  {newGoal.title && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">Target Duration</label>
+                      <div className="flex items-center space-x-3">
+                        <button
+                          type="button"
+                          onClick={() => setNewGoal({...newGoal, targetValue: Math.max(1, newGoal.targetValue - 1)})}
+                          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          −
+                        </button>
+                        <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-4 py-2 min-w-[120px]">
+                          <span className="text-2xl font-bold text-gray-900">{newGoal.targetValue}</span>
+                          <span className="text-sm text-gray-600">
+                            {getSubcategoryById(selectedCategory, selectedSubcategory)?.unit || 'days'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setNewGoal({...newGoal, targetValue: Math.min(365, newGoal.targetValue + 1)})}
+                          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Default: {getSubcategoryById(selectedCategory, selectedSubcategory)?.targetValue} days
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Difficulty Level */}
+                  {newGoal.title && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">Difficulty Level</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { value: 'easy', label: 'Easy', color: 'bg-green-100 text-green-800 border-green-200', icon: '😊' },
+                          { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: '😐' },
+                          { value: 'hard', label: 'Hard', color: 'bg-red-100 text-red-800 border-red-200', icon: '😤' },
+                          { value: 'extreme', label: 'Extreme', color: 'bg-purple-100 text-purple-800 border-purple-200', icon: '🔥' }
+                        ].map((level) => (
+                          <button
+                            key={level.value}
+                            type="button"
+                            onClick={() => setNewGoal({...newGoal, difficulty: level.value})}
+                            className={`p-3 rounded-lg border-2 text-center transition-all ${
+                              newGoal.difficulty === level.value
+                                ? `${level.color} border-current`
+                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="text-lg mb-1">{level.icon}</div>
+                            <div className="text-sm font-medium">{level.label}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+                    {/* Modal Actions */}
+                    <motion.div 
+                      className="flex justify-end space-x-4 mt-8"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.2 }}
+                    >
+                      <motion.button
+                        whileHover={{ scale: 1.05, rotate: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setShowAddGoal(false)}
+                        className="px-8 py-4 bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300"
+                      >
+                        Cancel
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05, rotate: 2 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={addGoal} 
+                        disabled={!newGoal.title || !selectedSubcategory}
+                        className="px-8 py-4 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white rounded-2xl font-black text-lg shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50"
+                      >
+                        🚀 Create Goal!
+                      </motion.button>
+                    </motion.div>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Goals Grid */}
+        {goalsLoading ? (
+          <motion.div 
+            className="text-center py-16"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full mx-auto mb-6"
+            />
+            <motion.p 
+              className="text-xl text-gray-600 font-bold"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              🎯 Loading your amazing goals...
+            </motion.p>
+          </motion.div>
+        ) : goals.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, type: "spring" }}
+            className="relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-3xl blur-xl opacity-20 transform rotate-1"></div>
+            <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border-4 border-white/50 p-12 text-center">
+              <motion.div 
+                className="text-8xl mb-6"
+                animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                🎯
+              </motion.div>
+              <h2 className="text-4xl font-black bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 bg-clip-text text-transparent mb-4">
+                No Goals Yet
+              </h2>
+              <p className="text-xl text-gray-600 mb-8 font-medium">
+                Click the "Create Your Dream Goal!" button above to start your amazing journey! 🚀
+              </p>
+            </div>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {goals.map((goal, index) => {
+              const category = getCategoryById(goal.category);
+              const subcategory = getSubcategoryById(goal.category, goal.subcategory);
+              
+              return (
+                <motion.div
+                  key={goal.id}
+                  initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: index * 0.1, duration: 0.6, type: "spring" }}
+                  whileHover={{ scale: 1.05, rotate: 2 }}
+                  className="relative"
+                >
+                  {/* Card Background Effects */}
+                  <div className={`absolute inset-0 rounded-3xl blur-xl opacity-20 transform rotate-1 ${
+                    goal.completed 
+                      ? 'bg-gradient-to-r from-green-400 to-emerald-400' 
+                      : 'bg-gradient-to-r from-blue-400 to-purple-400'
+                  }`}></div>
+                  <div className={`absolute inset-0 rounded-3xl blur-lg opacity-15 transform -rotate-1 ${
+                    goal.completed 
+                      ? 'bg-gradient-to-r from-yellow-400 to-green-400' 
+                      : 'bg-gradient-to-r from-pink-400 to-purple-400'
+                  }`}></div>
+                  
+                  <div className={`relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border-4 border-white/50 p-6 transition-all duration-300 ${
+                    goal.completed 
+                      ? 'border-green-200' 
+                      : 'border-blue-200'
+                  }`}>
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <motion.span 
+                            className="text-4xl"
+                            animate={{ rotate: [0, 10, -10, 0] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            {category?.icon}
+                          </motion.span>
+                          <h3 className="text-2xl font-black text-gray-900">{goal.title}</h3>
+                        </div>
+                        <div className="flex items-center space-x-3 mb-3">
+                          <span className={`inline-block px-4 py-2 rounded-2xl text-sm font-bold shadow-lg ${getCategoryColor(goal.category)}`}>
+                            {category?.name}
+                          </span>
+                          <span className={`text-sm px-4 py-2 rounded-2xl font-bold shadow-lg ${getDifficultyColor(goal.difficulty)}`}>
+                            {goal.difficulty}
+                          </span>
+                        </div>
+                        {goal.description && (
+                          <p className="text-gray-600 text-sm mb-4 bg-white/50 p-3 rounded-xl backdrop-blur-sm">{goal.description}</p>
+                        )}
+                      </div>
+                      {goal.completed && (
+                        <motion.div 
+                          className="text-5xl"
+                          animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          🎉
+                        </motion.div>
+                      )}
+                    </div>
+
+                    <div className="mb-6">
+                      <div className="flex justify-between text-lg font-black text-gray-700 mb-4">
+                        <span className="flex items-center">
+                          <span className="text-2xl mr-2">📊</span>
+                          Progress
+                        </span>
+                        <span className="bg-white/50 px-4 py-2 rounded-xl backdrop-blur-sm">
+                          {goal.currentValue} / {goal.targetValue} {goal.unit}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-4 shadow-inner">
+                        <motion.div 
+                          className={`h-4 rounded-full transition-all duration-1000 shadow-lg ${
+                            goal.completed 
+                              ? 'bg-gradient-to-r from-green-400 to-emerald-500' 
+                              : 'bg-gradient-to-r from-blue-400 to-purple-500'
+                          }`}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${getProgressPercentage(goal)}%` }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                        ></motion.div>
+                      </div>
+                      <div className="text-center mt-4">
+                        <motion.span 
+                          className="text-4xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          {getProgressPercentage(goal)}%
+                        </motion.span>
+                      </div>
+                    </div>
+
+                    {/* Streak Information */}
+                    <div className="flex items-center justify-between mb-6 p-4 bg-white/50 rounded-2xl backdrop-blur-sm shadow-lg">
+                      <div className="flex items-center space-x-2">
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          <Flame className="w-6 h-6 text-orange-500" />
+                        </motion.div>
+                        <span className="text-gray-700 font-black">Current: {goal.streak} days</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <motion.div
+                          animate={{ rotate: [0, 10, -10, 0] }}
+                          transition={{ duration: 3, repeat: Infinity }}
+                        >
+                          <Trophy className="w-6 h-6 text-yellow-500" />
+                        </motion.div>
+                        <span className="text-gray-700 font-black">Best: {goal.bestStreak} days</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <div className="flex space-x-3">
+                        <motion.button
+                          whileHover={{ scale: 1.1, rotate: 2 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white px-6 py-3 rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50"
+                          onClick={() => updateGoalProgress(goal.id, true)}
+                          disabled={goal.completed}
+                        >
+                          <TrendingUp className="w-5 h-5 mr-2 inline" />
+                          +1
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1, rotate: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="bg-gradient-to-r from-red-400 to-pink-500 hover:from-red-500 hover:to-pink-600 text-white px-6 py-3 rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50"
+                          onClick={() => updateGoalProgress(goal.id, false)}
+                          disabled={goal.currentValue === 0}
+                        >
+                          -1
+                        </motion.button>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.1, rotate: 2 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-6 py-3 rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all duration-300"
+                        onClick={() => deleteGoal(goal.id)}
+                      >
+                        🗑️ Delete
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+
+        {/* Summary Stats */}
+        {goals.length > 0 && (
+          <motion.div 
+            className="mt-20"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <motion.div 
+              className="text-center mb-12"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.7 }}
+            >
+              <motion.div 
+                className="inline-block p-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-3xl shadow-2xl mb-6"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                <h2 className="text-3xl font-black text-white mb-2">📊 Your Amazing Progress</h2>
+                <p className="text-white opacity-90 text-lg font-medium">Track your incredible achievements!</p>
+              </motion.div>
+            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              {[
+                { 
+                  value: goals.length, 
+                  label: "🎯 Total Goals", 
+                  color: "from-blue-500 to-indigo-500",
+                  bgColor: "from-blue-50 to-indigo-50",
+                  icon: "🎯"
+                },
+                { 
+                  value: goals.filter(goal => goal.completed).length, 
+                  label: "✅ Completed", 
+                  color: "from-green-500 to-emerald-500",
+                  bgColor: "from-green-50 to-emerald-50",
+                  icon: "✅"
+                },
+                { 
+                  value: Math.max(...goals.map(goal => goal.streak), 0), 
+                  label: "🔥 Best Streak", 
+                  color: "from-orange-500 to-red-500",
+                  bgColor: "from-orange-50 to-red-50",
+                  icon: "🔥"
+                },
+                { 
+                  value: Math.round(goals.reduce((sum, goal) => sum + getProgressPercentage(goal), 0) / goals.length), 
+                  label: "📈 Avg Progress", 
+                  color: "from-purple-500 to-pink-500",
+                  bgColor: "from-purple-50 to-pink-50",
+                  icon: "📈"
+                }
+              ].map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 0.9 + index * 0.1, duration: 0.6, type: "spring" }}
+                  whileHover={{ scale: 1.1, rotate: 2 }}
+                  className="relative"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-r ${stat.color} rounded-3xl blur-xl opacity-20 transform rotate-1`}></div>
+                  <div className={`relative bg-gradient-to-br ${stat.bgColor} rounded-3xl shadow-2xl border-4 border-white/50 p-8 text-center backdrop-blur-sm`}>
+                    <motion.div 
+                      className="text-6xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4"
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
+                    >
+                      {stat.value}
+                    </motion.div>
+                    <div className="text-gray-700 font-black text-xl flex items-center justify-center">
+                      <span className="text-2xl mr-2">{stat.icon}</span>
+                      {stat.label}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* All Badges Gallery */}
+        <motion.div 
+          className="mt-20"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0 }}
+        >
+          <motion.div 
+            className="text-center mb-12"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.2 }}
+          >
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              className="inline-block mb-6"
+            >
+              <div className="p-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 rounded-2xl">
+                <Crown className="w-12 h-12 text-white" />
+              </div>
+            </motion.div>
+            <h2 className="text-4xl font-black bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 bg-clip-text text-transparent mb-4">
+              🏆 All Amazing Badges
+            </h2>
+            <p className="text-lg text-gray-600 font-medium">Collect them all and show off your achievements!</p>
+          </motion.div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {allBadges.map((badge, index) => (
+              <motion.div
+                key={badge.id}
+                initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 1.4 + index * 0.1, duration: 0.6, type: "spring" }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+              >
+                <AchievementBadge
+                  title={badge.title}
+                  type={badge.type}
+                  stars={badge.stars}
+                  unlocked={!!badge.unlockedAt}
+                  size="md"
+                  description={badge.description}
+                  icon={badge.icon}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
