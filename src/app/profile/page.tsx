@@ -232,14 +232,6 @@ export default function ProfilePage() {
             Your Amazing Profile
           </motion.h1>
           
-          <motion.p 
-            className="text-xl text-slate-300 font-medium"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            ✨ Let's make your profile as vibrant as you are! ✨
-          </motion.p>
         </motion.div>
 
         {/* Success Message */}
@@ -476,9 +468,6 @@ export default function ProfilePage() {
                 </h2>
               </div>
               
-              <p className="text-lg text-slate-300 mb-8 font-medium">
-                🎨 Pick what makes your heart sing! The more you choose, the better our AI gets to know you!
-              </p>
               
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {interestOptions.map((interest, index) => (
@@ -550,9 +539,6 @@ export default function ProfilePage() {
                 </h2>
               </div>
               
-              <p className="text-lg text-slate-300 mb-8 font-medium">
-                Choose your preferred quote styles for personalized motivational content!
-              </p>
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {quoteStyleOptions.map((style, index) => (
@@ -625,9 +611,6 @@ export default function ProfilePage() {
                 </h2>
               </div>
               
-              <p className="text-lg text-slate-300 mb-8 font-medium">
-                Tell us about your favorite creators so we can suggest the perfect content for you!
-              </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Favorite Writers */}
@@ -646,9 +629,6 @@ export default function ProfilePage() {
                     className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-blue-500/10"
                     placeholder="e.g., Jane Austen, Hemingway, Tolkien"
                   />
-                  <p className="text-sm text-slate-400 mt-2 font-medium">
-                    For book suggestions when you select "reading"
-                  </p>
                 </motion.div>
 
                 {/* Favorite Musicians */}
@@ -667,9 +647,6 @@ export default function ProfilePage() {
                     className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-indigo-500/10"
                     placeholder="e.g., Bob Dylan, Nina Simone, Coldplay"
                   />
-                  <p className="text-sm text-slate-400 mt-2 font-medium">
-                    For music therapy and playlist suggestions
-                  </p>
                 </motion.div>
 
                 {/* Favorite Sports Figures */}
@@ -688,9 +665,6 @@ export default function ProfilePage() {
                     className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-purple-500/10"
                     placeholder="e.g., Messi, Ronaldo, Serena Williams"
                   />
-                  <p className="text-sm text-slate-400 mt-2 font-medium">
-                    For sports quotes and workout suggestions
-                  </p>
                 </motion.div>
 
                 {/* Favorite Artists */}
@@ -709,9 +683,6 @@ export default function ProfilePage() {
                     className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-pink-500/20 focus:border-pink-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-pink-500/10"
                     placeholder="e.g., Frida Kahlo, Van Gogh, Banksy"
                   />
-                  <p className="text-sm text-slate-400 mt-2 font-medium">
-                    For art inspiration and creative suggestions
-                  </p>
                 </motion.div>
               </div>
 
@@ -842,40 +813,8 @@ export default function ProfilePage() {
                 </div>
               </motion.button>
               
-              {!loading && (
-                <motion.p 
-                  className="text-lg text-slate-300 mt-4 font-medium"
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  Last updated: {new Date().toLocaleDateString()}
-                </motion.p>
-              )}
             </motion.div>
 
-            {/* Info Box */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.5 }}
-              className="mt-12 p-6 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl shadow-xl"
-            >
-              <div className="flex items-center mb-4">
-                <motion.div
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="text-3xl mr-3"
-                >
-                  🤖
-                </motion.div>
-                <h3 className="text-2xl font-black text-white">How AI Uses This Magic</h3>
-              </div>
-              <p className="text-lg text-slate-300 font-medium">
-                Your personal information helps our AI generate more relevant and personalized suggestions! 
-                For example, age-appropriate activities, gender-specific wellness tips, and personalized health recommendations. 
-                The more you share, the better we can serve you! ✨
-              </p>
-            </motion.div>
           </div>
         </motion.div>
       </div>
