@@ -885,24 +885,25 @@ export default function ProfilePage() {
                 onClick={saveProfile}
                 disabled={loading}
                 whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                className="relative overflow-hidden px-8 py-4 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 border border-slate-600"
+                whileTap={{ scale: 0.95 }}
+                className="relative overflow-hidden px-10 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-bold text-xl shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 disabled:opacity-50 border border-emerald-400/30"
               >
-                <div className="flex items-center justify-center space-x-3">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative flex items-center justify-center space-x-3">
                   {loading ? (
                     <>
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="w-5 h-5"
+                        className="w-6 h-6"
                       >
-                        <Save className="w-5 h-5" />
+                        <Save className="w-6 h-6" />
                       </motion.div>
-                      <span>Saving...</span>
+                      <span>Saving Profile...</span>
                     </>
                   ) : (
                     <>
-                      <Save className="w-5 h-5" />
+                      <Save className="w-6 h-6" />
                       <span>Save Profile</span>
                     </>
                   )}
