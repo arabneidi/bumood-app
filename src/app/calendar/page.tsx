@@ -64,38 +64,38 @@ export default function CalendarPage() {
 
   const getMoodColor = (mood: MoodEntry | undefined) => {
     if (!mood) return "bg-slate-800/40 backdrop-blur-xl border border-slate-600/50";
-    // Calculate total score: valence + energy + focus + (10 - stress)
-    const totalScore = mood.valence + mood.energy + mood.focus + (10 - mood.stress);
-    // Total score ranges from 4 to 40, so we adjust thresholds
-    if (totalScore >= 32) return "bg-gradient-to-br from-green-400 to-emerald-500";  // 80%+ of max
-    if (totalScore >= 24) return "bg-gradient-to-br from-blue-400 to-cyan-500";      // 60%+ of max
-    if (totalScore >= 16) return "bg-gradient-to-br from-yellow-400 to-orange-400";  // 40%+ of max
-    if (totalScore >= 8) return "bg-gradient-to-br from-orange-400 to-red-400";      // 20%+ of max
+    // Use the same calculation as dashboard: Life Rhythm Score (0-100)
+    const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
+    // Life Rhythm Score ranges from 0 to 100
+    if (lifeRhythmScore >= 80) return "bg-gradient-to-br from-green-400 to-emerald-500";  // 80%+
+    if (lifeRhythmScore >= 60) return "bg-gradient-to-br from-blue-400 to-cyan-500";      // 60%+
+    if (lifeRhythmScore >= 40) return "bg-gradient-to-br from-yellow-400 to-orange-400";  // 40%+
+    if (lifeRhythmScore >= 20) return "bg-gradient-to-br from-orange-400 to-red-400";     // 20%+
     return "bg-gradient-to-br from-red-500 to-pink-600";  // Below 20%
   };
 
   const getMoodEmoji = (mood: MoodEntry | undefined) => {
     if (!mood) return "";
-    // Calculate total score: valence + energy + focus + (10 - stress)
-    const totalScore = mood.valence + mood.energy + mood.focus + (10 - mood.stress);
-    // Total score ranges from 4 to 40, so we adjust thresholds
-    if (totalScore >= 36) return "😍";  // 90%+ of max
-    if (totalScore >= 32) return "😊";  // 80%+ of max
-    if (totalScore >= 28) return "🙂";  // 70%+ of max
-    if (totalScore >= 24) return "😐";  // 60%+ of max
-    if (totalScore >= 20) return "😕";  // 50%+ of max
-    if (totalScore >= 16) return "😟";  // 40%+ of max
-    if (totalScore >= 12) return "😰";  // 30%+ of max
-    if (totalScore >= 8) return "😢";   // 20%+ of max
+    // Use the same calculation as dashboard: Life Rhythm Score (0-100)
+    const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
+    // Life Rhythm Score ranges from 0 to 100
+    if (lifeRhythmScore >= 90) return "😍";  // 90%+
+    if (lifeRhythmScore >= 80) return "😊";  // 80%+
+    if (lifeRhythmScore >= 70) return "🙂";  // 70%+
+    if (lifeRhythmScore >= 60) return "😐";  // 60%+
+    if (lifeRhythmScore >= 50) return "😕";  // 50%+
+    if (lifeRhythmScore >= 40) return "😟";  // 40%+
+    if (lifeRhythmScore >= 30) return "😰";  // 30%+
+    if (lifeRhythmScore >= 20) return "😢";  // 20%+
     return "😭";  // Below 20%
   };
 
   const getMoodScore = (mood: MoodEntry | undefined) => {
     if (!mood) return "";
-    // Calculate total score: valence + energy + focus + (10 - stress)
-    // Stress is inverted so lower stress = higher score
-    const totalScore = mood.valence + mood.energy + mood.focus + (10 - mood.stress);
-    return totalScore;
+    // Use the same calculation as dashboard: Life Rhythm Score
+    // (valence + energy + focus + (sleep / 2)) / 3.5 * 10
+    const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
+    return lifeRhythmScore;
   };
 
   if (loading) {
@@ -163,7 +163,7 @@ export default function CalendarPage() {
                     {moodEntry && (
                       <div className="flex flex-col items-center">
                         <span className="text-lg mb-1">{moodEmoji}</span>
-                        <span className="text-xs font-bold text-white/90">{moodScore}/40</span>
+                        <span className="text-xs font-bold text-white/90">{moodScore}/100</span>
                       </div>
                     )}
                   </button>
