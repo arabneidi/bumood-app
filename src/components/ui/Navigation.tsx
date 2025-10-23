@@ -62,13 +62,13 @@ export default function Navigation() {
                   >
                     <Link 
                       href={item.href}
-                      className={`group flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg hover:scale-105 bg-gradient-to-r ${item.color} text-white relative overflow-hidden ${
+                      className={`group flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg hover:scale-105 bg-gradient-to-r ${item.color} text-white relative overflow-hidden z-10 ${
                         active ? "ring-4 ring-white ring-opacity-90 shadow-2xl scale-110 border-2 border-white border-opacity-70 animate-pulse" : ""
                       }`}
                     >
                       {/* Animated Background Shimmer */}
                       <motion.div
-                        className="absolute inset-0 bg-white"
+                        className="absolute inset-0 bg-white pointer-events-none"
                         animate={{
                           x: ['-100%', '200%'],
                           opacity: [0, 0.2, 0]

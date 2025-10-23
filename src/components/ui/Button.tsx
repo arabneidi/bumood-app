@@ -22,10 +22,10 @@ export default function Button({
   const baseClasses = 'font-semibold rounded-full transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2';
   
   const variantClasses = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 shadow-lg',
-    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 shadow-lg',
-    outline: 'border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white focus:ring-indigo-500',
-    ghost: 'text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500'
+    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-lg',
+    secondary: 'bg-slate-600 text-white hover:bg-slate-700 focus:ring-slate-500 shadow-lg',
+    outline: 'border-2 border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white focus:ring-blue-500',
+    ghost: 'text-blue-300 hover:bg-blue-500/20 hover:text-blue-200 focus:ring-blue-500'
   };
   
   const sizeClasses = {

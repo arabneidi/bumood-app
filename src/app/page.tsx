@@ -210,7 +210,7 @@ export default function Home() {
       {/* Hero Section - Floating Rounded Rectangle */}
       <div className="relative overflow-hidden py-12">
         {/* Animated Background Particles */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden -z-10">
           {[...Array(15)].map((_, i) => (
             <motion.div
               key={i}

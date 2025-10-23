@@ -306,7 +306,7 @@ export default function GoalsPage() {
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
       {/* Animated Background */}
-      <div className="absolute inset-0">
+      <div className="absolute top-16 left-0 right-0 bottom-0 z-0">
         <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_24%,rgba(59,130,246,0.1)_25%,rgba(59,130,246,0.1)_26%,transparent_27%,transparent_74%,rgba(59,130,246,0.1)_75%,rgba(59,130,246,0.1)_76%,transparent_77%)] bg-[length:50px_50px] animate-pulse"></div>
         <div className="absolute inset-0">
           {[...Array(30)].map((_, i) => (

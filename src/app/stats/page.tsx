@@ -100,11 +100,11 @@ export default function StatsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white relative">
       {/* Modern Background */}
-      <div className="absolute inset-0">
+      <div className="absolute top-24 left-0 right-0 bottom-0 z-0">
         {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_24%,rgba(59,130,246,0.05)_25%,rgba(59,130,246,0.05)_26%,transparent_27%,transparent_74%,rgba(147,51,234,0.05)_75%,rgba(147,51,234,0.05)_76%,transparent_77%)] bg-[length:40px_40px]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_24%,rgba(59,130,246,0.1)_25%,rgba(59,130,246,0.1)_26%,transparent_27%,transparent_74%,rgba(59,130,246,0.1)_75%,rgba(59,130,246,0.1)_76%,transparent_77%)] bg-[length:50px_50px] animate-pulse"></div>
         {/* Floating Dots */}
         <div className="absolute inset-0">
           {[...Array(15)].map((_, i) => (
