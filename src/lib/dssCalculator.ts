@@ -47,38 +47,6 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
     }
   });
 
-  // Check if there are any mood entries for today
-  const todayMoodEntries = await prisma.moodEntry.findMany({
-    where: {
-      userId,
-      createdAt: {
-        gte: today,
-        lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
-      }
-    }
-  });
-
-  // If no mood entries for today, return zero DSS
-  if (todayMoodEntries.length === 0) {
-    return {
-      dssScore: 0,
-      components: {
-        learningMomentum: 0,
-        recoveryIndex: 0,
-        connectionScore: 0
-      },
-      zScores: {
-        zLM: 0,
-        zRI: 0,
-        zCN: 0
-      },
-      historicalData: {
-        lmHistory: [],
-        riHistory: [],
-        cnHistory: []
-      }
-    };
-  }
 
   // If no tracking data for today, return zero DSS
   if (!todayTracking) {
