@@ -47,6 +47,28 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
     }
   });
 
+  // If no tracking data for today, return zero DSS
+  if (!todayTracking) {
+    return {
+      dssScore: 0,
+      components: {
+        learningMomentum: 0,
+        recoveryIndex: 0,
+        connectionScore: 0
+      },
+      zScores: {
+        zLM: 0,
+        zRI: 0,
+        zCN: 0
+      },
+      historicalData: {
+        lmHistory: [],
+        riHistory: [],
+        cnHistory: []
+      }
+    };
+  }
+
   // Calculate today's components
   const todayLM = calculateLearningMomentum(todayTracking);
   const todayRI = calculateRecoveryIndex(todayTracking);

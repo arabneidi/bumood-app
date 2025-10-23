@@ -99,6 +99,9 @@ export default function Home() {
         console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
+        setAchievementsLoading(false);
+        setDssLoading(false);
+        setMcLoading(false);
       }
     }
 
@@ -871,8 +874,7 @@ export default function Home() {
             )}
 
             {/* AI Suggestions - Modern Futuristic Design */}
-            {moodEntries.length > 0 && (
-              <motion.div 
+            <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: [0, -6, 0] }}
                 transition={{
