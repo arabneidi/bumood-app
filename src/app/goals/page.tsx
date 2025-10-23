@@ -4,7 +4,40 @@ import { useState, useEffect } from "react";
 import { Target, Plus, X, Star, Trophy, Minus } from "lucide-react";
 
 export default function GoalsPage() {
-  const [goals, setGoals] = useState([]);
+  const [goals, setGoals] = useState([
+    {
+      id: 1,
+      title: "Run 5K",
+      difficulty: "medium",
+      currentValue: 2,
+      targetValue: 31,
+      progress: 6
+    },
+    {
+      id: 2,
+      title: "Stop drinking alcohol",
+      difficulty: "hard",
+      currentValue: 0,
+      targetValue: 30,
+      progress: 0
+    },
+    {
+      id: 3,
+      title: "Stress Management",
+      difficulty: "medium",
+      currentValue: 8,
+      targetValue: 14,
+      progress: 57
+    },
+    {
+      id: 4,
+      title: "Morning Exercise",
+      difficulty: "hard",
+      currentValue: 15,
+      targetValue: 21,
+      progress: 71
+    }
+  ]);
   const [loading, setLoading] = useState(false);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -121,7 +154,8 @@ export default function GoalsPage() {
       prevGoals.map(goal => {
         if (goal.id === goalId) {
           const newValue = Math.max(0, Math.min(goal.currentValue + change, goal.targetValue));
-          return { ...goal, currentValue: newValue };
+          const newProgress = Math.round((newValue / goal.targetValue) * 100);
+          return { ...goal, currentValue: newValue, progress: newProgress };
         }
         return goal;
       })
@@ -179,10 +213,7 @@ export default function GoalsPage() {
         {/* Create New Goal Button */}
         <div className="text-center mb-8">
           <button
-            onClick={() => {
-              console.log("Button clicked, setting showAddGoal to true");
-              setShowAddGoal(true);
-            }}
+            onClick={() => setShowAddGoal(true)}
             className="px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white rounded-2xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300"
           >
             <Plus className="w-6 h-6 inline-block mr-2" />
@@ -210,32 +241,52 @@ export default function GoalsPage() {
               <p className="text-slate-300 text-lg font-medium">Create your first goal to get started on your journey!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {goals.map((goal) => (
-                <div key={goal.id} className="relative p-6 rounded-2xl border border-slate-600/50 bg-slate-800/60 backdrop-blur-xl shadow-2xl">
-                  <h3 className="text-xl font-bold text-white mb-2">{goal.title}</h3>
-                  <div className="w-full bg-slate-700 rounded-full h-2 mb-4">
-                    <div
-                      className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full"
-                      style={{ width: `${(goal.currentValue / goal.targetValue) * 100}%` }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-300">{goal.currentValue} / {goal.targetValue} days</span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => updateProgress(goal.id, -1)}
-                        className="p-2 rounded-full bg-slate-700/60 hover:bg-slate-600/60 transition-colors"
-                      >
-                        <Minus className="w-4 h-4 text-white" />
-                      </button>
-                      <button
-                        onClick={() => updateProgress(goal.id, 1)}
-                        className="p-2 rounded-full bg-slate-700/60 hover:bg-slate-600/60 transition-colors"
-                      >
-                        <Plus className="w-4 h-4 text-white" />
-                      </button>
+                <div key={goal.id} className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 shadow-2xl">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mr-4">
+                      <Target className="w-6 h-6 text-white" />
                     </div>
+                    <h3 className="text-xl font-bold text-white">{goal.title}</h3>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <div className="flex items-center mb-2">
+                      <span className="text-slate-300 text-sm">Difficulty:</span>
+                      <span className="ml-2 text-sm font-medium text-slate-200 capitalize">{goal.difficulty}</span>
+                    </div>
+                    <div className="flex items-center mb-2">
+                      <span className="text-slate-300 text-sm">Progress:</span>
+                      <span className="ml-2 text-sm font-medium text-slate-200">{goal.currentValue}/{goal.targetValue} days</span>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="w-full bg-slate-700 rounded-full h-3 mb-2">
+                      <div
+                        className="bg-gradient-to-r from-cyan-500 to-blue-500 h-3 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.round((goal.currentValue / goal.targetValue) * 100)}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-300 text-sm">{Math.round((goal.currentValue / goal.targetValue) * 100)}%</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => updateProgress(goal.id, -1)}
+                      className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-all duration-200"
+                    >
+                      -1
+                    </button>
+                    <button
+                      onClick={() => updateProgress(goal.id, 1)}
+                      className="px-3 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-sm font-medium transition-all duration-200"
+                    >
+                      +1
+                    </button>
                   </div>
                 </div>
               ))}
