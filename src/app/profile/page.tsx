@@ -62,6 +62,9 @@ export default function ProfilePage() {
     console.log('customCategories changed:', customCategories);
   }, [customCategories]);
 
+  // Debug component render
+  console.log('Profile component rendering with state:', { newCategoryName, newCategoryValue, customCategories });
+
   const loadProfile = async () => {
     try {
       const response = await fetch('/api/user?userId=dummy-user');
@@ -795,7 +798,10 @@ export default function ProfilePage() {
                 
                 <div className="text-center">
                   <button
-                    onClick={() => {
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       console.log('Button clicked!', { newCategoryName, newCategoryValue });
                       addCustomCategory();
                     }}
@@ -807,7 +813,10 @@ export default function ProfilePage() {
                   
                   {/* Test button */}
                   <button
-                    onClick={() => {
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       console.log('Test button clicked!');
                       setNewCategoryName('Test Category');
                       setNewCategoryValue('Test Value');
@@ -825,6 +834,20 @@ export default function ProfilePage() {
                 </div>
               </motion.div>
             </motion.div>
+
+            {/* Simple Test Button */}
+            <div className="text-center mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  console.log('SIMPLE TEST BUTTON CLICKED!');
+                  alert('Simple test button works!');
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg"
+              >
+                Simple Test
+              </button>
+            </div>
 
             {/* Save Button */}
             <motion.div
