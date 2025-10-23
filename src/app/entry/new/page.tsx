@@ -588,25 +588,73 @@ export default function NewEntry() {
               opacity: { duration: 0.6, delay: 0.2 },
               y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
+            className="relative bg-gradient-to-br from-slate-900/80 via-slate-800/60 to-slate-900/80 backdrop-blur-2xl rounded-3xl p-8 mx-8 border border-cyan-400/20 shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 overflow-hidden"
           >
-            {/* Glowing Edge Effect */}
-            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            {/* Futuristic Grid Background */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_24%,rgba(6,182,212,0.1)_25%,rgba(6,182,212,0.1)_26%,transparent_27%,transparent_74%,rgba(147,51,234,0.1)_75%,rgba(147,51,234,0.1)_76%,transparent_77%)] bg-[length:20px_20px]"></div>
+            </div>
+            
+            {/* Neon Glow Effects */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-cyan-400/30 shadow-[0_0_30px_rgba(6,182,212,0.4)]"></div>
+            <div className="absolute inset-0 rounded-3xl border border-purple-400/20 shadow-[0_0_60px_rgba(147,51,234,0.3)]"></div>
+            
+            {/* Scanning Line Effect */}
+            <motion.div
+              className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
+              animate={{ x: ['-100%', '100%'] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            />
             
             <div className="relative z-10">
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-                <motion.span
-                  className="mr-2 text-3xl"
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
+              <div className="text-center mb-8">
+                <motion.h2 
+                  className="text-3xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-2 drop-shadow-lg"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.6 }}
                 >
-                  📊
-                </motion.span>
-                Mood Parameters
-              </h2>
+                  Mood Parameters
+                </motion.h2>
+                <motion.p 
+                  className="text-cyan-300 text-sm font-medium tracking-wider uppercase"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.6 }}
+                >
+                  Rate how you're feeling across different dimensions
+                </motion.p>
+                <motion.div
+                  className="flex justify-center mt-4"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7, duration: 0.6 }}
+                >
+                  <div className="flex space-x-2">
+                    <motion.div 
+                      className="w-3 h-3 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full"
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                    <motion.div 
+                      className="w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
+                    />
+                    <motion.div 
+                      className="w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
+                    />
+                  </div>
+                </motion.div>
+              </div>
               
-              <div className="space-y-6">
-                <ParameterSlider
+              <div className="space-y-8">
+                {/* Parameter Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="space-y-8">
+                    <ParameterSlider
                   label="Valence"
                   value={formData.valence}
                   onChange={(val) => handleChange("valence", val)}
@@ -622,69 +670,73 @@ export default function NewEntry() {
                   }}
                 />
 
-                <ParameterSlider
-                  label="Energy"
-                  value={formData.energy}
-                  onChange={(val) => handleChange("energy", val)}
-                  min={1}
-                  max={10}
-                  minLabel="Drained"
-                  maxLabel="Energized"
-                  color="from-blue-400 to-yellow-500"
-                  icon="⚡"
-                  valueLabels={{
-                    1: "Exhausted", 2: "Very Low", 3: "Low", 4: "Tired", 5: "Normal",
-                    6: "Rested", 7: "Active", 8: "High", 9: "Very High", 10: "Hyper"
-                  }}
-                />
+                    <ParameterSlider
+                      label="Energy"
+                      value={formData.energy}
+                      onChange={(val) => handleChange("energy", val)}
+                      min={1}
+                      max={10}
+                      minLabel="Drained"
+                      maxLabel="Energized"
+                      color="from-blue-400 to-yellow-500"
+                      icon="⚡"
+                      valueLabels={{
+                        1: "Exhausted", 2: "Very Low", 3: "Low", 4: "Tired", 5: "Normal",
+                        6: "Rested", 7: "Active", 8: "High", 9: "Very High", 10: "Hyper"
+                      }}
+                    />
 
-                <ParameterSlider
-                  label="Focus"
-                  value={formData.focus}
-                  onChange={(val) => handleChange("focus", val)}
-                  min={1}
-                  max={10}
-                  minLabel="Distracted"
-                  maxLabel="Focused"
-                  color="from-purple-400 to-pink-500"
-                  icon="🎯"
-                  valueLabels={{
-                    1: "Completely Distracted", 2: "Very Distracted", 3: "Distracted", 4: "Wandering", 5: "Moderate",
-                    6: "Attentive", 7: "Engaged", 8: "Highly Focused", 9: "Deep Focus", 10: "Laser Focus"
-                  }}
-                />
+                    <ParameterSlider
+                      label="Focus"
+                      value={formData.focus}
+                      onChange={(val) => handleChange("focus", val)}
+                      min={1}
+                      max={10}
+                      minLabel="Distracted"
+                      maxLabel="Focused"
+                      color="from-purple-400 to-pink-500"
+                      icon="🎯"
+                      valueLabels={{
+                        1: "Completely Distracted", 2: "Very Distracted", 3: "Distracted", 4: "Wandering", 5: "Moderate",
+                        6: "Attentive", 7: "Engaged", 8: "Highly Focused", 9: "Deep Focus", 10: "Laser Focus"
+                      }}
+                    />
+                  </div>
 
-                <ParameterSlider
-                  label="Stress"
-                  value={formData.stress}
-                  onChange={(val) => handleChange("stress", val)}
-                  min={1}
-                  max={10}
-                  minLabel="Calm"
-                  maxLabel="Stressed"
-                  color="from-green-400 to-red-500"
-                  icon="😟"
-                  valueLabels={{
-                    1: "Zen Master", 2: "Very Calm", 3: "Calm", 4: "Relaxed", 5: "Mild",
-                    6: "Moderate", 7: "Elevated", 8: "High", 9: "Very High", 10: "Overwhelmed"
-                  }}
-                />
+                  <div className="space-y-8">
+                    <ParameterSlider
+                      label="Stress"
+                      value={formData.stress}
+                      onChange={(val) => handleChange("stress", val)}
+                      min={1}
+                      max={10}
+                      minLabel="Calm"
+                      maxLabel="Stressed"
+                      color="from-green-400 to-red-500"
+                      icon="😟"
+                      valueLabels={{
+                        1: "Zen Master", 2: "Very Calm", 3: "Calm", 4: "Relaxed", 5: "Mild",
+                        6: "Moderate", 7: "Elevated", 8: "High", 9: "Very High", 10: "Overwhelmed"
+                      }}
+                    />
 
-                <ParameterSlider
-                  label="Sleep"
-                  value={formData.sleep}
-                  onChange={(val) => handleChange("sleep", val)}
-                  min={0}
-                  max={12}
-                  minLabel="No sleep"
-                  maxLabel="12+ hours"
-                  color="from-indigo-400 to-purple-500"
-                  icon="😴"
-                  valueLabels={{
-                    0: "No sleep", 1: "1 hour", 2: "2 hours", 3: "3 hours", 4: "4 hours", 5: "5 hours",
-                    6: "6 hours", 7: "7 hours", 8: "8 hours", 9: "9 hours", 10: "10 hours", 11: "11 hours", 12: "12+ hours"
-                  }}
-                />
+                    <ParameterSlider
+                      label="Sleep"
+                      value={formData.sleep}
+                      onChange={(val) => handleChange("sleep", val)}
+                      min={0}
+                      max={12}
+                      minLabel="No sleep"
+                      maxLabel="12+ hours"
+                      color="from-indigo-400 to-purple-500"
+                      icon="😴"
+                      valueLabels={{
+                        0: "No sleep", 1: "1 hour", 2: "2 hours", 3: "3 hours", 4: "4 hours", 5: "5 hours",
+                        6: "6 hours", 7: "7 hours", 8: "8 hours", 9: "9 hours", 10: "10 hours", 11: "11 hours", 12: "12+ hours"
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>

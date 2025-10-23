@@ -1035,12 +1035,12 @@ export default function Home() {
                   <motion.div
                     animate={{ x: [0, 20, 0], y: [0, -20, 0], rotate: [0, 90, 0] }}
                     transition={{ duration: 8, repeat: Infinity }}
-                    className="absolute top-24 right-24 w-20 h-20 bg-blue-400/30 rounded-full opacity-20"
+                    className="absolute top-32 right-32 w-16 h-16 bg-blue-400/30 rounded-full opacity-20"
                   />
                   <motion.div
                     animate={{ x: [0, -15, 0], y: [0, 15, 0], rotate: [0, -90, 0] }}
                     transition={{ duration: 7, repeat: Infinity }}
-                    className="absolute bottom-24 left-24 w-28 h-28 bg-purple-400/30 rounded-full opacity-20"
+                    className="absolute bottom-32 left-32 w-24 h-24 bg-purple-400/30 rounded-full opacity-20"
                   />
 
                   <motion.h3 
