@@ -94,7 +94,7 @@ export default function AchievementBadge({
       
       case "Goal Getter":
         return {
-          gradient: 'bg-gradient-to-br from-blue-400 to-cyan-500',
+          gradient: 'bg-gradient-to-br from-blue-500 to-cyan-500',
           icon: '🎯'
         };
       
@@ -106,7 +106,7 @@ export default function AchievementBadge({
       
       case "Streak Star":
         return {
-          gradient: 'bg-gradient-to-br from-yellow-400 to-amber-500',
+          gradient: 'bg-gradient-to-br from-yellow-500 to-amber-500',
           icon: '⭐'
         };
       
@@ -197,13 +197,13 @@ export default function AchievementBadge({
       
       case "Busy Bee":
         return {
-          gradient: 'bg-gradient-to-br from-orange-400 to-red-500',
+          gradient: 'bg-gradient-to-br from-orange-500 to-red-500',
           icon: '🏃‍♀️'
         };
       
       case "Dedicated":
         return {
-          gradient: 'bg-gradient-to-br from-yellow-400 to-amber-500',
+          gradient: 'bg-gradient-to-br from-yellow-500 to-amber-500',
           icon: '🏅'
         };
       
@@ -225,7 +225,7 @@ export default function AchievementBadge({
 
   return (
     <motion.div 
-      className={`${baseClasses} ${design.gradient} rounded-2xl shadow-2xl p-6 flex flex-col items-center justify-center group relative overflow-hidden border-2 border-white/50`}
+      className={`${baseClasses} ${design.gradient} rounded-2xl shadow-2xl p-6 flex flex-col items-center justify-center group relative overflow-hidden`}
       animate={{
         y: [0, -8, 0],
       }}
@@ -235,51 +235,6 @@ export default function AchievementBadge({
         ease: "easeInOut"
       }}
     >
-      {/* Shimmer Effect - Same as Stats */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
-        animate={{
-          x: ['-100%', '200%'],
-        }}
-        transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-      />
-      
-      {/* Animated SVG Badge Particles */}
-      {[...Array(8)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute opacity-20"
-          style={{
-            backgroundImage: `url('/badges/badge-template.svg')`,
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            width: `${20 + Math.random() * 30}px`,
-            height: `${20 + Math.random() * 30}px`,
-            left: `${Math.random() * 80}%`,
-            top: `${Math.random() * 80}%`,
-            transform: `rotate(${Math.random() * 360}deg)`,
-            filter: 'hue-rotate(90deg) saturate(150%) brightness(120%)'
-          }}
-          animate={{
-            x: [0, Math.random() * 15 - 7.5, 0],
-            y: [0, Math.random() * 15 - 7.5, 0],
-            rotate: [0, Math.random() * 180 - 90, 0],
-            scale: [1, 1.2, 1],
-            opacity: [0.1, 0.3, 0.1]
-          }}
-          transition={{
-            duration: 4 + Math.random() * 2,
-            repeat: Infinity,
-            delay: Math.random() * 2,
-            ease: "easeInOut"
-          }}
-        />
-      ))}
       
       {/* Achievement Icon - No Badge Shape */}
       <div className="relative mb-4 z-10">
@@ -307,15 +262,6 @@ export default function AchievementBadge({
         ))}
       </div>
       
-      {/* Badge Description Tooltip - Shows on Hover */}
-      <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-80 bg-gradient-to-br from-purple-500 to-pink-500 text-white text-sm p-4 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-[9999] pointer-events-none border-2 border-white/30">
-        <div className="text-center">
-          <p className="font-bold mb-2 text-lg drop-shadow-lg">{title}</p>
-          <p className="text-white/90 text-sm leading-relaxed drop-shadow-md">{description || "Achievement unlocked!"}</p>
-        </div>
-        {/* Tooltip Arrow */}
-        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-purple-500"></div>
-      </div>
     </motion.div>
   );
 }

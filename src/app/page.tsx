@@ -244,7 +244,7 @@ export default function Home() {
       {/* Futuristic Background */}
       <div className="absolute inset-0">
         {/* Animated Grid Pattern */}
-        <div className="absolute top-24 left-0 right-0 bottom-0 z-0 bg-[linear-gradient(90deg,transparent_24%,rgba(147,51,234,0.1)_25%,rgba(147,51,234,0.1)_26%,transparent_27%,transparent_74%,rgba(59,130,246,0.1)_75%,rgba(59,130,246,0.1)_76%,transparent_77%)] bg-[length:50px_50px] animate-pulse"></div>
+        <div className="absolute top-24 left-0 right-0 bottom-0 z-0 bg-[linear-gradient(90deg,transparent_24%,rgba(59,130,246,0.1)_25%,rgba(59,130,246,0.1)_26%,transparent_27%,transparent_74%,rgba(147,51,234,0.1)_75%,rgba(147,51,234,0.1)_76%,transparent_77%)] bg-[length:50px_50px] animate-pulse"></div>
         {/* Floating Particles */}
         <div className="absolute inset-0">
           {[...Array(20)].map((_, i) => (
@@ -484,25 +484,14 @@ export default function Home() {
               </div>
             </motion.div>
 
-            {/* Achievements Section - Separate card with Show All toggle */}
+            {/* Achievements Section - Goals Page Style */}
             {achievementsLoading ? (
-              <div className="text-center py-12">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="inline-block"
-                >
-                  <div className="rounded-full h-16 w-16 border-4 border-blue-400 border-t-transparent mx-auto"></div>
-                </motion.div>
-                <p className="mt-4 text-slate-300 text-lg">Loading achievements...</p>
-              </div>
-            ) : achievements.length > 0 ? (
               <motion.div 
                 initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: [0, -5, 0] }}
+                animate={{ opacity: 1, y: [0, -6, 0] }}
                 transition={{
                   opacity: { duration: 0.6, delay: 0.2 },
-                  y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+                  y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
                 }}
                 className="mb-16"
               >
@@ -510,54 +499,224 @@ export default function Home() {
                   {/* Glowing Edge Effect */}
                   <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
                   
-                  <div className="flex items-center justify-between mb-4 relative z-10">
-                    <h2 className="text-2xl font-bold text-white flex items-center">
-                      <span className="mr-2">🏅</span>
-                      Achievements
-                    </h2>
-                    <button
-                      onClick={() => setShowAllBadges(v => !v)}
-                      className="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow hover:from-blue-600 hover:to-purple-600"
+                  <div className="text-center py-12 relative z-10">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="inline-block"
                     >
-                      {showAllBadges ? 'Show Last 4' : 'Show All'}
-                    </button>
+                      <div className="rounded-full h-16 w-16 border-4 border-blue-400 border-t-transparent mx-auto"></div>
+                    </motion.div>
+                    <p className="mt-4 text-slate-300 text-lg">Loading achievements...</p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 overflow-visible">
-                    {(showAllBadges ? achievements : achievements.slice(0, 4)).map((achievement, index) => (
-                      <motion.div
-                        key={achievement.id}
-                        initial={{ opacity: 0, y: 30, scale: 0.5, rotate: -10 }}
-                        animate={{ 
-                          opacity: 1, 
-                          y: 0, 
-                          scale: 1, 
-                          rotate: 0 
-                        }}
-                        transition={{ 
-                          delay: 0.1 + index * 0.05, 
-                          duration: 0.5,
-                          type: "spring",
-                          stiffness: 150
-                        }}
-                        whileHover={{ 
-                          scale: 1.2, 
-                          rotate: 8,
-                          y: -15,
-                          transition: { duration: 0.3, type: "spring" }
-                        }}
+                </div>
+              </motion.div>
+            ) : achievements.length > 0 ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: [0, -6, 0] }}
+                transition={{
+                  opacity: { duration: 0.6, delay: 0.2 },
+                  y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
+                }}
+                className="mb-16"
+              >
+                <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8">
+                  {/* Glowing Edge Effect */}
+                  <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+                  
+                  {/* Shimmer Effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/10 to-transparent opacity-20"
+                    animate={{
+                      x: ['-100%', '200%'],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                  />
+                  
+                  <div className="mb-6 relative z-10 text-center">
+                    <motion.h2 
+                      className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center justify-center"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <motion.span
+                        className="mr-3 text-4xl"
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
                       >
-                        <AchievementBadge
-                          title={achievement.title}
-                          type={achievement.type}
-                          stars={achievement.stars}
-                          unlocked={!!achievement.unlockedAt}
-                          size="md"
-                          description={achievement.description}
-                          icon={achievement.icon}
-                        />
-                      </motion.div>
-                    ))}
+                        🏅
+                      </motion.span>
+                      Recent Achievements
+                    </motion.h2>
                   </div>
+                  
+                  {/* Achievements Grid */}
+                  <div className="mb-8 relative z-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {achievements.filter(a => a.unlockedAt).slice(-4).map((achievement, index) => (
+                        <motion.div
+                          key={achievement.id}
+                          initial={{ opacity: 0, y: 30, scale: 0.5, rotate: -10 }}
+                          animate={{ 
+                            opacity: 1, 
+                            y: [0, -8, 0], 
+                            scale: 1, 
+                            rotate: 0 
+                          }}
+                          transition={{ 
+                            delay: 0.1 + index * 0.1, 
+                            duration: 0.6,
+                            type: "spring",
+                            stiffness: 150,
+                            y: { duration: 3.5 + index * 0.3, repeat: Infinity, ease: "easeInOut" }
+                          }}
+                          whileHover={{ 
+                            scale: 1.15, 
+                            rotate: 8,
+                            y: -20,
+                            transition: { duration: 0.3, type: "spring" }
+                          }}
+                          className="relative group"
+                        >
+                          {/* Colorful Transparent Glass - Different Colors for Each Achievement */}
+                          <div className={`relative rounded-2xl border-2 backdrop-blur-xl p-6 overflow-hidden shadow-lg ${
+                            index === 0 ? 'border-cyan-400/60 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-cyan-500/20' :
+                            index === 1 ? 'border-orange-400/60 bg-gradient-to-br from-orange-500/20 via-red-500/20 to-orange-500/20' :
+                            index === 2 ? 'border-yellow-400/60 bg-gradient-to-br from-yellow-500/20 via-amber-500/20 to-yellow-500/20' :
+                            index === 3 ? 'border-pink-400/60 bg-gradient-to-br from-pink-500/20 via-purple-500/20 to-pink-500/20' :
+                            'border-blue-400/60 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-indigo-500/20'
+                          }`}>
+                            {/* Glowing Edge Effect with Different Colors */}
+                            <div className={`absolute inset-0 rounded-2xl border shadow-lg animate-pulse ${
+                              index === 0 ? 'border-cyan-400/30 shadow-[0_0_20px_rgba(34,211,238,0.3)]' :
+                              index === 1 ? 'border-orange-400/30 shadow-[0_0_20px_rgba(251,146,60,0.3)]' :
+                              index === 2 ? 'border-yellow-400/30 shadow-[0_0_20px_rgba(250,204,21,0.3)]' :
+                              index === 3 ? 'border-pink-400/30 shadow-[0_0_20px_rgba(244,114,182,0.3)]' :
+                              'border-blue-400/30 shadow-[0_0_20px_rgba(59,130,246,0.3)]'
+                            }`}></div>
+                            
+                            <div className="text-center relative z-10">
+                              {/* Icon */}
+                              <div className="text-5xl mb-4">
+                                {achievement.icon}
+                              </div>
+                              
+                              {/* Title with Different Color Gradients */}
+                              <h3 className={`text-xl font-bold bg-clip-text text-transparent mb-2 ${
+                                index === 0 ? 'bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400' :
+                                index === 1 ? 'bg-gradient-to-r from-orange-400 via-red-400 to-orange-400' :
+                                index === 2 ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400' :
+                                index === 3 ? 'bg-gradient-to-r from-pink-400 via-purple-400 to-pink-400' :
+                                'bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400'
+                              }`}>
+                                {achievement.title}
+                              </h3>
+                              
+                              {/* Description */}
+                              <p className="text-sm text-slate-200 mb-3">
+                                {achievement.description}
+                              </p>
+                              
+                              {/* Stars */}
+                              <div className="flex items-center justify-center space-x-1">
+                                {Array.from({ length: 3 }, (_, i) => (
+                                  <span
+                                    key={i}
+                                    className={`text-sm ${i < achievement.stars ? 'text-yellow-300' : 'text-slate-400'}`}
+                                  >
+                                    ⭐
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Locked Badges Section */}
+                  {achievements.filter(a => !a.unlockedAt).length > 0 && (
+                    <div className="relative z-10">
+                      <h3 className="text-xl font-bold text-slate-400 mb-4 flex items-center">
+                        <span className="mr-2">🏆</span>
+                        <span className="mr-2">🔒</span>
+                        Locked Badges
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {achievements.filter(a => !a.unlockedAt).slice(0, showAllBadges ? undefined : 4).map((achievement, index) => (
+                          <motion.div
+                            key={achievement.id}
+                            initial={{ opacity: 0, y: 30, scale: 0.5, rotate: -10 }}
+                            animate={{ 
+                              opacity: 0.6, 
+                              y: [0, -4, 0], 
+                              scale: 1, 
+                              rotate: 0 
+                            }}
+                            transition={{ 
+                              delay: 0.1 + index * 0.1, 
+                              duration: 0.6,
+                              type: "spring",
+                              stiffness: 150,
+                              y: { duration: 4 + index * 0.3, repeat: Infinity, ease: "easeInOut" }
+                            }}
+                            whileHover={{ 
+                              scale: 1.05, 
+                              rotate: 4,
+                              y: -10,
+                              transition: { duration: 0.3, type: "spring" }
+                            }}
+                            className="relative group"
+                          >
+                            {/* Transparent Glass for Locked Badges - Modern Muted Style */}
+                            <div className="relative rounded-2xl border border-slate-500/30 bg-gradient-to-br from-slate-500/10 via-slate-600/10 to-slate-700/10 backdrop-blur-xl p-6 overflow-hidden grayscale shadow-lg">
+                              {/* Subtle Edge Effect */}
+                              <div className="absolute inset-0 rounded-2xl border border-slate-400/20 shadow-[0_0_10px_rgba(148,163,184,0.2)]"></div>
+                              
+                              <div className="text-center relative z-10">
+                                {/* Icon */}
+                                <div className="text-5xl mb-4 opacity-60">
+                                  {achievement.icon}
+                                </div>
+                                
+                                {/* Title in Muted Blue-Purple */}
+                                <h3 className="text-xl font-bold bg-gradient-to-r from-slate-400 via-slate-300 to-slate-400 bg-clip-text text-transparent mb-2">
+                                  {achievement.title}
+                                </h3>
+                                
+                                {/* Description */}
+                                <p className="text-sm text-slate-400 mb-3">
+                                  {achievement.description}
+                                </p>
+                                
+                                {/* Stars */}
+                                <div className="flex items-center justify-center space-x-1 mb-3">
+                                  {Array.from({ length: 3 }, (_, i) => (
+                                    <span
+                                      key={i}
+                                      className="text-sm text-slate-500"
+                                    >
+                                      ⭐
+                                    </span>
+                                  ))}
+                                </div>
+                                
+                                {/* Locked Status */}
+                                <div className="flex items-center justify-center bg-gradient-to-r from-slate-500 to-slate-600 text-white text-sm font-bold px-3 py-1 rounded-full">
+                                  🔒 Locked
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ) : null}
