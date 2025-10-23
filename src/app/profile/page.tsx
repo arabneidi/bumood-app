@@ -801,7 +801,11 @@ export default function ProfilePage() {
             {/* Add Custom Category - Compact Design */}
             <motion.div
               initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={{ opacity: 1, y: [0, -6, 0] }}
+              transition={{ 
+                opacity: { duration: 0.5 },
+                y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
+              }}
               className="mb-12"
             >
               <div className="flex items-center justify-between mb-8">
@@ -877,8 +881,11 @@ export default function ProfilePage() {
             {/* Save Button */}
             <motion.div
               initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.3 }}
+              animate={{ opacity: 1, y: [0, -8, 0] }}
+              transition={{ 
+                opacity: { duration: 0.5, delay: 1.3 },
+                y: { duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 1.3 }
+              }}
               className="text-center"
             >
               <motion.button
