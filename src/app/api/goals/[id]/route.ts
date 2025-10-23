@@ -7,12 +7,11 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { currentValue, progress, streak, bestStreak, completed, completedAt } = body;
+    const { currentValue, streak, bestStreak, completed, completedAt } = body;
 
     const updateData: any = {};
     
     if (currentValue !== undefined) updateData.currentValue = currentValue;
-    if (progress !== undefined) updateData.progress = progress;
     if (streak !== undefined) updateData.streak = streak;
     if (bestStreak !== undefined) updateData.bestStreak = bestStreak;
     if (completed !== undefined) updateData.completed = completed;

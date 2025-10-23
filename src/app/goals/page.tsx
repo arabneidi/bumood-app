@@ -106,16 +106,28 @@ export default function GoalsPage() {
   };
 
   useEffect(() => {
-    fetch("/api/goals")
-      .then((res) => res.json())
-      .then((data) => {
-        setGoals(data);
-        setLoading(false);
-      })
-      .catch((error) => {
+    const fetchGoals = async () => {
+      try {
+        const response = await fetch("/api/goals");
+        if (response.ok) {
+          const data = await response.json();
+          // Calculate progress for each goal
+          const goalsWithProgress = data.map((goal: any) => ({
+            ...goal,
+            progress: Math.round((goal.currentValue / goal.targetValue) * 100)
+          }));
+          setGoals(goalsWithProgress);
+        } else {
+          console.error("Failed to fetch goals");
+        }
+      } catch (error) {
         console.error("Error fetching goals:", error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchGoals();
   }, []);
 
   const handleCreateGoal = async () => {
@@ -182,7 +194,6 @@ export default function GoalsPage() {
           },
           body: JSON.stringify({
             currentValue: goalToUpdate.currentValue,
-            progress: goalToUpdate.progress,
           }),
         });
 
@@ -218,7 +229,6 @@ export default function GoalsPage() {
             completed: true,
             completedAt: new Date().toISOString(),
             currentValue: completedGoal.targetValue,
-            progress: 100,
           }),
         });
 
