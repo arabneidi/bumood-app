@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { achievementDefinitions } from "./achievements";
 
 export interface AchievementData {
   id: string;
@@ -19,12 +20,6 @@ export async function calculateAchievements(userId: string): Promise<Achievement
     orderBy: { createdAt: "desc" },
   });
 
-  // Get user's goals
-  const goals = await db.goal.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
-
   // Get existing achievements to avoid duplicates
   const existingAchievements = await db.achievement.findMany({
     where: { userId },
@@ -32,468 +27,188 @@ export async function calculateAchievements(userId: string): Promise<Achievement
 
   const existingTitles = new Set(existingAchievements.map(a => a.title));
 
-  // Calculate achievements based on mood entries
-  if (moodEntries.length > 0) {
-    const totalEntries = moodEntries.length;
-    const avgValence = moodEntries.reduce((sum, entry) => sum + entry.valence, 0) / totalEntries;
-    const avgEnergy = moodEntries.reduce((sum, entry) => sum + entry.energy, 0) / totalEntries;
-    const avgSleep = moodEntries.reduce((sum, entry) => sum + (entry.sleep || 0), 0) / totalEntries;
+  // Check each achievement definition
+  for (const achievementDef of achievementDefinitions) {
+    // Skip if already unlocked
+    if (existingTitles.has(achievementDef.title)) {
+      continue;
+    }
 
-    // First Entry Achievement
-    if (totalEntries >= 1 && !existingTitles.has("First Steps")) {
+    let isUnlocked = false;
+
+    switch (achievementDef.condition.type) {
+      case 'count':
+        if (achievementDef.id === 'first-entry') {
+          isUnlocked = moodEntries.length >= 1;
+        } else if (achievementDef.id === 'century-club') {
+          isUnlocked = moodEntries.length >= 100;
+        } else if (achievementDef.id === 'activity-explorer') {
+          // Count unique activities
+          const uniqueActivities = new Set();
+          moodEntries.forEach(entry => {
+            if (entry.activities) {
+              const activities = JSON.parse(entry.activities);
+              activities.forEach((activity: string) => uniqueActivities.add(activity));
+            }
+          });
+          isUnlocked = uniqueActivities.size >= 10;
+        } else if (achievementDef.id === 'reflection-master') {
+          // Count entries with reflections
+          const reflectionCount = moodEntries.filter(entry => entry.reflection && entry.reflection.trim() !== '').length;
+          isUnlocked = reflectionCount >= 25;
+        } else if (achievementDef.id === 'early-bird') {
+          // Count entries logged before 9 AM
+          const earlyEntries = moodEntries.filter(entry => {
+            const hour = new Date(entry.createdAt).getHours();
+            return hour < 9;
+          });
+          isUnlocked = earlyEntries.length >= 7;
+        }
+        break;
+
+      case 'streak':
+        if (achievementDef.id === 'week-streak') {
+          isUnlocked = await checkConsecutiveDays(moodEntries, 7);
+        } else if (achievementDef.id === 'month-streak') {
+          isUnlocked = await checkConsecutiveDays(moodEntries, 30);
+        }
+        break;
+
+      case 'mood':
+        if (achievementDef.id === 'happy-week') {
+          isUnlocked = await checkConsecutiveMood(moodEntries, 'valence', 8, 7);
+        } else if (achievementDef.id === 'energy-master') {
+          isUnlocked = await checkConsecutiveMood(moodEntries, 'energy', 8, 14);
+        }
+        break;
+
+      case 'habit_streak':
+        if (achievementDef.id === 'sleep-champion') {
+          isUnlocked = await checkConsecutiveSleep(moodEntries, 8, 7);
+        }
+        break;
+    }
+
+    if (isUnlocked) {
       achievements.push({
-        id: `first-entry-${Date.now()}`,
-        type: "milestone",
-        title: "First Steps",
-        description: "Logged your first mood entry!",
-        icon: "🎯",
-        stars: 1,
+        id: `${achievementDef.id}-${Date.now()}`,
+        type: achievementDef.type,
+        title: achievementDef.title,
+        description: achievementDef.description,
+        icon: achievementDef.icon,
+        stars: achievementDef.stars,
         unlockedAt: new Date(),
       });
     }
+  }
 
-    // Consistency Achievements
-    if (totalEntries >= 7 && !existingTitles.has("Week Warrior")) {
-      achievements.push({
-        id: `week-warrior-${Date.now()}`,
-        type: "streak",
-        title: "Week Warrior",
-        description: "Logged mood for 7 consecutive days!",
-        icon: "🔥",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
+  return achievements;
+}
+
+// Helper function to check consecutive days
+async function checkConsecutiveDays(moodEntries: any[], requiredDays: number): Promise<boolean> {
+  if (moodEntries.length < requiredDays) return false;
+
+  // Sort entries by date (newest first)
+  const sortedEntries = moodEntries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  
+  let consecutiveDays = 1;
+  let currentDate = new Date(sortedEntries[0].createdAt);
+  currentDate.setHours(0, 0, 0, 0);
+
+  for (let i = 1; i < sortedEntries.length; i++) {
+    const entryDate = new Date(sortedEntries[i].createdAt);
+    entryDate.setHours(0, 0, 0, 0);
+    
+    const dayDiff = Math.floor((currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (dayDiff === 1) {
+      consecutiveDays++;
+      currentDate = entryDate;
+    } else if (dayDiff > 1) {
+      break; // Gap in entries
     }
+  }
 
-    if (totalEntries >= 30 && !existingTitles.has("Monthly Master")) {
-      achievements.push({
-        id: `monthly-master-${Date.now()}`,
-        type: "streak",
-        title: "Monthly Master",
-        description: "Logged mood for 30 days!",
-        icon: "📅",
-        stars: 3,
-        unlockedAt: new Date(),
-      });
-    }
+  return consecutiveDays >= requiredDays;
+}
 
-    // Mood Quality Achievements
-    if (avgValence >= 8 && totalEntries >= 5 && !existingTitles.has("Sunshine Soul")) {
-      achievements.push({
-        id: `sunshine-soul-${Date.now()}`,
-        type: "quality",
-        title: "Sunshine Soul",
-        description: "Maintained high positive mood (8+ average)!",
-        icon: "☀️",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
+// Helper function to check consecutive mood quality
+async function checkConsecutiveMood(moodEntries: any[], moodType: string, minValue: number, requiredDays: number): Promise<boolean> {
+  if (moodEntries.length < requiredDays) return false;
 
-    if (avgEnergy >= 8 && totalEntries >= 5 && !existingTitles.has("Energizer Bunny")) {
-      achievements.push({
-        id: `energizer-bunny-${Date.now()}`,
-        type: "quality",
-        title: "Energizer Bunny",
-        description: "Maintained high energy levels (8+ average)!",
-        icon: "⚡",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
+  // Sort entries by date (newest first)
+  const sortedEntries = moodEntries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  
+  let consecutiveDays = 0;
+  let currentDate = new Date(sortedEntries[0].createdAt);
+  currentDate.setHours(0, 0, 0, 0);
 
-    if (avgSleep >= 7 && totalEntries >= 5 && !existingTitles.has("Sleep Champion")) {
-      achievements.push({
-        id: `sleep-champion-${Date.now()}`,
-        type: "quality",
-        title: "Sleep Champion",
-        description: "Maintained healthy sleep (7+ hours average)!",
-        icon: "😴",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Stress Management Achievement
-    const avgStress = moodEntries.reduce((sum, entry) => sum + entry.stress, 0) / totalEntries;
-    if (avgStress <= 3 && totalEntries >= 5 && !existingTitles.has("Zen Master")) {
-      achievements.push({
-        id: `zen-master-${Date.now()}`,
-        type: "quality",
-        title: "Zen Master",
-        description: "Maintained low stress levels (3 or below average)!",
-        icon: "🧘",
-        stars: 3,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Activity Achievements
-    const allActivities = moodEntries.flatMap(entry => {
-      try {
-        return JSON.parse(entry.activities || '[]');
-      } catch {
-        return [];
+  for (const entry of sortedEntries) {
+    const entryDate = new Date(entry.createdAt);
+    entryDate.setHours(0, 0, 0, 0);
+    
+    const dayDiff = Math.floor((currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (dayDiff === 0) {
+      // Same day, check if mood meets criteria
+      if (entry[moodType] >= minValue) {
+        consecutiveDays++;
+      } else {
+        break; // Mood doesn't meet criteria
       }
-    });
-
-    const activityCounts = allActivities.reduce((acc, activity) => {
-      acc[activity] = (acc[activity] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    // Most active activity
-    const topActivity = Object.entries(activityCounts)
-      .sort(([,a], [,b]) => b - a)[0];
-
-    if (topActivity && topActivity[1] >= 5 && !existingTitles.has("Activity Enthusiast")) {
-      achievements.push({
-        id: `activity-enthusiast-${Date.now()}`,
-        type: "activity",
-        title: "Activity Enthusiast",
-        description: `Tracked "${topActivity[0]}" activity 5+ times!`,
-        icon: "🏃",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Creative New Badges inspired by the images
-    // Study/Learning Badges
-    const studyActivities = allActivities.filter(activity => 
-      ['reading', 'studying', 'learning', 'research'].some(study => 
-        activity.toLowerCase().includes(study)
-      )
-    );
-    if (studyActivities.length >= 5 && !existingTitles.has("Nerd Hero")) {
-      achievements.push({
-        id: `nerd-hero-${Date.now()}`,
-        type: "study",
-        title: "Nerd Hero",
-        description: "Studied or learned 5+ times!",
-        icon: "🤓",
-        stars: 3,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Habit Tracking Badges
-    const habitEntries = moodEntries.filter(entry => 
-      entry.waterIntake && entry.waterIntake >= 8
-    );
-    if (habitEntries.length >= 3 && !existingTitles.has("Hydration Guardian")) {
-      achievements.push({
-        id: `hydration-guardian-${Date.now()}`,
-        type: "health",
-        title: "Hydration Guardian",
-        description: "Drank 8+ glasses of water for 3 days!",
-        icon: "💧",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Mindfulness Badges
-    const mindfulnessActivities = allActivities.filter(activity => 
-      ['meditation', 'breathing', 'mindfulness', 'yoga'].some(mind => 
-        activity.toLowerCase().includes(mind)
-      )
-    );
-    if (mindfulnessActivities.length >= 5 && !existingTitles.has("Calm Mind")) {
-      achievements.push({
-        id: `calm-mind-${Date.now()}`,
-        type: "mindfulness",
-        title: "Calm Mind",
-        description: "Practiced mindfulness 5+ times!",
-        icon: "🧘",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Entertainment Badges
-    const watchingActivities = allActivities.filter(activity => 
-      ['watching', 'movies', 'tv', 'shows'].some(watch => 
-        activity.toLowerCase().includes(watch)
-      )
-    );
-    if (watchingActivities.length >= 3 && !existingTitles.has("Movie Buff")) {
-      achievements.push({
-        id: `movie-buff-${Date.now()}`,
-        type: "entertainment",
-        title: "Movie Buff",
-        description: "Watched 3+ curated titles!",
-        icon: "🎬",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Art/Creativity Badges
-    const artActivities = allActivities.filter(activity => 
-      ['art', 'drawing', 'painting', 'creative', 'writing'].some(art => 
-        activity.toLowerCase().includes(art)
-      )
-    );
-    if (artActivities.length >= 3 && !existingTitles.has("Colorful Life")) {
-      achievements.push({
-        id: `colorful-life-${Date.now()}`,
-        type: "creativity",
-        title: "Colorful Life",
-        description: "Engaged in creative activities 3+ times!",
-        icon: "🎨",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Social Badges
-    const socialActivities = allActivities.filter(activity => 
-      ['social', 'friends', 'family', 'meeting', 'call'].some(social => 
-        activity.toLowerCase().includes(social)
-      )
-    );
-    if (socialActivities.length >= 5 && !existingTitles.has("Good Group")) {
-      achievements.push({
-        id: `good-group-${Date.now()}`,
-        type: "social",
-        title: "Good Group",
-        description: "Had 5+ social interactions!",
-        icon: "👥",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Communication Badges
-    if (socialActivities.length >= 3 && !existingTitles.has("Ring Ring")) {
-      achievements.push({
-        id: `ring-ring-${Date.now()}`,
-        type: "communication",
-        title: "Ring Ring",
-        description: "Made 3+ phone calls or video chats!",
-        icon: "📞",
-        stars: 1,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Photography/Memory Badges
-    const photoActivities = allActivities.filter(activity => 
-      ['photo', 'picture', 'camera', 'memory'].some(photo => 
-        activity.toLowerCase().includes(photo)
-      )
-    );
-    if (photoActivities.length >= 3 && !existingTitles.has("Paparazzi")) {
-      achievements.push({
-        id: `paparazzi-${Date.now()}`,
-        type: "photography",
-        title: "Paparazzi",
-        description: "Captured 3+ special moments!",
-        icon: "📸",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Style/Fashion Badges
-    const styleActivities = allActivities.filter(activity => 
-      ['fashion', 'style', 'outfit', 'dress'].some(style => 
-        activity.toLowerCase().includes(style)
-      )
-    );
-    if (styleActivities.length >= 2 && !existingTitles.has("You Have Style")) {
-      achievements.push({
-        id: `you-have-style-${Date.now()}`,
-        type: "fashion",
-        title: "You Have Style",
-        description: "Expressed your personal style 2+ times!",
-        icon: "✍️",
-        stars: 1,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Intelligence/Learning Badges
-    if (studyActivities.length >= 10 && !existingTitles.has("Smart")) {
-      achievements.push({
-        id: `smart-${Date.now()}`,
-        type: "intelligence",
-        title: "Smart",
-        description: "Engaged in learning 10+ times!",
-        icon: "💡",
-        stars: 3,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Safety/Wellness Badges
-    const safetyActivities = allActivities.filter(activity => 
-      ['safety', 'protection', 'wellness', 'health'].some(safety => 
-        activity.toLowerCase().includes(safety)
-      )
-    );
-    if (safetyActivities.length >= 2 && !existingTitles.has("Playing Safe")) {
-      achievements.push({
-        id: `playing-safe-${Date.now()}`,
-        type: "safety",
-        title: "Playing Safe",
-        description: "Prioritized safety and wellness 2+ times!",
-        icon: "🛡️",
-        stars: 1,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Hero/Achievement Badges
-    if (totalEntries >= 50 && !existingTitles.has("Our Hero")) {
-      achievements.push({
-        id: `our-hero-${Date.now()}`,
-        type: "hero",
-        title: "Our Hero",
-        description: "Logged 50+ mood entries!",
-        icon: "🦸",
-        stars: 3,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Complex Person Badge (for diverse activities)
-    const uniqueActivities = new Set(allActivities);
-    if (uniqueActivities.size >= 10 && !existingTitles.has("Complex Person")) {
-      achievements.push({
-        id: `complex-person-${Date.now()}`,
-        type: "diversity",
-        title: "Complex Person",
-        description: "Engaged in 10+ different activities!",
-        icon: "🎭",
-        stars: 3,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Busy Bee Badge (for high activity)
-    if (allActivities.length >= 20 && !existingTitles.has("Busy Bee")) {
-      achievements.push({
-        id: `busy-bee-${Date.now()}`,
-        type: "activity",
-        title: "Busy Bee",
-        description: "Tracked 20+ activities!",
-        icon: "🏃‍♀️",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Dedicated Badge (for consistency)
-    if (totalEntries >= 14 && !existingTitles.has("Dedicated")) {
-      achievements.push({
-        id: `dedicated-${Date.now()}`,
-        type: "dedication",
-        title: "Dedicated",
-        description: "Logged mood for 14+ days!",
-        icon: "🏅",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
-
-    // Hat-trick Badge (for three consecutive achievements)
-    if (totalEntries >= 21 && !existingTitles.has("Hat-trick")) {
-      achievements.push({
-        id: `hat-trick-${Date.now()}`,
-        type: "streak",
-        title: "Hat-trick",
-        description: "Maintained consistency for 21+ days!",
-        icon: "🎩",
-        stars: 3,
-        unlockedAt: new Date(),
-      });
+    } else if (dayDiff === 1) {
+      // Next day, check if mood meets criteria
+      if (entry[moodType] >= minValue) {
+        consecutiveDays++;
+        currentDate = entryDate;
+      } else {
+        break; // Mood doesn't meet criteria
+      }
+    } else {
+      break; // Gap in entries
     }
   }
 
-  // Goal-based achievements
-  if (goals.length > 0) {
-    const completedGoals = goals.filter(goal => goal.completed);
-    const bestStreak = Math.max(...goals.map(goal => goal.bestStreak), 0);
+  return consecutiveDays >= requiredDays;
+}
 
-    if (completedGoals.length >= 1 && !existingTitles.has("Goal Getter")) {
-      achievements.push({
-        id: `goal-getter-${Date.now()}`,
-        type: "goal",
-        title: "Goal Getter",
-        description: "Completed your first goal!",
-        icon: "🎯",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
+// Helper function to check consecutive sleep quality
+async function checkConsecutiveSleep(moodEntries: any[], minHours: number, requiredDays: number): Promise<boolean> {
+  if (moodEntries.length < requiredDays) return false;
 
-    if (completedGoals.length >= 3 && !existingTitles.has("Goal Crusher")) {
-      achievements.push({
-        id: `goal-crusher-${Date.now()}`,
-        type: "goal",
-        title: "Goal Crusher",
-        description: "Completed 3 goals!",
-        icon: "💪",
-        stars: 3,
-        unlockedAt: new Date(),
-      });
-    }
+  // Sort entries by date (newest first)
+  const sortedEntries = moodEntries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  
+  let consecutiveDays = 0;
+  let currentDate = new Date(sortedEntries[0].createdAt);
+  currentDate.setHours(0, 0, 0, 0);
 
-    if (bestStreak >= 7 && !existingTitles.has("Streak Star")) {
-      achievements.push({
-        id: `streak-star-${Date.now()}`,
-        type: "streak",
-        title: "Streak Star",
-        description: "Maintained a 7+ day streak on any goal!",
-        icon: "⭐",
-        stars: 2,
-        unlockedAt: new Date(),
-      });
-    }
-
-    if (bestStreak >= 30 && !existingTitles.has("Streak Legend")) {
-      achievements.push({
-        id: `streak-legend-${Date.now()}`,
-        type: "streak",
-        title: "Streak Legend",
-        description: "Maintained a 30+ day streak on any goal!",
-        icon: "👑",
-        stars: 3,
-        unlockedAt: new Date(),
-      });
+  for (const entry of sortedEntries) {
+    const entryDate = new Date(entry.createdAt);
+    entryDate.setHours(0, 0, 0, 0);
+    
+    const dayDiff = Math.floor((currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (dayDiff === 0) {
+      // Same day, check if sleep meets criteria
+      if (entry.sleep && entry.sleep >= minHours) {
+        consecutiveDays++;
+      } else {
+        break; // Sleep doesn't meet criteria
+      }
+    } else if (dayDiff === 1) {
+      // Next day, check if sleep meets criteria
+      if (entry.sleep && entry.sleep >= minHours) {
+        consecutiveDays++;
+        currentDate = entryDate;
+      } else {
+        break; // Sleep doesn't meet criteria
+      }
+    } else {
+      break; // Gap in entries
     }
   }
 
-  // Save new achievements to database
-  for (const achievement of achievements) {
-    await db.achievement.create({
-      data: {
-        userId,
-        type: achievement.type,
-        title: achievement.title,
-        description: achievement.description,
-        icon: achievement.icon,
-        stars: achievement.stars,
-        unlockedAt: achievement.unlockedAt,
-      },
-    });
-  }
-
-  // Return all achievements (existing + new)
-  const allAchievements = await db.achievement.findMany({
-    where: { userId },
-    orderBy: { unlockedAt: "desc" },
-  });
-
-  return allAchievements.map(achievement => ({
-    id: achievement.id,
-    type: achievement.type,
-    title: achievement.title,
-    description: achievement.description,
-    icon: achievement.icon,
-    stars: achievement.stars,
-    unlockedAt: achievement.unlockedAt,
-  }));
+  return consecutiveDays >= requiredDays;
 }

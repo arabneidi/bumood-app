@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { calculateMoodComposite, getTimeBucket } from "@/lib/moodCompositeCalculator";
+import { calculateAchievements } from "@/lib/achievementCalculator";
 
 export async function POST(request: NextRequest) {
   try {
@@ -150,6 +151,32 @@ export async function POST(request: NextRequest) {
         connectionScore: connectionScore
       }
     });
+
+    // Check and unlock achievements after creating the mood entry
+    console.log('🏆 Checking achievements...');
+    try {
+      const newAchievements = await calculateAchievements(dummyUserId);
+      console.log(`✅ Found ${newAchievements.length} new achievements`);
+      
+      // Save new achievements to database
+      for (const achievement of newAchievements) {
+        await db.achievement.create({
+          data: {
+            userId: dummyUserId,
+            title: achievement.title,
+            description: achievement.description,
+            icon: achievement.icon,
+            stars: achievement.stars,
+            type: achievement.type,
+            unlockedAt: new Date()
+          }
+        });
+        console.log(`🎉 Unlocked: ${achievement.title}`);
+      }
+    } catch (achievementError) {
+      console.error('⚠️ Error calculating achievements:', achievementError);
+      // Don't fail the mood entry creation if achievement calculation fails
+    }
 
     return NextResponse.json(moodEntry);
   } catch (error) {
