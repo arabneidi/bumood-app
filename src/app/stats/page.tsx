@@ -170,28 +170,30 @@ export default function StatsPage() {
           </div>
         </motion.div>
 
-        {/* Analytics Dashboard */}
+        {/* Analytics Dashboard and DSS Radar - Side by Side */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-12"
+          className="mb-12 grid grid-cols-1 lg:grid-cols-2 gap-6"
         >
-          <div className="relative bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6 shadow-lg">
+          {/* Analytics Dashboard */}
+          <motion.div 
+            whileHover={{ scale: 1.02, y: -5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            className="relative bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
+          >
             <AnalyticsDashboard data={moodEntries} />
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* DSS Radar Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.25 }}
-          className="mb-12"
-        >
-          <div className="relative bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-4 shadow-lg">
+          {/* DSS Radar Chart */}
+          <motion.div 
+            whileHover={{ scale: 1.02, y: -5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            className="relative bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
+          >
             <DSSRadar data={dssData} loading={dssLoading} />
-          </div>
+          </motion.div>
         </motion.div>
 
 

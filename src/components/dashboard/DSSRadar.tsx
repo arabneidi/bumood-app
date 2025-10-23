@@ -35,17 +35,49 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex items-center justify-center h-48"
+      >
+        <motion.div 
+          animate={{ 
+            rotate: 360,
+            scale: [1, 1.1, 1]
+          }}
+          transition={{ 
+            rotate: { duration: 1, repeat: Infinity, ease: "linear" },
+            scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+          }}
+          className="w-12 h-12 rounded-full border-4 border-blue-500/30 border-t-blue-500"
+        ></motion.div>
+      </motion.div>
     );
   }
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-500">
-        No DSS data available
-      </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center h-48 text-center"
+      >
+        <motion.div
+          animate={{ 
+            scale: [1, 1.1, 1],
+            rotate: [0, 5, -5, 0]
+          }}
+          transition={{ 
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="text-4xl mb-4"
+        >
+          📊
+        </motion.div>
+        <p className="text-slate-300 text-lg">No DSS data available</p>
+      </motion.div>
     );
   }
 
@@ -144,22 +176,54 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   };
 
   return (
-    <div className="w-full">
-      <div className="text-center mb-4">
-        <div className="text-2xl font-bold text-white mb-1">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="w-full"
+    >
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="text-center mb-6"
+      >
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.05, 1],
+            rotate: [0, 2, -2, 0]
+          }}
+          transition={{ 
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="text-3xl font-bold text-white mb-2"
+        >
           <span style={{ color: getScoreColor(data.dssScore || 0) }}>
             {data.dssScore !== null && data.dssScore !== undefined && typeof data.dssScore === 'number'
               ? data.dssScore.toFixed(2) 
               : 'N/A'}
           </span>
-        </div>
-        <p className="text-xs text-gray-300">
+        </motion.div>
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-sm text-slate-300 font-medium"
+        >
           {getScoreLabel(data.dssScore || 0)}
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
-      <div id="dss-radar-container" className="flex justify-center">
-        <svg width={dimensions.width} height={dimensions.height} className="overflow-visible">
+      <motion.div 
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+        id="dss-radar-container" 
+        className="flex justify-center mb-6"
+      >
+        <svg width={dimensions.width} height={dimensions.height} className="overflow-visible drop-shadow-lg">
           {/* Grid circles */}
           {gridCircles}
           
@@ -224,43 +288,84 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
       </div>
 
       {/* Legend */}
-      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-        <div className="space-y-1">
-          <div className="flex items-center justify-center space-x-1">
-            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-            <span className="text-xs font-medium text-white">LM</span>
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+        className="grid grid-cols-3 gap-4 text-center"
+      >
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -2 }}
+          className="space-y-2 p-3 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="w-3 h-3 rounded-full bg-blue-500 shadow-lg"
+            ></motion.div>
+            <span className="text-sm font-bold text-white">Learning Momentum</span>
           </div>
-          <div className="text-sm font-bold text-blue-400">
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.8, type: "spring" }}
+            className="text-lg font-bold text-blue-400"
+          >
             {learningMomentum !== null && learningMomentum !== undefined && typeof learningMomentum === 'number'
               ? learningMomentum.toFixed(1) 
               : 'N/A'}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         
-        <div className="space-y-1">
-          <div className="flex items-center justify-center space-x-1">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            <span className="text-xs font-medium text-white">RI</span>
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -2 }}
+          className="space-y-2 p-3 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-green-500/20 hover:border-green-400/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.7, repeat: Infinity }}
+              className="w-3 h-3 rounded-full bg-green-500 shadow-lg"
+            ></motion.div>
+            <span className="text-sm font-bold text-white">Recovery Index</span>
           </div>
-          <div className="text-sm font-bold text-green-400">
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.9, type: "spring" }}
+            className="text-lg font-bold text-green-400"
+          >
             {recoveryIndex !== null && recoveryIndex !== undefined && typeof recoveryIndex === 'number'
               ? recoveryIndex.toFixed(1) 
               : 'N/A'}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         
-        <div className="space-y-1">
-          <div className="flex items-center justify-center space-x-1">
-            <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-            <span className="text-xs font-medium text-white">CN</span>
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -2 }}
+          className="space-y-2 p-3 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-orange-500/20 hover:border-orange-400/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.3, repeat: Infinity }}
+              className="w-3 h-3 rounded-full bg-orange-500 shadow-lg"
+            ></motion.div>
+            <span className="text-sm font-bold text-white">Connection</span>
           </div>
-          <div className="text-sm font-bold text-orange-400">
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 1.0, type: "spring" }}
+            className="text-lg font-bold text-orange-400"
+          >
             {connectionScore !== null && connectionScore !== undefined && typeof connectionScore === 'number'
               ? connectionScore.toFixed(1) 
               : 'N/A'}
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
 
       {/* Hover tooltip */}
       {hoveredSegment && (
@@ -304,6 +409,6 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
           )}
         </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }
