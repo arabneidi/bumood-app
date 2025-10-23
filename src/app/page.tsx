@@ -287,10 +287,8 @@ export default function Home() {
               opacity: { duration: 0.6, delay: 0.2 },
               y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 md:p-12 overflow-hidden"
+            className="relative"
           >
-            {/* Glowing Edge Effect */}
-            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
             
             {/* Shimmer Effect */}
             <motion.div
@@ -305,21 +303,6 @@ export default function Home() {
               }}
             />
             
-            {/* Floating Emoji Decorations */}
-            <motion.div
-              className="absolute -top-4 -left-4 text-4xl"
-              animate={{ rotate: [0, 10, -10, 0], y: [0, -5, 0] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              ✨
-            </motion.div>
-            <motion.div
-              className="absolute -bottom-4 -right-4 text-4xl"
-              animate={{ rotate: [0, -10, 10, 0], y: [0, 5, 0] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              🌟
-            </motion.div>
               
             <motion.h2 
               initial={{ opacity: 0, y: 20 }}
@@ -342,7 +325,7 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {/* Life Rhythm Score - Heartbeat Pulse Animation */}
+            {/* Today Rhythm Score - Heartbeat Pulse Animation */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: [0, -6, 0] }}
@@ -352,9 +335,7 @@ export default function Home() {
               }}
               className="mb-16"
             >
-              <div className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-10 overflow-hidden">
-                {/* Glowing Edge Effect */}
-                <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+              <div className="relative">
                 {/* Heartbeat SVG Animation */}
                 <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
                   <svg className="w-full h-full opacity-20" viewBox="0 0 1000 200">
@@ -378,28 +359,6 @@ export default function Home() {
                   </svg>
                 </div>
 
-                {/* Pulsing Hearts */}
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute text-4xl"
-                    style={{
-                      left: `${15 + i * 15}%`,
-                      top: `${20 + (i % 2) * 60}%`,
-                    }}
-                    animate={{
-                      scale: [1, 1.5, 1],
-                      opacity: [0.3, 0.6, 0.3]
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      delay: i * 0.25,
-                    }}
-                  >
-                    ❤️
-                  </motion.div>
-                ))}
 
                 <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 z-10">
                   <motion.div 
@@ -416,11 +375,8 @@ export default function Home() {
                       transition={{ duration: 1.5, repeat: Infinity }}
                       className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-3 drop-shadow-lg"
                     >
-                      💓 Life Rhythm Score
+                      💓 Today Rhythm Score
                     </motion.h2>
-                    <p className="text-slate-300 text-lg font-medium">
-                      Your heartbeat of wellbeing
-                    </p>
                   </motion.div>
                   
                   {/* Animated Score Display */}
@@ -920,7 +876,7 @@ export default function Home() {
                           </div>
                         </div>
                         
-                        {/* Life Rhythm Score Display */}
+                        {/* Today Rhythm Score Display */}
                         <div className="mb-4">
                           <div className={`text-center p-3 rounded-lg ${getMoodColor(entry)} shadow-lg`}>
                             <div className="text-3xl font-bold text-white drop-shadow-lg">
@@ -928,7 +884,7 @@ export default function Home() {
                             </div>
                             <div className="text-sm text-white font-semibold opacity-90 flex items-center justify-center">
                               <span className="mr-2">{getMoodEmoji(entry)}</span>
-                              Life Rhythm Score
+                              Today Rhythm Score
                             </div>
                           </div>
                         </div>
@@ -1144,7 +1100,7 @@ export default function Home() {
                   
                   {recentEntry.notes && (
                     <div className="mt-6 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl p-4">
-                      <h4 className="font-bold text-slate-200 mb-2">Notes</h4>
+                      <h4 className="font-bold text-slate-200 mb-2">Vibe</h4>
                       <p className="text-sm text-slate-300">{recentEntry.notes}</p>
                     </div>
                   )}
