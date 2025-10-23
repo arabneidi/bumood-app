@@ -798,7 +798,7 @@ export default function GoalsPage() {
                     {/* Save Button */}
                     <button
                       onClick={handleCreateGoal}
-                      disabled={!newGoal.title.trim()}
+                      disabled={!newGoal.title.trim() || !newGoal.category.trim() || !newGoal.subcategory.trim()}
                       className="w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white rounded-2xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Create Goal
