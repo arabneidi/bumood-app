@@ -748,109 +748,119 @@ export default function ProfilePage() {
                 ))}
               </div>
 
-              {/* Add Custom Category - SIMPLIFIED */}
-              <div className="mt-12 p-4 border-2 border-red-500 bg-red-100">
-                <h3 className="text-2xl font-black text-red-800 mb-6">
-                  Add Custom Category (TEST VERSION)
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label className="block text-lg font-bold text-red-800 mb-3">
-                      Category Name
-                    </label>
-                    <input
-                      type="text"
-                      value={newCategoryName}
-                      onChange={(e) => {
-                        console.log('Category name changed:', e.target.value);
-                        setNewCategoryName(e.target.value);
-                      }}
-                      className="w-full px-4 py-2 border-2 border-red-500 rounded text-black"
-                      placeholder="e.g., Movies, Podcasts, YouTube"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-lg font-bold text-red-800 mb-3">
-                      Your Favorites
-                    </label>
-                    <input
-                      type="text"
-                      value={newCategoryValue}
-                      onChange={(e) => {
-                        console.log('Category value changed:', e.target.value);
-                        setNewCategoryValue(e.target.value);
-                      }}
-                      className="w-full px-4 py-2 border-2 border-red-500 rounded text-black"
-                      placeholder="e.g., Christopher Nolan, Joe Rogan, TED Talks"
-                    />
-                  </div>
-                </div>
-                
-                <div className="text-center space-x-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log('MAIN BUTTON CLICKED!', { newCategoryName, newCategoryValue });
-                      addCustomCategory();
-                    }}
-                    disabled={!newCategoryName.trim() || !newCategoryValue.trim()}
-                    className="px-6 py-3 bg-blue-500 text-white rounded font-bold disabled:opacity-50"
-                  >
-                    Add Custom Category
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log('TEST BUTTON CLICKED!');
-                      setNewCategoryName('Test Category');
-                      setNewCategoryValue('Test Value');
-                    }}
-                    className="px-4 py-2 bg-green-500 text-white rounded"
-                  >
-                    Test Fill
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log('ALERT BUTTON CLICKED!');
-                      alert('Alert button works!');
-                    }}
-                    className="px-4 py-2 bg-yellow-500 text-black rounded"
-                  >
-                    Alert Test
-                  </button>
-                </div>
-              </div>
+       {/* Add Custom Category - OUTSIDE FORM */}
+       <div className="mt-12 p-4 border-2 border-red-500 bg-red-100">
+         <h3 className="text-2xl font-black text-red-800 mb-6">
+           Add Custom Category (OUTSIDE FORM)
+         </h3>
+         
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+           <div>
+             <label className="block text-lg font-bold text-red-800 mb-3">
+               Category Name
+             </label>
+             <input
+               type="text"
+               value={newCategoryName}
+               onChange={(e) => {
+                 console.log('Category name changed:', e.target.value);
+                 setNewCategoryName(e.target.value);
+               }}
+               className="w-full px-4 py-2 border-2 border-red-500 rounded text-black"
+               placeholder="e.g., Movies, Podcasts, YouTube"
+             />
+           </div>
+           
+           <div>
+             <label className="block text-lg font-bold text-red-800 mb-3">
+               Your Favorites
+             </label>
+             <input
+               type="text"
+               value={newCategoryValue}
+               onChange={(e) => {
+                 console.log('Category value changed:', e.target.value);
+                 setNewCategoryValue(e.target.value);
+               }}
+               className="w-full px-4 py-2 border-2 border-red-500 rounded text-black"
+               placeholder="e.g., Christopher Nolan, Joe Rogan, TED Talks"
+             />
+           </div>
+         </div>
+         
+         <div className="text-center space-x-4">
+           <button
+             type="button"
+             onClick={(e) => {
+               e.preventDefault();
+               e.stopPropagation();
+               console.log('MAIN BUTTON CLICKED!', { newCategoryName, newCategoryValue });
+               addCustomCategory();
+             }}
+             disabled={!newCategoryName.trim() || !newCategoryValue.trim()}
+             className="px-6 py-3 bg-blue-500 text-white rounded font-bold disabled:opacity-50"
+           >
+             Add Custom Category
+           </button>
+           
+           <button
+             type="button"
+             onClick={(e) => {
+               e.preventDefault();
+               e.stopPropagation();
+               console.log('TEST BUTTON CLICKED!');
+               setNewCategoryName('Test Category');
+               setNewCategoryValue('Test Value');
+             }}
+             className="px-4 py-2 bg-green-500 text-white rounded"
+           >
+             Test Fill
+           </button>
+           
+           <button
+             type="button"
+             onClick={(e) => {
+               e.preventDefault();
+               e.stopPropagation();
+               console.log('ALERT BUTTON CLICKED!');
+               alert('Alert button works!');
+             }}
+             className="px-4 py-2 bg-yellow-500 text-black rounded"
+           >
+             Alert Test
+           </button>
+         </div>
+       </div>
             </motion.div>
 
-            {/* Simple Test Button */}
-            <div className="text-center mb-4 p-4 bg-yellow-200 border-4 border-yellow-500">
-              <h2 className="text-2xl font-bold text-black mb-4">TEST SECTION</h2>
-              <button
-                type="button"
-                onClick={() => {
-                  console.log('SIMPLE TEST BUTTON CLICKED!');
-                  alert('Simple test button works!');
-                }}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg mr-4"
-              >
-                Simple Test
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => {
-                  alert('DIRECT ALERT TEST!');
-                }}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg"
-              >
-                Direct Alert
-              </button>
-            </div>
+       {/* Simple Test Button - OUTSIDE FORM */}
+       <div className="text-center mb-4 p-4 bg-yellow-200 border-4 border-yellow-500">
+         <h2 className="text-2xl font-bold text-black mb-4">TEST SECTION (OUTSIDE FORM)</h2>
+         <button
+           type="button"
+           onClick={(e) => {
+             e.preventDefault();
+             e.stopPropagation();
+             console.log('SIMPLE TEST BUTTON CLICKED!');
+             alert('Simple test button works!');
+           }}
+           className="px-4 py-2 bg-red-500 text-white rounded-lg mr-4"
+         >
+           Simple Test
+         </button>
+         
+         <button
+           type="button"
+           onClick={(e) => {
+             e.preventDefault();
+             e.stopPropagation();
+             alert('DIRECT ALERT TEST!');
+           }}
+           className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+         >
+           Direct Alert
+         </button>
+       </div>
 
             {/* Save Button */}
             <motion.div
