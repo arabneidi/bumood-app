@@ -778,18 +778,25 @@ export default function ProfilePage() {
                   </motion.div>
                 </div>
                 
-                <motion.button
-                  whileHover={{ scale: 1.05, rotate: 2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    console.log('Button clicked!', { newCategoryName, newCategoryValue });
-                    addCustomCategory();
-                  }}
-                  disabled={!newCategoryName.trim() || !newCategoryValue.trim()}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Add Custom Category
-                </motion.button>
+                <div className="text-center">
+                  <motion.button
+                    whileHover={{ scale: 1.05, rotate: 2 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      console.log('Button clicked!', { newCategoryName, newCategoryValue });
+                      addCustomCategory();
+                    }}
+                    disabled={!newCategoryName.trim() || !newCategoryValue.trim()}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Add Custom Category
+                  </motion.button>
+                  {(!newCategoryName.trim() || !newCategoryValue.trim()) && (
+                    <p className="text-sm text-slate-400 mt-2">
+                      Please fill in both fields to add a custom category
+                    </p>
+                  )}
+                </div>
               </motion.div>
             </motion.div>
 
