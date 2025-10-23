@@ -79,7 +79,19 @@ export async function POST(request: NextRequest) {
     
     // Parse activities and DSS analysis to extract DSS components
     const activitiesList = activities || [];
-    const dssAnalysisData = dssAnalysis ? (typeof dssAnalysis === 'string' ? JSON.parse(dssAnalysis) : dssAnalysis) : {};
+    let dssAnalysisData = {};
+    if (dssAnalysis) {
+      if (typeof dssAnalysis === 'string') {
+        try {
+          dssAnalysisData = JSON.parse(dssAnalysis);
+        } catch (error) {
+          console.log('⚠️ Could not parse dssAnalysis as JSON:', dssAnalysis);
+          dssAnalysisData = {};
+        }
+      } else {
+        dssAnalysisData = dssAnalysis;
+      }
+    }
     
     // Calculate DSS components from mood entry data
     let learningMomentum = 0;
