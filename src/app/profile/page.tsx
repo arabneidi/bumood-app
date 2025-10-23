@@ -99,8 +99,22 @@ export default function ProfilePage() {
   };
 
 
-  const removeCustomCategory = (id: string) => {
-    setCustomCategories(customCategories.filter(cat => cat.id !== id));
+  const removeCustomCategory = async (id: string) => {
+    const updatedCategories = customCategories.filter(cat => cat.id !== id);
+    setCustomCategories(updatedCategories);
+    
+    // Save to database
+    try {
+      await fetch('/api/user', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customCategories: JSON.stringify(updatedCategories)
+        })
+      });
+    } catch (error) {
+      console.error('Error saving custom categories:', error);
+    }
   };
 
   const handleIncrement = (field: 'age' | 'height' | 'weight') => {
@@ -621,10 +635,20 @@ export default function ProfilePage() {
                   whileHover={{ scale: 1.05, rotate: 2 }}
                   className="group"
                 >
-                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
-                    <span className="text-2xl mr-2">📚</span>
-                    Favorite Writers/Authors
-                  </label>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-lg font-bold text-slate-200 flex items-center">
+                      <span className="text-2xl mr-2">📚</span>
+                      Favorite Writers/Authors
+                    </label>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setProfile({...profile, favoriteWriters: ''})}
+                      className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
+                    >
+                      ✕
+                    </motion.button>
+                  </div>
                   <input
                     type="text"
                     value={profile.favoriteWriters}
@@ -639,10 +663,20 @@ export default function ProfilePage() {
                   whileHover={{ scale: 1.05, rotate: -2 }}
                   className="group"
                 >
-                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
-                    <span className="text-2xl mr-2">🎵</span>
-                    Favorite Musicians/Bands
-                  </label>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-lg font-bold text-slate-200 flex items-center">
+                      <span className="text-2xl mr-2">🎵</span>
+                      Favorite Musicians/Bands
+                    </label>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setProfile({...profile, favoriteMusicians: ''})}
+                      className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
+                    >
+                      ✕
+                    </motion.button>
+                  </div>
                   <input
                     type="text"
                     value={profile.favoriteMusicians}
@@ -657,10 +691,20 @@ export default function ProfilePage() {
                   whileHover={{ scale: 1.05, rotate: 2 }}
                   className="group"
                 >
-                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
-                    <span className="text-2xl mr-2">⚽</span>
-                    Favorite Athletes/Sports Figures
-                  </label>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-lg font-bold text-slate-200 flex items-center">
+                      <span className="text-2xl mr-2">⚽</span>
+                      Favorite Athletes/Sports Figures
+                    </label>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setProfile({...profile, favoriteSportsFigures: ''})}
+                      className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
+                    >
+                      ✕
+                    </motion.button>
+                  </div>
                   <input
                     type="text"
                     value={profile.favoriteSportsFigures}
@@ -675,10 +719,20 @@ export default function ProfilePage() {
                   whileHover={{ scale: 1.05, rotate: -2 }}
                   className="group"
                 >
-                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
-                    <span className="text-2xl mr-2">🎨</span>
-                    Favorite Artists/Painters
-                  </label>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-lg font-bold text-slate-200 flex items-center">
+                      <span className="text-2xl mr-2">🎨</span>
+                      Favorite Artists/Painters
+                    </label>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setProfile({...profile, favoriteArtists: ''})}
+                      className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
+                    >
+                      ✕
+                    </motion.button>
+                  </div>
                   <input
                     type="text"
                     value={profile.favoriteArtists}
@@ -778,25 +832,45 @@ export default function ProfilePage() {
                 </div>
               </div>
               
-              <div className="text-center mt-8">
-                <button
-                  onClick={() => {
+              <div className="text-center mt-8 space-x-4">
+                <motion.button
+                  onClick={async () => {
                     if (newCategoryName.trim() && newCategoryValue.trim()) {
                       const newCategory = {
                         id: Date.now().toString(),
                         name: newCategoryName.trim(),
                         value: newCategoryValue.trim()
                       };
-                      setCustomCategories([...customCategories, newCategory]);
+                      const updatedCategories = [...customCategories, newCategory];
+                      setCustomCategories(updatedCategories);
                       setNewCategoryName('');
                       setNewCategoryValue('');
+                      
+                      // Save to database
+                      try {
+                        await fetch('/api/user', {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            customCategories: JSON.stringify(updatedCategories)
+                          })
+                        });
+                      } catch (error) {
+                        console.error('Error saving custom categories:', error);
+                      }
                     }
                   }}
                   disabled={!newCategoryName.trim() || !newCategoryValue.trim()}
-                  className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  whileHover={{ scale: 1.1, rotate: 2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative overflow-hidden px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-bold text-lg shadow-2xl transition-all duration-300 disabled:opacity-50"
                 >
-                  Add Custom Category
-                </button>
+                  <div className="absolute inset-0 rounded-2xl border border-green-400/50 shadow-[0_0_25px_rgba(34,197,94,0.6)] animate-pulse"></div>
+                  <div className="relative flex items-center justify-center space-x-3">
+                    <span>Add Custom Category</span>
+                  </div>
+                </motion.button>
+                
               </div>
             </motion.div>
 
@@ -810,36 +884,92 @@ export default function ProfilePage() {
               <motion.button
                 onClick={saveProfile}
                 disabled={loading}
-                whileHover={{ scale: 1.1, rotate: 2 }}
-                whileTap={{ scale: 0.95 }}
-                className="relative overflow-hidden px-12 py-6 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 text-white rounded-2xl font-black text-2xl shadow-2xl transition-all duration-300 disabled:opacity-50"
+                whileHover={{ scale: 1.15, rotate: 3, y: -5 }}
+                whileTap={{ scale: 0.9 }}
+                className="relative overflow-hidden px-16 py-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-3xl font-black text-3xl shadow-2xl transition-all duration-500 disabled:opacity-50"
               >
-                <div className="absolute inset-0 rounded-2xl border border-blue-400/50 shadow-[0_0_25px_rgba(59,130,246,0.6)] animate-pulse"></div>
+                <div className="absolute inset-0 rounded-3xl border-2 border-white/30 shadow-[0_0_50px_rgba(255,255,255,0.3)] animate-pulse"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                 <motion.div
-                  animate={{ x: [-100, 100] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30"
+                  animate={{ x: [-200, 200] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-40"
                 />
-                <div className="relative flex items-center justify-center space-x-3">
+                <div className="relative flex items-center justify-center space-x-4">
                   {loading ? (
                     <>
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="p-2 bg-white/20 rounded-full"
                       >
-                        <Save className="w-8 h-8" />
+                        <Save className="w-10 h-10" />
                       </motion.div>
-                      <span>Saving Your Magic...</span>
+                      <span className="text-2xl">Saving Your Magic...</span>
                     </>
                   ) : (
                     <>
-                      <Save className="w-8 h-8" />
-                      <span>Save Your Amazing Profile!</span>
+                      <motion.div
+                        whileHover={{ rotate: 360 }}
+                        transition={{ duration: 0.5 }}
+                        className="p-2 bg-white/20 rounded-full"
+                      >
+                        <Save className="w-10 h-10" />
+                      </motion.div>
+                      <span className="text-2xl">Save Your Amazing Profile!</span>
                     </>
                   )}
                 </div>
               </motion.button>
               
+            </motion.div>
+
+            {/* AI Information Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5 }}
+              className="mt-16 p-8 bg-gradient-to-r from-slate-800/40 to-slate-700/40 backdrop-blur-xl rounded-3xl border border-slate-600/50"
+            >
+              <div className="text-center">
+                <div className="mb-6">
+                  <div className="inline-block p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-brain w-8 h-8 text-white">
+                      <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1 .34-4.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"></path>
+                      <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0-.34-4.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"></path>
+                    </svg>
+                  </div>
+                </div>
+                
+                <h3 className="text-3xl font-black mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+                  AI-Powered Personalization
+                </h3>
+                
+                <p className="text-lg text-slate-300 mb-6 leading-relaxed">
+                  Your profile information helps our AI provide you with personalized quotes, 
+                  suggestions, and insights tailored specifically to your interests and preferences.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                  <div className="p-4 bg-slate-800/30 rounded-xl">
+                    <div className="text-2xl mb-2">🎯</div>
+                    <h4 className="font-bold text-white mb-2">Personalized Quotes</h4>
+                    <p className="text-sm text-slate-400">Get quotes from your favorite writers, philosophers, and thinkers</p>
+                  </div>
+                  
+                  <div className="p-4 bg-slate-800/30 rounded-xl">
+                    <div className="text-2xl mb-2">💡</div>
+                    <h4 className="font-bold text-white mb-2">Smart Suggestions</h4>
+                    <p className="text-sm text-slate-400">Receive activity and goal recommendations based on your interests</p>
+                  </div>
+                  
+                  <div className="p-4 bg-slate-800/30 rounded-xl">
+                    <div className="text-2xl mb-2">📊</div>
+                    <h4 className="font-bold text-white mb-2">Better Insights</h4>
+                    <p className="text-sm text-slate-400">Enhanced mood analysis and personalized wellness recommendations</p>
+                  </div>
+                </div>
+              </div>
             </motion.div>
 
           </div>
