@@ -26,7 +26,11 @@ export default function ProfilePage() {
     favoriteSportsFigures: '',
     favoriteMusicians: '',
     favoriteArtists: '',
-    favoritePhilosophers: ''
+    favoriteMovies: '',
+    favoritePhilosophers: '',
+    customFavorites: [] as Array<{id: string, category: string, items: string[]}>,
+    newCustomCategory: '',
+    newCustomItem: ''
   });
   
   const [loading, setLoading] = useState(false);
@@ -89,7 +93,9 @@ export default function ProfilePage() {
           favoriteSportsFigures: data.favoriteSportsFigures || '',
           favoriteMusicians: data.favoriteMusicians || '',
           favoriteArtists: data.favoriteArtists || '',
-          favoritePhilosophers: data.favoritePhilosophers || ''
+          favoriteMovies: data.favoriteMovies || '',
+          favoritePhilosophers: data.favoritePhilosophers || '',
+          customFavorites: data.customFavorites ? JSON.parse(data.customFavorites) : []
         });
         // Custom categories removed from schema
       }
@@ -123,29 +129,34 @@ export default function ProfilePage() {
     try {
       console.log('Saving profile:', profile);
       
+      const profileData = {
+        userId: 'dummy-user',
+        name: profile.name || null,
+        gender: profile.gender || null,
+        age: profile.age ? parseInt(profile.age) : null,
+        height: profile.height ? parseFloat(profile.height) : null,
+        weight: profile.weight ? parseFloat(profile.weight) : null,
+        personality: JSON.stringify(profile.personality),
+        universityLevel: profile.universityLevel || null,
+        fieldOfStudy: profile.fieldOfStudy || null,
+        interests: JSON.stringify(profile.interests), // For AI personalization
+        quoteStyle: JSON.stringify(profile.quoteStyle), // For AI quote generation
+        favoriteAuthors: profile.favoriteAuthors || null,
+        favoriteWriters: profile.favoriteWriters || null,
+        favoriteSportsFigures: profile.favoriteSportsFigures || null,
+        favoriteMusicians: profile.favoriteMusicians || null,
+        favoriteArtists: profile.favoriteArtists || null,
+        favoriteMovies: profile.favoriteMovies || null,
+        favoritePhilosophers: profile.favoritePhilosophers || null,
+        customFavorites: JSON.stringify(profile.customFavorites)
+      };
+      
+      console.log('📤 Sending profile data to API:', profileData);
+      
       const response = await fetch('/api/user', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: 'dummy-user',
-          name: profile.name || null,
-          gender: profile.gender || null,
-          age: profile.age ? parseInt(profile.age) : null,
-          height: profile.height ? parseFloat(profile.height) : null,
-          weight: profile.weight ? parseFloat(profile.weight) : null,
-          personality: JSON.stringify(profile.personality),
-          universityLevel: profile.universityLevel || null,
-          fieldOfStudy: profile.fieldOfStudy || null,
-          interests: JSON.stringify(profile.interests), // For AI personalization
-          quoteStyle: JSON.stringify(profile.quoteStyle), // For AI quote generation
-          favoriteAuthors: profile.favoriteAuthors || null,
-          favoriteWriters: profile.favoriteWriters || null,
-          favoriteSportsFigures: profile.favoriteSportsFigures || null,
-          favoriteMusicians: profile.favoriteMusicians || null,
-          favoriteArtists: profile.favoriteArtists || null,
-          favoritePhilosophers: profile.favoritePhilosophers || null,
-          // Custom categories removed
-        })
+        body: JSON.stringify(profileData)
       });
       
       console.log('Response status:', response.status);
@@ -1130,9 +1141,144 @@ export default function ProfilePage() {
                   />
                 </motion.div>
 
+                {/* Favorite Movies */}
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: 2 }}
+                  className="group"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-lg font-bold text-slate-200 flex items-center">
+                      <span className="text-2xl mr-2">🎬</span>
+                      Favorite Movies/TV Shows
+                    </label>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setProfile({...profile, favoriteMovies: ''})}
+                      className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
+                    >
+                      ✕
+                    </motion.button>
+                  </div>
+                  <input
+                    type="text"
+                    value={profile.favoriteMovies}
+                    onChange={(e) => setProfile({...profile, favoriteMovies: e.target.value})}
+                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-purple-500/10"
+                    placeholder="e.g., Inception, Breaking Bad, The Office"
+                  />
+                </motion.div>
+
+                {/* Custom Categories */}
+                {profile.customFavorites.map((customFav, index) => (
+                  <motion.div
+                    key={customFav.id}
+                    whileHover={{ scale: 1.05, rotate: 2 }}
+                    className="group"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="block text-lg font-bold text-slate-200 flex items-center">
+                        <span className="text-2xl mr-2">⭐</span>
+                        {customFav.category}
+                      </label>
+                      <motion.button
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          const updatedFavorites = profile.customFavorites.filter((_, i) => i !== index);
+                          setProfile({...profile, customFavorites: updatedFavorites});
+                        }}
+                        className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
+                      >
+                        ✕
+                      </motion.button>
+                    </div>
+                    <input
+                      type="text"
+                      value={customFav.items.join(', ')}
+                      onChange={(e) => {
+                        const updatedFavorites = [...profile.customFavorites];
+                        updatedFavorites[index].items = e.target.value.split(',').map(item => item.trim()).filter(item => item);
+                        setProfile({...profile, customFavorites: updatedFavorites});
+                      }}
+                      className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-purple-500/10"
+                      placeholder={`e.g., ${customFav.category} examples`}
+                    />
+                  </motion.div>
+                ))}
+
+
                 {/* Custom Categories removed from schema */}
               </div>
 
+            </motion.div>
+
+            {/* Add Custom Category Section - Separate */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+              className="mt-12"
+            >
+              <div className="flex items-center mb-6">
+                <h2 className="text-2xl font-bold text-slate-200 flex items-center">
+                  <span className="text-3xl mr-3">⭐</span>
+                  Add Custom Category
+                </h2>
+              </div>
+              
+              {/* Add New Custom Favorite Form */}
+              <div className="mb-8 p-6 bg-slate-800/40 backdrop-blur-xl border border-slate-600/50 rounded-2xl">
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <label className="block text-sm font-bold text-slate-200 mb-3">
+                      Category Name
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.newCustomCategory || ''}
+                      onChange={(e) => setProfile({...profile, newCustomCategory: e.target.value})}
+                      className="w-full px-4 py-4 bg-slate-700/60 backdrop-blur-xl border border-slate-500/50 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 text-white font-medium transition-all duration-300"
+                      placeholder="e.g., Singer"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-bold text-slate-200 mb-3">
+                      Your Favorites
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.newCustomItem || ''}
+                      onChange={(e) => setProfile({...profile, newCustomItem: e.target.value})}
+                      className="w-full px-4 py-4 bg-slate-700/60 backdrop-blur-xl border border-slate-500/50 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 text-white font-medium transition-all duration-300"
+                      placeholder="e.g., Sabrina Carpenter"
+                    />
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      if (profile.newCustomCategory && profile.newCustomItem) {
+                        const newId = Date.now().toString();
+                        const newCustomFavorite = {
+                          id: newId,
+                          category: profile.newCustomCategory.trim(),
+                          items: [profile.newCustomItem.trim()]
+                        };
+                        setProfile({
+                          ...profile,
+                          customFavorites: [...profile.customFavorites, newCustomFavorite],
+                          newCustomCategory: '',
+                          newCustomItem: ''
+                        });
+                      }
+                    }}
+                    className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
+                  >
+                    <Plus className="w-6 h-6" />
+                  </motion.button>
+                </div>
+              </div>
             </motion.div>
 
             {/* Custom Categories functionality removed from schema */}

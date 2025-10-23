@@ -67,6 +67,7 @@ model User {
   favoriteArtists String? // JSON array: artists (learned from art activity)
   favoriteMovies String? // JSON array: movies and TV shows (learned from watching activities)
   favoritePhilosophers String? // JSON array: philosophers (learned from philosophy interest)
+  customFavorites String? // JSON array: custom favorite categories and items
   
   accounts      Account[]
   sessions      Session[]

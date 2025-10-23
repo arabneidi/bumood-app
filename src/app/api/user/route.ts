@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
         favoriteMusicians: true,
         favoriteArtists: true,
         favoriteMovies: true,
-        favoritePhilosophers: true
+        favoritePhilosophers: true,
+        customFavorites: true
       }
     });
     
@@ -61,32 +62,38 @@ export async function PUT(request: NextRequest) {
       userId = 'dummy-user', gender, name, age, height, weight, timezone, 
       personality, universityLevel, fieldOfStudy,
       interests, quoteStyle, favoriteAuthors,
-      favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers
+      favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers, customFavorites
     } = body;
     
     console.log('Updating user:', userId);
+    
+    const updateData = {
+      ...(gender !== undefined && { gender }),
+      ...(name !== undefined && { name }),
+      ...(age !== undefined && { age }),
+      ...(height !== undefined && { height }),
+      ...(weight !== undefined && { weight }),
+      ...(timezone !== undefined && { timezone }),
+      ...(personality !== undefined && { personality }),
+      ...(universityLevel !== undefined && { universityLevel }),
+      ...(fieldOfStudy !== undefined && { fieldOfStudy }),
+      ...(interests !== undefined && { interests }),
+      ...(quoteStyle !== undefined && { quoteStyle }),
+      ...(favoriteAuthors !== undefined && { favoriteAuthors }),
+      ...(favoriteWriters !== undefined && { favoriteWriters }),
+      ...(favoriteSportsFigures !== undefined && { favoriteSportsFigures }),
+      ...(favoriteMusicians !== undefined && { favoriteMusicians }),
+      ...(favoriteArtists !== undefined && { favoriteArtists }),
+      ...(favoriteMovies !== undefined && { favoriteMovies }),
+      ...(favoritePhilosophers !== undefined && { favoritePhilosophers }),
+      ...(customFavorites !== undefined && { customFavorites })
+    };
+    
+    console.log('📝 Database update data:', updateData);
+    
     const user = await db.user.update({
       where: { id: userId },
-      data: {
-        ...(gender !== undefined && { gender }),
-        ...(name !== undefined && { name }),
-        ...(age !== undefined && { age }),
-        ...(height !== undefined && { height }),
-        ...(weight !== undefined && { weight }),
-        ...(timezone !== undefined && { timezone }),
-        ...(personality !== undefined && { personality }),
-        ...(universityLevel !== undefined && { universityLevel }),
-        ...(fieldOfStudy !== undefined && { fieldOfStudy }),
-        ...(interests !== undefined && { interests }),
-        ...(quoteStyle !== undefined && { quoteStyle }),
-        ...(favoriteAuthors !== undefined && { favoriteAuthors }),
-        ...(favoriteWriters !== undefined && { favoriteWriters }),
-        ...(favoriteSportsFigures !== undefined && { favoriteSportsFigures }),
-        ...(favoriteMusicians !== undefined && { favoriteMusicians }),
-        ...(favoriteArtists !== undefined && { favoriteArtists }),
-        ...(favoriteMovies !== undefined && { favoriteMovies }),
-        ...(favoritePhilosophers !== undefined && { favoritePhilosophers })
-      }
+      data: updateData
     });
     
     console.log('✅ User updated:', user);
