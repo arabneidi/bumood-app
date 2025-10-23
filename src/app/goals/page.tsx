@@ -50,10 +50,6 @@ export default function GoalsPage() {
     currentValue: 0,
     difficulty: "medium"
   });
-  const [customCategory, setCustomCategory] = useState("");
-  const [customSubcategory, setCustomSubcategory] = useState("");
-  const [showCustomCategory, setShowCustomCategory] = useState(false);
-  const [showCustomSubcategory, setShowCustomSubcategory] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [completedGoal, setCompletedGoal] = useState(null);
   const [completedGoals, setCompletedGoals] = useState([]);
@@ -176,10 +172,6 @@ export default function GoalsPage() {
         setShowAddGoal(false);
         setSelectedCategory("");
         setSelectedSubcategory("");
-        setCustomCategory("");
-        setCustomSubcategory("");
-        setShowCustomCategory(false);
-        setShowCustomSubcategory(false);
       }
     } catch (error) {
       console.error("Error creating goal:", error);
@@ -671,7 +663,6 @@ export default function GoalsPage() {
       {showAddGoal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowAddGoal(false)}>
           <div className="relative w-[95vw] max-w-6xl h-[95vh] mx-4 bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="absolute inset-0 rounded-3xl border-2 border-cyan-400/50 shadow-[0_0_25px_rgba(6,182,212,0.6)] animate-pulse pointer-events-none"></div>
             
             <div className="relative z-10">
               <div className="flex justify-between items-center mb-6">
@@ -692,134 +683,75 @@ export default function GoalsPage() {
                     {goalCategories.map((category) => (
                       <div key={category.id} className="bg-slate-700/30 rounded-xl p-4 border border-slate-600/50">
                         <h3 className="text-lg font-bold text-white mb-4">{category.name}</h3>
-                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {category.subcategories.map((subcategory) => (
-                            <button
+                            <div
                               key={subcategory.id}
-                              onClick={() => {
-                                setSelectedCategory(category.id);
-                                setSelectedSubcategory(subcategory.id);
-                                setNewGoal({ ...newGoal, category: category.id, subcategory: subcategory.id });
-                                setShowCustomCategory(false);
-                                setShowCustomSubcategory(false);
-                              }}
-                              className={`p-3 rounded-lg border-2 transition-all duration-300 text-left ${
+                              className={`p-4 rounded-lg border-2 transition-all duration-300 ${
                                 selectedSubcategory === subcategory.id
-                                  ? 'border-cyan-400/70 bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                                  ? 'border-cyan-400/70 bg-cyan-500/20'
                                   : 'border-slate-600/50 bg-slate-700/30 hover:border-slate-500/70'
                               }`}
                             >
-                              <h4 className="text-sm font-bold text-white mb-1">{subcategory.name}</h4>
-                              <p className="text-xs text-slate-400">Click to select</p>
-                            </button>
+                              <h4 className="text-lg font-bold text-white mb-4">{subcategory.name}</h4>
+                              
+                              {/* Goal examples directly visible within each subcategory */}
+                              <div className="grid grid-cols-1 gap-2">
+                                {subcategory.examples?.map((example, index) => (
+                                  <button
+                                    key={index}
+                                    onClick={() => {
+                                      setSelectedCategory(category.id);
+                                      setSelectedSubcategory(subcategory.id);
+                                      setNewGoal({ 
+                                        ...newGoal, 
+                                        title: example,
+                                        category: subcategory.name,
+                                        subcategory: example
+                                      });
+                                    }}
+                                    className="p-3 rounded-lg border border-slate-600/50 bg-slate-700/30 hover:border-cyan-400/50 hover:bg-cyan-500/10 transition-all duration-300 text-left"
+                                  >
+                                    <h5 className="text-sm font-medium text-white mb-1">{example}</h5>
+                                    <p className="text-xs text-slate-400">Click to use this goal</p>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
                           ))}
                         </div>
-                        
-                        {/* Goal Suggestions for selected category */}
-                        {selectedCategory === category.id && (
-                          <div className="mt-6 pt-4 border-t border-slate-600/50">
-                            <h4 className="text-lg font-semibold text-slate-200 mb-4">Choose Your Goal</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                              {category.subcategories
-                                .filter(sub => sub.examples)
-                                .flatMap(sub => sub.examples)
-                                .map((suggestion, index) => (
-                                <button
-                                  key={index}
-                                  onClick={() => {
-                                    setNewGoal({ 
-                                      ...newGoal, 
-                                      title: suggestion,
-                                      category: category.id,
-                                      subcategory: selectedSubcategory
-                                    });
-                                  }}
-                                  className="p-3 rounded-lg border border-slate-600/50 bg-slate-700/30 hover:border-cyan-400/50 hover:bg-cyan-500/10 transition-all duration-300 text-left"
-                                >
-                                  <h5 className="text-sm font-medium text-white mb-1">{suggestion}</h5>
-                                  <p className="text-xs text-slate-400">Click to use this goal</p>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
                       </div>
                     ))}
-                    
-                    {/* Custom Category Option */}
-                    <div className="bg-slate-700/30 rounded-xl p-4 border border-slate-600/50">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-white">Custom Category</h3>
-                        <button
-                          onClick={() => {
-                            setShowCustomCategory(!showCustomCategory);
-                            setShowCustomSubcategory(false);
-                            if (!showCustomCategory) {
-                              setSelectedCategory("");
-                              setSelectedSubcategory("");
-                            }
-                          }}
-                          className={`px-4 py-2 rounded-lg border-2 transition-all duration-300 ${
-                            showCustomCategory
-                              ? 'border-cyan-400/70 bg-cyan-500/20 text-cyan-300'
-                              : 'border-slate-600/50 bg-slate-700/30 text-slate-300 hover:border-slate-500/70'
-                          }`}
-                        >
-                          {showCustomCategory ? 'Hide' : 'Create Custom'}
-                        </button>
-                      </div>
-                      
-                      {showCustomCategory && (
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block text-sm font-semibold text-slate-200 mb-2">Category Name</label>
-                            <input
-                              type="text"
-                              value={customCategory}
-                              onChange={(e) => setCustomCategory(e.target.value)}
-                              placeholder="e.g., Personal Development, Hobbies, etc."
-                              className="w-full p-3 rounded-lg bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-semibold text-slate-200 mb-2">Subcategory Name</label>
-                            <input
-                              type="text"
-                              value={customSubcategory}
-                              onChange={(e) => setCustomSubcategory(e.target.value)}
-                              placeholder="e.g., Learn Guitar, Photography, etc."
-                              className="w-full p-3 rounded-lg bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
-                            />
-                          </div>
-                          
-                          <button
-                            onClick={() => {
-                              if (customCategory.trim() && customSubcategory.trim()) {
-                                setSelectedCategory('custom');
-                                setSelectedSubcategory('custom');
-                                setNewGoal({ 
-                                  ...newGoal, 
-                                  category: customCategory.trim(),
-                                  subcategory: customSubcategory.trim()
-                                });
-                                setShowCustomSubcategory(true);
-                              }
-                            }}
-                            disabled={!customCategory.trim() || !customSubcategory.trim()}
-                            className="w-full py-2 px-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
-                          >
-                            Use Custom Category
-                          </button>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
 
                 {/* Days and Difficulty */}
                 {selectedSubcategory && (
                   <div className="space-y-6">
+                    {/* Editable Category and Subcategory */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-lg font-semibold text-slate-200 mb-3">Category</label>
+                        <input
+                          type="text"
+                          value={newGoal.category}
+                          onChange={(e) => setNewGoal({ ...newGoal, category: e.target.value })}
+                          placeholder="Enter category name"
+                          className="w-full p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-lg font-semibold text-slate-200 mb-3">Subcategory</label>
+                        <input
+                          type="text"
+                          value={newGoal.subcategory}
+                          onChange={(e) => setNewGoal({ ...newGoal, subcategory: e.target.value })}
+                          placeholder="Enter subcategory name"
+                          className="w-full p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
+                        />
+                      </div>
+                    </div>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-lg font-semibold text-slate-200 mb-3">Target Days</label>
