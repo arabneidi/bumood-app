@@ -496,9 +496,18 @@ export default function GoalsPage() {
 
                 {/* Examples and Customization */}
                 {selectedSubcategory && (
-                  <div className="space-y-6">
-                    {/* Examples */}
-                    <div>
+                  <div className="space-y-4 -mt-2">
+                    {/* Connection indicator */}
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"></div>
+                      <div className="mx-4 px-3 py-1 bg-cyan-400/20 rounded-full text-cyan-300 text-sm font-medium">
+                        Next Step
+                      </div>
+                      <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"></div>
+                    </div>
+                    
+                    {/* Examples - Connected to category section */}
+                    <div className="bg-slate-700/30 rounded-xl p-4 border border-slate-600/50">
                       <label className="block text-lg font-semibold text-slate-200 mb-3">Choose Your Goal</label>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {getSelectedSubcategory()?.examples.map((example, index) => (
