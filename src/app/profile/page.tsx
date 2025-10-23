@@ -64,6 +64,9 @@ export default function ProfilePage() {
 
   // Debug component render
   console.log('Profile component rendering with state:', { newCategoryName, newCategoryValue, customCategories });
+  
+  // Test if console.log works at all
+  console.log('=== CONSOLE TEST - IF YOU SEE THIS, CONSOLE IS WORKING ===');
 
   const loadProfile = async () => {
     try {
@@ -825,16 +828,27 @@ export default function ProfilePage() {
             </motion.div>
 
             {/* Simple Test Button */}
-            <div className="text-center mb-4">
+            <div className="text-center mb-4 p-4 bg-yellow-200 border-4 border-yellow-500">
+              <h2 className="text-2xl font-bold text-black mb-4">TEST SECTION</h2>
               <button
                 type="button"
                 onClick={() => {
                   console.log('SIMPLE TEST BUTTON CLICKED!');
                   alert('Simple test button works!');
                 }}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg"
+                className="px-4 py-2 bg-red-500 text-white rounded-lg mr-4"
               >
                 Simple Test
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  alert('DIRECT ALERT TEST!');
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+              >
+                Direct Alert
               </button>
             </div>
 
