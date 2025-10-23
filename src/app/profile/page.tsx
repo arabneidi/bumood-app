@@ -3,8 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Save, Sparkles, Heart, Star, Zap, Palette, Music, BookOpen, Gamepad2, Plus, Minus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
+  const router = useRouter();
+  
   // Profile data
   const [profile, setProfile] = useState({
     name: '',
@@ -167,7 +170,10 @@ export default function ProfilePage() {
         const data = await response.json();
         console.log('Saved successfully:', data);
         setMessage('✅ Profile saved successfully!');
-        setTimeout(() => setMessage(''), 3000);
+        setTimeout(() => {
+          setMessage('');
+          router.push('/');
+        }, 2000);
       } else {
         const error = await response.text();
         console.error('Save failed:', error);
