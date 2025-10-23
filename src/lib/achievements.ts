@@ -14,7 +14,7 @@ export interface AchievementDefinition {
 }
 
 export const achievementDefinitions: AchievementDefinition[] = [
-  // Streak Achievements
+  // Entry Streaks
   {
     id: 'first-entry',
     title: 'Getting Started',
@@ -45,22 +45,12 @@ export const achievementDefinitions: AchievementDefinition[] = [
     condition: { type: 'streak', value: 30 },
     category: 'streak'
   },
-  {
-    id: 'hundred-days',
-    title: 'Century Club',
-    description: 'Log mood for 100 consecutive days',
-    icon: '🏆',
-    stars: 3,
-    type: 'streak',
-    condition: { type: 'streak', value: 100 },
-    category: 'streak'
-  },
 
-  // Mood Achievements
+  // Mood Quality
   {
     id: 'happy-week',
     title: 'Sunshine Week',
-    description: 'Have 7 consecutive days with mood 8+',
+    description: 'Have 7 consecutive days with valence 8+',
     icon: '☀️',
     stars: 2,
     type: 'mood',
@@ -68,104 +58,69 @@ export const achievementDefinitions: AchievementDefinition[] = [
     category: 'mood'
   },
   {
-    id: 'calm-master',
-    title: 'Zen Master',
-    description: 'Maintain calmness 9+ for 14 days',
-    icon: '🧘',
+    id: 'energy-master',
+    title: 'Energizer',
+    description: 'Maintain energy 8+ for 14 days',
+    icon: '⚡',
     stars: 3,
     type: 'mood',
-    condition: { type: 'mood', value: 9, period: 'daily' },
+    condition: { type: 'mood', value: 8, period: 'daily' },
     category: 'mood'
   },
 
-  // Goal Achievements
+  // Sleep & Recovery
   {
-    id: 'first-goal',
-    title: 'Goal Setter',
-    description: 'Complete your first goal',
-    icon: '🎯',
-    stars: 1,
-    type: 'goal',
-    condition: { type: 'goal_completion', value: 1 },
-    category: 'goals'
-  },
-  {
-    id: 'goal-master',
-    title: 'Goal Master',
-    description: 'Complete 10 goals',
-    icon: '👑',
-    stars: 3,
-    type: 'goal',
-    condition: { type: 'goal_completion', value: 10 },
-    category: 'goals'
-  },
-
-  // Habit Achievements
-  {
-    id: 'habit-builder',
-    title: 'Habit Builder',
-    description: 'Complete a habit for 21 days',
-    icon: '🔗',
+    id: 'sleep-champion',
+    title: 'Sleep Champion',
+    description: 'Log 8+ hours sleep for 7 consecutive days',
+    icon: '😴',
     stars: 2,
     type: 'habit',
-    condition: { type: 'habit_streak', value: 21 },
-    category: 'habits'
-  },
-  {
-    id: 'habit-master',
-    title: 'Habit Master',
-    description: 'Complete a habit for 100 days',
-    icon: '💪',
-    stars: 3,
-    type: 'habit',
-    condition: { type: 'habit_streak', value: 100 },
-    category: 'habits'
+    condition: { type: 'habit_streak', value: 7 },
+    category: 'recovery'
   },
 
-  // Special Achievements
+  // Activity & Engagement
   {
-    id: 'early-bird',
-    title: 'Early Bird',
-    description: 'Log mood before 8 AM for 7 days',
-    icon: '🐦',
+    id: 'activity-explorer',
+    title: 'Activity Explorer',
+    description: 'Log 10 different activities',
+    icon: '🎯',
     stars: 2,
     type: 'special',
-    condition: { type: 'count', value: 7 },
-    category: 'special'
+    condition: { type: 'count', value: 10 },
+    category: 'activities'
   },
   {
     id: 'reflection-master',
     title: 'Reflection Master',
-    description: 'Complete 50 micro-reflections',
+    description: 'Complete 25 micro-reflections',
     icon: '💭',
     stars: 2,
     type: 'special',
-    condition: { type: 'count', value: 50 },
-    category: 'special'
+    condition: { type: 'count', value: 25 },
+    category: 'reflection'
+  },
+
+  // Consistency
+  {
+    id: 'early-bird',
+    title: 'Early Bird',
+    description: 'Log mood before 9 AM for 7 days',
+    icon: '🐦',
+    stars: 2,
+    type: 'special',
+    condition: { type: 'count', value: 7 },
+    category: 'consistency'
   },
   {
-    id: 'voice-user',
-    title: 'Voice of Reason',
-    description: 'Use voice entry 10 times',
-    icon: '🎤',
-    stars: 1,
-    type: 'special',
-    condition: { type: 'count', value: 10 },
-    category: 'special'
+    id: 'century-club',
+    title: 'Century Club',
+    description: 'Log 100 total mood entries',
+    icon: '🏆',
+    stars: 3,
+    type: 'streak',
+    condition: { type: 'count', value: 100 },
+    category: 'milestone'
   }
 ];
-
-export const getAchievementById = (id: string): AchievementDefinition | undefined => {
-  return achievementDefinitions.find(achievement => achievement.id === id);
-};
-
-export const getAchievementsByCategory = (category: string): AchievementDefinition[] => {
-  return achievementDefinitions.filter(achievement => achievement.category === category);
-};
-
-export const getAchievementsByType = (type: string): AchievementDefinition[] => {
-  return achievementDefinitions.filter(achievement => achievement.type === type);
-};
-
-
-

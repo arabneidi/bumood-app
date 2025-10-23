@@ -9,7 +9,6 @@ import PeriodInsights from '@/components/dashboard/PeriodInsights';
 import DSSRadar from '@/components/dashboard/DSSRadar';
 import DriversCard from '@/components/dashboard/DriversCard';
 import PowerHoursHeatmap from '@/components/charts/PowerHoursHeatmap';
-import ProTipsCard from '@/components/dashboard/ProTipsCard';
 
 interface MoodEntry {
   id: string;
@@ -236,19 +235,6 @@ export default function StatsPage() {
           />
         </motion.div>
 
-        {/* Pro Tips Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mb-12"
-        >
-          <ProTipsCard 
-            powerHoursData={powerHoursData} 
-            userInfo={userInfo}
-            loading={powerHoursLoading} 
-          />
-        </motion.div>
 
         {/* Activity Drivers Section */}
         <motion.div
