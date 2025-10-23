@@ -50,6 +50,8 @@ export default function GoalsPage() {
     currentValue: 0,
     difficulty: "medium"
   });
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [completedGoal, setCompletedGoal] = useState(null);
 
   const goalCategories = [
     {
@@ -155,6 +157,13 @@ export default function GoalsPage() {
         if (goal.id === goalId) {
           const newValue = Math.max(0, Math.min(goal.currentValue + change, goal.targetValue));
           const newProgress = Math.round((newValue / goal.targetValue) * 100);
+          
+          // Check if goal is completed (100%)
+          if (newProgress >= 100 && change > 0) {
+            setCompletedGoal(goal);
+            setShowCompletionModal(true);
+          }
+          
           return { ...goal, currentValue: newValue, progress: newProgress };
         }
         return goal;
@@ -169,6 +178,44 @@ export default function GoalsPage() {
   const getSelectedSubcategory = () => {
     const category = getSelectedCategory();
     return category?.subcategories.find(sub => sub.id === selectedSubcategory);
+  };
+
+  const handleGoalCompletion = () => {
+    if (completedGoal) {
+      // Remove completed goal from the list
+      setGoals(prevGoals => prevGoals.filter(goal => goal.id !== completedGoal.id));
+      
+      // Here you would typically:
+      // 1. Save the completed goal to a "completed goals" list
+      // 2. Update achievement progress
+      // 3. Send notification to user
+      // 4. Update user statistics
+      
+      console.log(`Goal completed: ${completedGoal.title}`);
+      
+      // Reset modal state
+      setShowCompletionModal(false);
+      setCompletedGoal(null);
+    }
+  };
+
+  const handleCancelCompletion = () => {
+    // Reset the goal progress back to 99% if user cancels
+    if (completedGoal) {
+      setGoals(prevGoals =>
+        prevGoals.map(goal => {
+          if (goal.id === completedGoal.id) {
+            const newValue = Math.max(0, completedGoal.targetValue - 1);
+            const newProgress = Math.round((newValue / completedGoal.targetValue) * 100);
+            return { ...goal, currentValue: newValue, progress: newProgress };
+          }
+          return goal;
+        })
+      );
+    }
+    
+    setShowCompletionModal(false);
+    setCompletedGoal(null);
   };
 
   if (loading) {
@@ -577,6 +624,57 @@ export default function GoalsPage() {
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Goal Completion Confirmation Modal */}
+      {showCompletionModal && completedGoal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={handleCancelCompletion}>
+          <div className="relative w-[90vw] max-w-md mx-4 bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute inset-0 rounded-3xl border-2 border-green-400/50 shadow-[0_0_25px_rgba(34,197,94,0.6)] animate-pulse pointer-events-none"></div>
+            
+            <div className="relative z-10 text-center">
+              {/* Celebration Icon */}
+              <div className="text-6xl mb-4">🎉</div>
+              
+              {/* Title */}
+              <h3 className="text-3xl font-bold text-white mb-4">Congratulations!</h3>
+              
+              {/* Goal Details */}
+              <div className="bg-slate-700/30 rounded-xl p-4 mb-6 border border-slate-600/50">
+                <h4 className="text-xl font-bold text-green-300 mb-2">{completedGoal.title}</h4>
+                <p className="text-slate-300">You've successfully completed your goal!</p>
+                <div className="mt-3 flex items-center justify-center space-x-4">
+                  <span className="text-sm text-slate-400">Difficulty:</span>
+                  <span className="text-sm font-medium text-slate-200 capitalize">{completedGoal.difficulty}</span>
+                  <span className="text-sm text-slate-400">Days:</span>
+                  <span className="text-sm font-medium text-slate-200">{completedGoal.targetValue}</span>
+                </div>
+              </div>
+              
+              {/* Achievement Impact */}
+              <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-4 mb-6 border border-green-400/30">
+                <h5 className="text-lg font-bold text-green-300 mb-2">🏆 Achievement Unlocked!</h5>
+                <p className="text-sm text-green-200">This completion will contribute to your achievement badges and overall progress.</p>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <button
+                  onClick={handleCancelCompletion}
+                  className="flex-1 px-4 py-3 bg-slate-600/60 hover:bg-slate-600/80 text-slate-300 rounded-xl font-medium transition-all duration-300"
+                >
+                  Not Yet
+                </button>
+                <button
+                  onClick={handleGoalCompletion}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-green-500/25"
+                >
+                  Complete Goal
+                </button>
               </div>
             </div>
           </div>
