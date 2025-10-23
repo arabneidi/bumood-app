@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 interface DSSData {
@@ -23,11 +23,10 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
     const updateDimensions = () => {
       const container = document.getElementById('dss-radar-container');
       if (container) {
-        const size = Math.min(container.offsetWidth - 40, 250);
+        const size = Math.min(container.offsetWidth - 40, 250); // Max size 250px
         setDimensions({ width: size, height: size });
       }
     };
-
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
@@ -83,12 +82,12 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
 
   const { learningMomentum, recoveryIndex, connectionScore } = data;
   
-  // Normalize values to 0-1 scale for radar chart
-  const normalizeValue = (value: number) => Math.max(0, Math.min(1, (value + 3) / 6)); // Assuming values range from -3 to +3
-  
-  const lmNormalized = normalizeValue(learningMomentum || 0);
-  const riNormalized = normalizeValue(recoveryIndex || 0);
-  const cnNormalized = normalizeValue(connectionScore || 0);
+  // Normalize values to 0-1 scale for radar chart (assuming values range from -3 to +3)
+  const normalizeValue = (value: number) => Math.max(0, Math.min(1, (value + 3) / 6));
+
+  const lmNormalized = normalizeValue(typeof learningMomentum === 'number' ? learningMomentum : 0);
+  const riNormalized = normalizeValue(typeof recoveryIndex === 'number' ? recoveryIndex : 0);
+  const cnNormalized = normalizeValue(typeof connectionScore === 'number' ? connectionScore : 0);
 
   const centerX = dimensions.width / 2;
   const centerY = dimensions.height / 2;
@@ -229,63 +228,46 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
           
           {/* Axis lines */}
           {axisLines}
-          
-          {/* Radar area */}
-          <motion.path
-            d={radarPath}
-            fill="rgba(59, 130, 246, 0.3)"
-            stroke="rgba(59, 130, 246, 0.8)"
-            strokeWidth="2"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 1, ease: "easeInOut" }}
-          />
-          
+
           {/* Data points */}
-          <motion.circle
+          <circle
             cx={lmPoint.x}
             cy={lmPoint.y}
             r="6"
             fill="#3B82F6"
-            stroke="white"
-            strokeWidth="2"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.5, duration: 0.3 }}
+            className="cursor-pointer"
             onMouseEnter={() => setHoveredSegment('LM')}
             onMouseLeave={() => setHoveredSegment(null)}
-            className="cursor-pointer"
           />
-          <motion.circle
+          <circle
             cx={riPoint.x}
             cy={riPoint.y}
             r="6"
             fill="#10B981"
-            stroke="white"
-            strokeWidth="2"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.7, duration: 0.3 }}
+            className="cursor-pointer"
             onMouseEnter={() => setHoveredSegment('RI')}
             onMouseLeave={() => setHoveredSegment(null)}
-            className="cursor-pointer"
           />
-          <motion.circle
+          <circle
             cx={cnPoint.x}
             cy={cnPoint.y}
             r="6"
             fill="#F59E0B"
-            stroke="white"
-            strokeWidth="2"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.9, duration: 0.3 }}
+            className="cursor-pointer"
             onMouseEnter={() => setHoveredSegment('CN')}
             onMouseLeave={() => setHoveredSegment(null)}
+          />
+
+          {/* Radar area */}
+          <path
+            d={radarPath}
+            fill="rgba(59, 130, 246, 0.2)"
+            stroke="#3B82F6"
+            strokeWidth="2"
             className="cursor-pointer"
           />
         </svg>
-      </div>
+      </motion.div>
 
       {/* Legend */}
       <motion.div 
@@ -372,11 +354,12 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute bg-slate-800/90 backdrop-blur-sm border border-blue-500/30 rounded-lg px-3 py-2 text-sm text-white shadow-lg"
+          exit={{ opacity: 0, y: 10 }}
+          className="absolute bg-slate-800/90 backdrop-blur-sm border border-blue-500/30 rounded-lg p-3 text-white text-sm shadow-xl"
           style={{
+            top: '50%',
             left: '50%',
-            top: '10px',
-            transform: 'translateX(-50%)',
+            transform: 'translate(-50%, -50%)',
             zIndex: 10
           }}
         >
