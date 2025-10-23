@@ -87,8 +87,11 @@ export default function ProTipsCard({ powerHoursData, userInfo, loading }: ProTi
       const hourRanges = bestHours.map((h: any) => `${h.hour}:00`).join(' and ');
       
       // Check if user has LM-focused activities
-      const hasLMActivities = powerHoursData?.activityAnalysis?.lmPatterns?.size > 0;
-      const lmActivities = Array.from(powerHoursData?.activityAnalysis?.lmPatterns?.keys() || []);
+      const lmPatterns = powerHoursData?.activityAnalysis?.lmPatterns;
+      const hasLMActivities = lmPatterns && (lmPatterns.size > 0 || Object.keys(lmPatterns).length > 0);
+      const lmActivities = lmPatterns ? 
+        (lmPatterns instanceof Map ? Array.from(lmPatterns.keys()) : Object.keys(lmPatterns)) : 
+        [];
       
       if (hasLMActivities && lmActivities.length > 0) {
         tips.push({

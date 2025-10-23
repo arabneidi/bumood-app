@@ -544,7 +544,7 @@ export default function NewEntry() {
           activities: formData.activities,
           selectedTimeSlots: formData.selectedTimeSlots,
           selectedSubcategories: formData.selectedSubcategories,
-          dssAnalysis: formData.dssAnalysis,
+          dssAnalysis: formData.dssAnalysis ? JSON.stringify(formData.dssAnalysis) : null,
           onPeriod: formData.onPeriod,
           waterIntake: formData.waterIntake,
           mealsEaten: formData.mealsEaten,

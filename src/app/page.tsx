@@ -62,7 +62,9 @@ export default function Home() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
         
-        const response = await fetch("/api/dss?userId=dummy-user", {
+        // Get today's specific DSS score
+        const today = new Date().toISOString().split('T')[0];
+        const response = await fetch(`/api/dss?userId=dummy-user&date=${today}`, {
           signal: controller.signal
         });
         clearTimeout(timeoutId);
