@@ -33,6 +33,12 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
 
   // Load saved suggestions from localStorage on mount
   useEffect(() => {
+    // Don't load suggestions if there are no mood entries
+    if (moodEntries.length === 0) {
+      setSuggestions([]);
+      return;
+    }
+
     const savedSuggestions = localStorage.getItem('ai-suggestions');
     if (savedSuggestions) {
       try {
@@ -48,7 +54,7 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
       // No saved suggestions, generate new ones
       generateSuggestions();
     }
-  }, []);
+  }, [moodEntries.length]);
 
   useEffect(() => {
     console.log('🤖 AI Suggestions useEffect triggered:', {
@@ -57,6 +63,13 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
       moodEntriesLength: moodEntries.length,
       shouldRegenerate: hasNewMoodData || refreshTrigger
     });
+    
+    // Don't generate suggestions if there are no mood entries
+    if (moodEntries.length === 0) {
+      console.log('🚫 No mood entries - clearing suggestions');
+      setSuggestions([]);
+      return;
+    }
     
     // Only regenerate if we have new mood data OR manual refresh trigger
     if (hasNewMoodData || refreshTrigger) {
@@ -69,6 +82,14 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
   }, [moodEntries, currentMood, refreshTrigger, hasNewMoodData]);
 
   const generateSuggestions = async () => {
+    // Don't generate suggestions if there are no mood entries
+    if (moodEntries.length === 0) {
+      console.log('🚫 No mood entries - skipping AI suggestions generation');
+      setSuggestions([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -618,6 +639,20 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
   };
 
   const displayedSuggestions = suggestions.slice(0, 5); // Show all 5 suggestions
+
+  // Don't show suggestions if there are no mood entries
+  if (moodEntries.length === 0) {
+    return (
+      <div className="bg-gradient-to-br from-blue-900/20 via-purple-900/10 to-indigo-900/20 backdrop-blur-xl border border-blue-400/30 rounded-2xl p-6 shadow-2xl">
+        <div className="text-center">
+          <div className="text-4xl mb-4">🧠</div>
+          <h3 className="text-lg font-semibold text-white drop-shadow-lg mb-2">Mood Helper</h3>
+          <p className="text-slate-300 mb-4 drop-shadow-md">Add some mood entries to get personalized suggestions!</p>
+          <p className="text-slate-400 text-sm">Start by creating your first mood entry to unlock AI-powered insights.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (suggestions.length === 0 && !loading) {
     return (

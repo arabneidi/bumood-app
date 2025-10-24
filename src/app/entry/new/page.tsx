@@ -115,6 +115,9 @@ export default function NewEntry() {
     mealQuality: 'good',
     caffeine: 0,
     alcohol: 0,
+    // Date and time for past entries
+    entryDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+    entryTime: new Date().toTimeString().slice(0, 5), // HH:MM format
   });
 
   // Increment/Decrement helpers (no upper limit)
@@ -631,6 +634,9 @@ export default function NewEntry() {
           mealQuality: formData.mealQuality,
           caffeine: formData.caffeine,
           alcohol: formData.alcohol,
+          // Custom date and time for past entries
+          customDate: formData.entryDate,
+          customTime: formData.entryTime,
         }),
       });
 
@@ -698,6 +704,66 @@ export default function NewEntry() {
       >
       
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Date & Time Selection Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: [0, -5, 0] }}
+            transition={{
+              opacity: { duration: 0.6, delay: 0.1 },
+              y: { duration: 0.8, delay: 0.1, ease: "easeOut" }
+            }}
+            className="relative bg-slate-800/20 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-500/10 p-6"
+          >
+            {/* Subtle glow effect */}
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-slate-700/10 to-slate-800/5"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent flex items-center" style={{
+                  textShadow: '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
+                  filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
+                }}>
+                  📅 Entry Date & Time
+                </h2>
+              </div>
+              <p className="text-slate-400 text-sm mb-6">Select when this entry occurred (for past entries)</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Date Picker */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-slate-300">Date</label>
+                  <input
+                    type="date"
+                    value={formData.entryDate}
+                    onChange={(e) => handleChange('entryDate', e.target.value)}
+                    className={`w-full px-4 py-4 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none transition-all duration-300 text-lg ${
+                      (formData.onPeriod && isFirstPeriodEntry)
+                        ? 'border-red-400/50 shadow-[0_0_25px_rgba(239,68,68,0.6),0_0_50px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7),0_0_60px_rgba(239,68,68,0.5)] focus:border-red-400/70 focus:ring-2 focus:ring-red-400/30'
+                        : 'border-purple-400/30 shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] focus:border-purple-400/60 focus:ring-2 focus:ring-purple-400/20'
+                    }`}
+                    max={new Date().toISOString().split('T')[0]} // Can't select future dates
+                  />
+                </div>
+                
+                {/* Time Picker */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-slate-300">Time</label>
+                  <input
+                    type="time"
+                    value={formData.entryTime}
+                    onChange={(e) => handleChange('entryTime', e.target.value)}
+                    className={`w-full px-4 py-4 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none transition-all duration-300 text-lg ${
+                      (formData.onPeriod && isFirstPeriodEntry)
+                        ? 'border-red-400/50 shadow-[0_0_25px_rgba(239,68,68,0.6),0_0_50px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7),0_0_60px_rgba(239,68,68,0.5)] focus:border-red-400/70 focus:ring-2 focus:ring-red-400/30'
+                        : 'border-purple-400/30 shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] focus:border-purple-400/60 focus:ring-2 focus:ring-purple-400/20'
+                    }`}
+                  />
+                </div>
+              </div>
+              
+            </div>
+          </motion.div>
+
           {/* Mood Parameters Section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -835,7 +901,7 @@ export default function NewEntry() {
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent flex items-center" style={{ 
+                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent flex items-center" style={{ 
                   textShadow: (formData.onPeriod && isFirstPeriodEntry) 
                     ? '0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8), 0 0 75px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
                     : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
@@ -1093,7 +1159,7 @@ export default function NewEntry() {
             <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
             
             <div className="relative z-10">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center" style={{ 
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center" style={{ 
                 textShadow: (formData.onPeriod && isFirstPeriodEntry) 
                   ? '0 0 10px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
                   : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
@@ -1241,7 +1307,7 @@ export default function NewEntry() {
             
 
             <div className="relative z-10">
-              <h3 className="text-2xl font-extrabold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center" style={{ 
+              <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center" style={{ 
                 textShadow: (formData.onPeriod && isFirstPeriodEntry) 
                   ? '0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8), 0 0 75px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
                   : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',

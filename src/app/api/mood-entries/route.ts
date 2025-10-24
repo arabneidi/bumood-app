@@ -10,7 +10,8 @@ export async function POST(request: NextRequest) {
     const { 
       valence, energy, focus, stress, sleep, 
       notes, activities, selectedTimeSlots, selectedSubcategories, dssAnalysis, reflection, voiceNote, aiSuggestion,
-      onPeriod, periodDay, waterIntake, mealsEaten, mealQuality, caffeine, alcohol 
+      onPeriod, periodDay, waterIntake, mealsEaten, mealQuality, caffeine, alcohol,
+      customDate, customTime
     } = body;
     
     console.log('🔍 dssAnalysis type:', typeof dssAnalysis);
@@ -31,9 +32,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Use custom date/time if provided, otherwise use current date
+    const entryDate = customDate && customTime 
+      ? new Date(`${customDate}T${customTime}`)
+      : new Date();
+    
+    console.log('📅 Entry date:', entryDate.toISOString());
+    
     // Calculate Mood Composite
-    const currentDate = new Date();
-    const timeBucket = getTimeBucket(currentDate);
+    const timeBucket = getTimeBucket(entryDate);
     console.log('🧮 Calculating Mood Composite...');
     const mcResult = await calculateMoodComposite(
       dummyUserId,
@@ -41,7 +48,7 @@ export async function POST(request: NextRequest) {
       parseInt(energy),
       parseInt(focus),
       parseInt(stress),
-      currentDate
+      entryDate
     );
     console.log('✅ Mood Composite calculated:', mcResult.moodComposite);
 
@@ -71,13 +78,16 @@ export async function POST(request: NextRequest) {
         mealQuality: mealQuality || null,
         caffeine: caffeine ? parseInt(caffeine) : null,
         alcohol: alcohol ? parseInt(alcohol) : null,
+        // Use custom date/time if provided
+        createdAt: entryDate,
+        updatedAt: entryDate,
       },
     });
     console.log('✅ Mood entry created successfully:', moodEntry.id);
 
     // Auto-create/update DailyTracking record based on mood entry data
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const trackingDate = new Date(entryDate);
+    trackingDate.setHours(0, 0, 0, 0);
     
     // Parse activities and DSS analysis to extract DSS components
     const activitiesList = activities || [];
@@ -123,7 +133,7 @@ export async function POST(request: NextRequest) {
       where: {
         userId_date: {
           userId: dummyUserId,
-          date: today
+          date: trackingDate
         }
       },
       update: {
