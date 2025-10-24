@@ -359,7 +359,11 @@ export default function ProfilePage() {
                       type="number"
                       value={profile.age}
                       onChange={(e) => setProfile({...profile, age: e.target.value})}
-                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-cyan-500/10 text-center appearance-none"
+                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-cyan-500/10 text-center"
+                      style={{
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'textfield'
+                      }}
                       placeholder="Your age"
                       min="0"
                       max="120"
@@ -397,7 +401,11 @@ export default function ProfilePage() {
                       type="number"
                       value={profile.height}
                       onChange={(e) => setProfile({...profile, height: e.target.value})}
-                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-green-500/20 focus:border-green-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-green-500/10 text-center appearance-none"
+                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-green-500/20 focus:border-green-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-green-500/10 text-center"
+                      style={{
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'textfield'
+                      }}
                       placeholder="Your height"
                       min="0"
                       step="0.1"
@@ -435,7 +443,11 @@ export default function ProfilePage() {
                       type="number"
                       value={profile.weight}
                       onChange={(e) => setProfile({...profile, weight: e.target.value})}
-                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-orange-500/10 text-center appearance-none"
+                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-orange-500/10 text-center"
+                      style={{
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'textfield'
+                      }}
                       placeholder="Your weight"
                       min="0"
                       step="0.1"
