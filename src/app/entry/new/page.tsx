@@ -96,6 +96,9 @@ export default function NewEntry() {
   const [preferencesLocked, setPreferencesLocked] = useState<boolean>(false);
   const [enablePreferenceLearning, setEnablePreferenceLearning] = useState<boolean>(true);
   const [aiIcon, setAiIcon] = useState('🤖'); // Default fallback icon
+  const [userGender, setUserGender] = useState<string | null>(null);
+  const [periodStartDate, setPeriodStartDate] = useState<string | null>(null);
+  const [isFirstPeriodEntry, setIsFirstPeriodEntry] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     valence: 5,
     energy: 5,
@@ -125,6 +128,29 @@ export default function NewEntry() {
 
   const handleChange = (name: string, value: number | string | string[] | boolean) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Handle period tracking logic
+    if (name === 'onPeriod' && value === true) {
+      // Set period start date to today (Day 1)
+      const today = new Date().toISOString().split('T')[0];
+      setPeriodStartDate(today);
+      // Mark this as the first period entry of the cycle
+      setIsFirstPeriodEntry(true);
+    } else if (name === 'onPeriod' && value === false) {
+      // Clear period start date when period ends - resets to Day 1 for next cycle
+      setPeriodStartDate(null);
+      setIsFirstPeriodEntry(false);
+    }
+  };
+
+  // Calculate period day (1, 2, 3, etc.)
+  const getPeriodDay = () => {
+    if (!periodStartDate) return 0;
+    const start = new Date(periodStartDate);
+    const today = new Date();
+    const diffTime = today.getTime() - start.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(1, diffDays); // Minimum day 1
   };
 
   // Load user preferences on component mount
@@ -135,6 +161,7 @@ export default function NewEntry() {
         if (response.ok) {
           const user = await response.json();
           setUserInfo(user);
+          setUserGender(user.gender);
           setUserPreferences({
             interests: user.interests ? JSON.parse(user.interests) : [],
             favoriteWriters: user.favoriteWriters ? user.favoriteWriters.split(',').map((w: string) => w.trim()).filter(Boolean) : [],
@@ -598,6 +625,7 @@ export default function NewEntry() {
           selectedSubcategories: formData.selectedSubcategories,
           dssAnalysis: formData.dssAnalysis ? JSON.stringify(formData.dssAnalysis) : null,
           onPeriod: formData.onPeriod,
+          periodDay: formData.onPeriod ? getPeriodDay() : null,
           waterIntake: formData.waterIntake,
           mealsEaten: formData.mealsEaten,
           mealQuality: formData.mealQuality,
@@ -615,6 +643,8 @@ export default function NewEntry() {
         
         // Reset period tracking state after successful save
         handleChange('onPeriod', false);
+        // Reset first period entry flag after saving
+        setIsFirstPeriodEntry(false);
         
         router.push("/stats");
       } else {
@@ -683,12 +713,12 @@ export default function NewEntry() {
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent flex items-center" style={{ 
-                  textShadow: formData.onPeriod 
-                    ? '0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8), 0 0 75px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
-                    : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
-                  filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
-                }}>
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent flex items-center" style={{
+                    textShadow: (formData.onPeriod && isFirstPeriodEntry)
+                      ? '0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8), 0 0 75px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
+                      : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
+                    filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
+                  }}>
                   Mood Parameters
                 </h2>
               </div>
@@ -707,7 +737,7 @@ export default function NewEntry() {
                   maxLabel="Positive"
                   color="from-red-400 to-green-500"
                   icon="😊"
-                  glowColor={formData.onPeriod ? 'red' : 'purple'}
+                  glowColor={(formData.onPeriod && isFirstPeriodEntry) ? 'red' : 'purple'}
                   valueLabels={{
                     1: "Very Negative", 2: "Negative", 3: "Slightly Negative", 4: "Neutral-", 5: "Neutral",
                     6: "Neutral+", 7: "Slightly Positive", 8: "Positive", 9: "Very Positive", 10: "Ecstatic"
@@ -724,7 +754,7 @@ export default function NewEntry() {
                       maxLabel="Energized"
                       color="from-blue-400 to-yellow-500"
                       icon="⚡"
-                      glowColor={formData.onPeriod ? 'red' : 'purple'}
+                      glowColor={(formData.onPeriod && isFirstPeriodEntry) ? 'red' : 'purple'}
                       valueLabels={{
                         1: "Exhausted", 2: "Very Low", 3: "Low", 4: "Tired", 5: "Normal",
                         6: "Rested", 7: "Active", 8: "High", 9: "Very High", 10: "Hyper"
@@ -741,7 +771,7 @@ export default function NewEntry() {
                       maxLabel="Focused"
                       color="from-purple-400 to-pink-500"
                       icon="🎯"
-                      glowColor={formData.onPeriod ? 'red' : 'purple'}
+                      glowColor={(formData.onPeriod && isFirstPeriodEntry) ? 'red' : 'purple'}
                       valueLabels={{
                         1: "Completely Distracted", 2: "Very Distracted", 3: "Distracted", 4: "Wandering", 5: "Moderate",
                         6: "Attentive", 7: "Engaged", 8: "Highly Focused", 9: "Deep Focus", 10: "Laser Focus"
@@ -760,7 +790,7 @@ export default function NewEntry() {
                       maxLabel="Stressed"
                       color="from-green-400 to-red-500"
                       icon="😟"
-                      glowColor={formData.onPeriod ? 'red' : 'purple'}
+                      glowColor={(formData.onPeriod && isFirstPeriodEntry) ? 'red' : 'purple'}
                       valueLabels={{
                         1: "Zen Master", 2: "Very Calm", 3: "Calm", 4: "Relaxed", 5: "Mild",
                         6: "Moderate", 7: "Elevated", 8: "High", 9: "Very High", 10: "Overwhelmed"
@@ -772,15 +802,15 @@ export default function NewEntry() {
                       value={formData.sleep}
                       onChange={(val) => handleChange("sleep", val)}
                       min={0}
-                      max={12}
+                      max={10}
                       minLabel="No sleep"
-                      maxLabel="12+ hours"
+                      maxLabel="10+ hours"
                       color="from-indigo-400 to-purple-500"
-                      glowColor={formData.onPeriod ? 'red' : 'purple'}
+                      glowColor={(formData.onPeriod && isFirstPeriodEntry) ? 'red' : 'purple'}
                       icon="😴"
                       valueLabels={{
                         0: "No sleep", 1: "1 hour", 2: "2 hours", 3: "3 hours", 4: "4 hours", 5: "5 hours",
-                        6: "6 hours", 7: "7 hours", 8: "8 hours", 9: "9 hours", 10: "10 hours", 11: "11 hours", 12: "12+ hours"
+                        6: "6 hours", 7: "7 hours", 8: "8 hours", 9: "9 hours", 10: "10+ hours"
                       }}
                     />
                   </div>
@@ -801,12 +831,12 @@ export default function NewEntry() {
             className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
             {/* Glowing Edge Effect */}
-            <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
+            <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent flex items-center" style={{ 
-                  textShadow: formData.onPeriod 
+                  textShadow: (formData.onPeriod && isFirstPeriodEntry) 
                     ? '0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8), 0 0 75px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
                     : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                   filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
@@ -942,11 +972,11 @@ export default function NewEntry() {
               className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
             >
               {/* Glowing Edge Effect */}
-              <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
+              <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
               
               <div className="relative z-10">
                 <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-4 flex items-center" style={{ 
-                  textShadow: formData.onPeriod 
+                  textShadow: (formData.onPeriod && isFirstPeriodEntry) 
                     ? '0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8), 0 0 75px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
                     : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                   filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
@@ -1060,11 +1090,11 @@ export default function NewEntry() {
             className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
             {/* Glowing Edge Effect */}
-            <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
+            <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
             
             <div className="relative z-10">
               <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center" style={{ 
-                textShadow: formData.onPeriod 
+                textShadow: (formData.onPeriod && isFirstPeriodEntry) 
                   ? '0 0 10px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
                   : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                 filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
@@ -1135,7 +1165,7 @@ export default function NewEntry() {
             </div>
           </motion.div>
           {/* Period Tracking - Only for females */}
-          {userInfo && userInfo.gender === 'female' && (
+          {userGender === 'female' && (
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: [0, -4, 0] }}
@@ -1146,12 +1176,12 @@ export default function NewEntry() {
               className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
             >
               {/* Glowing Edge Effect */}
-              <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
+              <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
               
               <div className="relative z-10">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent flex items-center" style={{ 
-                    textShadow: formData.onPeriod 
+                    textShadow: (formData.onPeriod && isFirstPeriodEntry) 
                       ? '0 0 10px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
                       : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                     filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
@@ -1175,8 +1205,21 @@ export default function NewEntry() {
                     <span className={`w-8 h-8 rounded-full flex items-center justify-center text-lg shadow ${formData.onPeriod ? 'bg-red-500/30 text-red-200' : 'bg-red-900/30 text-red-400'}`}>🩸</span>
                     <div className="text-left">
                       <div className="font-semibold">
-                        Mark period today
+                        {formData.onPeriod 
+                          ? `Period Day ${getPeriodDay()}` 
+                          : 'Start new period cycle'
+                        }
                       </div>
+                      {formData.onPeriod && (
+                        <div className="text-xs text-red-300">
+                          Started {periodStartDate} • Click to end period
+                        </div>
+                      )}
+                      {!formData.onPeriod && (
+                        <div className="text-xs text-red-300">
+                          Click to begin Day 1
+                        </div>
+                      )}
                     </div>
                   </button>
                 </div>
@@ -1195,12 +1238,12 @@ export default function NewEntry() {
             className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
             {/* Glowing Edge Effect */}
-            <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
+            <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
             
 
             <div className="relative z-10">
               <h3 className="text-2xl font-extrabold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center" style={{ 
-                textShadow: formData.onPeriod 
+                textShadow: (formData.onPeriod && isFirstPeriodEntry) 
                   ? '0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8), 0 0 75px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
                   : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                 filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
@@ -1293,13 +1336,13 @@ export default function NewEntry() {
             className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
             {/* Glowing Edge Effect */}
-            <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
+            <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent" style={{ 
-                    textShadow: formData.onPeriod 
+                    textShadow: (formData.onPeriod && isFirstPeriodEntry) 
                       ? '0 0 10px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
                       : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                     filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'

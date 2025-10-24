@@ -112,6 +112,7 @@ model MoodEntry {
   
   // Daily tracking
   onPeriod    Boolean  @default(false) // Is on period today
+  periodDay   Int?     // Which day of period (1-7)
   waterIntake Int?     // glasses of water
   mealsEaten  Int?     // number of meals
   mealQuality String?  // poor, fair, good, excellent

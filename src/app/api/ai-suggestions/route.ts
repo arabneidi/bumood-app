@@ -74,7 +74,9 @@ export async function GET(req: NextRequest) {
         age: user.age || undefined,
         personality: personality || undefined,
         universityLevel: universityLevel || undefined,
-        fieldOfStudy: fieldOfStudy || undefined
+        fieldOfStudy: fieldOfStudy || undefined,
+        onPeriod: recentEntries.length > 0 ? recentEntries[0].onPeriod : false,
+        periodDay: recentEntries.length > 0 ? recentEntries[0].periodDay : undefined
       },
       userPreferences: {
         interests,

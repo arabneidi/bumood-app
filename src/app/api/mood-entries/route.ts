@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const { 
       valence, energy, focus, stress, sleep, 
       notes, activities, selectedTimeSlots, selectedSubcategories, dssAnalysis, reflection, voiceNote, aiSuggestion,
-      onPeriod, waterIntake, mealsEaten, mealQuality, caffeine, alcohol 
+      onPeriod, periodDay, waterIntake, mealsEaten, mealQuality, caffeine, alcohol 
     } = body;
     
     console.log('🔍 dssAnalysis type:', typeof dssAnalysis);
@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
         timeBucket: timeBucket,
         moodComposite: mcResult.moodComposite,
         onPeriod: onPeriod || false,
+        periodDay: periodDay ? parseInt(periodDay) : null,
         waterIntake: waterIntake ? parseInt(waterIntake) : null,
         mealsEaten: mealsEaten ? parseInt(mealsEaten) : null,
         mealQuality: mealQuality || null,
