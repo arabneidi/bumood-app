@@ -11,6 +11,11 @@ interface DSSData {
     recoveryIndex: number;
     connectionScore: number;
   };
+  zScores: {
+    zLM: number;
+    zRI: number;
+    zCN: number;
+  };
 }
 
 interface DSSRadarProps {
@@ -68,29 +73,26 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   }
 
   const { learningMomentum, recoveryIndex, connectionScore } = data.components;
+  const { zLM, zRI, zCN } = data.zScores;
   
-  // Normalize values to 0.0 to 1.0 scale (since all DSS components are positive)
-  const maxValue = Math.max(learningMomentum || 0, recoveryIndex || 0, connectionScore || 0);
-  
-  // Map values from 0-maxValue to 0-1 range (all positive values)
-  const normalizeToZeroToOne = (value: number, maxValue: number) => {
-    if (maxValue === 0) return 0;
-    return value / maxValue; // 0 to 1
+  // Use z-scores directly - they are already statistically normalized
+  // Z-scores can be negative (below average) or positive (above average)
+  // Map z-scores to -1 to 1 scale for radar chart display
+  const normalizeZScore = (zScore: number) => {
+    // Clamp z-scores to reasonable range (-3 to +3) then map to -1 to 1
+    const clamped = Math.max(-3, Math.min(3, zScore));
+    return clamped / 3; // -1 to 1
   };
   
-  const lmNormalized = normalizeToZeroToOne(typeof learningMomentum === 'number' ? learningMomentum : 0, maxValue);
-  const riNormalized = normalizeToZeroToOne(typeof recoveryIndex === 'number' ? recoveryIndex : 0, maxValue);
-  const cnNormalized = normalizeToZeroToOne(typeof connectionScore === 'number' ? connectionScore : 0, maxValue);
+  const lmNormalized = normalizeZScore(zLM);
+  const riNormalized = normalizeZScore(zRI);
+  const cnNormalized = normalizeZScore(zCN);
   
   // Debug logging
-  console.log('DSS Radar Debug (0 to 1 scale):', {
-    learningMomentum,
-    recoveryIndex, 
-    connectionScore,
-    maxValue,
-    lmNormalized,
-    riNormalized,
-    cnNormalized
+  console.log('DSS Radar Debug (z-scores to -1 to 1 scale):', {
+    rawValues: { learningMomentum, recoveryIndex, connectionScore },
+    zScores: { zLM, zRI, zCN },
+    normalized: { lmNormalized, riNormalized, cnNormalized }
   });
 
   // Prepare data for recharts radar chart
@@ -134,8 +136,8 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
           />
           <PolarRadiusAxis 
             angle={0} 
-            domain={[0, 1]}
-            tickCount={6}
+            domain={[-1, 1]}
+            tickCount={5}
             tick={{ fontSize: 10, fill: '#64748b' }}
             tickFormatter={(value) => value.toFixed(1)}
             axisLine={false}
