@@ -37,9 +37,7 @@ const activityCategories = {
     activities: [
       { id: 'exercise', name: 'Exercise', icon: '💪', color: 'bg-red-100 text-red-800' },
       { id: 'walking', name: 'Walking', icon: '🚶', color: 'bg-red-100 text-red-800' },
-      { id: 'running', name: 'Running', icon: '🏃', color: 'bg-red-100 text-red-800' },
       { id: 'yoga', name: 'Yoga', icon: '🧘', color: 'bg-red-100 text-red-800' },
-      { id: 'dancing', name: 'Dancing', icon: '💃', color: 'bg-red-100 text-red-800' },
       { id: 'swimming', name: 'Swimming', icon: '🏊', color: 'bg-red-100 text-red-800' },
     ]
   },
@@ -74,8 +72,6 @@ const activityCategories = {
     selectedColor: 'bg-gradient-to-r from-purple-600 to-indigo-600',
     cardStyle: 'bg-gradient-to-br from-purple-500/20 to-indigo-500/15 border-purple-400/30',
     activities: [
-      { id: 'music', name: 'Music', icon: '🎵', color: 'bg-purple-100 text-purple-800' },
-      { id: 'art', name: 'Art', icon: '🎨', color: 'bg-purple-100 text-purple-800' },
       { id: 'cooking', name: 'Cooking', icon: '👨‍🍳', color: 'bg-purple-100 text-purple-800' },
       { id: 'crafting', name: 'Crafting', icon: '✂️', color: 'bg-purple-100 text-purple-800' },
       { id: 'photography', name: 'Photography', icon: '📸', color: 'bg-purple-100 text-purple-800' },

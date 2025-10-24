@@ -137,9 +137,6 @@ export default function NewEntry() {
           setUserPreferences({
             interests: user.interests ? JSON.parse(user.interests) : [],
             favoriteWriters: user.favoriteWriters ? user.favoriteWriters.split(',').map((w: string) => w.trim()).filter(Boolean) : [],
-            favoriteSportsFigures: user.favoriteSportsFigures ? user.favoriteSportsFigures.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-            favoriteMusicians: user.favoriteMusicians ? user.favoriteMusicians.split(',').map((m: string) => m.trim()).filter(Boolean) : [],
-            favoriteArtists: user.favoriteArtists ? user.favoriteArtists.split(',').map((a: string) => a.trim()).filter(Boolean) : [],
             favoriteMovies: user.favoriteMovies ? user.favoriteMovies.split(',').map((m: string) => m.trim()).filter(Boolean) : [],
             favoritePhilosophers: user.favoritePhilosophers ? user.favoritePhilosophers.split(',').map((p: string) => p.trim()).filter(Boolean) : []
           });
@@ -203,9 +200,6 @@ export default function NewEntry() {
                 universityLevel: userInfo.universityLevel,
                 fieldOfStudy: userInfo.fieldOfStudy,
                 favoriteAuthors: userInfo.favoriteAuthors,
-                favoriteMusicians: userInfo.favoriteMusicians,
-                favoriteSportsFigures: userInfo.favoriteSportsFigures,
-                favoriteArtists: userInfo.favoriteArtists,
                 favoriteMovies: userInfo.favoriteMovies,
                 favoritePhilosophers: userInfo.favoritePhilosophers,
               }
@@ -280,9 +274,6 @@ export default function NewEntry() {
       // Get existing favorites to exclude them
       const existingFavorites = [
         ...(userInfo.favoriteWriters ? userInfo.favoriteWriters.split(',').map((w: string) => w.trim()).filter(Boolean) : []),
-        ...(userInfo.favoriteMusicians ? userInfo.favoriteMusicians.split(',').map((m: string) => m.trim()).filter(Boolean) : []),
-        ...(userInfo.favoriteSportsFigures ? userInfo.favoriteSportsFigures.split(',').map((s: string) => s.trim()).filter(Boolean) : []),
-        ...(userInfo.favoriteArtists ? userInfo.favoriteArtists.split(',').map((a: string) => a.trim()).filter(Boolean) : []),
         ...(userInfo.favoritePhilosophers ? userInfo.favoritePhilosophers.split(',').map((p: string) => p.trim()).filter(Boolean) : [])
       ];
       
@@ -304,9 +295,6 @@ export default function NewEntry() {
                 universityLevel: userInfo.universityLevel,
                 fieldOfStudy: userInfo.fieldOfStudy,
                 favoriteAuthors: userInfo.favoriteAuthors,
-                favoriteMusicians: userInfo.favoriteMusicians,
-                favoriteSportsFigures: userInfo.favoriteSportsFigures,
-                favoriteArtists: userInfo.favoriteArtists,
                 favoriteMovies: userInfo.favoriteMovies,
                 favoritePhilosophers: userInfo.favoritePhilosophers,
               },
@@ -373,14 +361,6 @@ export default function NewEntry() {
   const getCategoryForActivity = (activity: string): string => {
     const categories: { [key: string]: string } = {
       'reading': 'favoriteWriters',
-      'music': 'favoriteMusicians',
-      'dancing': 'favoriteMusicians',
-      'gym': 'favoriteSportsFigures',
-      'football': 'favoriteSportsFigures',
-      'running': 'favoriteSportsFigures',
-      'art': 'favoriteArtists',
-      'painting': 'favoriteArtists',
-      'drawing': 'favoriteArtists',
       'watching': 'favoriteMovies', // movies and TV shows
       'movies': 'favoriteMovies',
       'tv': 'favoriteMovies',
@@ -392,14 +372,6 @@ export default function NewEntry() {
   const getTitleForActivity = (activity: string): string => {
     const titles: { [key: string]: string } = {
       'reading': 'Favorite Writers/Authors',
-      'music': 'Favorite Musicians/Artists',
-      'dancing': 'Favorite Musicians/Artists',
-      'gym': 'Favorite Athletes/Sports Figures',
-      'football': 'Favorite Athletes/Sports Figures',
-      'running': 'Favorite Athletes/Sports Figures',
-      'art': 'Favorite Artists/Painters',
-      'painting': 'Favorite Artists/Painters',
-      'drawing': 'Favorite Artists/Painters',
       'watching': 'Favorite Movies & TV Shows',
       'movies': 'Favorite Movies',
       'tv': 'Favorite TV Shows',
@@ -456,9 +428,6 @@ export default function NewEntry() {
           setUserPreferences({
             interests: user.interests ? JSON.parse(user.interests) : [],
             favoriteWriters: user.favoriteWriters ? user.favoriteWriters.split(',').map((w: string) => w.trim()).filter(Boolean) : [],
-            favoriteSportsFigures: user.favoriteSportsFigures ? user.favoriteSportsFigures.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-            favoriteMusicians: user.favoriteMusicians ? user.favoriteMusicians.split(',').map((m: string) => m.trim()).filter(Boolean) : [],
-            favoriteArtists: user.favoriteArtists ? user.favoriteArtists.split(',').map((a: string) => a.trim()).filter(Boolean) : [],
             favoritePhilosophers: user.favoritePhilosophers ? user.favoritePhilosophers.split(',').map((p: string) => p.trim()).filter(Boolean) : []
           });
         }
