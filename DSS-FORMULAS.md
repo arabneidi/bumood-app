@@ -1,66 +1,44 @@
-# 📊 DSS (Daily Success Score) Formulas
+# 📊 DSS (Daily Success Score) - Official Formula
 
-## 🎯 Overview
-The DSS is calculated using 3 components with the formula:
-**DSS = 0.5 × zLM + 0.3 × zRI + 0.2 × zCN**
+## 🎯 Goal
+"Summarize how well the day was set up for learning and well-being."
 
-Where z-scores are calculated as: **z = (value - historical_average) / standard_deviation**
+## 📋 Components and Raw Formulas
 
----
+### 1️⃣ Learning Momentum (LM)
+**Formula:** `LM = deepwork_minutes + 10 * tasks_completed`
 
-## 1️⃣ Learning Momentum (LM)
-**Formula:** `LM = deepworkMinutes + (10 × tasksCompleted)`
+### 2️⃣ Recovery Index (RI)  
+**Formula:** `RI = sleep_hours + (recovery_action ? 1 : 0)`
 
-**Data Sources:**
-- `deepworkMinutes` - Minutes spent in deep work
-- `tasksCompleted` - Number of tasks completed
+### 3️⃣ Connection (CN)
+**Formula:** `CN = positive_social_touchpoints`
 
-**Z-Score Calculation:**
-- Compare today's LM to last 14 days of LM values
-- zLM = (todayLM - averageLM) / stdDevLM
+## 📊 Z-Score Calculation
+**Principle:** "Compute z-scores from last ~14 day-level values (non-null only, sigma floor 0.5)"
 
-**Weight in DSS:** 50% (0.5)
+### Z-Score Formulas:
+- `zLM = (LM_today - mean(LM_last14)) / sigmaLM`
+- `zRI = (RI_today - mean(RI_last14)) / sigmaRI`  
+- `zCN = (CN_today - mean(CN_last14)) / sigmaCN`
 
----
+**Where:**
+- `LM_today`, `RI_today`, `CN_today` = Current day's raw values
+- `mean(LM_last14)`, `mean(RI_last14)`, `mean(CN_last14)` = 14-day averages
+- `sigmaLM`, `sigmaRI`, `sigmaCN` = 14-day standard deviations (with 0.5 floor)
 
-## 2️⃣ Recovery Index (RI)
-**Formula:** `RI = sleepHours + (recoveryAction ? 1 : 0)`
+## 🎯 Final DSS Formula
+**DSS = 0.5 * zLM + 0.3 * zRI + 0.2 * zCN**
 
-**Data Sources:**
-- `sleepHours` - Hours of sleep
-- `recoveryAction` - Boolean (true/false) for recovery activities
-
-**Z-Score Calculation:**
-- Compare today's RI to last 14 days of RI values
-- zRI = (todayRI - averageRI) / stdDevRI
-
-**Weight in DSS:** 30% (0.3)
-
----
-
-## 3️⃣ Connection Score (CN)
-**Formula:** `CN = positiveSocialTouchpoints`
-
-**Data Sources:**
-- `positiveSocialTouchpoints` - Number of positive social interactions
-
-**Z-Score Calculation:**
-- Compare today's CN to last 14 days of CN values
-- zCN = (todayCN - averageCN) / stdDevCN
-
-**Weight in DSS:** 20% (0.2)
-
----
+**Weights:**
+- Learning Momentum (zLM): **50%**
+- Recovery Index (zRI): **30%**  
+- Connection (zCN): **20%**
 
 ## 📈 Z-Score Interpretation
-- **Positive z-score** = Above your personal average
-- **Negative z-score** = Below your personal average
-- **Zero z-score** = Exactly at your personal average
-
-## 🔄 Fallback for New Users
-If < 5 days of historical data:
-- Use normalized raw scores (0-1 range) instead of z-scores
-- DSS = 0.5 × (LM/maxLM) + 0.3 × (RI/maxRI) + 0.2 × (CN/maxCN)
+- **Positive z-score** = Above your personal 14-day average
+- **Negative z-score** = Below your personal 14-day average
+- **Zero z-score** = Exactly at your personal 14-day average
 
 ## 📊 Database Schema
 ```sql
