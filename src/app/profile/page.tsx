@@ -8,6 +8,26 @@ import { useRouter } from 'next/navigation';
 export default function ProfilePage() {
   const router = useRouter();
   
+  // Add global styles to hide spinner arrows
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      input[type="number"]::-webkit-outer-spin-button,
+      input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type="number"] {
+        -moz-appearance: textfield;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  
   // Profile data
   const [profile, setProfile] = useState({
     name: '',
@@ -356,17 +376,18 @@ export default function ProfilePage() {
                       <Minus className="w-5 h-5" />
                     </motion.button>
                     <input
-                      type="number"
+                      type="text"
                       value={profile.age}
-                      onChange={(e) => setProfile({...profile, age: e.target.value})}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, ''); // Only allow numbers
+                        setProfile({...profile, age: value});
+                      }}
                       className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-cyan-500/10 text-center"
+                      placeholder="Your age"
                       style={{
                         WebkitAppearance: 'none',
                         MozAppearance: 'textfield'
                       }}
-                      placeholder="Your age"
-                      min="0"
-                      max="120"
                     />
                     <motion.button
                       whileHover={{ scale: 1.1 }}
@@ -398,17 +419,18 @@ export default function ProfilePage() {
                       <Minus className="w-5 h-5" />
                     </motion.button>
                     <input
-                      type="number"
+                      type="text"
                       value={profile.height}
-                      onChange={(e) => setProfile({...profile, height: e.target.value})}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9.]/g, ''); // Only allow numbers and decimal
+                        setProfile({...profile, height: value});
+                      }}
                       className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-green-500/20 focus:border-green-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-green-500/10 text-center"
+                      placeholder="Your height"
                       style={{
                         WebkitAppearance: 'none',
                         MozAppearance: 'textfield'
                       }}
-                      placeholder="Your height"
-                      min="0"
-                      step="0.1"
                     />
                     <motion.button
                       whileHover={{ scale: 1.1 }}
@@ -440,17 +462,18 @@ export default function ProfilePage() {
                       <Minus className="w-5 h-5" />
                     </motion.button>
                     <input
-                      type="number"
+                      type="text"
                       value={profile.weight}
-                      onChange={(e) => setProfile({...profile, weight: e.target.value})}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9.]/g, ''); // Only allow numbers and decimal
+                        setProfile({...profile, weight: value});
+                      }}
                       className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-orange-500/10 text-center"
+                      placeholder="Your weight"
                       style={{
                         WebkitAppearance: 'none',
                         MozAppearance: 'textfield'
                       }}
-                      placeholder="Your weight"
-                      min="0"
-                      step="0.1"
                     />
                     <motion.button
                       whileHover={{ scale: 1.1 }}
