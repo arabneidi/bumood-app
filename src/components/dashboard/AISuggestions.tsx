@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { analyzeMoodPatterns, extractSuccessfulSolutions, UserMoodProfile, AISuggestion } from '@/lib/aiService';
@@ -643,7 +644,7 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
           </div>
         </div>
         <div className="flex space-x-2">
-          <button
+          <motion.button
             onClick={() => {
               if (onRefresh) {
                 onRefresh();
@@ -653,6 +654,18 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
             }}
             disabled={loading}
             className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-purple-600 border-2 border-blue-400 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg font-semibold w-12 h-12 rounded-full transition-all duration-300 transform hover:scale-110 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            animate={{ 
+              rotate: [0, 360],
+              scale: [1, 1.05, 1]
+            }}
+            transition={{ 
+              rotate: { duration: 4, repeat: Infinity, ease: "linear" },
+              scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+            }}
+            whileHover={{ 
+              rotate: 0,
+              scale: 1.1
+            }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative z-10 flex items-center justify-center">
@@ -663,7 +676,7 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
               )}
             </div>
             <div className="absolute inset-0 rounded-full border-2 border-blue-300 group-hover:border-blue-200 transition-all duration-300"></div>
-          </button>
+          </motion.button>
         </div>
       </div>
 
