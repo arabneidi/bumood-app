@@ -34,11 +34,13 @@ export default function Home() {
   const [lastGoalsHash, setLastGoalsHash] = useState<string>('');
   const [lastAchievementsHash, setLastAchievementsHash] = useState<string>('');
   const [hasNewProTipData, setHasNewProTipData] = useState<boolean>(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
   
   // Check for mood entry creation signal
   const moodEntryCreated = typeof window !== 'undefined' ? localStorage.getItem('mood-entry-created') : null;
 
-  // Congratulations system
+  // Congratulations system - only show if there are real achievements
   const {
     congratulations,
     currentCongratulation,
@@ -47,6 +49,7 @@ export default function Home() {
     markAsRead,
     closeModal
   } = useCongratulations('dummy-user');
+
 
   useEffect(() => {
     async function fetchData() {
@@ -278,6 +281,48 @@ export default function Home() {
 
     fetchData();
   }, [timeRange]); // Refetch when time range changes or component mounts
+
+  // Delete entry function
+  const handleDeleteEntry = (entryId: string) => {
+    setEntryToDelete(entryId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!entryToDelete) return;
+
+    try {
+      const response = await fetch(`/api/mood-entries?id=${entryToDelete}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Remove the entry from local state
+        setMoodEntries(prev => prev.filter(entry => entry.id !== entryToDelete));
+        
+        // Close modal
+        setShowDeleteModal(false);
+        setEntryToDelete(null);
+        
+        // Silent deletion - no popup messages
+        // Just refresh the page to update all related data
+        window.location.reload();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to delete entry: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+      alert('Failed to delete entry. Please try again.');
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setEntryToDelete(null);
+  };
 
   // Filter entries based on time range
   const getFilteredEntries = () => {
@@ -1049,7 +1094,18 @@ export default function Home() {
                               hour12: true 
                             })}
                           </span>
-                          {entry.onPeriod && <span className="text-xl">🩸</span>}
+                          <div className="flex items-center gap-2">
+                            {entry.onPeriod && <span className="text-xl">🩸</span>}
+                            <button
+                              onClick={() => handleDeleteEntry(entry.id)}
+                              className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1 rounded transition-all duration-200"
+                              title="Delete this entry"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                         
                         <div className="grid grid-cols-2 gap-3 mb-4">
@@ -1201,14 +1257,67 @@ export default function Home() {
           </>
         )}
 
+        {/* Congratulations Modal - only show if there are real achievements */}
+        {congratulations && congratulations.length > 0 && (
+          <CongratulationModal
+            isOpen={isModalOpen}
+            onClose={closeModal}
+            congratulation={currentCongratulation}
+            onMarkAsRead={markAsRead}
+          />
+        )}
 
-        {/* Congratulations Modal */}
-        <CongratulationModal
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          congratulation={currentCongratulation}
-          onMarkAsRead={markAsRead}
-        />
+        {/* Custom Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-purple-900/20 backdrop-blur-xl rounded-2xl shadow-2xl border border-red-400/30 p-8 w-full max-w-md"
+              style={{
+                boxShadow: '0 0 30px rgba(239, 68, 68, 0.3), 0 0 60px rgba(239, 68, 68, 0.2), 0 0 20px rgba(147, 51, 234, 0.3)'
+              }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Title */}
+              <h3 className="text-2xl font-bold text-white text-center mb-4">
+                Delete Entry?
+              </h3>
+
+              {/* Message */}
+              <p className="text-slate-300 text-center mb-8 leading-relaxed">
+                This will permanently remove the mood entry and all related data including:
+                <br />
+                <span className="text-red-400 font-semibold">DSS scores, achievements, AI suggestions, and power hours</span> for this date.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-4">
+                <button
+                  onClick={cancelDelete}
+                  className="flex-1 px-6 py-3 bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 hover:border-slate-500/50 rounded-xl transition-all duration-200 text-white font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-6 py-3 bg-red-500/80 hover:bg-red-500 border border-red-400/50 hover:border-red-400 rounded-xl transition-all duration-200 text-white font-semibold shadow-lg hover:shadow-red-500/25"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,98 @@ import { db } from "@/lib/db";
 import { calculateMoodComposite, getTimeBucket } from "@/lib/moodCompositeCalculator";
 import { calculateAchievements } from "@/lib/achievementCalculator";
 
+// Helper functions for achievement rollback validation
+async function checkConsecutiveDays(moodEntries: any[], requiredDays: number): Promise<boolean> {
+  if (moodEntries.length < requiredDays) return false;
+
+  // Sort entries by date (newest first)
+  const sortedEntries = moodEntries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  
+  let consecutiveDays = 1;
+  let currentDate = new Date(sortedEntries[0].createdAt);
+  currentDate.setHours(0, 0, 0, 0);
+
+  for (let i = 1; i < sortedEntries.length; i++) {
+    const entryDate = new Date(sortedEntries[i].createdAt);
+    entryDate.setHours(0, 0, 0, 0);
+    
+    const dayDiff = Math.floor((currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (dayDiff === 1) {
+      consecutiveDays++;
+      currentDate = entryDate;
+    } else if (dayDiff > 1) {
+      break; // Gap in consecutive days
+    }
+  }
+
+  return consecutiveDays >= requiredDays;
+}
+
+async function checkConsecutiveMood(moodEntries: any[], moodType: string, minValue: number, requiredDays: number): Promise<boolean> {
+  if (moodEntries.length < requiredDays) return false;
+
+  // Sort entries by date (newest first)
+  const sortedEntries = moodEntries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  
+  let consecutiveDays = 0;
+  let currentDate = new Date(sortedEntries[0].createdAt);
+  currentDate.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < sortedEntries.length; i++) {
+    const entryDate = new Date(sortedEntries[i].createdAt);
+    entryDate.setHours(0, 0, 0, 0);
+    
+    const dayDiff = Math.floor((currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (dayDiff === 0 || dayDiff === 1) {
+      if (sortedEntries[i][moodType] >= minValue) {
+        consecutiveDays++;
+        if (consecutiveDays >= requiredDays) return true;
+      } else {
+        consecutiveDays = 0; // Reset streak
+      }
+      currentDate = entryDate;
+    } else if (dayDiff > 1) {
+      break; // Gap in consecutive days
+    }
+  }
+
+  return false;
+}
+
+async function checkConsecutiveSleep(moodEntries: any[], minValue: number, requiredDays: number): Promise<boolean> {
+  if (moodEntries.length < requiredDays) return false;
+
+  // Sort entries by date (newest first)
+  const sortedEntries = moodEntries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  
+  let consecutiveDays = 0;
+  let currentDate = new Date(sortedEntries[0].createdAt);
+  currentDate.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < sortedEntries.length; i++) {
+    const entryDate = new Date(sortedEntries[i].createdAt);
+    entryDate.setHours(0, 0, 0, 0);
+    
+    const dayDiff = Math.floor((currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (dayDiff === 0 || dayDiff === 1) {
+      if (sortedEntries[i].sleep >= minValue) {
+        consecutiveDays++;
+        if (consecutiveDays >= requiredDays) return true;
+      } else {
+        consecutiveDays = 0; // Reset streak
+      }
+      currentDate = entryDate;
+    } else if (dayDiff > 1) {
+      break; // Gap in consecutive days
+    }
+  }
+
+  return false;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -150,7 +242,7 @@ export async function POST(request: NextRequest) {
       },
       create: {
         userId: dummyUserId,
-        date: today,
+        date: trackingDate,
         deepworkMinutes: Math.max(0, learningMomentum),
         tasksCompleted: Math.floor(learningMomentum / 10),
         sleepHours: sleep ? parseFloat(sleep) : 0,
@@ -278,6 +370,247 @@ export async function GET() {
     console.error("Error fetching mood entries:", error);
     return NextResponse.json(
       { error: "Failed to fetch mood entries" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const entryId = searchParams.get('id');
+    
+    console.log('🗑️ DELETE request for entry ID:', entryId);
+    
+    if (!entryId) {
+      return NextResponse.json(
+        { error: "Entry ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const dummyUserId = "dummy-user";
+    
+    // First, get the entry to find its date for rollback calculations
+    console.log('🔍 Looking for entry with ID:', entryId, 'and userId:', dummyUserId);
+    const entry = await db.moodEntry.findUnique({
+      where: { id: entryId, userId: dummyUserId }
+    });
+
+    console.log('🔍 Entry found:', entry);
+
+    if (!entry) {
+      // Let's also check if the entry exists without userId filter
+      const anyEntry = await db.moodEntry.findUnique({
+        where: { id: entryId }
+      });
+      console.log('🔍 Entry without userId filter:', anyEntry);
+      
+      return NextResponse.json(
+        { error: "Entry not found" },
+        { status: 404 }
+      );
+    }
+
+    const entryDate = new Date(entry.createdAt);
+    const dateString = entryDate.toISOString().split('T')[0];
+    
+    // Create proper DateTime objects for the date range
+    const startOfDay = new Date(entryDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(entryDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    console.log(`🗑️ Deleting mood entry ${entryId} for date ${dateString}`);
+
+    // Start transaction for complete rollback
+    const result = await db.$transaction(async (tx) => {
+      // 1. Delete the mood entry
+      await tx.moodEntry.delete({
+        where: { id: entryId }
+      });
+
+      // 2. Delete related DailyTracking record for this date
+      await tx.dailyTracking.deleteMany({
+        where: {
+          userId: dummyUserId,
+          date: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }
+      });
+
+      // 3. Delete related AI suggestions for this date
+      await tx.aISuggestionAction.deleteMany({
+        where: {
+          userId: dummyUserId,
+          createdAt: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }
+      });
+
+      // 4. Check and rollback achievements that might be affected by this entry deletion
+      console.log('🔍 Checking for achievements to rollback...');
+      
+      // Get all achievements for this user
+      const userAchievements = await tx.achievement.findMany({
+        where: { userId: dummyUserId },
+        orderBy: { unlockedAt: 'desc' }
+      });
+      
+      console.log(`📊 Found ${userAchievements.length} total achievements for user`);
+      
+      // Get current mood entries (excluding the one being deleted)
+      const remainingEntries = await tx.moodEntry.findMany({
+        where: { 
+          userId: dummyUserId,
+          id: { not: entryId }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+      
+      console.log(`📊 Found ${remainingEntries.length} remaining mood entries after deletion`);
+      
+      // Check each achievement to see if it should be rolled back
+      const achievementsToRollback = [];
+      
+      for (const achievement of userAchievements) {
+        let shouldRollback = false;
+        
+        // Check streak-based achievements
+        if (achievement.type === 'streak') {
+          if (achievement.id.includes('daily-logging')) {
+            // Check if we still have consecutive daily entries
+            const consecutiveDays = await checkConsecutiveDays(remainingEntries, 1);
+            if (!consecutiveDays) {
+              shouldRollback = true;
+              console.log(`🔄 Rolling back daily logging streak achievement: ${achievement.title}`);
+            }
+          } else if (achievement.id.includes('week')) {
+            // Check if we still have 7 consecutive days
+            const consecutiveDays = await checkConsecutiveDays(remainingEntries, 7);
+            if (!consecutiveDays) {
+              shouldRollback = true;
+              console.log(`🔄 Rolling back week streak achievement: ${achievement.title}`);
+            }
+          } else if (achievement.id.includes('month')) {
+            // Check if we still have 30 consecutive days
+            const consecutiveDays = await checkConsecutiveDays(remainingEntries, 30);
+            if (!consecutiveDays) {
+              shouldRollback = true;
+              console.log(`🔄 Rolling back month streak achievement: ${achievement.title}`);
+            }
+          }
+        }
+        
+        // Check mood-based achievements
+        if (achievement.type === 'mood_consistency') {
+          if (achievement.id.includes('happy-week')) {
+            // Check if we still have 7 consecutive days with valence >= 8
+            const happyWeek = await checkConsecutiveMood(remainingEntries, 'valence', 8, 7);
+            if (!happyWeek) {
+              shouldRollback = true;
+              console.log(`🔄 Rolling back happy week achievement: ${achievement.title}`);
+            }
+          } else if (achievement.id.includes('energy-master')) {
+            // Check if we still have 14 consecutive days with energy >= 8
+            const energyMaster = await checkConsecutiveMood(remainingEntries, 'energy', 8, 14);
+            if (!energyMaster) {
+              shouldRollback = true;
+              console.log(`🔄 Rolling back energy master achievement: ${achievement.title}`);
+            }
+          }
+        }
+        
+        // Check habit-based achievements
+        if (achievement.type === 'habit_streak') {
+          if (achievement.id.includes('sleep-champion')) {
+            // Check if we still have 7 consecutive days with sleep >= 8
+            const sleepChampion = await checkConsecutiveSleep(remainingEntries, 8, 7);
+            if (!sleepChampion) {
+              shouldRollback = true;
+              console.log(`🔄 Rolling back sleep champion achievement: ${achievement.title}`);
+            }
+          }
+        }
+        
+        if (shouldRollback) {
+          achievementsToRollback.push(achievement);
+        }
+      }
+      
+      // Delete achievements that should be rolled back
+      if (achievementsToRollback.length > 0) {
+        console.log(`🗑️ Rolling back ${achievementsToRollback.length} achievements`);
+        await tx.achievement.deleteMany({
+          where: {
+            id: { in: achievementsToRollback.map(a => a.id) }
+          }
+        });
+        
+        // Also delete related congratulations for these achievements
+        await tx.congratulation.deleteMany({
+          where: {
+            userId: dummyUserId,
+            type: 'achievement_unlocked',
+            title: { in: achievementsToRollback.map(a => a.title) }
+          }
+        });
+      }
+
+      // 5. Delete related power hours data for this date
+      // (Power hours are calculated from mood entries, so removing the entry will affect calculations)
+
+      // 6. Delete related congratulations for this date
+      await tx.congratulation.deleteMany({
+        where: {
+          userId: dummyUserId,
+          createdAt: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }
+      });
+
+      // 7. Delete related activity outcome connections for this date
+      await tx.activityOutcomeConnection.deleteMany({
+        where: {
+          userId: dummyUserId,
+          createdAt: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }
+      });
+
+      console.log(`✅ Complete rollback completed for entry ${entryId}`);
+      
+      return { 
+        success: true, 
+        achievementsRolledBack: achievementsToRollback.length,
+        rolledBackAchievements: achievementsToRollback.map(a => a.title)
+      };
+    });
+
+    let message = "Entry and all related data deleted successfully";
+    if (result.achievementsRolledBack > 0) {
+      message += `. ${result.achievementsRolledBack} achievement(s) were rolled back: ${result.rolledBackAchievements.join(', ')}`;
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message,
+      achievementsRolledBack: result.achievementsRolledBack,
+      rolledBackAchievements: result.rolledBackAchievements
+    });
+
+  } catch (error) {
+    console.error("Error deleting mood entry:", error);
+    return NextResponse.json(
+      { error: "Failed to delete mood entry", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

@@ -42,6 +42,29 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Create congratulation for the achievement
+    try {
+      const congratulationResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/congratulations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: dummyUserId,
+          type: 'achievement_unlocked',
+          title: title,
+          description: description,
+          icon: icon,
+          stars: stars || 1
+        })
+      });
+
+      if (congratulationResponse.ok) {
+        console.log('🎉 Congratulation created for achievement:', title);
+      }
+    } catch (congratulationError) {
+      console.error('Error creating congratulation:', congratulationError);
+      // Don't fail the achievement creation if congratulation fails
+    }
+
     // Signal dashboard to regenerate Pro Tips
     console.log('🏆 Achievement created - signaling dashboard for regeneration');
 

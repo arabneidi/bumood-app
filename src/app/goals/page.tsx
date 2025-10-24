@@ -4,40 +4,7 @@ import { useState, useEffect } from "react";
 import { Target, Plus, X, Star, Trophy, Minus } from "lucide-react";
 
 export default function GoalsPage() {
-  const [goals, setGoals] = useState([
-    {
-      id: 1,
-      title: "Run 5K",
-      difficulty: "medium",
-      currentValue: 2,
-      targetValue: 31,
-      progress: 6
-    },
-    {
-      id: 2,
-      title: "Stop drinking alcohol",
-      difficulty: "hard",
-      currentValue: 0,
-      targetValue: 30,
-      progress: 0
-    },
-    {
-      id: 3,
-      title: "Stress Management",
-      difficulty: "medium",
-      currentValue: 8,
-      targetValue: 14,
-      progress: 57
-    },
-    {
-      id: 4,
-      title: "Morning Exercise",
-      difficulty: "hard",
-      currentValue: 15,
-      targetValue: 21,
-      progress: 71
-    }
-  ]);
+  const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");

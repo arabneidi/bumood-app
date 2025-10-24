@@ -99,6 +99,12 @@ export default function NewEntry() {
   const [userGender, setUserGender] = useState<string | null>(null);
   const [periodStartDate, setPeriodStartDate] = useState<string | null>(null);
   const [isFirstPeriodEntry, setIsFirstPeriodEntry] = useState<boolean>(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedHour, setSelectedHour] = useState(new Date().getHours());
+  const [selectedMinute, setSelectedMinute] = useState(0);
   const [formData, setFormData] = useState({
     valence: 5,
     energy: 5,
@@ -666,7 +672,68 @@ export default function NewEntry() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white">
+    <>
+      {/* Custom CSS for date/time picker styling */}
+      <style jsx global>{`
+        /* Hide native date/time picker icons */
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+          display: none;
+        }
+        
+        /* Style the date picker popup */
+        input[type="date"]::-webkit-datetime-edit {
+          color: white;
+        }
+        
+        input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+          background: transparent;
+        }
+        
+        input[type="date"]::-webkit-datetime-edit-text {
+          color: white;
+        }
+        
+        input[type="date"]::-webkit-datetime-edit-month-field,
+        input[type="date"]::-webkit-datetime-edit-day-field,
+        input[type="date"]::-webkit-datetime-edit-year-field {
+          color: white;
+        }
+        
+        /* Style the time picker popup */
+        input[type="time"]::-webkit-datetime-edit {
+          color: white;
+        }
+        
+        input[type="time"]::-webkit-datetime-edit-fields-wrapper {
+          background: transparent;
+        }
+        
+        input[type="time"]::-webkit-datetime-edit-text {
+          color: white;
+        }
+        
+        input[type="time"]::-webkit-datetime-edit-hour-field,
+        input[type="time"]::-webkit-datetime-edit-minute-field {
+          color: white;
+        }
+        
+        /* Custom date picker popup styling */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+          background: transparent;
+          color: transparent;
+          cursor: pointer;
+        }
+        
+        /* Custom time picker popup styling */
+        input[type="time"]::-webkit-calendar-picker-indicator {
+          background: transparent;
+          color: transparent;
+          cursor: pointer;
+        }
+      `}</style>
+      
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white">
       {/* Futuristic Background */}
       <div className="absolute inset-0">
         {/* Animated Grid Pattern */}
@@ -732,37 +799,285 @@ export default function NewEntry() {
                 {/* Date Picker */}
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-slate-300">Date</label>
-                  <input
-                    type="date"
-                    value={formData.entryDate}
-                    onChange={(e) => handleChange('entryDate', e.target.value)}
-                    className={`w-full px-4 py-4 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none transition-all duration-300 text-lg ${
-                      (formData.onPeriod && isFirstPeriodEntry)
-                        ? 'border-red-400/50 shadow-[0_0_25px_rgba(239,68,68,0.6),0_0_50px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7),0_0_60px_rgba(239,68,68,0.5)] focus:border-red-400/70 focus:ring-2 focus:ring-red-400/30'
-                        : 'border-purple-400/30 shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] focus:border-purple-400/60 focus:ring-2 focus:ring-purple-400/20'
-                    }`}
-                    max={new Date().toISOString().split('T')[0]} // Can't select future dates
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.entryDate}
+                      onChange={(e) => handleChange('entryDate', e.target.value)}
+                      placeholder="YYYY-MM-DD"
+                      className={`w-full px-4 py-4 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none transition-all duration-300 text-lg pr-12 ${
+                        (formData.onPeriod && isFirstPeriodEntry)
+                          ? 'border-red-400/50 shadow-[0_0_25px_rgba(239,68,68,0.6),0_0_50px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7),0_0_60px_rgba(239,68,68,0.5)] focus:border-red-400/70 focus:ring-2 focus:ring-red-400/30'
+                          : 'border-purple-400/30 shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] focus:border-purple-400/60 focus:ring-2 focus:ring-purple-400/20'
+                      }`}
+                    />
+                    {/* Custom Calendar Icon */}
+                    <div 
+                      className={`absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer z-10 ${
+                        (formData.onPeriod && isFirstPeriodEntry)
+                          ? 'text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]'
+                          : 'text-purple-400 drop-shadow-[0_0_8px_rgba(147,51,234,0.8)]'
+                      }`}
+                      onClick={() => setShowDatePicker(!showDatePicker)}
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Time Picker */}
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-slate-300">Time</label>
-                  <input
-                    type="time"
-                    value={formData.entryTime}
-                    onChange={(e) => handleChange('entryTime', e.target.value)}
-                    className={`w-full px-4 py-4 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none transition-all duration-300 text-lg ${
-                      (formData.onPeriod && isFirstPeriodEntry)
-                        ? 'border-red-400/50 shadow-[0_0_25px_rgba(239,68,68,0.6),0_0_50px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7),0_0_60px_rgba(239,68,68,0.5)] focus:border-red-400/70 focus:ring-2 focus:ring-red-400/30'
-                        : 'border-purple-400/30 shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] focus:border-purple-400/60 focus:ring-2 focus:ring-purple-400/20'
-                    }`}
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.entryTime}
+                      onChange={(e) => handleChange('entryTime', e.target.value)}
+                      placeholder="HH:MM"
+                      className={`w-full px-4 py-4 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none transition-all duration-300 text-lg pr-12 ${
+                        (formData.onPeriod && isFirstPeriodEntry)
+                          ? 'border-red-400/50 shadow-[0_0_25px_rgba(239,68,68,0.6),0_0_50px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7),0_0_60px_rgba(239,68,68,0.5)] focus:border-red-400/70 focus:ring-2 focus:ring-red-400/30'
+                          : 'border-purple-400/30 shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] focus:border-purple-400/60 focus:ring-2 focus:ring-purple-400/20'
+                      }`}
+                    />
+                    {/* Custom Clock Icon */}
+                    <div 
+                      className={`absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer z-10 ${
+                        (formData.onPeriod && isFirstPeriodEntry)
+                          ? 'text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]'
+                          : 'text-purple-400 drop-shadow-[0_0_8px_rgba(147,51,234,0.8)]'
+                      }`}
+                      onClick={() => setShowTimePicker(!showTimePicker)}
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
               
             </div>
           </motion.div>
+
+          {/* Custom Date Picker Modal */}
+          {showDatePicker && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-purple-400/30 p-6 w-full max-w-md"
+                style={{
+                  boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), 0 0 60px rgba(59, 130, 246, 0.2)'
+                }}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                    Select Date
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowDatePicker(false)}
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  {/* Year and Month Selection */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Year</label>
+                      <select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                        className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:border-purple-400/50 focus:outline-none"
+                      >
+                        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((year) => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Month</label>
+                      <select
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                        className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:border-purple-400/50 focus:outline-none"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i).map((month) => (
+                          <option key={month} value={month}>
+                            {new Date(0, month).toLocaleString('default', { month: 'long' })}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Day Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Day</label>
+                    <div className="grid grid-cols-7 gap-1">
+                      {Array.from({ length: new Date(selectedYear, selectedMonth + 1, 0).getDate() }, (_, i) => i + 1).map((day) => (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => {
+                            const selectedDate = new Date(selectedYear, selectedMonth, day);
+                            const dateString = selectedDate.toISOString().split('T')[0];
+                            handleChange('entryDate', dateString);
+                            setShowDatePicker(false);
+                          }}
+                          className="p-2 text-center rounded-lg bg-slate-700/50 hover:bg-purple-500/30 border border-slate-600/50 hover:border-purple-400/50 transition-all duration-200 text-white hover:scale-105 text-sm"
+                        >
+                          {day}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const today = new Date();
+                        const yesterday = new Date(today);
+                        yesterday.setDate(today.getDate() - 1);
+                        handleChange('entryDate', yesterday.toISOString().split('T')[0]);
+                        setShowDatePicker(false);
+                      }}
+                      className="flex-1 px-4 py-2 bg-slate-700/50 hover:bg-purple-500/30 border border-slate-600/50 hover:border-purple-400/50 rounded-lg transition-all duration-200 text-white"
+                    >
+                      Yesterday
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const today = new Date();
+                        handleChange('entryDate', today.toISOString().split('T')[0]);
+                        setShowDatePicker(false);
+                      }}
+                      className="flex-1 px-4 py-2 bg-purple-500/30 hover:bg-purple-500/50 border border-purple-400/50 rounded-lg transition-all duration-200 text-white"
+                    >
+                      Today
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* Custom Time Picker Modal */}
+          {showTimePicker && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-purple-400/30 p-6 w-full max-w-md"
+                style={{
+                  boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), 0 0 60px rgba(59, 130, 246, 0.2)'
+                }}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                    Select Time
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowTimePicker(false)}
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  {/* Hour and Minute Selection */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Hour</label>
+                      <div className="grid grid-cols-6 gap-1">
+                        {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                          <button
+                            key={hour}
+                            type="button"
+                            onClick={() => setSelectedHour(hour)}
+                            className={`p-2 text-center rounded-lg border transition-all duration-200 text-white hover:scale-105 text-sm ${
+                              selectedHour === hour
+                                ? 'bg-purple-500/50 border-purple-400/50'
+                                : 'bg-slate-700/50 border-slate-600/50 hover:bg-purple-500/30 hover:border-purple-400/50'
+                            }`}
+                          >
+                            {hour.toString().padStart(2, '0')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Minute</label>
+                      <div className="grid grid-cols-6 gap-1">
+                        {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => (
+                          <button
+                            key={minute}
+                            type="button"
+                            onClick={() => setSelectedMinute(minute)}
+                            className={`p-2 text-center rounded-lg border transition-all duration-200 text-white hover:scale-105 text-sm ${
+                              selectedMinute === minute
+                                ? 'bg-purple-500/50 border-purple-400/50'
+                                : 'bg-slate-700/50 border-slate-600/50 hover:bg-purple-500/30 hover:border-purple-400/50'
+                            }`}
+                          >
+                            {minute.toString().padStart(2, '0')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Time Display and Confirm */}
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white mb-4">
+                      {selectedHour.toString().padStart(2, '0')}:{selectedMinute.toString().padStart(2, '0')}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const timeString = `${selectedHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
+                          handleChange('entryTime', timeString);
+                          setShowTimePicker(false);
+                        }}
+                        className="flex-1 px-4 py-2 bg-purple-500/30 hover:bg-purple-500/50 border border-purple-400/50 rounded-lg transition-all duration-200 text-white"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const now = new Date();
+                          const timeString = now.toTimeString().slice(0, 5);
+                          handleChange('entryTime', timeString);
+                          setShowTimePicker(false);
+                        }}
+                        className="flex-1 px-4 py-2 bg-slate-700/50 hover:bg-purple-500/30 border border-slate-600/50 hover:border-purple-400/50 rounded-lg transition-all duration-200 text-white"
+                      >
+                        Now
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
 
           {/* Mood Parameters Section */}
           <motion.div
@@ -1547,5 +1862,6 @@ export default function NewEntry() {
         </form>
       </motion.div>
     </div>
+    </>
   );
 }
