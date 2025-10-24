@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 
 interface DSSData {
   dssScore: number;
@@ -18,22 +19,6 @@ interface DSSRadarProps {
 }
 
 export default function DSSRadar({ data, loading }: DSSRadarProps) {
-  const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
-  const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);
-
-  useEffect(() => {
-    const updateDimensions = () => {
-      const container = document.getElementById('dss-radar-container');
-      if (container) {
-        const size = Math.min(container.offsetWidth - 100, 400); // Increased max size to 400px and added more padding
-        setDimensions({ width: size, height: size });
-      }
-    };
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
-
   if (loading) {
     return (
       <motion.div 
@@ -84,11 +69,8 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
 
   const { learningMomentum, recoveryIndex, connectionScore } = data.components;
   
-  // Normalize values to -1.0 to 1.0 scale like the Success Compass chart
-  // Convert raw values to z-scores and then map to -1 to 1 range
+  // Normalize values to -1.0 to 1.0 scale
   const normalizeToMinusOneToOne = (value: number, maxValue: number) => {
-    // Map value from 0-maxValue to -1 to 1 range
-    // 0 maps to -1, maxValue maps to 1
     return (2 * value / maxValue) - 1;
   };
 
@@ -109,337 +91,64 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
     cnNormalized
   });
 
-  const centerX = dimensions.width / 2;
-  const centerY = dimensions.height / 2;
-  const radius = Math.min(dimensions.width, dimensions.height) / 2 - 80; // Increased padding for labels
-
-  // Calculate points for each axis using -1 to 1 scale
-  const getPoint = (angle: number, value: number) => {
-    // Convert -1 to 1 scale to 0 to 1 for positioning
-    const normalizedValue = (value + 1) / 2;
-    const x = centerX + Math.cos(angle) * radius * normalizedValue;
-    const y = centerY + Math.sin(angle) * radius * normalizedValue;
-    return { x, y };
-  };
-
-  // Three axes: LM, RI, CN (120 degrees apart)
-  const lmAngle = -Math.PI / 2; // Top
-  const riAngle = -Math.PI / 2 + (2 * Math.PI / 3); // Bottom right
-  const cnAngle = -Math.PI / 2 + (4 * Math.PI / 3); // Bottom left
-
-  const lmPoint = getPoint(lmAngle, lmNormalized);
-  const riPoint = getPoint(riAngle, riNormalized);
-  const cnPoint = getPoint(cnAngle, cnNormalized);
-
-  // Create path for the radar area
-  const radarPath = `M ${lmPoint.x} ${lmPoint.y} L ${riPoint.x} ${riPoint.y} L ${cnPoint.x} ${cnPoint.y} Z`;
-
-  // Grid circles for -1 to 1 scale
-  const gridCircles = [-1.0, -0.8, -0.6, -0.4, -0.2, 0.2, 0.4, 0.6, 0.8, 1.0].map((scale, index) => {
-    // Convert -1 to 1 scale to 0 to 1 for positioning
-    const normalizedScale = (scale + 1) / 2;
-    return (
-      <circle
-        key={index}
-        cx={centerX}
-        cy={centerY}
-        r={radius * normalizedScale}
-        fill="none"
-        stroke="rgba(59, 130, 246, 0.2)"
-        strokeWidth="1"
-      />
-    );
-  });
-
-  // Scale labels for -1 to 1 positioned exactly on their grid lines
-  const scaleLabels = [-1.0, -0.5, 0, 0.5, 1.0].map((scale, index) => {
-    const normalizedScale = (scale + 1) / 2;
-    const labelRadius = radius * normalizedScale; // Position exactly on the grid line
-    return (
-      <text
-        key={`label-${index}`}
-        x={centerX + labelRadius + 15} // Small offset to place label just outside the line
-        y={centerY - 5}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        className="text-sm fill-slate-300 font-medium"
-        fontSize="12"
-      >
-        {scale}
-      </text>
-    );
-  });
-
-  // Axis lines
-  const axisLines = [
-    { angle: lmAngle, label: 'LM', color: '#3B82F6' },
-    { angle: riAngle, label: 'RI', color: '#10B981' },
-    { angle: cnAngle, label: 'CN', color: '#F59E0B' }
-  ].map((axis, index) => {
-    const endX = centerX + Math.cos(axis.angle) * radius;
-    const endY = centerY + Math.sin(axis.angle) * radius;
-    const labelX = centerX + Math.cos(axis.angle) * (radius + 20);
-    const labelY = centerY + Math.sin(axis.angle) * (radius + 20);
-
-    return (
-      <g key={index}>
-        <line
-          x1={centerX}
-          y1={centerY}
-          x2={endX}
-          y2={endY}
-          stroke={axis.color}
-          strokeWidth="2"
-          opacity="0.3"
-        />
-        <text
-          x={labelX}
-          y={labelY}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          className="text-sm font-bold fill-white"
-        >
-          {axis.label}
-        </text>
-      </g>
-    );
-  });
-
-  const getScoreColor = (score: number) => {
-    if (score >= 1) return '#10B981'; // Green
-    if (score >= 0) return '#3B82F6'; // Blue
-    if (score >= -1) return '#F59E0B'; // Orange
-    return '#EF4444'; // Red
-  };
-
-  const getScoreLabel = (score: number) => {
-    if (score >= 1) return 'Excellent';
-    if (score >= 0) return 'Good';
-    if (score >= -1) return 'Fair';
-    return 'Needs Improvement';
-  };
+  // Prepare data for recharts radar chart
+  const chartData = [
+    {
+      subject: 'Learning Momentum',
+      value: lmNormalized,
+      fullMark: 1
+    },
+    {
+      subject: 'Recovery Index', 
+      value: riNormalized,
+      fullMark: 1
+    },
+    {
+      subject: 'Connection Score',
+      value: cnNormalized,
+      fullMark: 1
+    }
+  ];
 
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      className="w-full"
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="w-full h-full"
     >
-      <motion.div 
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="text-center mb-6"
-      >
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.05, 1],
-            rotate: [0, 2, -2, 0]
-          }}
-          transition={{ 
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="text-3xl font-bold text-white mb-2"
-        >
-          <span style={{ color: getScoreColor(data.dssScore || 0) }}>
-            {data.dssScore !== null && data.dssScore !== undefined && typeof data.dssScore === 'number'
-              ? data.dssScore.toFixed(2) 
-              : 'N/A'}
-          </span>
-        </motion.div>
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-sm text-slate-300 font-medium"
-        >
-          {getScoreLabel(data.dssScore || 0)}
-        </motion.p>
-      </motion.div>
-
-      <motion.div 
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-        id="dss-radar-container" 
-        className="flex justify-center mb-6"
-      >
-        <svg width={dimensions.width} height={dimensions.height} className="overflow-visible drop-shadow-lg">
-          {/* Grid circles */}
-          {gridCircles}
-          
-          {/* Scale labels */}
-          {scaleLabels}
-          
-          {/* Axis lines */}
-          {axisLines}
-
-          {/* Data points */}
-          <circle
-            cx={lmPoint.x}
-            cy={lmPoint.y}
-            r="6"
-            fill="#3B82F6"
-            className="cursor-pointer"
-            onMouseEnter={() => setHoveredSegment('LM')}
-            onMouseLeave={() => setHoveredSegment(null)}
+      <ResponsiveContainer width="100%" height={400}>
+        <RadarChart data={chartData} margin={{ top: 20, right: 80, bottom: 20, left: 20 }}>
+          <PolarGrid 
+            gridType="circle"
+            radialLines={false}
+            stroke="rgba(59, 130, 246, 0.2)"
+            strokeWidth={1}
           />
-          <circle
-            cx={riPoint.x}
-            cy={riPoint.y}
-            r="6"
-            fill="#10B981"
-            className="cursor-pointer"
-            onMouseEnter={() => setHoveredSegment('RI')}
-            onMouseLeave={() => setHoveredSegment(null)}
+          <PolarAngleAxis 
+            dataKey="subject" 
+            tick={{ fontSize: 12, fill: '#64748b' }}
+            tickLine={false}
           />
-          <circle
-            cx={cnPoint.x}
-            cy={cnPoint.y}
-            r="6"
-            fill="#F59E0B"
-            className="cursor-pointer"
-            onMouseEnter={() => setHoveredSegment('CN')}
-            onMouseLeave={() => setHoveredSegment(null)}
+          <PolarRadiusAxis 
+            angle={0} 
+            domain={[-1, 1]}
+            tickCount={11}
+            tick={{ fontSize: 10, fill: '#64748b' }}
+            tickFormatter={(value) => value.toFixed(1)}
+            axisLine={false}
+            tickLine={false}
           />
-
-          {/* Radar area */}
-          <path
-            d={radarPath}
-            fill="rgba(59, 130, 246, 0.2)"
+          <Radar
+            name="DSS Components"
+            dataKey="value"
             stroke="#3B82F6"
-            strokeWidth="2"
-            className="cursor-pointer"
+            fill="#3B82F6"
+            fillOpacity={0.3}
+            strokeWidth={2}
           />
-        </svg>
-      </motion.div>
-
-      {/* Legend */}
-      <motion.div 
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
-        className="grid grid-cols-3 gap-4 text-center"
-      >
-        <motion.div 
-          whileHover={{ scale: 1.05, y: -2 }}
-          className="space-y-2 p-3 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300"
-        >
-          <div className="flex items-center justify-center space-x-2">
-            <motion.div 
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-3 h-3 rounded-full bg-blue-500 shadow-lg"
-            ></motion.div>
-            <span className="text-sm font-bold text-white">Learning Momentum</span>
-          </div>
-          <motion.div 
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.8, type: "spring" }}
-            className="text-lg font-bold text-blue-400"
-          >
-            {learningMomentum !== null && learningMomentum !== undefined && typeof learningMomentum === 'number'
-              ? learningMomentum.toFixed(1) 
-              : 'N/A'}
-          </motion.div>
-        </motion.div>
-        
-        <motion.div 
-          whileHover={{ scale: 1.05, y: -2 }}
-          className="space-y-2 p-3 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-green-500/20 hover:border-green-400/40 transition-all duration-300"
-        >
-          <div className="flex items-center justify-center space-x-2">
-            <motion.div 
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.7, repeat: Infinity }}
-              className="w-3 h-3 rounded-full bg-green-500 shadow-lg"
-            ></motion.div>
-            <span className="text-sm font-bold text-white">Recovery Index</span>
-          </div>
-          <motion.div 
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.9, type: "spring" }}
-            className="text-lg font-bold text-green-400"
-          >
-            {recoveryIndex !== null && recoveryIndex !== undefined && typeof recoveryIndex === 'number'
-              ? recoveryIndex.toFixed(1) 
-              : 'N/A'}
-          </motion.div>
-        </motion.div>
-        
-        <motion.div 
-          whileHover={{ scale: 1.05, y: -2 }}
-          className="space-y-2 p-3 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-orange-500/20 hover:border-orange-400/40 transition-all duration-300"
-        >
-          <div className="flex items-center justify-center space-x-2">
-            <motion.div 
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.3, repeat: Infinity }}
-              className="w-3 h-3 rounded-full bg-orange-500 shadow-lg"
-            ></motion.div>
-            <span className="text-sm font-bold text-white">Connection</span>
-          </div>
-          <motion.div 
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 1.0, type: "spring" }}
-            className="text-lg font-bold text-orange-400"
-          >
-            {connectionScore !== null && connectionScore !== undefined && typeof connectionScore === 'number'
-              ? connectionScore.toFixed(1) 
-              : 'N/A'}
-          </motion.div>
-        </motion.div>
-      </motion.div>
-
-      {/* Hover tooltip */}
-      {hoveredSegment && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-          className="absolute bg-slate-800/90 backdrop-blur-sm border border-blue-500/30 rounded-lg p-3 text-white text-sm shadow-xl"
-          style={{
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 10
-          }}
-        >
-          {hoveredSegment === 'LM' && (
-            <div>
-              <div className="font-bold text-blue-400">Learning Momentum</div>
-              <div>Score: {learningMomentum !== null && learningMomentum !== undefined && typeof learningMomentum === 'number'
-                ? learningMomentum.toFixed(2) 
-                : 'N/A'}</div>
-              <div className="text-xs text-gray-300">Deep work + Tasks</div>
-            </div>
-          )}
-          {hoveredSegment === 'RI' && (
-            <div>
-              <div className="font-bold text-green-400">Recovery Index</div>
-              <div>Score: {recoveryIndex !== null && recoveryIndex !== undefined && typeof recoveryIndex === 'number'
-                ? recoveryIndex.toFixed(2) 
-                : 'N/A'}</div>
-              <div className="text-xs text-gray-300">Sleep + Recovery</div>
-            </div>
-          )}
-          {hoveredSegment === 'CN' && (
-            <div>
-              <div className="font-bold text-orange-400">Connection</div>
-              <div>Score: {connectionScore !== null && connectionScore !== undefined && typeof connectionScore === 'number'
-                ? connectionScore.toFixed(2) 
-                : 'N/A'}</div>
-              <div className="text-xs text-gray-300">Social Touchpoints</div>
-            </div>
-          )}
-        </motion.div>
-      )}
+        </RadarChart>
+      </ResponsiveContainer>
     </motion.div>
   );
 }
