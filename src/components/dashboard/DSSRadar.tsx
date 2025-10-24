@@ -151,15 +151,15 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
     );
   });
 
-  // Scale labels for -1 to 1 (show only key values to avoid clutter)
+  // Scale labels for -1 to 1 positioned exactly on their grid lines
   const scaleLabels = [-1.0, -0.5, 0, 0.5, 1.0].map((scale, index) => {
     const normalizedScale = (scale + 1) / 2;
-    const labelRadius = radius * normalizedScale + 30; // Increased spacing for labels
+    const labelRadius = radius * normalizedScale; // Position exactly on the grid line
     return (
       <text
         key={`label-${index}`}
-        x={centerX + labelRadius}
-        y={centerY - 10}
+        x={centerX + labelRadius + 15} // Small offset to place label just outside the line
+        y={centerY - 5}
         textAnchor="middle"
         dominantBaseline="middle"
         className="text-sm fill-slate-300 font-medium"
