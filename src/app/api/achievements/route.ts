@@ -6,10 +6,13 @@ export async function GET() {
   try {
     const dummyUserId = "dummy-user";
     
-    // Calculate and get all achievements for the user
-    const achievements = await calculateAchievements(dummyUserId);
+    // Get all unlocked achievements from database
+    const unlockedAchievements = await db.achievement.findMany({
+      where: { userId: dummyUserId },
+      orderBy: { unlockedAt: 'desc' }
+    });
 
-    return NextResponse.json(achievements);
+    return NextResponse.json(unlockedAchievements);
   } catch (error) {
     console.error("Error fetching achievements:", error);
     return NextResponse.json(

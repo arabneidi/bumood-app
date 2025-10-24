@@ -622,7 +622,7 @@ export default function NewEntry() {
             <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
             
             <div className="relative z-10">
-              <div className="flex items-center justify-center mb-6">
+              <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center">
                   <motion.span
                     className="mr-2 text-3xl"

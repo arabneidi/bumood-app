@@ -92,20 +92,95 @@ export default function GoalsPage() {
     }
   ];
 
-  const achievements = {
-    achieved: [
-      { id: 1, title: "First Steps", description: "Complete your first goal", icon: "🎯", stars: 1 },
-      { id: 2, title: "3-Day Streak", description: "Complete goals for 3 consecutive days", icon: "🔥", stars: 1 },
-      { id: 3, title: "Easy Rider", description: "Complete 10 easy goals", icon: "🌱", stars: 1 },
-      { id: 4, title: "Early Bird", description: "Complete a goal before 6 AM", icon: "🌅", stars: 1 },
-    ],
-    locked: [
-      { id: 5, title: "Week Warrior", description: "Complete goals for 7 consecutive days", icon: "⚡", stars: 2 },
-      { id: 6, title: "Goal Getter", description: "Complete 5 goals", icon: "🎪", stars: 2 },
-      { id: 7, title: "Monthly Master", description: "Complete goals for 30 consecutive days", icon: "🏆", stars: 3 },
-      { id: 8, title: "Legend", description: "Complete 100 goals total", icon: "🌟", stars: 3 },
-    ]
-  };
+  const [achievements, setAchievements] = useState({
+    achieved: [],
+    locked: []
+  });
+
+  // Define all possible achievements
+  const allAchievements = [
+    {
+      id: "getting-started",
+      title: "Getting Started",
+      description: "Log your first mood entry",
+      icon: "🌟",
+      stars: 1,
+      type: "streak"
+    },
+    {
+      id: "streak-3",
+      title: "3-Day Streak",
+      description: "Log mood entries for 3 consecutive days",
+      icon: "🔥",
+      stars: 1,
+      type: "streak"
+    },
+    {
+      id: "streak-7",
+      title: "Week Warrior",
+      description: "Log mood entries for 7 consecutive days",
+      icon: "⚡",
+      stars: 2,
+      type: "streak"
+    },
+    {
+      id: "streak-30",
+      title: "Monthly Master",
+      description: "Log mood entries for 30 consecutive days",
+      icon: "🏆",
+      stars: 3,
+      type: "streak"
+    },
+    {
+      id: "entries-10",
+      title: "Mood Tracker",
+      description: "Log 10 mood entries total",
+      icon: "📊",
+      stars: 1,
+      type: "count"
+    },
+    {
+      id: "entries-50",
+      title: "Data Collector",
+      description: "Log 50 mood entries total",
+      icon: "📈",
+      stars: 2,
+      type: "count"
+    },
+    {
+      id: "entries-100",
+      title: "Mood Expert",
+      description: "Log 100 mood entries total",
+      icon: "🎯",
+      stars: 3,
+      type: "count"
+    },
+    {
+      id: "activities-5",
+      title: "Activity Explorer",
+      description: "Try 5 different activities",
+      icon: "🎪",
+      stars: 1,
+      type: "activity"
+    },
+    {
+      id: "activities-15",
+      title: "Activity Master",
+      description: "Try 15 different activities",
+      icon: "🎨",
+      stars: 2,
+      type: "activity"
+    },
+    {
+      id: "perfect-week",
+      title: "Perfect Week",
+      description: "Log entries every day for a week",
+      icon: "💎",
+      stars: 3,
+      type: "streak"
+    }
+  ];
+  const [achievementsLoading, setAchievementsLoading] = useState(false);
 
   useEffect(() => {
     const fetchGoals = async () => {
@@ -140,7 +215,54 @@ export default function GoalsPage() {
       }
     };
 
+    const fetchAchievements = async () => {
+      try {
+        const response = await fetch("/api/achievements");
+        if (response.ok) {
+          const achievedData = await response.json();
+          console.log("API returned achievements:", achievedData);
+          
+          // If no achievements from API, show all as locked
+          if (achievedData.length === 0) {
+            setAchievements({
+              achieved: [],
+              locked: allAchievements
+            });
+          } else {
+            const achievedIds = achievedData.map((achievement: any) => achievement.id || achievement.title.toLowerCase().replace(/\s+/g, '-'));
+            console.log("Achieved IDs:", achievedIds);
+            
+            // Separate achieved and locked achievements
+            const achieved = allAchievements.filter(achievement => 
+              achievedIds.includes(achievement.id) || 
+              achievedIds.includes(achievement.title.toLowerCase().replace(/\s+/g, '-'))
+            );
+            
+            const locked = allAchievements.filter(achievement => 
+              !achievedIds.includes(achievement.id) && 
+              !achievedIds.includes(achievement.title.toLowerCase().replace(/\s+/g, '-'))
+            );
+            
+            console.log("Achieved:", achieved.length, "Locked:", locked.length);
+            
+            setAchievements({
+              achieved,
+              locked
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching achievements:", error);
+        // If API fails, show all as locked
+        setAchievements({
+          achieved: [],
+          locked: allAchievements
+        });
+      }
+    };
+
     fetchGoals();
+    fetchAchievements();
   }, []);
 
   const handleCreateGoal = async () => {
@@ -221,6 +343,32 @@ export default function GoalsPage() {
       }
     } catch (error) {
       console.error('Error updating goal progress:', error);
+    }
+  };
+
+  const deleteGoal = async (goalId) => {
+    // Confirm deletion
+    if (!confirm('Are you sure you want to delete this goal? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      // Delete from database
+      const response = await fetch(`/api/goals/${goalId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove from local state
+        setGoals(prevGoals => prevGoals.filter(goal => goal.id !== goalId));
+        console.log('Goal deleted successfully');
+      } else {
+        console.error('Failed to delete goal from database');
+        alert('Failed to delete goal. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      alert('Error deleting goal. Please try again.');
     }
   };
 
@@ -369,31 +517,86 @@ export default function GoalsPage() {
         <div className="text-center mb-8">
           <button
             onClick={() => setShowAddGoal(true)}
-            className="px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white rounded-2xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300"
+            className="relative overflow-hidden group hover:scale-105 transition-all duration-500 rounded-2xl px-8 py-4 font-bold text-lg"
+            style={{
+              background: 'rgba(30, 41, 59, 0.3)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(148, 163, 184, 0.2)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+            }}
           >
-            <Plus className="w-6 h-6 inline-block mr-2" />
-            Create New Goal
+            {/* Edge glow effect */}
+            <div className="absolute inset-0 rounded-2xl"
+              style={{
+                background: 'linear-gradient(45deg, transparent, rgba(6, 182, 212, 0.1), transparent)',
+                border: '1px solid rgba(6, 182, 212, 0.3)',
+                boxShadow: 'inset 0 0 20px rgba(6, 182, 212, 0.2), 0 0 40px rgba(6, 182, 212, 0.3)'
+              }}
+            ></div>
+            
+            {/* Glass overlay */}
+            <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
+                backdropFilter: 'blur(10px)'
+              }}
+            ></div>
+            
+            <div className="relative z-10 flex items-center justify-center">
+              <Plus className="w-6 h-6 inline-block mr-2" />
+              <span style={{
+                background: 'linear-gradient(45deg, #06b6d4, #3b82f6, #8b5cf6)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: '0 0 20px rgba(6, 182, 212, 0.5)'
+              }}>
+                Create New Goal
+              </span>
+            </div>
           </button>
         </div>
 
         {/* Goals List */}
         <div className="mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-5xl font-black mb-4" style={{
-              background: 'linear-gradient(45deg, #06b6d4, #3b82f6, #6366f1, #8b5cf6)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              Your Active Goals
-            </h2>
-            <p className="text-slate-300 text-lg">Keep pushing towards your aspirations!</p>
-          </div>
 
           {goals.length === 0 ? (
-            <div className="text-center py-20 bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
-              <Target className="w-20 h-20 text-blue-400 mx-auto mb-6" />
-              <h3 className="text-3xl font-bold text-white mb-4">No Goals Yet</h3>
-              <p className="text-slate-300 text-lg font-medium">Create your first goal to get started on your journey!</p>
+            <div className="text-center py-20 relative overflow-hidden group hover:scale-105 transition-all duration-500 rounded-3xl p-8"
+              style={{
+                background: 'rgba(30, 41, 59, 0.3)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(148, 163, 184, 0.2)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              {/* Edge glow effect */}
+              <div className="absolute inset-0 rounded-3xl"
+                style={{
+                  background: 'linear-gradient(45deg, transparent, rgba(6, 182, 212, 0.1), transparent)',
+                  border: '1px solid rgba(6, 182, 212, 0.3)',
+                  boxShadow: 'inset 0 0 20px rgba(6, 182, 212, 0.2), 0 0 40px rgba(6, 182, 212, 0.3)'
+                }}
+              ></div>
+              
+              {/* Glass overlay */}
+              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
+                  backdropFilter: 'blur(10px)'
+                }}
+              ></div>
+              
+              <div className="relative z-10">
+                <Target className="w-20 h-20 text-blue-400 mx-auto mb-6" />
+                <h3 className="text-3xl font-bold text-white mb-4" style={{
+                  background: 'linear-gradient(45deg, #06b6d4, #3b82f6, #8b5cf6)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textShadow: '0 0 20px rgba(6, 182, 212, 0.5)'
+                }}>
+                  No Goals Yet
+                </h3>
+                <p className="text-slate-300 text-lg font-medium">Create your first goal to get started on your journey!</p>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
@@ -428,6 +631,15 @@ export default function GoalsPage() {
                   ></div>
                   
                   <div className="relative z-10 p-6">
+                    {/* Delete button - top right */}
+                    <button
+                      onClick={() => deleteGoal(goal.id)}
+                      className="absolute top-4 right-4 p-2 bg-red-600/20 hover:bg-red-600/30 text-red-300 rounded-lg transition-all duration-200 z-20"
+                      title="Delete this goal"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+
                     <div className="flex items-center mb-4">
                       <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mr-4">
                         <Target className="w-6 h-6 text-white" />
@@ -663,7 +875,12 @@ export default function GoalsPage() {
               <h3 className="text-3xl font-black bg-gradient-to-r from-green-500 via-emerald-500 to-cyan-500 bg-clip-text text-transparent">✅ Achieved Badges</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {achievements.achieved.map((badge, index) => (
+              {achievements.achieved.length === 0 ? (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-slate-300">No achievements unlocked yet. Keep working on your goals!</p>
+                </div>
+              ) : (
+                achievements.achieved.map((badge, index) => (
                 <div 
                   key={badge.id} 
                   className="relative p-6 rounded-2xl border-2 shadow-2xl transition-all duration-300 bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-400/50 group hover:scale-105"
@@ -685,7 +902,8 @@ export default function GoalsPage() {
                     <div className="mt-4 text-green-300 font-bold">✅ Achieved!</div>
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
