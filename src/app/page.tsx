@@ -8,7 +8,6 @@ import Button from "@/components/ui/Button";
 import ProgressCircle from "@/components/ui/ProgressCircle";
 import AchievementBadge from "@/components/ui/AchievementBadge";
 import AISuggestions from "@/components/dashboard/AISuggestions";
-import ProTipsCard from "@/components/dashboard/ProTipsCard";
 import CongratulationModal, { useCongratulations } from "@/components/ui/CongratulationModal";
 import { MoodEntry } from "@prisma/client";
 // Removed unused import - now using API for coaching tips
@@ -409,9 +408,86 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hero Section - Floating Rounded Rectangle */}
+      {/* Hero Section - Pro Tips */}
       <div className="relative overflow-hidden py-12">
-        
+        {/* Pro Tips Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+            🎯 Pro Tips
+          </h1>
+          <p className="text-slate-300 text-sm">Goal-oriented coaching for your success</p>
+        </motion.div>
+
+        {/* Pro Tips Content Box */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: [0, -8, 0] }}
+            transition={{
+              opacity: { duration: 0.6, delay: 0.2 },
+              y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+            }}
+            className="relative bg-slate-800/40 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-500/30 p-8 overflow-hidden"
+          >
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20"></div>
+            <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_24%,rgba(147,51,234,0.1)_25%,rgba(147,51,234,0.1)_26%,transparent_27%,transparent_74%,rgba(147,51,234,0.1)_75%,rgba(147,51,234,0.1)_76%,transparent_77%)] bg-[length:30px_30px]"></div>
+            
+            {/* Shimmer Effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent opacity-30"
+              animate={{
+                x: ['-100%', '200%'],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+            
+            {/* Content */}
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="flex-1">
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.8 }}
+                  className="text-xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-relaxed"
+                >
+                  {proTip || "Your mental wellness journey starts here."}
+                </motion.h2>
+              </div>
+              
+              {/* Refresh Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={refreshProTips}
+                disabled={proTipLoading}
+                className="ml-4 p-3 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                <motion.div
+                  animate={{ rotate: proTipLoading ? 360 : 0 }}
+                  transition={{ duration: 1, repeat: proTipLoading ? Infinity : 0 }}
+                >
+                  🔄
+                </motion.div>
+                <span className="text-sm text-slate-300">Refresh</span>
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Dashboard Section */}
@@ -1173,12 +1249,6 @@ export default function Home() {
           </>
         )}
 
-        {/* Pro Tips Card - Fixed Position */}
-        <ProTipsCard 
-          proTip={proTip}
-          onRefresh={refreshProTips}
-          loading={proTipLoading}
-        />
 
         {/* Congratulations Modal */}
         <CongratulationModal
