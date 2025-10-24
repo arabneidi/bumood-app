@@ -75,23 +75,35 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   const { learningMomentum, recoveryIndex, connectionScore } = data.components;
   const { zLM, zRI, zCN } = data.zScores;
   
-  // Use z-scores directly - they are already statistically normalized
-  // Z-scores can be negative (below average) or positive (above average)
-  // Map z-scores to -1 to 1 scale for radar chart display
-  const normalizeZScore = (zScore: number) => {
-    // Clamp z-scores to reasonable range (-3 to +3) then map to -1 to 1
-    const clamped = Math.max(-3, Math.min(3, zScore));
-    return clamped / 3; // -1 to 1
-  };
+  // Check if we have true z-scores (can be negative) or normalized scores (0-1 range)
+  const hasTrueZScores = zLM < 0 || zRI < 0 || zCN < 0 || zLM > 1 || zRI > 1 || zCN > 1;
   
-  const lmNormalized = normalizeZScore(zLM);
-  const riNormalized = normalizeZScore(zRI);
-  const cnNormalized = normalizeZScore(zCN);
+  let lmNormalized, riNormalized, cnNormalized;
+  
+  if (hasTrueZScores) {
+    // True z-scores: map (-3 to +3) to (-1 to +1)
+    const normalizeZScore = (zScore: number) => {
+      const clamped = Math.max(-3, Math.min(3, zScore));
+      return clamped / 3; // -1 to 1
+    };
+    lmNormalized = normalizeZScore(zLM);
+    riNormalized = normalizeZScore(zRI);
+    cnNormalized = normalizeZScore(zCN);
+  } else {
+    // Normalized scores (0-1 range): map to (-1 to +1) by centering around 0
+    const normalizeToCentered = (value: number) => {
+      return (2 * value) - 1; // 0->-1, 0.5->0, 1->1
+    };
+    lmNormalized = normalizeToCentered(zLM);
+    riNormalized = normalizeToCentered(zRI);
+    cnNormalized = normalizeToCentered(zCN);
+  }
   
   // Debug logging
-  console.log('DSS Radar Debug (z-scores to -1 to 1 scale):', {
+  console.log('DSS Radar Debug:', {
     rawValues: { learningMomentum, recoveryIndex, connectionScore },
     zScores: { zLM, zRI, zCN },
+    hasTrueZScores,
     normalized: { lmNormalized, riNormalized, cnNormalized }
   });
 
