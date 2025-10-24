@@ -66,9 +66,16 @@ export default function StatsPage() {
 
         // Fetch user info
         const userResponse = await fetch('/api/user');
-        if (!userResponse.ok) throw new Error('Failed to fetch user info');
-        const userData = await userResponse.json();
-        setUserInfo(userData);
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          setUserInfo(userData);
+        } else if (userResponse.status === 404) {
+          // No user data - this is expected for a clean database
+          console.log('No user data found - clean database state');
+          setUserInfo(null);
+        } else {
+          throw new Error('Failed to fetch user info');
+        }
 
         // Fetch user preferences for network graph
         const preferencesResponse = await fetch('/api/learn-connections?userId=dummy-user');
