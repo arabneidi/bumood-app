@@ -69,23 +69,21 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
 
   const { learningMomentum, recoveryIndex, connectionScore } = data.components;
   
-  // Normalize values to -1.0 to 1.0 scale
-  // Since all DSS components are positive values, we need to map them to 0-1 range first
+  // Normalize values to 0.0 to 1.0 scale (since all DSS components are positive)
   const maxValue = Math.max(learningMomentum || 0, recoveryIndex || 0, connectionScore || 0);
   
-  // Map values from 0-maxValue to 0-1 range, then to -1 to 1 range
-  const normalizeToMinusOneToOne = (value: number, maxValue: number) => {
+  // Map values from 0-maxValue to 0-1 range (all positive values)
+  const normalizeToZeroToOne = (value: number, maxValue: number) => {
     if (maxValue === 0) return 0;
-    const normalized = value / maxValue; // 0 to 1
-    return (2 * normalized) - 1; // -1 to 1
+    return value / maxValue; // 0 to 1
   };
   
-  const lmNormalized = normalizeToMinusOneToOne(typeof learningMomentum === 'number' ? learningMomentum : 0, maxValue);
-  const riNormalized = normalizeToMinusOneToOne(typeof recoveryIndex === 'number' ? recoveryIndex : 0, maxValue);
-  const cnNormalized = normalizeToMinusOneToOne(typeof connectionScore === 'number' ? connectionScore : 0, maxValue);
+  const lmNormalized = normalizeToZeroToOne(typeof learningMomentum === 'number' ? learningMomentum : 0, maxValue);
+  const riNormalized = normalizeToZeroToOne(typeof recoveryIndex === 'number' ? recoveryIndex : 0, maxValue);
+  const cnNormalized = normalizeToZeroToOne(typeof connectionScore === 'number' ? connectionScore : 0, maxValue);
   
   // Debug logging
-  console.log('DSS Radar Debug (-1 to 1 scale):', {
+  console.log('DSS Radar Debug (0 to 1 scale):', {
     learningMomentum,
     recoveryIndex, 
     connectionScore,
@@ -136,8 +134,8 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
           />
           <PolarRadiusAxis 
             angle={0} 
-            domain={[-1, 1]}
-            tickCount={11}
+            domain={[0, 1]}
+            tickCount={6}
             tick={{ fontSize: 10, fill: '#64748b' }}
             tickFormatter={(value) => value.toFixed(1)}
             axisLine={false}
