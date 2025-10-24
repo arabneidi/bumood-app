@@ -91,9 +91,13 @@ export async function PUT(request: NextRequest) {
     
     console.log('📝 Database update data:', updateData);
     
-    const user = await db.user.update({
+    const user = await db.user.upsert({
       where: { id: userId },
-      data: updateData
+      update: updateData,
+      create: {
+        id: userId,
+        ...updateData
+      }
     });
     
     console.log('✅ User updated:', user);
