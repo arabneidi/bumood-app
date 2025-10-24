@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateAIMotivationalQuote } from '@/lib/inspirationalQuotes';
+import { generateCoachingTip } from '@/lib/coachingTips';
 import { db } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId') || 'dummy-user';
     
     console.log('🎯 Fetching personalized quote for user:', userId);
+    console.log('🔑 OpenAI API Key available:', !!process.env.OPENAI_API_KEY);
     
     // Get user profile data
     const user = await db.user.findUnique({
@@ -26,7 +27,34 @@ export async function GET(request: NextRequest) {
     const recentEntries = await db.moodEntry.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      take: 1
+      take: 3
+    });
+
+    // Get today's daily tracking data
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    
+    const dailyTracking = await db.dailyTracking.findFirst({
+      where: { 
+        userId,
+        date: {
+          gte: startOfToday,
+          lt: endOfToday
+        }
+      }
+    });
+
+    // Get recent daily tracking data (last 7 days)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentDailyTracking = await db.dailyTracking.findMany({
+      where: { 
+        userId,
+        date: {
+          gte: sevenDaysAgo
+        }
+      },
+      orderBy: { date: 'desc' }
     });
 
     // Get active goals for goal-oriented quotes
@@ -36,6 +64,25 @@ export async function GET(request: NextRequest) {
         completed: false
       },
       orderBy: { createdAt: 'desc' }
+    });
+
+    // Get completed goals for positive reinforcement
+    const completedGoals = await db.goal.findMany({
+      where: { 
+        userId,
+        completed: true
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 10 // Get last 10 completed goals
+    });
+
+    // Get achieved badges for capability recognition
+    const achievedBadges = await db.achievement.findMany({
+      where: { 
+        userId
+      },
+      orderBy: { unlockedAt: 'desc' },
+      take: 15 // Get last 15 achievements
     });
     
     // Get recent activities from the latest entry
@@ -86,7 +133,7 @@ export async function GET(request: NextRequest) {
       favoriteArtists,
       favoriteMovies,
       favoritePhilosophers,
-      recentActivities,
+      recentActivities: recentActivities,
       activeGoals: activeGoals.map(goal => ({
         id: goal.id,
         title: goal.title,
@@ -100,7 +147,122 @@ export async function GET(request: NextRequest) {
         streak: goal.streak,
         completed: goal.completed
       })),
-      timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'
+      completedGoals: completedGoals.map(goal => ({
+        id: goal.id,
+        title: goal.title,
+        description: goal.description,
+        category: goal.category,
+        subcategory: goal.subcategory,
+        targetValue: goal.targetValue,
+        completedAt: goal.updatedAt,
+        difficulty: goal.difficulty,
+        finalStreak: goal.streak
+      })),
+      achievedBadges: achievedBadges.map(badge => ({
+        id: badge.id,
+        title: badge.title,
+        description: badge.description,
+        icon: badge.icon,
+        stars: badge.stars,
+        type: badge.type,
+        unlockedAt: badge.unlockedAt
+      })),
+      timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening',
+      
+      // Enhanced data for better AI coaching
+      sleepData: {
+        today: dailyTracking ? {
+          sleepHours: dailyTracking.sleepHours,
+          sleepQuality: dailyTracking.sleepQuality,
+          bedtime: dailyTracking.bedtime,
+          wakeTime: dailyTracking.wakeTime
+        } : null,
+        recent: recentDailyTracking.map(day => ({
+          date: day.date,
+          sleepHours: day.sleepHours,
+          sleepQuality: day.sleepQuality,
+          bedtime: day.bedtime,
+          wakeTime: day.wakeTime
+        }))
+      },
+      
+      hydrationData: {
+        today: dailyTracking ? {
+          waterIntake: dailyTracking.waterIntake,
+          hydrationLevel: dailyTracking.hydrationLevel
+        } : null,
+        recent: recentDailyTracking.map(day => ({
+          date: day.date,
+          waterIntake: day.waterIntake,
+          hydrationLevel: day.hydrationLevel
+        }))
+      },
+      
+      exerciseData: {
+        today: dailyTracking ? {
+          exerciseMinutes: dailyTracking.exerciseMinutes,
+          exerciseType: dailyTracking.exerciseType,
+          steps: dailyTracking.steps
+        } : null,
+        recent: recentDailyTracking.map(day => ({
+          date: day.date,
+          exerciseMinutes: day.exerciseMinutes,
+          exerciseType: day.exerciseType,
+          steps: day.steps
+        }))
+      },
+      
+      periodData: user.gender === 'female' ? {
+        onPeriod: user.onPeriod,
+        cycleDay: user.cycleDay,
+        symptoms: user.symptoms ? JSON.parse(user.symptoms) : []
+      } : null,
+      
+      moodTrends: {
+        recent: recentEntries.map(entry => ({
+          date: entry.createdAt.toISOString().split('T')[0],
+          valence: entry.valence,
+          energy: entry.energy,
+          stress: entry.stress,
+          sleep: entry.sleep,
+          activities: entry.activities ? JSON.parse(entry.activities) : []
+        })),
+        average: recentEntries.length > 0 ? {
+          valence: Math.round(recentEntries.reduce((sum, entry) => sum + entry.valence, 0) / recentEntries.length),
+          energy: Math.round(recentEntries.reduce((sum, entry) => sum + entry.energy, 0) / recentEntries.length),
+          stress: Math.round(recentEntries.reduce((sum, entry) => sum + entry.stress, 0) / recentEntries.length),
+          sleep: Math.round(recentEntries.reduce((sum, entry) => sum + entry.sleep, 0) / recentEntries.length)
+        } : null
+      },
+      
+      dssScore: dailyTracking ? dailyTracking.dssScore : null,
+      dssAnalysis: dailyTracking ? dailyTracking.dssAnalysis : null,
+      
+      // Today's specific activities and progress
+      todayActivities: {
+        moodEntry: recentEntries.length > 0 ? {
+          time: recentEntries[0].createdAt.toISOString(),
+          valence: recentEntries[0].valence,
+          energy: recentEntries[0].energy,
+          stress: recentEntries[0].stress,
+          sleep: recentEntries[0].sleep,
+          activities: recentEntries[0].activities ? JSON.parse(recentEntries[0].activities) : [],
+          notes: recentEntries[0].notes
+        } : null,
+        dailyTracking: dailyTracking ? {
+          sleepHours: dailyTracking.sleepHours,
+          waterIntake: dailyTracking.waterIntake,
+          exerciseMinutes: dailyTracking.exerciseMinutes,
+          steps: dailyTracking.steps,
+          dssScore: dailyTracking.dssScore
+        } : null,
+        goalsProgress: activeGoals.map(goal => ({
+          title: goal.title,
+          progress: `${goal.currentValue}/${goal.targetValue}`,
+          percentage: goal.progressPercentage,
+          streak: goal.streak
+        }))
+      }
     };
     
     console.log('📊 User profile for quote generation:', {
@@ -118,8 +280,8 @@ export async function GET(request: NextRequest) {
     });
     
     // Generate personalized quote
-    const quote = await generateAIMotivationalQuote(userProfile);
-    
+    console.log('🎯 About to call generateCoachingTip with profile:', JSON.stringify(userProfile, null, 2));
+    const quote = await generateCoachingTip(userProfile);
     console.log('✅ Generated personalized quote:', quote);
     
     return NextResponse.json({ 
@@ -134,10 +296,11 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('❌ Error generating personalized quote:', error);
+    console.error('❌ Error details:', JSON.stringify(error, null, 2));
     return NextResponse.json({ 
       quote: "Your mental wellness journey starts here.",
       source: "fallback",
-      error: "Failed to generate personalized quote"
+      error: `Failed to generate personalized quote: ${error instanceof Error ? error.message : 'Unknown error'}`
     });
   }
 }

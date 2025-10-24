@@ -178,7 +178,7 @@ export async function generateAIMotivationalQuote(userProfile: {
     } = userProfile;
     
     // Create personalized prompt
-    let prompt = `Generate ONE short, powerful motivational quote for someone with this profile:
+    let prompt = `Generate ONE short, powerful COACHING TIP focused on GETTING THINGS DONE for someone with this profile:
 
 `;
 
@@ -231,12 +231,6 @@ export async function generateAIMotivationalQuote(userProfile: {
     // Recent activities
     if (recentActivities && recentActivities.length > 0) {
       prompt += `Recent activities: ${recentActivities.join(', ')}\n`;
-      prompt += `IMPORTANT: Match activities to quote sources:
-      - If user did "reading" → use quotes from their favorite writers
-      - If user did "gym/football/running" → use quotes from their favorite athletes
-      - If user did "music" → use quotes from their favorite musicians
-      - If user did "art" → use quotes from their favorite artists
-      - If user did "watching movies/TV" → use quotes from their favorite movies/shows\n`;
     }
 
     // Current mood and state
@@ -274,7 +268,7 @@ export async function generateAIMotivationalQuote(userProfile: {
 - Includes attribution if from a famous person
 - Varies the source and style each time (avoid repetition!)
 
-CRITICAL PERSONALIZATION RULES:
+COACHING TIP RULES:
 1. **Match Activity to Source:**
    - If recent activity = "reading" → Use quotes from their favoriteWriters
    - If recent activity = "gym/football/running" → Use quotes from their favoriteSportsFigures

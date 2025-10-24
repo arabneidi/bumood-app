@@ -16,7 +16,7 @@ export default function Home() {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [userPreferences, setUserPreferences] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [inspirationalQuote, setInspirationalQuote] = useState("");
+  const [proTip, setProTip] = useState("");
   const [achievements, setAchievements] = useState<any[]>([]);
   const [showAllBadges, setShowAllBadges] = useState(false);
   const [showAllEntries, setShowAllEntries] = useState(false);
@@ -102,15 +102,15 @@ export default function Home() {
           const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
           if (quoteRes.ok) {
             const quoteData = await quoteRes.json();
-            setInspirationalQuote(quoteData.quote);
+            setProTip(quoteData.quote);
             console.log('✅ Personalized quote loaded:', quoteData.quote);
           } else {
             console.log('⚠️ Personalized quote API failed, using fallback');
-            setInspirationalQuote("Your mental wellness journey starts here.");
+            setProTip("Your mental wellness journey starts here.");
           }
         } catch (error) {
           console.error('Error generating personalized quote:', error);
-          setInspirationalQuote("Your mental wellness journey starts here.");
+          setProTip("Your mental wellness journey starts here.");
         }
 
       } catch (error) {
@@ -235,6 +235,19 @@ export default function Home() {
 
       {/* Hero Section - Floating Rounded Rectangle */}
       <div className="relative overflow-hidden py-12">
+        
+        {/* Pro Tips Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+            🎯 Pro Tips
+          </h1>
+          <p className="text-slate-300 text-sm">Goal-oriented coaching for your success</p>
+        </motion.div>
 
         {/* Quote Box - Rounded Rectangle with Float */}
         <motion.div 
@@ -273,7 +286,7 @@ export default function Home() {
               transition={{ delay: 0.5, duration: 0.8 }}
               className="text-xl md:text-3xl font-bold text-center bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-relaxed relative z-10"
             >
-              {inspirationalQuote || "Your mental wellness journey starts here."}
+              {proTip || "Your mental wellness journey starts here."}
             </motion.h2>
           </motion.div>
         </motion.div>
