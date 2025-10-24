@@ -489,13 +489,13 @@ export default function Home() {
                   </motion.div>
                   
                   {/* Two Circles Side by Side */}
-                  <div className="flex flex-col md:flex-row items-start justify-between gap-8 w-full">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-8 w-full max-w-3xl mx-auto px-8">
                     {/* DSS Circle - Left Aligned */}
                     <motion.div 
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 1.0, type: "spring", stiffness: 150 }}
-                      className="flex flex-col items-center md:items-start"
+                      className="flex flex-col items-center"
                     >
                       <motion.div
                         animate={{ 
@@ -549,7 +549,7 @@ export default function Home() {
                           />
                         ))}
                       </motion.div>
-                      <div className="mt-4 text-center md:text-left">
+                      <div className="mt-4 text-center">
                         <div className="text-lg font-semibold text-blue-300">Daily Success Score</div>
                         <div className="text-sm text-slate-400">Overall Performance</div>
                       </div>
@@ -560,7 +560,7 @@ export default function Home() {
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 1.2, type: "spring", stiffness: 150 }}
-                      className="flex flex-col items-center md:items-end"
+                      className="flex flex-col items-center"
                     >
                       <motion.div
                         animate={{ 
@@ -617,7 +617,7 @@ export default function Home() {
                           />
                         ))}
                       </motion.div>
-                      <div className="mt-4 text-center md:text-right">
+                      <div className="mt-4 text-center">
                         <div className="text-lg font-semibold text-purple-300">Mood Composite</div>
                         <div className="text-sm text-slate-400">Emotional State</div>
                       </div>
