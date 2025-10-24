@@ -18,14 +18,14 @@ interface DSSRadarProps {
 }
 
 export default function DSSRadar({ data, loading }: DSSRadarProps) {
-  const [dimensions, setDimensions] = useState({ width: 300, height: 300 });
+  const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);
 
   useEffect(() => {
     const updateDimensions = () => {
       const container = document.getElementById('dss-radar-container');
       if (container) {
-        const size = Math.min(container.offsetWidth - 40, 250); // Max size 250px
+        const size = Math.min(container.offsetWidth - 100, 400); // Increased max size to 400px and added more padding
         setDimensions({ width: size, height: size });
       }
     };
@@ -111,7 +111,7 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
 
   const centerX = dimensions.width / 2;
   const centerY = dimensions.height / 2;
-  const radius = Math.min(dimensions.width, dimensions.height) / 2 - 40;
+  const radius = Math.min(dimensions.width, dimensions.height) / 2 - 80; // Increased padding for labels
 
   // Calculate points for each axis using -1 to 1 scale
   const getPoint = (angle: number, value: number) => {
@@ -154,16 +154,16 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   // Scale labels for -1 to 1 (show only key values to avoid clutter)
   const scaleLabels = [-1.0, -0.5, 0, 0.5, 1.0].map((scale, index) => {
     const normalizedScale = (scale + 1) / 2;
-    const labelRadius = radius * normalizedScale + 20; // Position labels outside the circles
+    const labelRadius = radius * normalizedScale + 30; // Increased spacing for labels
     return (
       <text
         key={`label-${index}`}
         x={centerX + labelRadius}
-        y={centerY - 8}
+        y={centerY - 10}
         textAnchor="middle"
         dominantBaseline="middle"
-        className="text-xs fill-slate-300 font-medium"
-        fontSize="11"
+        className="text-sm fill-slate-300 font-medium"
+        fontSize="12"
       >
         {scale}
       </text>
