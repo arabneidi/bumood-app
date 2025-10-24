@@ -392,18 +392,6 @@ export default function Home() {
 
       {/* Hero Section - Pro Tips */}
       <div className="relative overflow-hidden py-12">
-        {/* Pro Tips Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-            🎯 Pro Tips
-          </h1>
-        </motion.div>
-
         {/* Pro Tips Content Box */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -422,6 +410,14 @@ export default function Home() {
           >
             {/* Content */}
             <div className="relative z-10">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4 text-center"
+              >
+                Pro Tips
+              </motion.h1>
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
