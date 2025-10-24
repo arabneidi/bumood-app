@@ -15,6 +15,7 @@ interface ParameterSliderProps {
   color?: string;
   icon?: string;
   valueLabels?: Record<number, string>;
+  glowColor?: 'purple' | 'red';
 }
 
 export default function ParameterSlider({ 
@@ -27,7 +28,8 @@ export default function ParameterSlider({
   maxLabel = '',
   color = 'from-blue-400 to-purple-500',
   icon = '😊',
-  valueLabels = {}
+  valueLabels = {},
+  glowColor = 'purple'
 }: ParameterSliderProps) {
   const percentage = ((value - min) / (max - min)) * 100;
   const valueLabel = valueLabels[value] || value.toString();
@@ -41,20 +43,20 @@ export default function ParameterSlider({
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
       {/* Glowing Edge Effect */}
-      <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+      <div className={`absolute inset-0 rounded-3xl border-2 ${glowColor === 'red' ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
       
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center">
             <motion.div
-              className="px-3 py-1.5 bg-slate-800/40 backdrop-blur-xl rounded-lg border border-purple-400/50"
+              className={`px-3 py-1.5 bg-slate-800/40 backdrop-blur-xl rounded-lg border ${glowColor === 'red' ? 'border-red-400/80' : 'border-purple-400/50'}`}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
               whileHover={{ 
                 scale: 1.05, 
-                boxShadow: '0 0 20px rgba(147, 51, 234, 0.4)',
-                borderColor: 'rgba(147, 51, 234, 0.6)'
+                boxShadow: glowColor === 'red' ? '0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(239, 68, 68, 0.6)' : '0 0 20px rgba(147, 51, 234, 0.4)',
+                borderColor: glowColor === 'red' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(147, 51, 234, 0.6)'
               }}
             >
               <h3 className="text-sm font-semibold text-white">
@@ -65,9 +67,9 @@ export default function ParameterSlider({
           
           {/* Current Value Indicator */}
           <motion.div 
-            className="px-3 py-1.5 bg-slate-800/40 backdrop-blur-xl rounded-lg border border-purple-400/50"
+              className={`px-3 py-1.5 bg-slate-800/40 backdrop-blur-xl rounded-lg border ${glowColor === 'red' ? 'border-red-400/80' : 'border-purple-400/50'}`}
             animate={{
-              boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)'
+              boxShadow: glowColor === 'red' ? '0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(239, 68, 68, 0.4)' : '0 0 15px rgba(147, 51, 234, 0.3)'
             }}
             transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
           >
@@ -90,8 +92,12 @@ export default function ParameterSlider({
                   relative w-8 h-8 rounded-lg font-bold transition-all duration-300 cursor-pointer
                   flex items-center justify-center backdrop-blur-sm
                   ${isCurrentValue 
-                    ? 'text-purple-400 text-sm scale-110 bg-purple-400/20 border border-purple-400/30 shadow-[0_0_15px_rgba(147,51,234,0.4)]' 
-                    : 'text-slate-300 hover:text-purple-400 hover:bg-purple-400/10 border border-slate-500/30 hover:border-purple-400/30 hover:shadow-[0_0_8px_rgba(147,51,234,0.2)]'
+                    ? glowColor === 'red' 
+                      ? 'text-red-300 text-sm scale-110 bg-red-400/30 border border-red-400/60 shadow-[0_0_25px_rgba(239,68,68,0.8),0_0_50px_rgba(239,68,68,0.6)]' 
+                      : 'text-purple-400 text-sm scale-110 bg-purple-400/20 border border-purple-400/30 shadow-[0_0_15px_rgba(147,51,234,0.4)]'
+                    : glowColor === 'red'
+                      ? 'text-slate-300 hover:text-red-300 hover:bg-red-400/20 border border-slate-500/30 hover:border-red-400/60 hover:shadow-[0_0_15px_rgba(239,68,68,0.4),0_0_30px_rgba(239,68,68,0.2)]'
+                      : 'text-slate-300 hover:text-purple-400 hover:bg-purple-400/10 border border-slate-500/30 hover:border-purple-400/30 hover:shadow-[0_0_8px_rgba(147,51,234,0.2)]'
                   }
                 `}
                 whileHover={{ scale: 1.1 }}
@@ -99,10 +105,12 @@ export default function ParameterSlider({
                 onClick={() => onChange(num)}
                 animate={{
                   textShadow: isCurrentValue 
-                    ? '0 0 10px rgba(147, 51, 234, 0.6)' 
+                    ? glowColor === 'red' ? '0 0 20px rgba(239, 68, 68, 1), 0 0 40px rgba(239, 68, 68, 0.8)' : '0 0 10px rgba(147, 51, 234, 0.6)'
                     : '0 0 0px rgba(0, 0, 0, 0)',
                   boxShadow: isCurrentValue 
-                    ? '0 0 20px rgba(147, 51, 234, 0.3), inset 0 0 15px rgba(147, 51, 234, 0.1)' 
+                    ? glowColor === 'red' 
+                      ? '0 0 30px rgba(239, 68, 68, 0.6), 0 0 60px rgba(239, 68, 68, 0.4), inset 0 0 20px rgba(239, 68, 68, 0.2)' 
+                      : '0 0 20px rgba(147, 51, 234, 0.3), inset 0 0 15px rgba(147, 51, 234, 0.1)'
                     : '0 0 0px rgba(0, 0, 0, 0)'
                 }}
                 transition={{ duration: 0.3 }}
@@ -110,7 +118,7 @@ export default function ParameterSlider({
                 {/* Glowing inner effect for selected */}
                 {isCurrentValue && (
                   <motion.div
-                    className="absolute inset-0.5 rounded-md bg-purple-400/10"
+                    className={`absolute inset-0.5 rounded-md ${glowColor === 'red' ? 'bg-red-400/10' : 'bg-purple-400/10'}`}
                     animate={{
                       opacity: [0.2, 0.4, 0.2]
                     }}

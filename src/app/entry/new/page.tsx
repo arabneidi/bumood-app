@@ -95,6 +95,7 @@ export default function NewEntry() {
   const [showCustomInput, setShowCustomInput] = useState<boolean>(false);
   const [preferencesLocked, setPreferencesLocked] = useState<boolean>(false);
   const [enablePreferenceLearning, setEnablePreferenceLearning] = useState<boolean>(true);
+  const [aiIcon, setAiIcon] = useState('🤖'); // Default fallback icon
   const [formData, setFormData] = useState({
     valence: 5,
     energy: 5,
@@ -147,6 +148,25 @@ export default function NewEntry() {
     };
     
     fetchUserPreferences();
+  }, []);
+
+  // Set AI icon based on connected services
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const openaiKey = localStorage.getItem('openai_api_key');
+      const geminiKey = localStorage.getItem('gemini_api_key');
+      const textcortexKey = localStorage.getItem('textcortex_api_key');
+      
+      if (openaiKey) {
+        setAiIcon('openai');
+      } else if (geminiKey) {
+        setAiIcon('gemini');
+      } else if (textcortexKey) {
+        setAiIcon('textcortex');
+      } else {
+        setAiIcon('🤖');
+      }
+    }
   }, []);
 
   // Generate preference options when activities change
@@ -593,6 +613,9 @@ export default function NewEntry() {
         localStorage.setItem('mood-entry-created', Date.now().toString());
         console.log('📝 Mood entry created - signaling dashboard for regeneration');
         
+        // Reset period tracking state after successful save
+        handleChange('onPeriod', false);
+        
         router.push("/stats");
       } else {
         const errorData = await response.json();
@@ -661,7 +684,9 @@ export default function NewEntry() {
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent flex items-center" style={{ 
-                  textShadow: '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
+                  textShadow: formData.onPeriod 
+                    ? '0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8), 0 0 75px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
+                    : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                   filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
                 }}>
                   Mood Parameters
@@ -682,6 +707,7 @@ export default function NewEntry() {
                   maxLabel="Positive"
                   color="from-red-400 to-green-500"
                   icon="😊"
+                  glowColor={formData.onPeriod ? 'red' : 'purple'}
                   valueLabels={{
                     1: "Very Negative", 2: "Negative", 3: "Slightly Negative", 4: "Neutral-", 5: "Neutral",
                     6: "Neutral+", 7: "Slightly Positive", 8: "Positive", 9: "Very Positive", 10: "Ecstatic"
@@ -698,6 +724,7 @@ export default function NewEntry() {
                       maxLabel="Energized"
                       color="from-blue-400 to-yellow-500"
                       icon="⚡"
+                      glowColor={formData.onPeriod ? 'red' : 'purple'}
                       valueLabels={{
                         1: "Exhausted", 2: "Very Low", 3: "Low", 4: "Tired", 5: "Normal",
                         6: "Rested", 7: "Active", 8: "High", 9: "Very High", 10: "Hyper"
@@ -714,6 +741,7 @@ export default function NewEntry() {
                       maxLabel="Focused"
                       color="from-purple-400 to-pink-500"
                       icon="🎯"
+                      glowColor={formData.onPeriod ? 'red' : 'purple'}
                       valueLabels={{
                         1: "Completely Distracted", 2: "Very Distracted", 3: "Distracted", 4: "Wandering", 5: "Moderate",
                         6: "Attentive", 7: "Engaged", 8: "Highly Focused", 9: "Deep Focus", 10: "Laser Focus"
@@ -732,6 +760,7 @@ export default function NewEntry() {
                       maxLabel="Stressed"
                       color="from-green-400 to-red-500"
                       icon="😟"
+                      glowColor={formData.onPeriod ? 'red' : 'purple'}
                       valueLabels={{
                         1: "Zen Master", 2: "Very Calm", 3: "Calm", 4: "Relaxed", 5: "Mild",
                         6: "Moderate", 7: "Elevated", 8: "High", 9: "Very High", 10: "Overwhelmed"
@@ -747,6 +776,7 @@ export default function NewEntry() {
                       minLabel="No sleep"
                       maxLabel="12+ hours"
                       color="from-indigo-400 to-purple-500"
+                      glowColor={formData.onPeriod ? 'red' : 'purple'}
                       icon="😴"
                       valueLabels={{
                         0: "No sleep", 1: "1 hour", 2: "2 hours", 3: "3 hours", 4: "4 hours", 5: "5 hours",
@@ -771,12 +801,14 @@ export default function NewEntry() {
             className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
             {/* Glowing Edge Effect */}
-            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent flex items-center" style={{ 
-                  textShadow: '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
+                  textShadow: formData.onPeriod 
+                    ? '0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8), 0 0 75px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
+                    : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                   filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
                 }}>
                   Activities
@@ -816,17 +848,13 @@ export default function NewEntry() {
                     >
                       {(() => {
                         // Check which AI service is connected and show appropriate icon
-                        const openaiKey = localStorage.getItem('openai_api_key');
-                        const geminiKey = localStorage.getItem('gemini_api_key');
-                        const textcortexKey = localStorage.getItem('textcortex_api_key');
-                        
-                        if (openaiKey) {
+                        if (aiIcon === 'openai') {
                           return (
                             <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current text-white">
                               <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/>
                             </svg>
                           );
-                        } else if (geminiKey) {
+                        } else if (aiIcon === 'gemini') {
                           return (
                             <svg viewBox="0 0 16 16" className="w-5 h-5 fill-current text-white">
                               <path d="M16 8.016A8.522 8.522 0 008.016 16h-.032A8.521 8.521 0 000 8.016v-.032A8.521 8.521 0 007.984 0h.032A8.522 8.522 0 0016 7.984v.032z" fill="url(#prefix__paint0_radial_980_20147)"/>
@@ -839,7 +867,7 @@ export default function NewEntry() {
                               </defs>
                             </svg>
                           );
-                        } else if (textcortexKey) {
+                        } else if (aiIcon === 'textcortex') {
                           return (
                             <svg viewBox="0 0 2000 2000" className="w-5 h-5 fill-current text-white">
                               <defs>
@@ -854,7 +882,7 @@ export default function NewEntry() {
                           );
                         } else {
                           // Default robot icon if no AI service is connected
-                          return '🤖';
+                          return aiIcon;
                         }
                       })()}
                     </motion.span>
@@ -914,11 +942,13 @@ export default function NewEntry() {
               className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
             >
               {/* Glowing Edge Effect */}
-              <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+              <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
               
               <div className="relative z-10">
                 <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-4 flex items-center" style={{ 
-                  textShadow: '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
+                  textShadow: formData.onPeriod 
+                    ? '0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8), 0 0 75px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
+                    : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                   filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
                 }}>
                   Help Us Know You Better
@@ -1030,11 +1060,13 @@ export default function NewEntry() {
             className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
             {/* Glowing Edge Effect */}
-            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
             
             <div className="relative z-10">
               <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center" style={{ 
-                textShadow: '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
+                textShadow: formData.onPeriod 
+                  ? '0 0 10px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
+                  : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                 filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
               }}>
                 Time Slots
@@ -1114,12 +1146,14 @@ export default function NewEntry() {
               className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
             >
               {/* Glowing Edge Effect */}
-              <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+              <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
               
               <div className="relative z-10">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent flex items-center" style={{ 
-                    textShadow: '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
+                    textShadow: formData.onPeriod 
+                      ? '0 0 10px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
+                      : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                     filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
                   }}>
                     Period Tracking
@@ -1132,16 +1166,16 @@ export default function NewEntry() {
                     type="button"
                     aria-pressed={formData.onPeriod}
                     onClick={() => handleChange('onPeriod', !formData.onPeriod)}
-                    className={`w-full md:w-auto inline-flex items-center space-x-3 px-5 py-3 rounded-full transition-all border-2 shadow-sm
+                    className={`w-full md:w-auto inline-flex items-center space-x-3 px-5 py-3 rounded-full transition-all border-2 shadow-sm backdrop-blur-xl
                       ${formData.onPeriod
-                        ? 'bg-gradient-to-r from-red-500 to-red-600 text-white border-red-300 hover:from-red-600 hover:to-red-700'
+                        ? 'bg-red-500/20 text-red-200 border-red-400/50 hover:bg-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
                         : 'bg-slate-800/50 text-red-400 border-red-400/50 hover:bg-slate-700/50'}
                     `}
                   >
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-lg shadow ${formData.onPeriod ? 'bg-white/20' : 'bg-red-900/30 text-red-400'}`}>🩸</span>
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-lg shadow ${formData.onPeriod ? 'bg-red-500/30 text-red-200' : 'bg-red-900/30 text-red-400'}`}>🩸</span>
                     <div className="text-left">
                       <div className="font-semibold">
-                        {formData.onPeriod ? 'On period today' : 'Mark period today'}
+                        Mark period today
                       </div>
                     </div>
                   </button>
@@ -1158,15 +1192,17 @@ export default function NewEntry() {
               opacity: { duration: 0.6, delay: 1.2 },
               y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8 overflow-hidden"
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
             {/* Glowing Edge Effect */}
-            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
             
 
             <div className="relative z-10">
               <h3 className="text-2xl font-extrabold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center" style={{ 
-                textShadow: '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
+                textShadow: formData.onPeriod 
+                  ? '0 0 25px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 0.8), 0 0 75px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
+                  : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                 filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
               }}>
                 Meals & Drinks
@@ -1257,13 +1293,15 @@ export default function NewEntry() {
             className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
           >
             {/* Glowing Edge Effect */}
-            <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+            <div className={`absolute inset-0 rounded-3xl border-2 ${formData.onPeriod ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent" style={{ 
-                    textShadow: '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
+                    textShadow: formData.onPeriod 
+                      ? '0 0 10px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
+                      : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
                     filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
                   }}>Quick Reflection</h3>
                 </div>
