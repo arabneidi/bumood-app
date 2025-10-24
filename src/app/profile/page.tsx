@@ -22,9 +22,6 @@ export default function ProfilePage() {
     interests: [] as string[],
     favoriteAuthors: '',
     favoriteWriters: '',
-    favoriteSportsFigures: '',
-    favoriteMusicians: '',
-    favoriteArtists: '',
     favoriteMovies: '',
     favoritePhilosophers: '',
     customFavorites: [] as Array<{id: string, category: string, items: string[]}>,
@@ -80,9 +77,6 @@ export default function ProfilePage() {
           interests: data.interests ? JSON.parse(data.interests) : [],
           favoriteAuthors: data.favoriteAuthors || '',
           favoriteWriters: data.favoriteWriters || '',
-          favoriteSportsFigures: data.favoriteSportsFigures || '',
-          favoriteMusicians: data.favoriteMusicians || '',
-          favoriteArtists: data.favoriteArtists || '',
           favoriteMovies: data.favoriteMovies || '',
           favoritePhilosophers: data.favoritePhilosophers || '',
           customFavorites: data.customFavorites ? JSON.parse(data.customFavorites) : []
@@ -132,9 +126,6 @@ export default function ProfilePage() {
         interests: JSON.stringify(profile.interests), // For AI personalization
         favoriteAuthors: profile.favoriteAuthors || null,
         favoriteWriters: profile.favoriteWriters || null,
-        favoriteSportsFigures: profile.favoriteSportsFigures || null,
-        favoriteMusicians: profile.favoriteMusicians || null,
-        favoriteArtists: profile.favoriteArtists || null,
         favoriteMovies: profile.favoriteMovies || null,
         favoritePhilosophers: profile.favoritePhilosophers || null,
         customFavorites: JSON.stringify(profile.customFavorites)
@@ -972,89 +963,6 @@ export default function ProfilePage() {
                   />
                 </motion.div>
 
-                {/* Favorite Musicians */}
-                <motion.div
-                  whileHover={{ scale: 1.05, rotate: -2 }}
-                  className="group"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-lg font-bold text-slate-200 flex items-center">
-                      <span className="text-2xl mr-2">🎵</span>
-                      Favorite Musicians/Bands
-                    </label>
-                    <motion.button
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setProfile({...profile, favoriteMusicians: ''})}
-                      className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
-                    >
-                      ✕
-                    </motion.button>
-                  </div>
-                  <input
-                    type="text"
-                    value={profile.favoriteMusicians}
-                    onChange={(e) => setProfile({...profile, favoriteMusicians: e.target.value})}
-                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-indigo-500/10"
-                    placeholder="e.g., Bob Dylan, Nina Simone, Coldplay"
-                  />
-                </motion.div>
-
-                {/* Favorite Sports Figures */}
-                <motion.div
-                  whileHover={{ scale: 1.05, rotate: 2 }}
-                  className="group"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-lg font-bold text-slate-200 flex items-center">
-                      <span className="text-2xl mr-2">⚽</span>
-                      Favorite Athletes/Sports Figures
-                    </label>
-                    <motion.button
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setProfile({...profile, favoriteSportsFigures: ''})}
-                      className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
-                    >
-                      ✕
-                    </motion.button>
-                  </div>
-                  <input
-                    type="text"
-                    value={profile.favoriteSportsFigures}
-                    onChange={(e) => setProfile({...profile, favoriteSportsFigures: e.target.value})}
-                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-purple-500/10"
-                    placeholder="e.g., Messi, Ronaldo, Serena Williams"
-                  />
-                </motion.div>
-
-                {/* Favorite Artists */}
-                <motion.div
-                  whileHover={{ scale: 1.05, rotate: -2 }}
-                  className="group"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-lg font-bold text-slate-200 flex items-center">
-                      <span className="text-2xl mr-2">🎨</span>
-                      Favorite Artists/Painters
-                    </label>
-                    <motion.button
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setProfile({...profile, favoriteArtists: ''})}
-                      className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
-                    >
-                      ✕
-                    </motion.button>
-                  </div>
-                  <input
-                    type="text"
-                    value={profile.favoriteArtists}
-                    onChange={(e) => setProfile({...profile, favoriteArtists: e.target.value})}
-                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-pink-500/20 focus:border-pink-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-pink-500/10"
-                    placeholder="e.g., Frida Kahlo, Van Gogh, Banksy"
-                  />
-                </motion.div>
 
                 {/* Favorite Movies */}
                 <motion.div
