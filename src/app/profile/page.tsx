@@ -321,23 +321,22 @@ export default function ProfilePage() {
                     <Zap className="w-5 h-5 mr-2 text-purple-400" />
                     Gender
                   </label>
-                  <select
-                    value={profile.gender}
-                    onChange={(e) => setProfile({...profile, gender: e.target.value})}
-                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-purple-500/10 appearance-none"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238b5cf6' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: 'right 12px center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: '16px'
-                    }}
-                  >
-                    <option value="">Choose your identity</option>
-                    <option value="female">Female</option>
-                    <option value="male">Male</option>
-                    <option value="non-binary">Non-binary</option>
-                    <option value="prefer-not-to-say">Prefer not to say</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={profile.gender}
+                      onChange={(e) => setProfile({...profile, gender: e.target.value})}
+                      className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-purple-500/10 appearance-none pr-12"
+                    >
+                      <option value="">Choose your identity</option>
+                      <option value="female">Female</option>
+                      <option value="male">Male</option>
+                      <option value="non-binary">Non-binary</option>
+                      <option value="prefer-not-to-say">Prefer not to say</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <span className="text-violet-400 text-lg">▼</span>
+                    </div>
+                  </div>
                 </motion.div>
 
                 {/* Age */}
@@ -805,23 +804,22 @@ export default function ProfilePage() {
                     <span className="text-2xl mr-2">🎓</span>
                     University Level
                   </label>
-                  <select
-                    value={profile.universityLevel}
-                    onChange={(e) => setProfile({...profile, universityLevel: e.target.value})}
-                    className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-blue-500/10 appearance-none"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238b5cf6' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: 'right 12px center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: '16px'
-                    }}
-                  >
-                    <option value="">Choose your level</option>
-                    <option value="undergraduate">Undergraduate</option>
-                    <option value="master">Master's</option>
-                    <option value="phd">PhD</option>
-                    <option value="other">Other</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={profile.universityLevel}
+                      onChange={(e) => setProfile({...profile, universityLevel: e.target.value})}
+                      className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-blue-500/10 appearance-none pr-12"
+                    >
+                      <option value="">Choose your level</option>
+                      <option value="undergraduate">Undergraduate</option>
+                      <option value="master">Master's</option>
+                      <option value="phd">PhD</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <span className="text-violet-400 text-lg">▼</span>
+                    </div>
+                  </div>
                 </motion.div>
 
                 {/* Field of Study */}
