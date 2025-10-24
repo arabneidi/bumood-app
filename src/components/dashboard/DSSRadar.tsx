@@ -70,11 +70,15 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   const { learningMomentum, recoveryIndex, connectionScore } = data.components;
   
   // Normalize values to -1.0 to 1.0 scale
-  const normalizeToMinusOneToOne = (value: number, maxValue: number) => {
-    return (2 * value / maxValue) - 1;
-  };
-
+  // Since all DSS components are positive values, we need to map them to 0-1 range first
   const maxValue = Math.max(learningMomentum || 0, recoveryIndex || 0, connectionScore || 0);
+  
+  // Map values from 0-maxValue to 0-1 range, then to -1 to 1 range
+  const normalizeToMinusOneToOne = (value: number, maxValue: number) => {
+    if (maxValue === 0) return 0;
+    const normalized = value / maxValue; // 0 to 1
+    return (2 * normalized) - 1; // -1 to 1
+  };
   
   const lmNormalized = normalizeToMinusOneToOne(typeof learningMomentum === 'number' ? learningMomentum : 0, maxValue);
   const riNormalized = normalizeToMinusOneToOne(typeof recoveryIndex === 'number' ? recoveryIndex : 0, maxValue);
