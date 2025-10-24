@@ -61,37 +61,62 @@ export async function GET(req: NextRequest) {
         energy: recentEntries[0].energy,
         focus: recentEntries[0].focus,
         stress: recentEntries[0].stress,
-        sleep: recentEntries[0].sleep
-      } : null,
-      gender: user.gender,
-      age: user.age,
-      personality,
-      universityLevel,
-      fieldOfStudy,
-      interests,
-      recentActivities,
+        sleep: recentEntries[0].sleep || undefined
+      } : {
+        valence: 5,
+        energy: 5,
+        focus: 5,
+        stress: 5,
+        sleep: undefined
+      },
+      userInfo: {
+        gender: user.gender || undefined,
+        age: user.age || undefined,
+        personality: personality || undefined,
+        universityLevel: universityLevel || undefined,
+        fieldOfStudy: fieldOfStudy || undefined
+      },
+      userPreferences: {
+        interests,
+        favoriteWriters: user.favoriteWriters ? JSON.parse(user.favoriteWriters) : [],
+        favoriteSportsFigures: user.favoriteSportsFigures ? JSON.parse(user.favoriteSportsFigures) : [],
+        favoriteMusicians: user.favoriteMusicians ? JSON.parse(user.favoriteMusicians) : [],
+        favoriteArtists: user.favoriteArtists ? JSON.parse(user.favoriteArtists) : [],
+        favoriteMovies: user.favoriteMovies ? JSON.parse(user.favoriteMovies) : [],
+        favoritePhilosophers: user.favoritePhilosophers ? JSON.parse(user.favoritePhilosophers) : []
+      },
+      recentEntries: recentEntries,
+      moodHistory: {
+        avgValence: recentEntries.length > 0 ? recentEntries.reduce((sum, entry) => sum + entry.valence, 0) / recentEntries.length : 5,
+        valenceTrend: 0,
+        stressPattern: recentEntries.length > 0 ? recentEntries.reduce((sum, entry) => sum + entry.stress, 0) / recentEntries.length : 5,
+        energyPattern: recentEntries.length > 0 ? recentEntries.reduce((sum, entry) => sum + entry.energy, 0) / recentEntries.length : 5,
+        sleepPattern: recentEntries.length > 0 ? recentEntries.reduce((sum, entry) => sum + (entry.sleep || 0), 0) / recentEntries.length : 8
+      },
+      successfulSolutions: [],
+      commonActivities: recentActivities,
+      timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening',
       activeGoals: activeGoals.map(goal => ({
         id: goal.id,
         title: goal.title,
-        description: goal.description,
+        description: goal.description || undefined,
         category: goal.category,
-        subcategory: goal.subcategory,
-        targetValue: goal.targetValue,
+        subcategory: goal.subcategory || undefined,
+        targetValue: goal.targetValue || 0,
         currentValue: goal.currentValue,
-        progressPercentage: goal.targetValue > 0 ? Math.round((goal.currentValue / goal.targetValue) * 100) : 0,
+        progressPercentage: (goal.targetValue || 0) > 0 ? Math.round((goal.currentValue / (goal.targetValue || 1)) * 100) : 0,
         difficulty: goal.difficulty,
         streak: goal.streak,
         completed: goal.completed
-      })),
-      timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'
+      }))
     };
 
     console.log('📊 User profile for AI suggestions:', {
-      age: userProfile.age,
-      gender: userProfile.gender,
-      personality: userProfile.personality,
-      interests: userProfile.interests,
-      recentActivities: userProfile.recentActivities,
+      age: userProfile.userInfo?.age,
+      gender: userProfile.userInfo?.gender,
+      personality: userProfile.userInfo?.personality,
+      interests: userProfile.userPreferences?.interests,
+      recentActivities: userProfile.commonActivities,
       activeGoals: userProfile.activeGoals?.length || 0
     });
 
@@ -130,12 +155,12 @@ export async function POST(req: NextRequest) {
     const goalsWithProgress = activeGoals.map(goal => ({
       id: goal.id,
       title: goal.title,
-      description: goal.description,
+      description: goal.description || undefined,
       category: goal.category,
-      subcategory: goal.subcategory,
-      targetValue: goal.targetValue,
+      subcategory: goal.subcategory || undefined,
+      targetValue: goal.targetValue || 0,
       currentValue: goal.currentValue,
-      progressPercentage: goal.targetValue > 0 ? Math.round((goal.currentValue / goal.targetValue) * 100) : 0,
+      progressPercentage: (goal.targetValue || 0) > 0 ? Math.round((goal.currentValue / (goal.targetValue || 1)) * 100) : 0,
       difficulty: goal.difficulty,
       streak: goal.streak,
       completed: goal.completed

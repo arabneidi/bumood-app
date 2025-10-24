@@ -124,11 +124,41 @@ const AI_ENDPOINTS = {
 // 🎯 AI MODE SELECTION - OpenAI with smart fallback
 const AI_MODE: 'OPENAI_ONLY' | 'GEMINI_ONLY' | 'TEXTCORTEX_ONLY' | 'DEEPAI_ONLY' | 'LOCAL_ONLY' | 'HUGGINGFACE_ONLY' | 'HUGGINGFACE_WITH_FALLBACK' | 'OPENAI_WITH_FALLBACK' = 'OPENAI_ONLY';
 
+// Check if AI services are available
+export function isAIAvailable(): boolean {
+  // Check environment variables first
+  const envOpenaiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+  const envGeminiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  const envTextcortexKey = process.env.TEXTCORTEX_API_KEY || process.env.NEXT_PUBLIC_TEXTCORTEX_API_KEY;
+  const envDeepaiKey = process.env.DEEPAI_API_KEY || process.env.NEXT_PUBLIC_DEEPAI_API_KEY;
+  const envHuggingfaceToken = process.env.HUGGINGFACE_API_TOKEN || process.env.NEXT_PUBLIC_HUGGINGFACE_API_TOKEN;
+  
+  // Check localStorage for user-provided keys (client-side only)
+  let userOpenaiKey = false;
+  let userGeminiKey = false;
+  let userTextcortexKey = false;
+  
+  if (typeof window !== 'undefined') {
+    userOpenaiKey = !!localStorage.getItem('openai_api_key');
+    userGeminiKey = !!localStorage.getItem('gemini_api_key');
+    userTextcortexKey = !!localStorage.getItem('textcortex_api_key');
+  }
+  
+  return !!(envOpenaiKey || envGeminiKey || envTextcortexKey || envDeepaiKey || envHuggingfaceToken || 
+           userOpenaiKey || userGeminiKey || userTextcortexKey);
+}
+
 // Generate AI suggestions using free APIs
 export async function generateAISuggestions(profile: UserMoodProfile): Promise<AISuggestion[]> {
   console.log(`\n${'='.repeat(60)}`);
   console.log(`🤖 AI MODE: ${AI_MODE}`);
   console.log(`${'='.repeat(60)}\n`);
+
+  // Check if AI is available
+  if (!isAIAvailable()) {
+    console.log('📱 No AI API keys found - using local fallback suggestions');
+    return generateLocalSuggestionsWithLearning(profile);
+  }
 
   if (AI_MODE === 'OPENAI_ONLY') {
     console.log('🤖 Using OPENAI API for REAL AI');
@@ -138,7 +168,8 @@ export async function generateAISuggestions(profile: UserMoodProfile): Promise<A
       return suggestions;
     } catch (error) {
       console.error('❌ OpenAI API FAILED:', error.message);
-      throw error;
+      console.log('🔄 Falling back to local AI...');
+      return generateLocalSuggestionsWithLearning(profile);
     }
   }
 
@@ -208,7 +239,16 @@ export async function generateAISuggestions(profile: UserMoodProfile): Promise<A
 
 // Generate suggestions using OpenAI API (REAL AI!)
 async function generateWithOpenAI(profile: UserMoodProfile): Promise<AISuggestion[]> {
-  const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+  // Check for user's stored API key first, then environment variables
+  let apiKey = null;
+  
+  if (typeof window !== 'undefined') {
+    apiKey = localStorage.getItem('openai_api_key');
+  }
+  
+  if (!apiKey) {
+    apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+  }
   
   if (!apiKey) {
     console.log('❌ OpenAI API key not found');
@@ -310,7 +350,16 @@ async function generateWithGemini(profile: UserMoodProfile): Promise<AISuggestio
 
 // Generate suggestions using TextCortex API
 async function generateWithTextCortex(profile: UserMoodProfile): Promise<AISuggestion[]> {
-  const apiKey = process.env.TEXTCORTEX_API_KEY || process.env.NEXT_PUBLIC_TEXTCORTEX_API_KEY;
+  // Filter user's stored API key first, then environment variables
+  let apiKey = null;
+  
+  if (typeof window !== 'undefined') {
+    apiKey = localStorage.getItem('textcortex_api_key');
+  }
+  
+  if (!apiKey) {
+    apiKey = process.env.TEXTCORTEX_API_KEY || process.env.NEXT_PUBLIC_TEXTCORTEX_API_KEY;
+  }
   
   if (!apiKey) {
     console.log('❌ TextCortex API key not found');

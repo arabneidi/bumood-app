@@ -52,8 +52,8 @@ export default function GoalsPage() {
     difficulty: "medium"
   });
   const [showCompletionModal, setShowCompletionModal] = useState(false);
-  const [completedGoal, setCompletedGoal] = useState(null);
-  const [completedGoals, setCompletedGoals] = useState([]);
+  const [completedGoal, setCompletedGoal] = useState<any>(null);
+  const [completedGoals, setCompletedGoals] = useState<any[]>([]);
 
   const goalCategories = [
     {
@@ -92,7 +92,10 @@ export default function GoalsPage() {
     }
   ];
 
-  const [achievements, setAchievements] = useState({
+  const [achievements, setAchievements] = useState<{
+    achieved: any[];
+    locked: any[];
+  }>({
     achieved: [],
     locked: []
   });
@@ -307,7 +310,7 @@ export default function GoalsPage() {
     }
   };
 
-  const updateProgress = async (goalId, change) => {
+  const updateProgress = async (goalId: number, change: number) => {
     const updatedGoals = goals.map(goal => {
       if (goal.id === goalId) {
         const newValue = Math.max(0, Math.min(goal.currentValue + change, goal.targetValue));
@@ -351,7 +354,7 @@ export default function GoalsPage() {
     }
   };
 
-  const deleteGoal = async (goalId) => {
+  const deleteGoal = async (goalId: number) => {
     // Confirm deletion
     if (!confirm('Are you sure you want to delete this goal? This action cannot be undone.')) {
       return;
@@ -669,7 +672,7 @@ export default function GoalsPage() {
                           <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3 animate-pulse"></div>
                           <span className="text-cyan-300 text-sm font-medium">Category</span>
                         </div>
-                        <span className="text-white text-sm font-bold bg-cyan-500/20 px-3 py-1 rounded-full">{goal.category}</span>
+                        <span className="text-white text-sm font-bold bg-cyan-500/20 px-3 py-1 rounded-full">{(goal as any).category || 'General'}</span>
                       </div>
                       
                       {/* Type */}
@@ -678,7 +681,7 @@ export default function GoalsPage() {
                           <div className="w-2 h-2 bg-purple-400 rounded-full mr-3 animate-pulse"></div>
                           <span className="text-purple-300 text-sm font-medium">Type</span>
                         </div>
-                        <span className="text-white text-sm font-bold bg-purple-500/20 px-3 py-1 rounded-full">{goal.subcategory}</span>
+                        <span className="text-white text-sm font-bold bg-purple-500/20 px-3 py-1 rounded-full">{(goal as any).subcategory || 'General'}</span>
                       </div>
                       
                       {/* Difficulty */}

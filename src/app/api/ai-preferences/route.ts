@@ -5,6 +5,92 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Fallback preferences when AI is unavailable
+function generateFallbackPreferences(activity: string, selectedGenres: string[], preferenceType: string) {
+  const fallbackData = {
+    reading: {
+      genres: ['Fiction', 'Non-fiction', 'Poetry', 'Biography', 'Self-help'],
+      specifics: {
+        'Fiction': ['Mystery', 'Romance', 'Fantasy', 'Thriller', 'Literary Fiction'],
+        'Non-fiction': ['Biography', 'History', 'Science', 'Self-help', 'Philosophy'],
+        'Poetry': ['Classical', 'Modern', 'Haiku', 'Free Verse', 'Sonnet'],
+        'Biography': ['Historical Figure', 'Celebrity', 'Scientist', 'Artist', 'Politician'],
+        'Self-help': ['Productivity', 'Mindfulness', 'Relationships', 'Career', 'Health']
+      }
+    },
+    watching: {
+      genres: ['Drama', 'Comedy', 'Action', 'Documentary', 'Sci-fi'],
+      specifics: {
+        'Drama': ['Classic Drama', 'Modern Drama', 'Romantic Drama', 'Historical Drama', 'Psychological Drama'],
+        'Comedy': ['Romantic Comedy', 'Dark Comedy', 'Satire', 'Slapstick', 'Stand-up'],
+        'Action': ['Superhero', 'Martial Arts', 'War', 'Adventure', 'Crime'],
+        'Documentary': ['Nature', 'History', 'Science', 'Social Issues', 'Biography'],
+        'Sci-fi': ['Space Opera', 'Cyberpunk', 'Dystopian', 'Time Travel', 'Alien Contact']
+      }
+    },
+    exercise: {
+      genres: ['Cardio', 'Strength', 'Yoga', 'Swimming', 'Running'],
+      specifics: {
+        'Cardio': ['Running', 'Cycling', 'Swimming', 'Dancing', 'Aerobics'],
+        'Strength': ['Weightlifting', 'Bodyweight', 'Resistance Bands', 'Kettlebell', 'CrossFit'],
+        'Yoga': ['Hatha', 'Vinyasa', 'Ashtanga', 'Yin', 'Hot Yoga'],
+        'Swimming': ['Freestyle', 'Backstroke', 'Breaststroke', 'Butterfly', 'Water Aerobics'],
+        'Running': ['Jogging', 'Sprinting', 'Trail Running', 'Treadmill', 'Marathon Training']
+      }
+    }
+  };
+
+  const activityData = fallbackData[activity as keyof typeof fallbackData] || {
+    genres: ['General', 'Creative', 'Relaxing', 'Active', 'Social'],
+    specifics: {
+      'General': ['Popular', 'Classic', 'Modern', 'Creative', 'Relaxing']
+    }
+  };
+
+  if (preferenceType === 'genres') {
+    return activityData.genres;
+  } else if (preferenceType === 'specifics') {
+    const result = [];
+    for (const genre of selectedGenres) {
+      const specifics = activityData.specifics as any;
+      result.push(...(specifics[genre] || ['Popular', 'Classic', 'Modern']));
+    }
+    return result;
+  }
+
+  return activityData.genres;
+}
+
+function generateFallbackDSSAnalysis(activity: string) {
+  const dssAnalysis = {
+    reading: {
+      learningMomentum: 0.7,
+      recoveryIndex: 0.3,
+      connectionScore: 0.2,
+      reasoning: "Reading enhances learning momentum through knowledge acquisition and cognitive engagement."
+    },
+    watching: {
+      learningMomentum: 0.4,
+      recoveryIndex: 0.6,
+      connectionScore: 0.3,
+      reasoning: "Watching content provides relaxation and recovery while offering learning opportunities."
+    },
+    exercise: {
+      learningMomentum: 0.2,
+      recoveryIndex: 0.8,
+      connectionScore: 0.4,
+      reasoning: "Exercise primarily supports recovery and physical well-being, with some social connection aspects."
+    }
+  };
+
+  return dssAnalysis[activity as keyof typeof dssAnalysis] || {
+    learningMomentum: 0.5,
+    recoveryIndex: 0.5,
+    connectionScore: 0.3,
+    reasoning: "This activity provides balanced benefits across learning, recovery, and connection."
+  };
+}
+
 export async function POST(req: Request) {
   try {
     const { 
@@ -17,6 +103,18 @@ export async function POST(req: Request) {
 
     if (!activity || !preferenceType) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Check if OpenAI API key is available
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      console.log('📱 No OpenAI API key found - using fallback preferences');
+      return NextResponse.json({
+        suggestions: generateFallbackPreferences(activity, selectedGenres, preferenceType),
+        dssAnalysis: generateFallbackDSSAnalysis(activity),
+        fallback: true,
+        message: 'AI service unavailable - using offline preferences'
+      });
     }
 
     console.log(`🤖 Generating AI preferences for ${preferenceType} in ${activity}`);

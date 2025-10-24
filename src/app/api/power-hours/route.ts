@@ -272,7 +272,7 @@ async function analyzeActivityPatterns(moodEntries: any[]) {
   // Analyze which activities are most common during productive hours
   const activityFrequency = new Map();
   hourlyActivities.forEach((activities, hour) => {
-    activities.forEach(activity => {
+    activities.forEach((activity: string) => {
       if (!activityFrequency.has(activity)) {
         activityFrequency.set(activity, { count: 0, hours: [], timeSlots: [] });
       }
@@ -283,7 +283,7 @@ async function analyzeActivityPatterns(moodEntries: any[]) {
 
   // Analyze time slot patterns
   timeSlotActivities.forEach((activities, hour) => {
-    activities.forEach(activity => {
+    activities.forEach((activity: string) => {
       if (activityFrequency.has(activity)) {
         activityFrequency.get(activity).timeSlots.push(hour);
       }
@@ -298,7 +298,7 @@ async function analyzeActivityPatterns(moodEntries: any[]) {
     if (activityFrequency.has(activity)) {
       const data = activityFrequency.get(activity);
       const timeSlotHours = data.timeSlots || [];
-      const allHours = [...new Set([...data.hours, ...timeSlotHours])];
+      const allHours = Array.from(new Set([...data.hours, ...timeSlotHours]));
       
       lmPatterns.set(activity, {
         frequency: data.count,
@@ -313,9 +313,9 @@ async function analyzeActivityPatterns(moodEntries: any[]) {
   // Calculate optimal hours for deep work based on user patterns
   const optimalHours = new Map();
   deepWorkActivities.forEach((sessions, hour) => {
-    const avgFocus = sessions.reduce((sum, session) => sum + session.focus, 0) / sessions.length;
-    const avgEnergy = sessions.reduce((sum, session) => sum + session.energy, 0) / sessions.length;
-    const avgStress = sessions.reduce((sum, session) => sum + session.stress, 0) / sessions.length;
+      const avgFocus = sessions.reduce((sum: number, session: any) => sum + session.focus, 0) / sessions.length;
+      const avgEnergy = sessions.reduce((sum: number, session: any) => sum + session.energy, 0) / sessions.length;
+      const avgStress = sessions.reduce((sum: number, session: any) => sum + session.stress, 0) / sessions.length;
     
     optimalHours.set(hour, {
       focus: avgFocus,
@@ -410,13 +410,13 @@ function calculateInsights(data: any[], activityAnalysis?: any) {
   
   if (activityAnalysis && activityAnalysis.optimalHours.size > 0) {
     const optimalHours = Array.from(activityAnalysis.optimalHours.entries())
-      .sort((a, b) => b[1].productivity - a[1].productivity)
+      .sort((a: any, b: any) => b[1].productivity - a[1].productivity)
       .slice(0, 3);
     
     recommendations.push({
       type: 'optimal_hours',
       title: 'Your Optimal Deep Work Hours',
-      description: `Based on your activity patterns, your most productive hours are: ${optimalHours.map(([hour, data]) => `${hour}:00 (${Math.round(data.productivity * 100)}% productivity)`).join(', ')}`,
+      description: `Based on your activity patterns, your most productive hours are: ${optimalHours.map((item: any) => `${item[0]}:00 (${Math.round(item[1].productivity * 100)}% productivity)`).join(', ')}`,
       priority: 'high'
     });
   }
@@ -432,13 +432,13 @@ function calculateInsights(data: any[], activityAnalysis?: any) {
 
   if (activityAnalysis && activityAnalysis.lmPatterns.size > 0) {
     const topActivities = Array.from(activityAnalysis.lmPatterns.entries())
-      .sort((a, b) => b[1].frequency - a[1].frequency)
+      .sort((a: any, b: any) => b[1].frequency - a[1].frequency)
       .slice(0, 3);
     
     recommendations.push({
       type: 'activity_focus',
       title: 'Focus on Your Most Productive Activities',
-      description: `Your most productive activities are: ${topActivities.map(([activity, data]) => `${activity} (${data.frequency} sessions)`).join(', ')}`,
+      description: `Your most productive activities are: ${topActivities.map((item: any) => `${item[0]} (${item[1].frequency} sessions)`).join(', ')}`,
       priority: 'medium'
     });
   }

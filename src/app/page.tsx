@@ -1066,17 +1066,17 @@ export default function Home() {
                         
                         {entry.waterIntake || entry.mealsEaten || entry.caffeine ? (
                           <div className="flex flex-wrap gap-2 mb-3">
-                            {entry.waterIntake > 0 && (
+                            {(entry.waterIntake || 0) > 0 && (
                               <span className="text-xs bg-blue-900/30 text-blue-300 px-2 py-1 rounded-full border border-blue-500/20">
                                 💧 {entry.waterIntake} glasses
                               </span>
                             )}
-                            {entry.mealsEaten > 0 && (
+                            {(entry.mealsEaten || 0) > 0 && (
                               <span className="text-xs bg-green-900/30 text-green-300 px-2 py-1 rounded-full border border-green-500/20">
                                 🍽️ {entry.mealsEaten} meals
                               </span>
                             )}
-                            {entry.caffeine > 0 && (
+                            {(entry.caffeine || 0) > 0 && (
                               <span className="text-xs bg-amber-900/30 text-amber-300 px-2 py-1 rounded-full border border-amber-500/20">
                                 ☕ {entry.caffeine} caffeine
                               </span>

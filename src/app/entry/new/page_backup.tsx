@@ -369,6 +369,7 @@ export default function NewEntry() {
 
       {showCelebration && (
         <CelebrationModal
+          isOpen={showCelebration}
           title={celebrationData.title}
           description={celebrationData.description}
           icon={celebrationData.icon}

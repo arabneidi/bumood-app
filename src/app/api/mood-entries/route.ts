@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     
     // Check if any activity contributes to DSS components
     for (const activity of activitiesList) {
-      const activityDSS = dssAnalysisData[activity];
+      const activityDSS = (dssAnalysisData as any)[activity];
       if (activityDSS) {
         if (activityDSS.primaryComponent === 'LM') {
           learningMomentum += 10; // Basic contribution for LM activities

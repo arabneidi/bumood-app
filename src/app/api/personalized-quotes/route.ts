@@ -105,14 +105,12 @@ export async function GET(request: NextRequest) {
     const favoritePhilosophers = user.favoritePhilosophers ? user.favoritePhilosophers.split(',').map(p => p.trim()).filter(Boolean) : [];
     
     // Get current mood if available
-    let currentMood = null;
+    let currentMood = undefined;
     if (recentEntries.length > 0) {
       currentMood = {
         valence: recentEntries[0].valence,
         energy: recentEntries[0].energy,
-        focus: recentEntries[0].focus,
-        stress: recentEntries[0].stress,
-        sleep: recentEntries[0].sleep
+        stress: recentEntries[0].stress
       };
     }
 
@@ -133,7 +131,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate today's mood averages
-    let todayMoodAverages = null;
+    let todayMoodAverages = undefined;
     if (todayEntries.length > 0) {
       const totalEntries = todayEntries.length;
       todayMoodAverages = {
@@ -141,13 +139,13 @@ export async function GET(request: NextRequest) {
         energy: Math.round(todayEntries.reduce((sum, entry) => sum + entry.energy, 0) / totalEntries),
         focus: Math.round(todayEntries.reduce((sum, entry) => sum + entry.focus, 0) / totalEntries),
         stress: Math.round(todayEntries.reduce((sum, entry) => sum + entry.stress, 0) / totalEntries),
-        sleep: Math.round(todayEntries.reduce((sum, entry) => sum + entry.sleep, 0) / totalEntries),
+         sleep: Math.round(todayEntries.reduce((sum, entry) => sum + (entry.sleep || 0), 0) / totalEntries),
         entryCount: totalEntries
       };
     }
 
     // Get Power Hours data for the user's most productive times
-    let powerHoursData = null;
+    let powerHoursData = undefined;
     try {
       const powerHoursResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/power-hours?userId=${userId}&days=7`);
       if (powerHoursResponse.ok) {
@@ -168,11 +166,11 @@ export async function GET(request: NextRequest) {
       currentMood,
       todayMoodAverages, // Today's mood averages
       powerHoursData, // Power Hours insights
-      gender: user.gender,
-      age: user.age,
-      personality: user.personality,
-      universityLevel: user.universityLevel,
-      fieldOfStudy: user.fieldOfStudy,
+      gender: user.gender || undefined,
+      age: user.age || undefined,
+      personality: user.personality || undefined,
+      universityLevel: user.universityLevel || undefined,
+      fieldOfStudy: user.fieldOfStudy || undefined,
       interests,
       favoriteWriters,
       favoriteMusicians,
@@ -184,12 +182,12 @@ export async function GET(request: NextRequest) {
       activeGoals: activeGoals.map(goal => ({
         id: goal.id,
         title: goal.title,
-        description: goal.description,
+        description: goal.description || undefined,
         category: goal.category,
-        subcategory: goal.subcategory,
-        targetValue: goal.targetValue,
+        subcategory: goal.subcategory || undefined,
+        targetValue: goal.targetValue || 0,
         currentValue: goal.currentValue,
-        progressPercentage: goal.targetValue > 0 ? Math.round((goal.currentValue / goal.targetValue) * 100) : 0,
+        progressPercentage: (goal.targetValue || 0) > 0 ? Math.round((goal.currentValue / (goal.targetValue || 1)) * 100) : 0,
         difficulty: goal.difficulty,
         streak: goal.streak,
         completed: goal.completed
@@ -220,49 +218,37 @@ export async function GET(request: NextRequest) {
       sleepData: {
         today: dailyTracking ? {
           sleepHours: dailyTracking.sleepHours,
-          sleepQuality: dailyTracking.sleepQuality,
-          bedtime: dailyTracking.bedtime,
-          wakeTime: dailyTracking.wakeTime
         } : null,
         recent: recentDailyTracking.map(day => ({
           date: day.date,
           sleepHours: day.sleepHours,
-          sleepQuality: day.sleepQuality,
-          bedtime: day.bedtime,
-          wakeTime: day.wakeTime
         }))
       },
       
       hydrationData: {
         today: dailyTracking ? {
           waterIntake: dailyTracking.waterIntake,
-          hydrationLevel: dailyTracking.hydrationLevel
         } : null,
         recent: recentDailyTracking.map(day => ({
           date: day.date,
           waterIntake: day.waterIntake,
-          hydrationLevel: day.hydrationLevel
         }))
       },
       
       exerciseData: {
         today: dailyTracking ? {
-          exerciseMinutes: dailyTracking.exerciseMinutes,
           exerciseType: dailyTracking.exerciseType,
           steps: dailyTracking.steps
         } : null,
         recent: recentDailyTracking.map(day => ({
           date: day.date,
-          exerciseMinutes: day.exerciseMinutes,
           exerciseType: day.exerciseType,
           steps: day.steps
         }))
       },
       
       periodData: user.gender === 'female' ? {
-        onPeriod: user.onPeriod,
-        cycleDay: user.cycleDay,
-        symptoms: user.symptoms ? JSON.parse(user.symptoms) : []
+        symptoms: []
       } : null,
       
       moodTrends: {
@@ -278,12 +264,11 @@ export async function GET(request: NextRequest) {
           valence: Math.round(recentEntries.reduce((sum, entry) => sum + entry.valence, 0) / recentEntries.length),
           energy: Math.round(recentEntries.reduce((sum, entry) => sum + entry.energy, 0) / recentEntries.length),
           stress: Math.round(recentEntries.reduce((sum, entry) => sum + entry.stress, 0) / recentEntries.length),
-          sleep: Math.round(recentEntries.reduce((sum, entry) => sum + entry.sleep, 0) / recentEntries.length)
+          sleep: Math.round(recentEntries.reduce((sum, entry) => sum + (entry.sleep || 0), 0) / recentEntries.length)
         } : null
       },
       
       dssScore: dailyTracking ? dailyTracking.dssScore : null,
-      dssAnalysis: dailyTracking ? dailyTracking.dssAnalysis : null,
       
       // Today's specific activities and progress
       todayActivities: {
@@ -299,14 +284,12 @@ export async function GET(request: NextRequest) {
         dailyTracking: dailyTracking ? {
           sleepHours: dailyTracking.sleepHours,
           waterIntake: dailyTracking.waterIntake,
-          exerciseMinutes: dailyTracking.exerciseMinutes,
           steps: dailyTracking.steps,
           dssScore: dailyTracking.dssScore
         } : null,
         goalsProgress: activeGoals.map(goal => ({
           title: goal.title,
           progress: `${goal.currentValue}/${goal.targetValue}`,
-          percentage: goal.progressPercentage,
           streak: goal.streak
         }))
       }

@@ -34,8 +34,8 @@ export default function ParameterSlider({
 
   return (
     <motion.div 
-      className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl p-6 border border-blue-400/30 shadow-2xl"
-      whileHover={{ scale: 1.05 }}
+      className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-4"
+      whileHover={{ scale: 1.02 }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
@@ -44,20 +44,20 @@ export default function ParameterSlider({
       <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
       
       <div className="relative z-10">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center">
             <motion.div
-              className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full border border-cyan-400/30 backdrop-blur-sm"
+              className="px-3 py-1.5 bg-slate-800/40 backdrop-blur-xl rounded-lg border border-purple-400/50"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
               whileHover={{ 
                 scale: 1.05, 
-                boxShadow: '0 0 20px rgba(6, 182, 212, 0.4)',
-                borderColor: 'rgba(6, 182, 212, 0.5)'
+                boxShadow: '0 0 20px rgba(147, 51, 234, 0.4)',
+                borderColor: 'rgba(147, 51, 234, 0.6)'
               }}
             >
-              <h3 className="text-sm font-bold text-cyan-400">
+              <h3 className="text-sm font-semibold text-white">
                 {label}
               </h3>
             </motion.div>
@@ -65,82 +65,70 @@ export default function ParameterSlider({
           
           {/* Current Value Indicator */}
           <motion.div 
-            className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full border border-cyan-400/30 backdrop-blur-sm"
+            className="px-3 py-1.5 bg-slate-800/40 backdrop-blur-xl rounded-lg border border-purple-400/50"
             animate={{
-              boxShadow: '0 0 15px rgba(6, 182, 212, 0.3)'
+              boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)'
             }}
             transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
           >
-            <span className="text-sm font-bold text-cyan-400">
+            <span className="text-sm font-semibold text-white">
               {value}/{max}
             </span>
           </motion.div>
         </div>
         
-        <div className="flex items-center space-x-4">
-          {/* Stylish Slider Container */}
-          <div className="relative flex-1">
-            {/* Track Background */}
-            <div className="absolute top-1/2 transform -translate-y-1/2 w-full h-3 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-full shadow-inner border border-slate-600/40"></div>
-            
-            {/* Filled Track */}
-            <motion.div 
-              className="absolute top-1/2 transform -translate-y-1/2 h-3 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.4)] border border-cyan-400/30"
-              style={{ width: `${percentage}%` }}
-              initial={{ width: 0 }}
-              animate={{ width: `${percentage}%` }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            />
-            
-            {/* Slider Input */}
-            <input
-              type="range"
-              min={min}
-              max={max}
-              value={value}
-              onChange={(e) => onChange(parseInt(e.target.value))}
-              className="relative w-full h-3 bg-transparent appearance-none cursor-pointer focus:outline-none z-20"
-              style={{
-                WebkitAppearance: 'none',
-                background: 'transparent',
-              }}
-            />
-            
-            {/* Range Numbers */}
-            <div className="flex justify-between mt-3 px-1">
-              {Array.from({ length: max - min + 1 }, (_, i) => min + i).map((num) => {
-                const isCurrentValue = num === value;
-                const isActive = num <= value; // Numbers up to current value are active
-                return (
-                  <motion.span
-                    key={num}
-                    className={`
-                      text-xs font-medium transition-all duration-300 cursor-pointer
-                      ${isCurrentValue 
-                        ? 'text-cyan-400 font-bold text-sm scale-110' 
-                        : isActive 
-                          ? 'text-blue-300 font-semibold' 
-                          : 'text-slate-600 opacity-40'
-                      }
-                    `}
-                    whileHover={{ scale: isActive ? 1.1 : 1 }}
-                    whileTap={{ scale: isActive ? 0.95 : 1 }}
-                    onClick={() => onChange(num)}
+        
+        {/* Range Numbers */}
+        <div className="flex justify-between mt-3 px-1">
+          {Array.from({ length: max - min + 1 }, (_, i) => min + i).map((num) => {
+            const isCurrentValue = num === value;
+            return (
+              <motion.button
+                key={num}
+                type="button"
+                className={`
+                  relative w-8 h-8 rounded-lg font-bold transition-all duration-300 cursor-pointer
+                  flex items-center justify-center backdrop-blur-sm
+                  ${isCurrentValue 
+                    ? 'text-purple-400 text-sm scale-110 bg-purple-400/20 border border-purple-400/30 shadow-[0_0_15px_rgba(147,51,234,0.4)]' 
+                    : 'text-slate-300 hover:text-purple-400 hover:bg-purple-400/10 border border-slate-500/30 hover:border-purple-400/30 hover:shadow-[0_0_8px_rgba(147,51,234,0.2)]'
+                  }
+                `}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => onChange(num)}
+                animate={{
+                  textShadow: isCurrentValue 
+                    ? '0 0 10px rgba(147, 51, 234, 0.6)' 
+                    : '0 0 0px rgba(0, 0, 0, 0)',
+                  boxShadow: isCurrentValue 
+                    ? '0 0 20px rgba(147, 51, 234, 0.3), inset 0 0 15px rgba(147, 51, 234, 0.1)' 
+                    : '0 0 0px rgba(0, 0, 0, 0)'
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Glowing inner effect for selected */}
+                {isCurrentValue && (
+                  <motion.div
+                    className="absolute inset-0.5 rounded-md bg-purple-400/10"
                     animate={{
-                      textShadow: isActive 
-                        ? isCurrentValue 
-                          ? '0 0 8px rgba(6, 182, 212, 0.6)' 
-                          : '0 0 4px rgba(59, 130, 246, 0.4)'
-                        : '0 0 0px rgba(0, 0, 0, 0)'
+                      opacity: [0.2, 0.4, 0.2]
                     }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {num}
-                  </motion.span>
-                );
-              })}
-            </div>
-          </div>
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                )}
+                
+                {/* Number */}
+                <span className="relative z-10">
+                  {num}
+                </span>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 
