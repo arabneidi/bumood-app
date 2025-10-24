@@ -86,17 +86,17 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
     {
       subject: 'Learning Momentum',
       value: zLM,
-      fullMark: 3 // Set reasonable max for z-scores
+      fullMark: 1 // Set to match -1 to 1 scale
     },
     {
       subject: 'Recovery Index', 
       value: zRI,
-      fullMark: 3
+      fullMark: 1
     },
     {
       subject: 'Connection Score',
       value: zCN,
-      fullMark: 3
+      fullMark: 1
     }
   ];
 
@@ -122,8 +122,8 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
           />
           <PolarRadiusAxis 
             angle={0} 
-            domain={[-3, 3]}
-            tickCount={7}
+            domain={[-1, 1]}
+            tickCount={5}
             tick={{ fontSize: 10, fill: '#64748b' }}
             tickFormatter={(value) => value.toFixed(1)}
             axisLine={false}
