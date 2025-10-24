@@ -34,24 +34,6 @@ export default function Home() {
   const [lastGoalsHash, setLastGoalsHash] = useState<string>('');
   const [lastAchievementsHash, setLastAchievementsHash] = useState<string>('');
   const [hasNewProTipData, setHasNewProTipData] = useState<boolean>(false);
-  const [proTipLoading, setProTipLoading] = useState(false);
-  
-  // Pro Tips refresh function
-  const refreshProTips = async () => {
-    setProTipLoading(true);
-    try {
-      const response = await fetch('/api/personalized-quotes');
-      if (response.ok) {
-        const data = await response.json();
-        setProTip(data.quote);
-        console.log('🎯 Pro Tips refreshed manually');
-      }
-    } catch (error) {
-      console.error('Failed to refresh Pro Tips:', error);
-    } finally {
-      setProTipLoading(false);
-    }
-  };
   
   // Check for mood entry creation signal
   const moodEntryCreated = typeof window !== 'undefined' ? localStorage.getItem('mood-entry-created') : null;
@@ -437,54 +419,18 @@ export default function Home() {
               opacity: { duration: 0.6, delay: 0.2 },
               y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-slate-800/40 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-500/30 p-8 overflow-hidden"
+            className="relative rounded-3xl p-8"
           >
-            {/* Background Pattern */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20"></div>
-            <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_24%,rgba(147,51,234,0.1)_25%,rgba(147,51,234,0.1)_26%,transparent_27%,transparent_74%,rgba(147,51,234,0.1)_75%,rgba(147,51,234,0.1)_76%,transparent_77%)] bg-[length:30px_30px]"></div>
-            
-            {/* Shimmer Effect */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent opacity-30"
-              animate={{
-                x: ['-100%', '200%'],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-            />
-            
             {/* Content */}
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="flex-1">
-                <motion.h2
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.8 }}
-                  className="text-xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-relaxed"
-                >
-                  {proTip || "Your mental wellness journey starts here."}
-                </motion.h2>
-              </div>
-              
-              {/* Refresh Button */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={refreshProTips}
-                disabled={proTipLoading}
-                className="ml-4 p-3 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+            <div className="relative z-10">
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="text-xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-relaxed text-left"
               >
-                <motion.div
-                  animate={{ rotate: proTipLoading ? 360 : 0 }}
-                  transition={{ duration: 1, repeat: proTipLoading ? Infinity : 0 }}
-                >
-                  🔄
-                </motion.div>
-                <span className="text-sm text-slate-300">Refresh</span>
-              </motion.button>
+                {proTip || "Your mental wellness journey starts here."}
+              </motion.h2>
             </div>
           </motion.div>
         </motion.div>
