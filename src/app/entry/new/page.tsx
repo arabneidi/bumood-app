@@ -122,7 +122,7 @@ export default function NewEntry() {
     });
   };
 
-  const handleChange = (name: string, value: number | string | string[]) => {
+  const handleChange = (name: string, value: number | string | string[] | boolean) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -199,7 +199,17 @@ export default function NewEntry() {
               userInfo: {
                 age: userInfo.age || 25,
                 gender: userInfo.gender || 'other',
-                interests: userInfo.interests ? JSON.parse(userInfo.interests) : []
+                interests: userInfo.interests,
+                personality: userInfo.personality,
+                universityLevel: userInfo.universityLevel,
+                fieldOfStudy: userInfo.fieldOfStudy,
+                favoriteAuthors: userInfo.favoriteAuthors,
+                favoriteMusicians: userInfo.favoriteMusicians,
+                favoriteSportsFigures: userInfo.favoriteSportsFigures,
+                favoriteArtists: userInfo.favoriteArtists,
+                favoriteMovies: userInfo.favoriteMovies,
+                favoritePhilosophers: userInfo.favoritePhilosophers,
+                quoteStyle: userInfo.quoteStyle
               }
             })
           });
@@ -291,7 +301,17 @@ export default function NewEntry() {
               userInfo: {
                 age: userInfo.age || 25,
                 gender: userInfo.gender || 'other',
-                interests: userInfo.interests ? JSON.parse(userInfo.interests) : []
+                interests: userInfo.interests,
+                personality: userInfo.personality,
+                universityLevel: userInfo.universityLevel,
+                fieldOfStudy: userInfo.fieldOfStudy,
+                favoriteAuthors: userInfo.favoriteAuthors,
+                favoriteMusicians: userInfo.favoriteMusicians,
+                favoriteSportsFigures: userInfo.favoriteSportsFigures,
+                favoriteArtists: userInfo.favoriteArtists,
+                favoriteMovies: userInfo.favoriteMovies,
+                favoritePhilosophers: userInfo.favoritePhilosophers,
+                quoteStyle: userInfo.quoteStyle
               },
               existingFavorites
             })
@@ -413,7 +433,7 @@ export default function NewEntry() {
           // Get current preferences for this category
           const currentPreferences = userPreferences?.[option.category] || [];
           // Combine with new preferences and remove duplicates
-          const combinedPreferences = [...new Set([...currentPreferences, ...categoryPreferences])];
+          const combinedPreferences = Array.from(new Set([...currentPreferences, ...categoryPreferences]));
           preferencesToSave[option.category] = combinedPreferences.join(', ');
         }
       });

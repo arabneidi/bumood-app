@@ -48,7 +48,9 @@ export async function calculateAchievements(userId: string): Promise<Achievement
           moodEntries.forEach(entry => {
             if (entry.activities) {
               const activities = JSON.parse(entry.activities);
-              activities.forEach((activity: string) => uniqueActivities.add(activity));
+              if (Array.isArray(activities)) {
+                activities.forEach((activity: string) => uniqueActivities.add(activity));
+              }
             }
           });
           isUnlocked = uniqueActivities.size >= 10;

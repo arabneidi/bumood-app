@@ -1452,7 +1452,14 @@ function parseOpenAIResponse(data: any, profile: UserMoodProfile): AISuggestion[
     // Try to extract JSON from the response
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-      const suggestions = JSON.parse(jsonMatch[0]);
+      // Sanitize the JSON string to remove control characters
+      const sanitizedJson = jsonMatch[0]
+        .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+        .replace(/\n/g, '\\n') // Escape newlines
+        .replace(/\r/g, '\\r') // Escape carriage returns
+        .replace(/\t/g, '\\t'); // Escape tabs
+      
+      const suggestions = JSON.parse(sanitizedJson);
       return suggestions.map((s: any, index: number) => ({
         ...s,
         suggestionId: `openai_${Date.now()}_${index}`,

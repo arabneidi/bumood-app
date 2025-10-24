@@ -494,88 +494,150 @@ export default function Home() {
                 </div>
 
 
-                <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 z-10">
+                <div className="relative flex flex-col items-center gap-8 z-10">
                   <motion.div 
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8, duration: 0.5 }}
-                    className="text-center md:text-left flex-1"
+                    className="text-center"
                   >
-                    <motion.h2 
-                      animate={{ 
-                        scale: [1, 1.05, 1],
-                        x: [0, 3, 0]
-                      }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-3 drop-shadow-lg"
-                    >
-                      📊 Daily Success Score
-                    </motion.h2>
                   </motion.div>
                   
-                  {/* Animated Score Display */}
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.0, type: "spring", stiffness: 150 }}
-                    className="flex items-center justify-center"
-                  >
-                    <motion.div
-                      animate={{ 
-                        scale: [1, 1.15, 1],
-                        rotate: [0, 5, -5, 0]
-                      }}
-                      transition={{ 
-                        duration: 1.5, 
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                      className="relative"
+                  {/* Two Circles Side by Side */}
+                  <div className="flex flex-col md:flex-row items-start justify-between gap-8 w-full">
+                    {/* DSS Circle - Left Aligned */}
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 1.0, type: "spring", stiffness: 150 }}
+                      className="flex flex-col items-center md:items-start"
                     >
-                      <div className="w-40 h-40 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-2xl">
-                        <motion.div
-                          animate={{ 
-                            scale: [1, 1.1, 1]
-                          }}
-                          transition={{ 
-                            duration: 1, 
-                            repeat: Infinity
-                          }}
-                          className="text-center"
-                        >
-                          <div className="text-6xl font-bold text-white drop-shadow-lg">
-                            {dssLoading ? (
-                              <div className="animate-pulse">...</div>
-                            ) : (
-                              displayScore !== null && displayScore !== undefined 
-                                ? displayScore.toFixed(2) 
-                                : 'N/A'
-                            )}
-                          </div>
-                          <div className="text-white text-sm font-semibold">
-                            Score
-                          </div>
-                        </motion.div>
+                      <motion.div
+                        animate={{ 
+                          scale: [1, 1.15, 1],
+                          rotate: [0, 5, -5, 0]
+                        }}
+                        transition={{ 
+                          duration: 1.5, 
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        className="relative"
+                      >
+                        <div className="w-40 h-40 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-2xl">
+                          <motion.div
+                            animate={{ 
+                              scale: [1, 1.1, 1]
+                            }}
+                            transition={{ 
+                              duration: 1, 
+                              repeat: Infinity
+                            }}
+                            className="text-center"
+                          >
+                            <div className="text-6xl font-bold text-white drop-shadow-lg">
+                              {dssLoading ? (
+                                <div className="animate-pulse">...</div>
+                              ) : (
+                                displayScore !== null && displayScore !== undefined 
+                                  ? displayScore.toFixed(2) 
+                                  : 'N/A'
+                              )}
+                            </div>
+                          </motion.div>
+                        </div>
+                        
+                        {/* Pulse Rings */}
+                        {[...Array(3)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            className="absolute inset-0 rounded-full border-4 border-blue-400"
+                            animate={{
+                              scale: [1, 1.5, 2],
+                              opacity: [0.6, 0.3, 0]
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              delay: i * 0.6
+                            }}
+                          />
+                        ))}
+                      </motion.div>
+                      <div className="mt-4 text-center md:text-left">
+                        <div className="text-lg font-semibold text-blue-300">Daily Success Score</div>
+                        <div className="text-sm text-slate-400">Overall Performance</div>
                       </div>
-                      
-                      {/* Pulse Rings */}
-                      {[...Array(3)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          className="absolute inset-0 rounded-full border-4 border-blue-400"
-                          animate={{
-                            scale: [1, 1.5, 2],
-                            opacity: [0.6, 0.3, 0]
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            delay: i * 0.6
-                          }}
-                        />
-                      ))}
                     </motion.div>
-                  </motion.div>
+
+                    {/* MC Circle - Right Aligned */}
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 1.2, type: "spring", stiffness: 150 }}
+                      className="flex flex-col items-center md:items-end"
+                    >
+                      <motion.div
+                        animate={{ 
+                          scale: [1, 1.15, 1],
+                          rotate: [0, -5, 5, 0]
+                        }}
+                        transition={{ 
+                          duration: 1.5, 
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        className="relative"
+                      >
+                        <div className="w-40 h-40 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-2xl">
+                          <motion.div
+                            animate={{ 
+                              scale: [1, 1.1, 1]
+                            }}
+                            transition={{ 
+                              duration: 1, 
+                              repeat: Infinity
+                            }}
+                            className="text-center"
+                          >
+                            <div className="text-6xl font-bold text-white drop-shadow-lg">
+                              {mcLoading ? (
+                                <div className="animate-pulse">...</div>
+                              ) : (
+                                moodComposite !== null && moodComposite !== undefined 
+                                  ? moodComposite.toFixed(2) 
+                                  : 'N/A'
+                              )}
+                            </div>
+                            <div className="text-white text-sm font-semibold">
+                              {currentTimeBucket || 'unknown'}
+                            </div>
+                          </motion.div>
+                        </div>
+                        
+                        {/* Pulse Rings */}
+                        {[...Array(3)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            className="absolute inset-0 rounded-full border-4 border-purple-400"
+                            animate={{
+                              scale: [1, 1.5, 2],
+                              opacity: [0.6, 0.3, 0]
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              delay: i * 0.6
+                            }}
+                          />
+                        ))}
+                      </motion.div>
+                      <div className="mt-4 text-center md:text-right">
+                        <div className="text-lg font-semibold text-purple-300">Mood Composite</div>
+                        <div className="text-sm text-slate-400">Emotional State</div>
+                      </div>
+                    </motion.div>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -1016,18 +1078,6 @@ export default function Home() {
                           </div>
                         </div>
                         
-                        {/* Today Rhythm Score Display */}
-                        <div className="mb-4">
-                          <div className={`text-center p-3 rounded-lg ${getMoodColor(entry)} shadow-lg`}>
-                            <div className="text-3xl font-bold text-white drop-shadow-lg">
-                              {getMoodScore(entry)}/100
-                            </div>
-                            <div className="text-sm text-white font-semibold opacity-90 flex items-center justify-center">
-                              <span className="mr-2">{getMoodEmoji(entry)}</span>
-                              Daily Success Score
-                            </div>
-                          </div>
-                        </div>
                         
                         {entry.waterIntake || entry.mealsEaten || entry.caffeine ? (
                           <div className="flex flex-wrap gap-2 mb-3">
@@ -1153,33 +1203,6 @@ export default function Home() {
               </motion.div>
             )}
 
-            {/* Mood Composite Display */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.4 }}
-              className="mb-16"
-            >
-              <div className="relative bg-purple-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-400/30 p-8 overflow-hidden">
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
-                    📈 Mood Composite ({mcLoading ? 'loading...' : (currentTimeBucket || 'unknown')})
-                  </h3>
-                  <div className="text-4xl font-bold text-white mb-2">
-                    {mcLoading ? (
-                      <div className="animate-pulse">...</div>
-                    ) : (
-                      moodComposite !== null && moodComposite !== undefined 
-                        ? moodComposite.toFixed(2) 
-                        : 'N/A'
-                    )}
-                  </div>
-                  <p className="text-sm text-purple-200">
-                    MC = 0.4×zV + 0.3×zE + 0.2×zF - 0.2×zS
-                  </p>
-                </div>
-              </div>
-            </motion.div>
 
 
           </>
