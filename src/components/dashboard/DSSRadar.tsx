@@ -84,17 +84,17 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   // Prepare data for recharts radar chart - use z-scores directly
   const chartData = [
     {
-      subject: 'Learning Momentum',
+      subject: 'zLM',
       value: zLM,
       fullMark: 1 // Set to match -1 to 1 scale
     },
     {
-      subject: 'Recovery Index', 
+      subject: 'zRI', 
       value: zRI,
       fullMark: 1
     },
     {
-      subject: 'Connection Score',
+      subject: 'zCN',
       value: zCN,
       fullMark: 1
     }
