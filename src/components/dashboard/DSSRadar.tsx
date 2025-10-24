@@ -75,54 +75,28 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   const { learningMomentum, recoveryIndex, connectionScore } = data.components;
   const { zLM, zRI, zCN } = data.zScores;
   
-  // Check if we have true z-scores (can be negative) or normalized scores (0-1 range)
-  const hasTrueZScores = zLM < 0 || zRI < 0 || zCN < 0 || zLM > 1 || zRI > 1 || zCN > 1;
-  
-  let lmNormalized, riNormalized, cnNormalized;
-  
-  if (hasTrueZScores) {
-    // True z-scores: map (-3 to +3) to (-1 to +1)
-    const normalizeZScore = (zScore: number) => {
-      const clamped = Math.max(-3, Math.min(3, zScore));
-      return clamped / 3; // -1 to 1
-    };
-    lmNormalized = normalizeZScore(zLM);
-    riNormalized = normalizeZScore(zRI);
-    cnNormalized = normalizeZScore(zCN);
-  } else {
-    // Normalized scores (0-1 range): map to (-1 to +1) by centering around 0
-    const normalizeToCentered = (value: number) => {
-      return (2 * value) - 1; // 0->-1, 0.5->0, 1->1
-    };
-    lmNormalized = normalizeToCentered(zLM);
-    riNormalized = normalizeToCentered(zRI);
-    cnNormalized = normalizeToCentered(zCN);
-  }
-  
   // Debug logging
-  console.log('DSS Radar Debug:', {
+  console.log('DSS Radar Debug (raw z-scores):', {
     rawValues: { learningMomentum, recoveryIndex, connectionScore },
-    zScores: { zLM, zRI, zCN },
-    hasTrueZScores,
-    normalized: { lmNormalized, riNormalized, cnNormalized }
+    zScores: { zLM, zRI, zCN }
   });
 
-  // Prepare data for recharts radar chart
+  // Prepare data for recharts radar chart - use z-scores directly
   const chartData = [
     {
       subject: 'Learning Momentum',
-      value: lmNormalized,
-      fullMark: 1
+      value: zLM,
+      fullMark: 3 // Set reasonable max for z-scores
     },
     {
       subject: 'Recovery Index', 
-      value: riNormalized,
-      fullMark: 1
+      value: zRI,
+      fullMark: 3
     },
     {
       subject: 'Connection Score',
-      value: cnNormalized,
-      fullMark: 1
+      value: zCN,
+      fullMark: 3
     }
   ];
 
@@ -148,8 +122,8 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
           />
           <PolarRadiusAxis 
             angle={0} 
-            domain={[-1, 1]}
-            tickCount={5}
+            domain={[-3, 3]}
+            tickCount={7}
             tick={{ fontSize: 10, fill: '#64748b' }}
             tickFormatter={(value) => value.toFixed(1)}
             axisLine={false}
