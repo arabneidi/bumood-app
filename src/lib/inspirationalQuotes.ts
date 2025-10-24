@@ -146,6 +146,7 @@ export async function generateAIMotivationalQuote(userProfile: {
   favoriteSportsFigures?: string[];
   favoriteMusicians?: string[];
   favoriteArtists?: string[];
+  favoriteMovies?: string[];
   favoritePhilosophers?: string[];
   recentActivities?: string[];  // To detect what user has been doing
 }): Promise<string> {
@@ -159,7 +160,7 @@ export async function generateAIMotivationalQuote(userProfile: {
 
     const { 
       currentMood, onPeriod, waterIntake, timeOfDay, gender, age, interests, quoteStyle, favoriteAuthors,
-      favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoritePhilosophers,
+      favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers,
       recentActivities
     } = userProfile;
     
@@ -206,6 +207,10 @@ export async function generateAIMotivationalQuote(userProfile: {
       prompt += `Favorite artists: ${favoriteArtists.join(', ')} (use when user does art)\n`;
     }
     
+    if (favoriteMovies && favoriteMovies.length > 0) {
+      prompt += `Favorite movies/TV shows: ${favoriteMovies.join(', ')} (use for entertainment/inspiration)\n`;
+    }
+    
     if (favoritePhilosophers && favoritePhilosophers.length > 0) {
       prompt += `Favorite philosophers: ${favoritePhilosophers.join(', ')} (use for deep thoughts)\n`;
     }
@@ -213,7 +218,12 @@ export async function generateAIMotivationalQuote(userProfile: {
     // Recent activities
     if (recentActivities && recentActivities.length > 0) {
       prompt += `Recent activities: ${recentActivities.join(', ')}\n`;
-      prompt += `IMPORTANT: If user did "reading", use quotes from their favorite writers. If user did "gym/football", use quotes from their favorite athletes!\n`;
+      prompt += `IMPORTANT: Match activities to quote sources:
+      - If user did "reading" → use quotes from their favorite writers
+      - If user did "gym/football/running" → use quotes from their favorite athletes
+      - If user did "music" → use quotes from their favorite musicians
+      - If user did "art" → use quotes from their favorite artists
+      - If user did "watching movies/TV" → use quotes from their favorite movies/shows\n`;
     }
 
     // Current mood and state
@@ -249,6 +259,7 @@ export async function generateAIMotivationalQuote(userProfile: {
 - Is relevant to their current mood/situation
 - Is short and powerful (max 20 words)
 - Includes attribution if from a famous person
+- Varies the source and style each time (avoid repetition!)
 
 CRITICAL PERSONALIZATION RULES:
 1. **Match Activity to Source:**
@@ -256,19 +267,52 @@ CRITICAL PERSONALIZATION RULES:
    - If recent activity = "gym/football/running" → Use quotes from their favoriteSportsFigures
    - If recent activity = "music" → Use quotes from their favoriteMusicians
    - If recent activity = "art" → Use quotes from their favoriteArtists
+   - If recent activity = "watching movies/TV" → Use quotes from their favoriteMovies
 
 2. **Use Their Specific Favorites:**
    - If they listed "Messi, Ronaldo" as athletes → MUST use quotes from Messi or Ronaldo
    - If they listed "Maya Angelou, Rumi" as writers → MUST use quotes from Maya Angelou or Rumi
    - If they listed "Bob Dylan" as musician → MUST use Bob Dylan quotes/lyrics
+   - If they listed "Inception, Breaking Bad" as movies → MUST use quotes from those shows/movies
+   - If they listed "Van Gogh, Frida Kahlo" as artists → MUST use quotes from those artists
 
 3. **Interest-Based Matching:**
    - gym/sports interests → Athletic/competitive quotes
    - poetry/literature interests → Beautiful/poetic quotes
    - science interests → Logical/curiosity quotes
    - spirituality interests → Calm/mindful quotes
+   - art interests → Creative/inspirational quotes
+   - music interests → Rhythmic/emotional quotes
 
-4. **ALWAYS prefer their specific favorites over generic famous people!**
+4. **Age and Gender Considerations:**
+   - For younger users (teens/20s) → More energetic, future-focused quotes
+   - For older users (40s+) → More wisdom-based, reflective quotes
+   - Consider gender-specific motivation when appropriate
+
+5. **ALWAYS prefer their specific favorites over generic famous people!**
+
+6. **VARIETY AND RANDOMNESS RULES:**
+   - NEVER repeat the same person/source in consecutive requests
+   - If user has multiple favorites in a category, rotate between them randomly
+   - Mix between different categories (writers, athletes, philosophers, etc.)
+   - Sometimes create original quotes inspired by their favorites
+   - Vary the quote style (short vs. longer, direct vs. metaphorical)
+   - Consider different time periods (modern vs. historical figures)
+   - **GENRE-BASED EXPANSION**: When user likes specific artists/writers, suggest similar ones in the same genre/vibe
+
+7. **ANTI-REPETITION STRATEGY:**
+   - If last quote was from Messi → next time use a different athlete or switch to writers/philosophers
+   - Rotate through all their favorite categories over multiple requests
+   - Mix real quotes with original inspirational content
+   - Vary the emotional tone (motivational, reflective, energetic, calm)
+
+8. **GENRE-BASED SUGGESTIONS:**
+   - If user likes "Taylor Swift" → suggest similar pop artists (Ariana Grande, Olivia Rodrigo, Billie Eilish)
+   - If user likes "Maya Angelou" → suggest similar poets (Langston Hughes, Rumi, Pablo Neruda)
+   - If user likes "Messi" → suggest similar footballers (Neymar, Mbappé, Ronaldo) or other sports legends
+   - If user likes "Frida Kahlo" → suggest similar artists (Georgia O'Keeffe, Diego Rivera, Vincent van Gogh)
+   - If user likes "Marcus Aurelius" → suggest similar philosophers (Seneca, Epictetus, Stoic thinkers)
+   - **EXPAND BEYOND THEIR EXACT FAVORITES** - suggest artists/writers in the same style, era, or genre
 
 FORMAT:
 If using a real quote: "Quote text" — Author Name
@@ -289,7 +333,7 @@ Respond with ONLY the quote and attribution, nothing else.`;
         messages: [
           {
             role: "system",
-            content: "You are a motivational wellness coach. Generate short, powerful, uplifting quotes."
+            content: "You are a motivational wellness coach. Generate short, powerful, uplifting quotes. CRITICAL: Always vary your sources and avoid repetition. Mix between different people, create original content, and rotate through all available categories."
           },
           {
             role: "user",
@@ -297,7 +341,8 @@ Respond with ONLY the quote and attribution, nothing else.`;
           }
         ],
         max_tokens: 50,
-        temperature: 0.9
+        temperature: 1.2,
+        seed: Math.floor(Math.random() * 1000000)
       })
     });
 

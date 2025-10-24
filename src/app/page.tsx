@@ -9,7 +9,7 @@ import ProgressCircle from "@/components/ui/ProgressCircle";
 import AchievementBadge from "@/components/ui/AchievementBadge";
 import AISuggestions from "@/components/dashboard/AISuggestions";
 import { MoodEntry } from "@prisma/client";
-import { getRandomQuote, generateAIMotivationalQuote } from "@/lib/inspirationalQuotes";
+import { generateAIMotivationalQuote } from "@/lib/inspirationalQuotes";
 
 export default function Home() {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
@@ -86,12 +86,19 @@ export default function Home() {
           setMcLoading(false);
         }
 
-        // Generate quote
+        // Generate personalized quote
         try {
-          const quote = getRandomQuote();
-          setInspirationalQuote(quote);
+          const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
+          if (quoteRes.ok) {
+            const quoteData = await quoteRes.json();
+            setInspirationalQuote(quoteData.quote);
+            console.log('✅ Personalized quote loaded:', quoteData.quote);
+          } else {
+            console.log('⚠️ Personalized quote API failed, using fallback');
+            setInspirationalQuote("Your mental wellness journey starts here.");
+          }
         } catch (error) {
-          console.error('Error generating quote:', error);
+          console.error('Error generating personalized quote:', error);
           setInspirationalQuote("Your mental wellness journey starts here.");
         }
 

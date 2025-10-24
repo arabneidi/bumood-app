@@ -215,7 +215,7 @@ async function generateWithOpenAI(profile: UserMoodProfile): Promise<AISuggestio
         messages: [
           {
             role: "system",
-            content: "You are a wellness AI assistant. Generate personalized mood improvement suggestions based on user data. Always respond with valid JSON format."
+            content: "You are a wellness AI assistant. Generate personalized mood improvement suggestions based on user data. Always respond with valid JSON format. CRITICAL: Always vary your suggestions and avoid repetition. Mix between different activities, artists, songs, and approaches each time."
           },
           {
             role: "user",
@@ -223,7 +223,8 @@ async function generateWithOpenAI(profile: UserMoodProfile): Promise<AISuggestio
           }
         ],
         max_tokens: 1000,
-        temperature: 0.9
+        temperature: 1.2,
+        seed: Math.floor(Math.random() * 1000000)
       })
     });
 
@@ -1215,6 +1216,9 @@ CRITICAL INSTRUCTION - BE ULTRA-SPECIFIC IN YOUR SUGGESTIONS:
 1. **If suggesting music/dance:**
    - DO NOT say "listen to music" or "dance"
    - If they have favorite musicians: "Listen to [SPECIFIC SONG] by [FAVORITE MUSICIAN]"
+   - **GENRE EXPANSION**: If they like Taylor Swift → suggest similar pop artists (Ariana Grande, Olivia Rodrigo, Billie Eilish)
+   - **GENRE EXPANSION**: If they like Pink Floyd → suggest similar rock/prog artists (Led Zeppelin, Queen, Radiohead)
+   - **GENRE EXPANSION**: If they like classical → suggest similar composers (Mozart, Beethoven, Chopin)
    - If NO favorite musicians saved: Use age-appropriate suggestions:
      * Age 18-25: "Listen to 'Levitating' by Dua Lipa" or "Dance to 'Good 4 U' by Olivia Rodrigo"
      * Age 26-35: "Listen to 'Blinding Lights' by The Weeknd" or "Dance to 'Watermelon Sugar' by Harry Styles"
@@ -1225,14 +1229,20 @@ CRITICAL INSTRUCTION - BE ULTRA-SPECIFIC IN YOUR SUGGESTIONS:
 2. **If suggesting reading:**
    - DO NOT say "read a book"
    - DO say "Read [SPECIFIC BOOK TITLE] by [FAVORITE WRITER]"
+   - **GENRE EXPANSION**: If they like Maya Angelou → suggest similar poets (Langston Hughes, Rumi, Pablo Neruda)
+   - **GENRE EXPANSION**: If they like Ernest Hemingway → suggest similar writers (F. Scott Fitzgerald, John Steinbeck, Jack London)
+   - **GENRE EXPANSION**: If they like Carl Sagan → suggest similar science writers (Neil deGrasse Tyson, Stephen Hawking, Richard Feynman)
    - Example: "Read 'Pride and Prejudice' by Jane Austen" or "Read Rumi's 'The Guest House' poem"
-   - Use ONLY their favorite writers list!
+   - Use their favorite writers list AND similar authors in the same genre!
 
 3. **If suggesting exercise/sports:**
    - DO NOT say "work out" or "exercise"
    - DO say "Try [SPECIFIC WORKOUT] inspired by [FAVORITE ATHLETE]"
+   - **GENRE EXPANSION**: If they like Messi → suggest similar footballers (Neymar, Mbappé, Ronaldo) or other sports legends
+   - **GENRE EXPANSION**: If they like Serena Williams → suggest similar tennis players (Venus Williams, Roger Federer, Rafael Nadal)
+   - **GENRE EXPANSION**: If they like Michael Jordan → suggest similar basketball players (LeBron James, Kobe Bryant, Magic Johnson)
    - Example: "Do Ronaldo's 30-min HIIT routine" or "Try Serena Williams' warmup stretches"
-   - Use ONLY their favorite athletes list!
+   - Use their favorite athletes list AND similar athletes in the same sport!
 
 4. **If suggesting movies/shows:**
    - DO NOT say "watch a movie"
@@ -1247,6 +1257,9 @@ CRITICAL INSTRUCTION - BE ULTRA-SPECIFIC IN YOUR SUGGESTIONS:
 6. **If suggesting art/creativity:**
    - DO NOT say "do art"
    - DO say "Try [SPECIFIC ART ACTIVITY] inspired by [FAVORITE ARTIST]"
+   - **GENRE EXPANSION**: If they like Frida Kahlo → suggest similar artists (Georgia O'Keeffe, Diego Rivera, Vincent van Gogh)
+   - **GENRE EXPANSION**: If they like Leonardo da Vinci → suggest similar Renaissance artists (Michelangelo, Raphael, Botticelli)
+   - **GENRE EXPANSION**: If they like Van Gogh → suggest similar impressionist artists (Monet, Renoir, Degas)
    - Example: "Draw self-portraits inspired by Frida Kahlo" or "Try Van Gogh's color techniques"
 
 RESPONSE FORMAT:
