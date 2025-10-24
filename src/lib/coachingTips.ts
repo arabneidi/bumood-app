@@ -6,6 +6,38 @@ export interface UserProfile {
     energy: number;
     stress: number;
   };
+  todayMoodAverages?: {
+    valence: number;
+    energy: number;
+    focus: number;
+    stress: number;
+    sleep: number;
+    entryCount: number;
+  };
+  powerHoursData?: {
+    mostProductiveHours: Array<{
+      day: string;
+      hour: number;
+      productivity: number;
+    }>;
+    bestDay: {
+      day: string;
+      productivity: number;
+    } | null;
+    bestDeepWorkHours: Array<{
+      day: string;
+      hour: number;
+      avgMinutes: number;
+      avgTasks: number;
+      sessions: number;
+    }>;
+    recommendations: Array<{
+      type: string;
+      title: string;
+      description: string;
+      priority: string;
+    }>;
+  };
   onPeriod?: boolean;
   waterIntake?: number;
   timeOfDay?: string;
@@ -50,7 +82,7 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
   }
 
   const {
-    currentMood, onPeriod, waterIntake, timeOfDay, gender, age, interests, quoteStyle, favoriteAuthors,
+    currentMood, todayMoodAverages, powerHoursData, onPeriod, waterIntake, timeOfDay, gender, age, interests, quoteStyle, favoriteAuthors,
     favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers,
     recentActivities, activeGoals, completedGoals, achievedBadges, personality, universityLevel, fieldOfStudy, sleepData, hydrationData, 
     exerciseData, periodData, moodTrends, dssScore, dssAnalysis, todayActivities
@@ -133,6 +165,52 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
     }
     if (currentMood.stress > 7) {
       prompt += `⚠️ User is stressed - provide stress-reduction strategies\n`;
+    }
+  }
+
+  // Today's mood averages for better context
+  if (todayMoodAverages) {
+    prompt += `\nToday's Mood Averages (${todayMoodAverages.entryCount} entries):\n`;
+    prompt += `- Happiness: ${todayMoodAverages.valence}/10\n`;
+    prompt += `- Energy: ${todayMoodAverages.energy}/10\n`;
+    prompt += `- Focus: ${todayMoodAverages.focus}/10\n`;
+    prompt += `- Stress: ${todayMoodAverages.stress}/10\n`;
+    prompt += `- Sleep Quality: ${todayMoodAverages.sleep}/10\n`;
+    
+    // Add insights based on today's averages
+    if (todayMoodAverages.energy < 5) {
+      prompt += `⚠️ Low energy today - suggest energy-boosting activities\n`;
+    }
+    if (todayMoodAverages.stress > 6) {
+      prompt += `⚠️ High stress today - suggest stress management\n`;
+    }
+    if (todayMoodAverages.focus > 7) {
+      prompt += `✅ High focus today - suggest deep work tasks\n`;
+    }
+  }
+
+  // Power Hours data for optimal timing
+  if (powerHoursData && powerHoursData.mostProductiveHours && powerHoursData.mostProductiveHours.length > 0) {
+    prompt += `\nPower Hours (Most Productive Times):\n`;
+    powerHoursData.mostProductiveHours.slice(0, 3).forEach((hour, index) => {
+      prompt += `- ${hour.day}s at ${hour.hour}:00 (${Math.round(hour.productivity * 100)}% productivity)\n`;
+    });
+    
+    if (powerHoursData.bestDay) {
+      prompt += `- Best day: ${powerHoursData.bestDay.day} (${Math.round(powerHoursData.bestDay.productivity * 100)}% productivity)\n`;
+    }
+    
+    // Add time-based coaching
+    const currentHour = new Date().getHours();
+    const currentDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
+    const isPowerHour = powerHoursData.mostProductiveHours.some(hour => 
+      hour.day === currentDay && Math.abs(hour.hour - currentHour) <= 1
+    );
+    
+    if (isPowerHour) {
+      prompt += `\n🎯 CURRENTLY IN YOUR POWER HOUR! Focus on high-priority tasks now.\n`;
+    } else {
+      prompt += `\n⏰ Not in power hour - suggest lighter tasks or preparation work.\n`;
     }
   }
   

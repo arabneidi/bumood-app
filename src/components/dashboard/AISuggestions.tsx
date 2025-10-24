@@ -15,9 +15,13 @@ interface AISuggestionsProps {
     stress: number;
     sleep?: number;
   };
+  refreshTrigger?: number;
+  hasNewMoodData?: boolean;
+  onRefresh?: () => void;
+  onDataProcessed?: () => void;
 }
 
-export default function AISuggestions({ moodEntries, currentMood }: AISuggestionsProps) {
+export default function AISuggestions({ moodEntries, currentMood, refreshTrigger, hasNewMoodData, onRefresh, onDataProcessed }: AISuggestionsProps) {
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -26,9 +30,32 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
   const [lastPayload, setLastPayload] = useState<UserMoodProfile | null>(null);
   const [showPayload, setShowPayload] = useState(false);
 
+  // Load saved suggestions from localStorage on mount
   useEffect(() => {
-    generateSuggestions();
-  }, [moodEntries, currentMood]);
+    const savedSuggestions = localStorage.getItem('ai-suggestions');
+    if (savedSuggestions) {
+      try {
+        const parsed = JSON.parse(savedSuggestions);
+        setSuggestions(parsed);
+        console.log('📱 Loaded saved AI suggestions from localStorage');
+      } catch (error) {
+        console.error('Error loading saved suggestions:', error);
+        // If parsing fails, generate new suggestions
+        generateSuggestions();
+      }
+    } else {
+      // No saved suggestions, generate new ones
+      generateSuggestions();
+    }
+  }, []);
+
+  useEffect(() => {
+    // Only regenerate if we have new mood data OR manual refresh trigger
+    if (hasNewMoodData || refreshTrigger) {
+      generateSuggestions();
+    }
+    // If no new data and no refresh trigger, keep existing suggestions
+  }, [moodEntries, currentMood, refreshTrigger, hasNewMoodData]);
 
   const generateSuggestions = async () => {
     setLoading(true);
@@ -149,7 +176,15 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
       setActionStates({});
       setSuggestions(newSuggestions);
       
+      // Save suggestions to localStorage for persistence
+      localStorage.setItem('ai-suggestions', JSON.stringify(newSuggestions));
+      
       console.log(`✅ Generated ${newSuggestions.length} fresh suggestions`);
+      
+      // Reset the new data flag after processing
+      if (onDataProcessed) {
+        onDataProcessed();
+      }
     } catch (error) {
       console.error('Error generating AI suggestions:', error);
       setError('Failed to generate AI suggestions. Please try again.');
@@ -599,7 +634,13 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
         </div>
         <div className="flex space-x-2">
           <button
-            onClick={generateSuggestions}
+            onClick={() => {
+              if (onRefresh) {
+                onRefresh();
+              } else {
+                generateSuggestions();
+              }
+            }}
             disabled={loading}
             className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-purple-600 border-2 border-blue-400 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg font-semibold w-12 h-12 rounded-full transition-all duration-300 transform hover:scale-110 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           >

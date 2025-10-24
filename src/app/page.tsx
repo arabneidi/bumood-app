@@ -8,9 +8,9 @@ import Button from "@/components/ui/Button";
 import ProgressCircle from "@/components/ui/ProgressCircle";
 import AchievementBadge from "@/components/ui/AchievementBadge";
 import AISuggestions from "@/components/dashboard/AISuggestions";
-import { CongratulationModal, useCongratulations } from "@/components/ui/CongratulationModal";
+import CongratulationModal, { useCongratulations } from "@/components/ui/CongratulationModal";
 import { MoodEntry } from "@prisma/client";
-import { generateAIMotivationalQuote } from "@/lib/inspirationalQuotes";
+// Removed unused import - now using API for coaching tips
 
 export default function Home() {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
@@ -28,6 +28,9 @@ export default function Home() {
   const [moodComposite, setMoodComposite] = useState<number | null>(null);
   const [mcLoading, setMcLoading] = useState(true);
   const [currentTimeBucket, setCurrentTimeBucket] = useState<string>('');
+  const [lastMoodEntriesHash, setLastMoodEntriesHash] = useState<string>('');
+  const [aiSuggestionsTrigger, setAiSuggestionsTrigger] = useState<number>(0);
+  const [hasNewMoodData, setHasNewMoodData] = useState<boolean>(false);
 
   // Congratulations system
   const {
@@ -54,7 +57,32 @@ export default function Home() {
         // Process mood entries
         if (moodEntriesRes.ok) {
           const data = await moodEntriesRes.json();
-          setMoodEntries(data);
+          // Create a hash of the mood entries to detect changes
+          const entriesHash = JSON.stringify(data.map((entry: any) => ({
+            id: entry.id,
+            createdAt: entry.createdAt,
+            valence: entry.valence,
+            energy: entry.energy,
+            focus: entry.focus,
+            stress: entry.stress,
+            activities: entry.activities
+          })));
+          
+          // Only update if the data has actually changed
+          if (entriesHash !== lastMoodEntriesHash) {
+            setMoodEntries(data);
+            setLastMoodEntriesHash(entriesHash);
+            // Only set flag to true if we had previous data (not first load)
+            if (lastMoodEntriesHash !== '') {
+              setHasNewMoodData(true); // Flag that we have new data
+              console.log('📊 Mood entries updated - AI suggestions will regenerate');
+            } else {
+              console.log('📊 First load - AI suggestions will not regenerate');
+            }
+          } else {
+            setHasNewMoodData(false); // No new data
+            console.log('📊 Mood entries unchanged - AI suggestions will not regenerate');
+          }
         }
 
         // Process achievements
@@ -979,7 +1007,13 @@ export default function Home() {
                   
                   {/* AI Suggestions Content */}
                   <div className="relative z-10">
-                    <AISuggestions moodEntries={moodEntries} />
+                    <AISuggestions 
+                      moodEntries={moodEntries} 
+                      refreshTrigger={aiSuggestionsTrigger}
+                      hasNewMoodData={hasNewMoodData}
+                      onRefresh={() => setAiSuggestionsTrigger(prev => prev + 1)}
+                      onDataProcessed={() => setHasNewMoodData(false)}
+                    />
                   </div>
                 </div>
               </motion.div>

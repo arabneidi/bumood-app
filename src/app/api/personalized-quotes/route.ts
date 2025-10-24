@@ -116,10 +116,59 @@ export async function GET(request: NextRequest) {
         sleep: recentEntries[0].sleep
       };
     }
+
+    // Get today's mood entries for average calculation
+    const todayForMoods = new Date();
+    const startOfTodayForMoods = new Date(todayForMoods.getFullYear(), todayForMoods.getMonth(), todayForMoods.getDate());
+    const endOfTodayForMoods = new Date(todayForMoods.getFullYear(), todayForMoods.getMonth(), todayForMoods.getDate() + 1);
+    
+    const todayEntries = await db.moodEntry.findMany({
+      where: { 
+        userId,
+        createdAt: {
+          gte: startOfTodayForMoods,
+          lt: endOfTodayForMoods
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Calculate today's mood averages
+    let todayMoodAverages = null;
+    if (todayEntries.length > 0) {
+      const totalEntries = todayEntries.length;
+      todayMoodAverages = {
+        valence: Math.round(todayEntries.reduce((sum, entry) => sum + entry.valence, 0) / totalEntries),
+        energy: Math.round(todayEntries.reduce((sum, entry) => sum + entry.energy, 0) / totalEntries),
+        focus: Math.round(todayEntries.reduce((sum, entry) => sum + entry.focus, 0) / totalEntries),
+        stress: Math.round(todayEntries.reduce((sum, entry) => sum + entry.stress, 0) / totalEntries),
+        sleep: Math.round(todayEntries.reduce((sum, entry) => sum + entry.sleep, 0) / totalEntries),
+        entryCount: totalEntries
+      };
+    }
+
+    // Get Power Hours data for the user's most productive times
+    let powerHoursData = null;
+    try {
+      const powerHoursResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/power-hours?userId=${userId}&days=7`);
+      if (powerHoursResponse.ok) {
+        const powerHours = await powerHoursResponse.json();
+        powerHoursData = {
+          mostProductiveHours: powerHours.insights?.mostProductiveHours || [],
+          bestDay: powerHours.insights?.bestDay || null,
+          bestDeepWorkHours: powerHours.insights?.bestDeepWorkHours || [],
+          recommendations: powerHours.insights?.recommendations || []
+        };
+      }
+    } catch (error) {
+      console.log('⚠️ Error fetching Power Hours data:', error);
+    }
     
     // Create user profile for AI quote generation
     const userProfile = {
       currentMood,
+      todayMoodAverages, // Today's mood averages
+      powerHoursData, // Power Hours insights
       gender: user.gender,
       age: user.age,
       personality: user.personality,
