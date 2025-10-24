@@ -556,6 +556,11 @@ export default function NewEntry() {
 
       if (response.ok) {
         console.log("Entry saved successfully!");
+        
+        // Signal dashboard to regenerate AI suggestions and Pro Tips
+        localStorage.setItem('mood-entry-created', Date.now().toString());
+        console.log('📝 Mood entry created - signaling dashboard for regeneration');
+        
         router.push("/stats");
       } else {
         const errorData = await response.json();

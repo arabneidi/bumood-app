@@ -284,6 +284,11 @@ export default function GoalsPage() {
       if (response.ok) {
         const createdGoal = await response.json();
         setGoals([...goals, createdGoal]);
+        
+        // Signal dashboard that goals have changed
+        localStorage.setItem('goals-changed', Date.now().toString());
+        console.log('🎯 Goal created - signaling dashboard to regenerate Pro Tips');
+        
         setNewGoal({
           title: "",
           category: "",

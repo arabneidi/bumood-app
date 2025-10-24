@@ -50,9 +50,19 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
   }, []);
 
   useEffect(() => {
+    console.log('🤖 AI Suggestions useEffect triggered:', {
+      hasNewMoodData,
+      refreshTrigger,
+      moodEntriesLength: moodEntries.length,
+      shouldRegenerate: hasNewMoodData || refreshTrigger
+    });
+    
     // Only regenerate if we have new mood data OR manual refresh trigger
     if (hasNewMoodData || refreshTrigger) {
+      console.log('🤖 AI Suggestions regenerating...');
       generateSuggestions();
+    } else {
+      console.log('🤖 AI Suggestions keeping existing suggestions');
     }
     // If no new data and no refresh trigger, keep existing suggestions
   }, [moodEntries, currentMood, refreshTrigger, hasNewMoodData]);

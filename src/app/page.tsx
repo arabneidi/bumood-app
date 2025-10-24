@@ -31,6 +31,12 @@ export default function Home() {
   const [lastMoodEntriesHash, setLastMoodEntriesHash] = useState<string>('');
   const [aiSuggestionsTrigger, setAiSuggestionsTrigger] = useState<number>(0);
   const [hasNewMoodData, setHasNewMoodData] = useState<boolean>(false);
+  const [lastGoalsHash, setLastGoalsHash] = useState<string>('');
+  const [lastAchievementsHash, setLastAchievementsHash] = useState<string>('');
+  const [hasNewProTipData, setHasNewProTipData] = useState<boolean>(false);
+  
+  // Check for mood entry creation signal
+  const moodEntryCreated = typeof window !== 'undefined' ? localStorage.getItem('mood-entry-created') : null;
 
   // Congratulations system
   const {
@@ -45,10 +51,12 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
+        console.log('🔄 Dashboard fetching data...');
         // Fetch all data in parallel
-        const [moodEntriesRes, achievementsRes, userRes, dssRes, mcRes] = await Promise.all([
+        const [moodEntriesRes, achievementsRes, goalsRes, userRes, dssRes, mcRes] = await Promise.all([
           fetch("/api/mood-entries"),
           fetch("/api/achievements"),
+          fetch("/api/goals"),
           fetch("/api/user?userId=dummy-user"),
           fetch(`/api/dss?userId=dummy-user&date=${new Date().toISOString().split('T')[0]}`),
           fetch("/api/mood-composite?userId=dummy-user")
@@ -69,15 +77,23 @@ export default function Home() {
           })));
           
           // Only update if the data has actually changed
+          console.log('🔍 Hash comparison:', {
+            entriesHash: entriesHash.substring(0, 50) + '...',
+            lastMoodEntriesHash: lastMoodEntriesHash.substring(0, 50) + '...',
+            hasChanged: entriesHash !== lastMoodEntriesHash,
+            lastHashEmpty: lastMoodEntriesHash === ''
+          });
+          
           if (entriesHash !== lastMoodEntriesHash) {
             setMoodEntries(data);
             setLastMoodEntriesHash(entriesHash);
             // Only set flag to true if we had previous data (not first load)
             if (lastMoodEntriesHash !== '') {
               setHasNewMoodData(true); // Flag that we have new data
-              console.log('📊 Mood entries updated - AI suggestions will regenerate');
+              setHasNewProTipData(true); // Also trigger Pro Tips regeneration
+              console.log('📊 Mood entries updated - AI suggestions and Pro Tips will regenerate');
             } else {
-              console.log('📊 First load - AI suggestions will not regenerate');
+              console.log('📊 First load - AI suggestions and Pro Tips will not regenerate');
             }
           } else {
             setHasNewMoodData(false); // No new data
@@ -88,8 +104,60 @@ export default function Home() {
         // Process achievements
         if (achievementsRes.ok) {
           const data = await achievementsRes.json();
-          setAchievements(data);
+          // Create hash of achievements to detect changes
+          const achievementsHash = JSON.stringify(data.map((achievement: any) => ({
+            id: achievement.id,
+            name: achievement.name,
+            description: achievement.description,
+            unlockedAt: achievement.unlockedAt
+          })));
+          
+          // Only update if achievements have actually changed
+          if (achievementsHash !== lastAchievementsHash) {
+            setAchievements(data);
+            setLastAchievementsHash(achievementsHash);
+            // Only set flag to true if we had previous data (not first load)
+            if (lastAchievementsHash !== '') {
+              setHasNewProTipData(true); // New achievement = new coaching opportunity
+              console.log('🏆 Achievements updated - Pro Tips will regenerate');
+            } else {
+              console.log('🏆 First load achievements - Pro Tips will not regenerate');
+            }
+          } else {
+            console.log('🏆 Achievements unchanged - Pro Tips will not regenerate');
+          }
           setAchievementsLoading(false);
+        }
+
+        // Process goals
+        if (goalsRes.ok) {
+          const data = await goalsRes.json();
+          // Create hash of goals to detect changes
+          const goalsHash = JSON.stringify(data.map((goal: any) => ({
+            id: goal.id,
+            title: goal.title,
+            description: goal.description,
+            category: goal.category,
+            subcategory: goal.subcategory,
+            progress: goal.progress,
+            completed: goal.completed,
+            createdAt: goal.createdAt,
+            completedAt: goal.completedAt
+          })));
+          
+          // Only update if goals have actually changed
+          if (goalsHash !== lastGoalsHash) {
+            setLastGoalsHash(goalsHash);
+            // Only set flag to true if we had previous data (not first load)
+            if (lastGoalsHash !== '') {
+              setHasNewProTipData(true); // New goal or goal change = new coaching opportunity
+              console.log('🎯 Goals updated - Pro Tips will regenerate');
+            } else {
+              console.log('🎯 First load goals - Pro Tips will not regenerate');
+            }
+          } else {
+            console.log('🎯 Goals unchanged - Pro Tips will not regenerate');
+          }
         }
 
         // Process user data
@@ -125,20 +193,71 @@ export default function Home() {
           setMcLoading(false);
         }
 
-        // Generate personalized quote
-        try {
-          const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
-          if (quoteRes.ok) {
-            const quoteData = await quoteRes.json();
-            setProTip(quoteData.quote);
-            console.log('✅ Personalized quote loaded:', quoteData.quote);
-          } else {
-            console.log('⚠️ Personalized quote API failed, using fallback');
+        // Check if goals changed from other pages
+        const goalsChanged = localStorage.getItem('goals-changed');
+        const moodEntryCreated = localStorage.getItem('mood-entry-created');
+        const shouldRegenerateProTips = hasNewMoodData || hasNewProTipData || goalsChanged || moodEntryCreated;
+        
+        console.log('🔍 Pro Tips regeneration check:', {
+          hasNewMoodData,
+          hasNewProTipData,
+          goalsChanged,
+          moodEntryCreated,
+          shouldRegenerateProTips
+        });
+        
+        // Generate personalized quote only if we have new data
+        if (shouldRegenerateProTips) {
+          try {
+            const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
+            if (quoteRes.ok) {
+              const quoteData = await quoteRes.json();
+              setProTip(quoteData.quote);
+              // Save to localStorage for persistence
+              localStorage.setItem('pro-tip', quoteData.quote);
+              
+              // Clear the signals after using them
+              if (goalsChanged) {
+                localStorage.removeItem('goals-changed');
+                console.log('🎯 Pro Tips regenerated due to goals change:', quoteData.quote);
+              } else if (moodEntryCreated) {
+                localStorage.removeItem('mood-entry-created');
+                console.log('📝 Pro Tips regenerated due to new mood entry:', quoteData.quote);
+              } else {
+                console.log('🎯 Pro Tips regenerated due to new data:', quoteData.quote);
+              }
+            } else {
+              console.log('⚠️ Personalized quote API failed, using fallback');
+              setProTip("Your mental wellness journey starts here.");
+            }
+          } catch (error) {
+            console.error('Error generating personalized quote:', error);
             setProTip("Your mental wellness journey starts here.");
           }
-        } catch (error) {
-          console.error('Error generating personalized quote:', error);
-          setProTip("Your mental wellness journey starts here.");
+        } else {
+          // Load saved Pro Tip from localStorage
+          const savedProTip = localStorage.getItem('pro-tip');
+          if (savedProTip) {
+            setProTip(savedProTip);
+            console.log('📱 Loaded saved Pro Tip from localStorage');
+          } else {
+            // No saved Pro Tip, generate one
+            try {
+              const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
+              if (quoteRes.ok) {
+                const quoteData = await quoteRes.json();
+                setProTip(quoteData.quote);
+                localStorage.setItem('pro-tip', quoteData.quote);
+                console.log('🎯 Generated initial Pro Tip');
+              } else {
+                console.log('⚠️ Personalized quote API failed, using fallback');
+                setProTip("Your mental wellness journey starts here.");
+              }
+            } catch (error) {
+              console.error('Error generating personalized quote:', error);
+              setProTip("Your mental wellness journey starts here.");
+            }
+          }
         }
 
       } catch (error) {
@@ -152,7 +271,7 @@ export default function Home() {
     }
 
     fetchData();
-  }, []);
+  }, [timeRange]); // Refetch when time range changes or component mounts
 
   // Filter entries based on time range
   const getFilteredEntries = () => {
@@ -165,14 +284,24 @@ export default function Home() {
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const entryStart = new Date(entryDate.getUTCFullYear(), entryDate.getUTCMonth(), entryDate.getUTCDate());
         
+        // Also check yesterday and tomorrow to be more flexible
+        const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
+        const tomorrowStart = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+        
         console.log('🔍 Date comparison (UTC):', {
           entryDate: entryDate.toISOString(),
           entryStart: entryStart.toISOString(),
           todayStart: todayStart.toISOString(),
-          match: entryStart.getTime() === todayStart.getTime()
+          yesterdayStart: yesterdayStart.toISOString(),
+          tomorrowStart: tomorrowStart.toISOString(),
+          matchToday: entryStart.getTime() === todayStart.getTime(),
+          matchYesterday: entryStart.getTime() === yesterdayStart.getTime(),
+          matchTomorrow: entryStart.getTime() === tomorrowStart.getTime()
         });
         
-        return entryStart.getTime() === todayStart.getTime();
+        return entryStart.getTime() === todayStart.getTime() || 
+               entryStart.getTime() === yesterdayStart.getTime() || 
+               entryStart.getTime() === tomorrowStart.getTime();
       } else if (timeRange === 'weekly') {
         // Last 7 days
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -1010,9 +1139,14 @@ export default function Home() {
                     <AISuggestions 
                       moodEntries={moodEntries} 
                       refreshTrigger={aiSuggestionsTrigger}
-                      hasNewMoodData={hasNewMoodData}
+                      hasNewMoodData={hasNewMoodData || !!moodEntryCreated}
                       onRefresh={() => setAiSuggestionsTrigger(prev => prev + 1)}
-                      onDataProcessed={() => setHasNewMoodData(false)}
+                      onDataProcessed={() => {
+                        setHasNewMoodData(false);
+                        if (moodEntryCreated) {
+                          localStorage.removeItem('mood-entry-created');
+                        }
+                      }}
                     />
                   </div>
                 </div>

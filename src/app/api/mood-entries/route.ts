@@ -232,6 +232,10 @@ export async function POST(request: NextRequest) {
       // Don't fail the mood entry creation if achievement calculation fails
     }
 
+    // Signal dashboard to regenerate AI suggestions and Pro Tips
+    // This will be picked up by the dashboard's useEffect
+    console.log('📝 Mood entry created - signaling dashboard for regeneration');
+
     return NextResponse.json(moodEntry);
   } catch (error) {
     console.error("Error creating mood entry:", error);

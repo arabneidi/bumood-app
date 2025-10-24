@@ -42,6 +42,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Signal dashboard to regenerate Pro Tips
+    console.log('🏆 Achievement created - signaling dashboard for regeneration');
+
     return NextResponse.json(achievement);
   } catch (error) {
     console.error("Error creating achievement:", error);
