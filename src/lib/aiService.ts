@@ -39,7 +39,6 @@ export interface UserMoodProfile {
   };
   userPreferences?: {
     interests?: string[];  // gym, sports, poetry, literature, etc.
-    quoteStyle?: string;
     favoriteWriters?: string[];  // For book suggestions
     favoriteSportsFigures?: string[];  // For sports/workout suggestions
     favoriteMusicians?: string[];  // For music suggestions

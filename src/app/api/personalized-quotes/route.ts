@@ -97,7 +97,6 @@ export async function GET(request: NextRequest) {
     
     // Parse user preferences
     const interests = user.interests ? JSON.parse(user.interests) : [];
-    const quoteStyle = user.quoteStyle ? JSON.parse(user.quoteStyle) : [];
     const favoriteWriters = user.favoriteWriters ? user.favoriteWriters.split(',').map(w => w.trim()).filter(Boolean) : [];
     const favoriteMusicians = user.favoriteMusicians ? user.favoriteMusicians.split(',').map(m => m.trim()).filter(Boolean) : [];
     const favoriteSportsFigures = user.favoriteSportsFigures ? user.favoriteSportsFigures.split(',').map(s => s.trim()).filter(Boolean) : [];
@@ -175,7 +174,6 @@ export async function GET(request: NextRequest) {
       universityLevel: user.universityLevel,
       fieldOfStudy: user.fieldOfStudy,
       interests,
-      quoteStyle: quoteStyle.join(', '), // Convert array to string
       favoriteWriters,
       favoriteMusicians,
       favoriteSportsFigures,
@@ -317,7 +315,6 @@ export async function GET(request: NextRequest) {
     console.log('📊 User profile for quote generation:', {
       age: userProfile.age,
       gender: userProfile.gender,
-      quoteStyle: userProfile.quoteStyle,
       interests: userProfile.interests,
       recentActivities: userProfile.recentActivities,
       favoriteWriters: userProfile.favoriteWriters,
@@ -337,7 +334,6 @@ export async function GET(request: NextRequest) {
       quote,
       source: "ai",
       userPreferences: {
-        quoteStyle: userProfile.quoteStyle,
         interests: userProfile.interests,
         recentActivities: userProfile.recentActivities
       }

@@ -136,7 +136,6 @@ export default function NewEntry() {
           setUserInfo(user);
           setUserPreferences({
             interests: user.interests ? JSON.parse(user.interests) : [],
-            quoteStyle: user.quoteStyle,
             favoriteWriters: user.favoriteWriters ? user.favoriteWriters.split(',').map((w: string) => w.trim()).filter(Boolean) : [],
             favoriteSportsFigures: user.favoriteSportsFigures ? user.favoriteSportsFigures.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
             favoriteMusicians: user.favoriteMusicians ? user.favoriteMusicians.split(',').map((m: string) => m.trim()).filter(Boolean) : [],
@@ -209,7 +208,6 @@ export default function NewEntry() {
                 favoriteArtists: userInfo.favoriteArtists,
                 favoriteMovies: userInfo.favoriteMovies,
                 favoritePhilosophers: userInfo.favoritePhilosophers,
-                quoteStyle: userInfo.quoteStyle
               }
             })
           });
@@ -311,7 +309,6 @@ export default function NewEntry() {
                 favoriteArtists: userInfo.favoriteArtists,
                 favoriteMovies: userInfo.favoriteMovies,
                 favoritePhilosophers: userInfo.favoritePhilosophers,
-                quoteStyle: userInfo.quoteStyle
               },
               existingFavorites
             })
@@ -458,7 +455,6 @@ export default function NewEntry() {
           const user = await userResponse.json();
           setUserPreferences({
             interests: user.interests ? JSON.parse(user.interests) : [],
-            quoteStyle: user.quoteStyle,
             favoriteWriters: user.favoriteWriters ? user.favoriteWriters.split(',').map((w: string) => w.trim()).filter(Boolean) : [],
             favoriteSportsFigures: user.favoriteSportsFigures ? user.favoriteSportsFigures.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
             favoriteMusicians: user.favoriteMusicians ? user.favoriteMusicians.split(',').map((m: string) => m.trim()).filter(Boolean) : [],

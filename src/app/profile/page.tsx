@@ -20,7 +20,6 @@ export default function ProfilePage() {
     universityLevel: '',
     fieldOfStudy: '',
     interests: [] as string[],
-    quoteStyle: [] as string[],
     favoriteAuthors: '',
     favoriteWriters: '',
     favoriteSportsFigures: '',
@@ -52,14 +51,6 @@ export default function ProfilePage() {
     { name: 'cooking', emoji: '👨‍🍳', color: 'from-orange-400 to-red-500' }
   ];
 
-  const quoteStyleOptions = [
-    { name: 'motivational', emoji: '💪', color: 'from-red-400 to-pink-500', description: 'Tony Robbins, Les Brown' },
-    { name: 'poetic', emoji: '📝', color: 'from-purple-400 to-violet-500', description: 'Rumi, Maya Angelou' },
-    { name: 'sporty', emoji: '⚽', color: 'from-green-400 to-emerald-500', description: 'Muhammad Ali, Kobe Bryant' },
-    { name: 'scientific', emoji: '🔬', color: 'from-indigo-400 to-blue-500', description: 'Carl Sagan, Marie Curie' },
-    { name: 'spiritual', emoji: '🧘', color: 'from-violet-400 to-purple-500', description: 'Dalai Lama, Thich Nhat Hanh' },
-    { name: 'philosophical', emoji: '🤔', color: 'from-slate-400 to-gray-500', description: 'Marcus Aurelius, Seneca' }
-  ];
 
   // Load profile data
   useEffect(() => {
@@ -87,7 +78,6 @@ export default function ProfilePage() {
           universityLevel: data.universityLevel || '',
           fieldOfStudy: data.fieldOfStudy || '',
           interests: data.interests ? JSON.parse(data.interests) : [],
-          quoteStyle: data.quoteStyle ? JSON.parse(data.quoteStyle) : [],
           favoriteAuthors: data.favoriteAuthors || '',
           favoriteWriters: data.favoriteWriters || '',
           favoriteSportsFigures: data.favoriteSportsFigures || '',
@@ -140,7 +130,6 @@ export default function ProfilePage() {
         universityLevel: profile.universityLevel || null,
         fieldOfStudy: profile.fieldOfStudy || null,
         interests: JSON.stringify(profile.interests), // For AI personalization
-        quoteStyle: JSON.stringify(profile.quoteStyle), // For AI quote generation
         favoriteAuthors: profile.favoriteAuthors || null,
         favoriteWriters: profile.favoriteWriters || null,
         favoriteSportsFigures: profile.favoriteSportsFigures || null,
@@ -927,80 +916,6 @@ export default function ProfilePage() {
               </div>
             </motion.div>
 
-            {/* Quote Style Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: [0, -6, 0] }}
-              transition={{ 
-                opacity: { duration: 0.5, delay: 0.9 },
-                y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
-              }}
-              className="mb-12"
-            >
-              <div className="flex items-center mb-8">
-                <motion.div
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  className="mr-4"
-                >
-                  <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl">
-                    <BookOpen className="w-8 h-8 text-white" />
-                  </div>
-                </motion.div>
-                <h2 className="text-4xl font-black bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                  Quote Style
-                </h2>
-              </div>
-              
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {quoteStyleOptions.map((style, index) => (
-                  <motion.button
-                    key={style.name}
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.05, rotate: 2 }}
-                    whileTap={{ scale: 0.95 }}
-                         onClick={() => {
-                           if (profile.quoteStyle.includes(style.name)) {
-                             setProfile({
-                               ...profile,
-                               quoteStyle: profile.quoteStyle.filter(s => s !== style.name)
-                             });
-                           } else {
-                             setProfile({
-                               ...profile,
-                               quoteStyle: [...profile.quoteStyle, style.name]
-                             });
-                           }
-                         }}
-                         className={`relative overflow-hidden rounded-2xl p-4 font-bold text-lg transition-all duration-300 ${
-                           profile.quoteStyle.includes(style.name)
-                             ? `bg-gradient-to-r ${style.color} text-white shadow-2xl transform scale-105`
-                             : 'bg-slate-800/40 backdrop-blur-xl text-slate-300 border border-slate-600/50 hover:border-slate-500 hover:shadow-xl'
-                         }`}
-                  >
-                    <div className="flex flex-col items-center space-y-2">
-                      <span className="text-3xl">{style.emoji}</span>
-                      <span className="capitalize">{style.name}</span>
-                      <span className="text-xs opacity-75">{style.description}</span>
-                    </div>
-                         {profile.quoteStyle.includes(style.name) && (
-                           <motion.div
-                             initial={{ scale: 0 }}
-                             animate={{ scale: 1 }}
-                             className="absolute top-2 right-2"
-                           >
-                             <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                               <span className="text-green-500 text-sm">✓</span>
-                             </div>
-                           </motion.div>
-                         )}
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
 
             {/* Activity-Specific Favorites */}
             <motion.div

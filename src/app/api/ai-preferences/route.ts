@@ -124,7 +124,6 @@ function createGenrePrompt(activity: string, userInfo: any): string {
     favoriteArtists,
     favoriteMovies,
     favoritePhilosophers,
-    quoteStyle
   } = userInfo;
   
   return `You are an expert personalization assistant. Generate 8-12 relevant subcategories/genres for the activity "${activity}" based on comprehensive user profile data.
@@ -137,7 +136,6 @@ COMPREHENSIVE USER PROFILE:
 - Personality Type: ${personality || 'Not specified'}
 - University Level: ${universityLevel || 'Not specified'}
 - Field of Study: ${fieldOfStudy || 'Not specified'}
-- Quote Style Preference: ${quoteStyle || 'Not specified'}
 - Interests: ${interests ? JSON.parse(interests).join(', ') : 'Not specified'}
 - Favorite Authors: ${favoriteAuthors || 'Not specified'}
 - Favorite Musicians: ${favoriteMusicians || 'Not specified'}
@@ -189,7 +187,6 @@ function createSpecificPrompt(activity: string, selectedGenres: string[], userIn
     favoriteArtists,
     favoriteMovies,
     favoritePhilosophers,
-    quoteStyle
   } = userInfo;
   
   return `You are an expert personalization assistant. Generate 12-16 specific suggestions for the activity "${activity}" based on selected subcategories and comprehensive user profile data.
@@ -203,7 +200,6 @@ COMPREHENSIVE USER PROFILE:
 - Personality Type: ${personality || 'Not specified'}
 - University Level: ${universityLevel || 'Not specified'}
 - Field of Study: ${fieldOfStudy || 'Not specified'}
-- Quote Style Preference: ${quoteStyle || 'Not specified'}
 - Interests: ${interests ? JSON.parse(interests).join(', ') : 'Not specified'}
 - Favorite Authors: ${favoriteAuthors || 'Not specified'}
 - Favorite Musicians: ${favoriteMusicians || 'Not specified'}

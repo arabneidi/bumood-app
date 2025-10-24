@@ -44,7 +44,6 @@ export interface UserProfile {
   gender?: string;
   age?: number;
   interests?: string[];
-  quoteStyle?: string;
   favoriteWriters?: string[];
   favoriteMusicians?: string[];
   favoriteSportsFigures?: string[];
@@ -82,7 +81,7 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
   }
 
   const {
-    currentMood, todayMoodAverages, powerHoursData, onPeriod, waterIntake, timeOfDay, gender, age, interests, quoteStyle, favoriteAuthors,
+    currentMood, todayMoodAverages, powerHoursData, onPeriod, waterIntake, timeOfDay, gender, age, interests, favoriteAuthors,
     favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers,
     recentActivities, activeGoals, completedGoals, achievedBadges, personality, universityLevel, fieldOfStudy, sleepData, hydrationData, 
     exerciseData, periodData, moodTrends, dssScore, dssAnalysis, todayActivities
@@ -118,9 +117,6 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
     prompt += `Interests: ${interests.join(', ')}\n`;
   }
   
-  if (quoteStyle) {
-    prompt += `Preferred Style: ${quoteStyle}\n`;
-  }
   
   if (favoriteWriters && favoriteWriters.length > 0) {
     prompt += `Favorite Writers: ${favoriteWriters.join(', ')}\n`;
