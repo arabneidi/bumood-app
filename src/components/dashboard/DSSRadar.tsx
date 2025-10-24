@@ -84,13 +84,14 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
 
   const { learningMomentum, recoveryIndex, connectionScore } = data.components;
   
-  // Normalize values to 0-1 scale for radar chart based on actual value ranges
-  // Learning Momentum: typically 0-200, Recovery Index: typically 0-12, Connection: typically 0-10
-  const normalizeValue = (value: number, maxValue: number) => Math.max(0, Math.min(1, value / maxValue));
+  // Normalize values to 0-1 scale using the maximum value among all components
+  // This ensures proper relative scaling where LM (141) appears much larger than RI (8.4)
+  const maxValue = Math.max(learningMomentum || 0, recoveryIndex || 0, connectionScore || 0);
+  const normalizeValue = (value: number) => maxValue > 0 ? Math.max(0, Math.min(1, value / maxValue)) : 0;
 
-  const lmNormalized = normalizeValue(typeof learningMomentum === 'number' ? learningMomentum : 0, 200);
-  const riNormalized = normalizeValue(typeof recoveryIndex === 'number' ? recoveryIndex : 0, 12);
-  const cnNormalized = normalizeValue(typeof connectionScore === 'number' ? connectionScore : 0, 10);
+  const lmNormalized = normalizeValue(typeof learningMomentum === 'number' ? learningMomentum : 0);
+  const riNormalized = normalizeValue(typeof recoveryIndex === 'number' ? recoveryIndex : 0);
+  const cnNormalized = normalizeValue(typeof connectionScore === 'number' ? connectionScore : 0);
 
   const centerX = dimensions.width / 2;
   const centerY = dimensions.height / 2;
