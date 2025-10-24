@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
         activities: true,
         selectedTimeSlots: true,
         selectedSubcategories: true,
+        activityEntries: true,
         valence: true,
         energy: true,
         focus: true,
@@ -136,10 +137,36 @@ export async function GET(request: NextRequest) {
           let deepWorkMinutes = 0;
           let tasksCompleted = 0;
 
-          // Check if this hour has LM-focused activities from time slots
-          const hasLMActivities = dayActivities.some(activity => 
-            ['studying', 'working', 'reading', 'coding', 'writing', 'research', 'learning', 'programming'].includes(activity)
-          );
+          // Check if this hour has LM-focused activities using exact activity entries
+          const hourActivities = moodEntries.filter(entry => {
+            const entryDate = new Date(entry.createdAt);
+            const isSameDay = entryDate.toDateString() === currentDate.toDateString();
+            
+            if (!isSameDay) return false;
+            
+            // Check if there are activity entries for this exact hour
+            const activityEntries = JSON.parse(entry.activityEntries || '[]');
+            const hasActivityAtHour = activityEntries.some((activityEntry: any) => {
+              const activityTime = new Date(activityEntry.exactTime);
+              return activityTime.getHours() === hour;
+            });
+            
+            // Also check time slots as fallback
+            const timeSlots = JSON.parse(entry.selectedTimeSlots || '[]');
+            const hasTimeSlot = timeSlots.some((slot: string) => {
+              const slotHour = parseInt(slot.split('-')[1]);
+              return slotHour === hour;
+            });
+            
+            return hasActivityAtHour || hasTimeSlot;
+          });
+
+          const hasLMActivities = hourActivities.some(entry => {
+            const activities = JSON.parse(entry.activities || '[]');
+            return activities.some((activity: string) => 
+              ['studying', 'working', 'reading', 'coding', 'writing', 'research', 'learning', 'programming'].includes(activity)
+            );
+          });
 
           // Check if this hour is in user's optimal deep work hours
           const isOptimalHour = activityAnalysis.optimalHours.has(hour);
@@ -152,16 +179,31 @@ export async function GET(request: NextRequest) {
             ) : 
             (hour >= 9 && hour <= 17) || (hour >= 19 && hour <= 22);
 
-          // Calculate productivity based on multiple factors
-          if (isOptimalHour && optimalData) {
-            // Use actual user data for optimal hours
+          // Calculate productivity based on exact timestamps and mood scores
+          if (hourActivities.length > 0) {
+            // Calculate productivity based on actual mood scores and activities
+            const avgValence = hourActivities.reduce((sum, entry) => sum + entry.valence, 0) / hourActivities.length;
+            const avgEnergy = hourActivities.reduce((sum, entry) => sum + entry.energy, 0) / hourActivities.length;
+            const avgFocus = hourActivities.reduce((sum, entry) => sum + entry.focus, 0) / hourActivities.length;
+            const avgStress = hourActivities.reduce((sum, entry) => sum + entry.stress, 0) / hourActivities.length;
+            
+            // Power hours formula: (Valence + Energy + Focus - Stress) / 3
+            const moodProductivity = (avgValence + avgEnergy + avgFocus - avgStress) / 3;
+            productivity = Math.max(0, Math.min(1, moodProductivity / 10)); // Normalize to 0-1
+            
+            // Calculate deep work minutes based on focus and activities
+            if (hasLMActivities && avgFocus >= 7) {
+              deepWorkMinutes = Math.round(60 * (avgFocus / 10)); // Convert focus score to minutes
+              tasksCompleted = Math.round((avgEnergy + avgFocus) / 2); // Energy + Focus = task completion
+            }
+          } else if (isOptimalHour && optimalData) {
+            // Use historical optimal data if no current activities
             productivity = Math.min(optimalData.productivity, 1);
             deepWorkMinutes = Math.round(readingMinutes * 0.15);
             tasksCompleted = Math.round((exerciseMinutes + meditationMinutes) * 0.1);
-          } else if (isProductiveHour || hasLMActivities) {
+          } else if (isProductiveHour) {
             // Use pattern-based calculation for other productive hours
-            const hourWeight = hasLMActivities ? 0.8 : 0.4;
-            productivity = baseProductivity * hourWeight;
+            productivity = baseProductivity * 0.4;
             
             // Distribute productive activities across productive hours
             if (hour >= 9 && hour <= 17) {
@@ -232,6 +274,7 @@ async function analyzeActivityPatterns(moodEntries: any[]) {
     const activities = JSON.parse(entry.activities || '[]');
     const timeSlots = JSON.parse(entry.selectedTimeSlots || '[]');
     const subcategories = JSON.parse(entry.selectedSubcategories || '[]');
+    const activityEntries = JSON.parse(entry.activityEntries || '[]');
     
     // Track activities by actual time
     if (!hourlyActivities.has(actualHour)) {
@@ -239,13 +282,55 @@ async function analyzeActivityPatterns(moodEntries: any[]) {
     }
     hourlyActivities.get(actualHour).push(...activities);
     
-    // Track activities by selected time slots
+    // Track activities by exact activity entries (preferred method)
+    activityEntries.forEach((activityEntry: any) => {
+      const activityTime = new Date(activityEntry.exactTime);
+      const hour = activityTime.getHours();
+      
+      if (!timeSlotActivities.has(hour)) {
+        timeSlotActivities.set(hour, []);
+      }
+      
+      // Store activity with exact timestamp and mood scores
+      timeSlotActivities.get(hour).push({
+        activity: activityEntry.activity,
+        exactTime: activityEntry.exactTime,
+        timeSlot: activityEntry.timeSlot,
+        hour: activityEntry.hour,
+        moodScores: {
+          valence: entry.valence,
+          energy: entry.energy,
+          focus: entry.focus,
+          stress: entry.stress
+        }
+      });
+    });
+    
+    // Fallback: Track activities by selected time slots (for backward compatibility)
     timeSlots.forEach((timeSlot: string) => {
       const hour = parseInt(timeSlot.split('-')[1]) || actualHour;
       if (!timeSlotActivities.has(hour)) {
         timeSlotActivities.set(hour, []);
       }
-      timeSlotActivities.get(hour).push(...activities);
+      // Only add if not already added via activityEntries
+      const hasExactEntry = activityEntries.some((ae: any) => {
+        const aeHour = new Date(ae.exactTime).getHours();
+        return aeHour === hour;
+      });
+      
+      if (!hasExactEntry) {
+        timeSlotActivities.get(hour).push({
+          activity: activities,
+          exactTime: entry.createdAt,
+          timeSlot: timeSlot,
+          moodScores: {
+            valence: entry.valence,
+            energy: entry.energy,
+            focus: entry.focus,
+            stress: entry.stress
+          }
+        });
+      }
     });
     
     // Identify deep work activities based on mood scores and activities

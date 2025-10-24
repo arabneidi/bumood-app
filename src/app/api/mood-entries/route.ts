@@ -101,9 +101,9 @@ export async function POST(request: NextRequest) {
     console.log('📝 Creating mood entry with data:', JSON.stringify(body, null, 2));
     const { 
       valence, energy, focus, stress, sleep, 
-      notes, activities, selectedTimeSlots, selectedSubcategories, dssAnalysis, reflection, voiceNote, aiSuggestion,
+      notes, activities, selectedTimeSlots, selectedSubcategories, activityEntries, dssAnalysis, reflection, voiceNote, aiSuggestion,
       onPeriod, periodDay, waterIntake, mealsEaten, mealQuality, caffeine, alcohol,
-      customDate, customTime
+      customDate
     } = body;
     
     console.log('🔍 dssAnalysis type:', typeof dssAnalysis);
@@ -124,9 +124,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Use custom date/time if provided, otherwise use current date
-    const entryDate = customDate && customTime 
-      ? new Date(`${customDate}T${customTime}`)
+    // Use custom date if provided, otherwise use current date
+    const entryDate = customDate 
+      ? new Date(`${customDate}T12:00:00`) // Use noon as default time
       : new Date();
     
     console.log('📅 Entry date:', entryDate.toISOString());
@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
         activities: JSON.stringify(activities),
         selectedTimeSlots: selectedTimeSlots ? JSON.stringify(selectedTimeSlots) : null,
         selectedSubcategories: selectedSubcategories ? JSON.stringify(selectedSubcategories) : null,
+        activityEntries: activityEntries ? JSON.stringify(activityEntries) : null,
         dssAnalysis: dssAnalysis ? (typeof dssAnalysis === 'string' ? dssAnalysis : JSON.stringify(dssAnalysis)) : null,
         reflection: reflection || null,
         voiceNote: voiceNote || null,

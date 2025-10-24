@@ -100,11 +100,9 @@ export default function NewEntry() {
   const [periodStartDate, setPeriodStartDate] = useState<string | null>(null);
   const [isFirstPeriodEntry, setIsFirstPeriodEntry] = useState<boolean>(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedHour, setSelectedHour] = useState(new Date().getHours());
-  const [selectedMinute, setSelectedMinute] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(new Date().getDate());
   const [formData, setFormData] = useState({
     valence: 5,
     energy: 5,
@@ -114,6 +112,7 @@ export default function NewEntry() {
     activities: [] as string[],
     selectedTimeSlots: [] as string[],
     selectedSubcategories: [] as string[],
+    activityEntries: [] as any[], // Store activities with exact timestamps
     dssAnalysis: null as any,
     onPeriod: false,
     waterIntake: 0,
@@ -121,9 +120,8 @@ export default function NewEntry() {
     mealQuality: 'good',
     caffeine: 0,
     alcohol: 0,
-    // Date and time for past entries
+    // Date for past entries
     entryDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
-    entryTime: new Date().toTimeString().slice(0, 5), // HH:MM format
   });
 
   // Increment/Decrement helpers (no upper limit)
@@ -632,6 +630,7 @@ export default function NewEntry() {
           activities: formData.activities,
           selectedTimeSlots: formData.selectedTimeSlots,
           selectedSubcategories: formData.selectedSubcategories,
+          activityEntries: formData.activityEntries,
           dssAnalysis: formData.dssAnalysis ? JSON.stringify(formData.dssAnalysis) : null,
           onPeriod: formData.onPeriod,
           periodDay: formData.onPeriod ? getPeriodDay() : null,
@@ -640,9 +639,8 @@ export default function NewEntry() {
           mealQuality: formData.mealQuality,
           caffeine: formData.caffeine,
           alcohol: formData.alcohol,
-          // Custom date and time for past entries
+          // Custom date for past entries
           customDate: formData.entryDate,
-          customTime: formData.entryTime,
         }),
       });
 
@@ -827,36 +825,6 @@ export default function NewEntry() {
                   </div>
                 </div>
                 
-                {/* Time Picker */}
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-slate-300">Time</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.entryTime}
-                      onChange={(e) => handleChange('entryTime', e.target.value)}
-                      placeholder="HH:MM"
-                      className={`w-full px-4 py-4 bg-slate-800/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none transition-all duration-300 text-lg pr-12 ${
-                        (formData.onPeriod && isFirstPeriodEntry)
-                          ? 'border-red-400/50 shadow-[0_0_25px_rgba(239,68,68,0.6),0_0_50px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7),0_0_60px_rgba(239,68,68,0.5)] focus:border-red-400/70 focus:ring-2 focus:ring-red-400/30'
-                          : 'border-purple-400/30 shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] focus:border-purple-400/60 focus:ring-2 focus:ring-purple-400/20'
-                      }`}
-                    />
-                    {/* Custom Clock Icon */}
-                    <div 
-                      className={`absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer z-10 ${
-                        (formData.onPeriod && isFirstPeriodEntry)
-                          ? 'text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]'
-                          : 'text-purple-400 drop-shadow-[0_0_8px_rgba(147,51,234,0.8)]'
-                      }`}
-                      onClick={() => setShowTimePicker(!showTimePicker)}
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
               </div>
               
             </div>
@@ -924,21 +892,35 @@ export default function NewEntry() {
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">Day</label>
                     <div className="grid grid-cols-7 gap-1">
-                      {Array.from({ length: new Date(selectedYear, selectedMonth + 1, 0).getDate() }, (_, i) => i + 1).map((day) => (
-                        <button
-                          key={day}
-                          type="button"
-                          onClick={() => {
-                            const selectedDate = new Date(selectedYear, selectedMonth, day);
-                            const dateString = selectedDate.toISOString().split('T')[0];
-                            handleChange('entryDate', dateString);
-                            setShowDatePicker(false);
-                          }}
-                          className="p-2 text-center rounded-lg bg-slate-700/50 hover:bg-purple-500/30 border border-slate-600/50 hover:border-purple-400/50 transition-all duration-200 text-white hover:scale-105 text-sm"
-                        >
-                          {day}
-                        </button>
-                      ))}
+                      {Array.from({ length: new Date(selectedYear, selectedMonth + 1, 0).getDate() }, (_, i) => i + 1).map((day) => {
+                        const isToday = selectedYear === new Date().getFullYear() && 
+                                      selectedMonth === new Date().getMonth() && 
+                                      day === new Date().getDate();
+                        const isSelected = day === selectedDay;
+                        
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                              setSelectedDay(day);
+                              const selectedDate = new Date(selectedYear, selectedMonth, day);
+                              const dateString = selectedDate.toISOString().split('T')[0];
+                              handleChange('entryDate', dateString);
+                              setShowDatePicker(false);
+                            }}
+                            className={`p-2 text-center rounded-lg border transition-all duration-200 text-white hover:scale-105 text-sm ${
+                              isSelected
+                                ? 'bg-purple-500/70 border-purple-400/70 shadow-lg shadow-purple-500/30'
+                                : isToday
+                                ? 'bg-cyan-500/30 border-cyan-400/50 hover:bg-cyan-500/50'
+                                : 'bg-slate-700/50 border-slate-600/50 hover:bg-purple-500/30 hover:border-purple-400/50'
+                            }`}
+                          >
+                            {day}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   
@@ -949,6 +931,9 @@ export default function NewEntry() {
                         const today = new Date();
                         const yesterday = new Date(today);
                         yesterday.setDate(today.getDate() - 1);
+                        setSelectedYear(yesterday.getFullYear());
+                        setSelectedMonth(yesterday.getMonth());
+                        setSelectedDay(yesterday.getDate());
                         handleChange('entryDate', yesterday.toISOString().split('T')[0]);
                         setShowDatePicker(false);
                       }}
@@ -960,6 +945,9 @@ export default function NewEntry() {
                       type="button"
                       onClick={() => {
                         const today = new Date();
+                        setSelectedYear(today.getFullYear());
+                        setSelectedMonth(today.getMonth());
+                        setSelectedDay(today.getDate());
                         handleChange('entryDate', today.toISOString().split('T')[0]);
                         setShowDatePicker(false);
                       }}
@@ -973,111 +961,6 @@ export default function NewEntry() {
             </div>
           )}
 
-          {/* Custom Time Picker Modal */}
-          {showTimePicker && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-purple-400/30 p-6 w-full max-w-md"
-                style={{
-                  boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), 0 0 60px rgba(59, 130, 246, 0.2)'
-                }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-                    Select Time
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setShowTimePicker(false)}
-                    className="text-slate-400 hover:text-white transition-colors"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  {/* Hour and Minute Selection */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Hour</label>
-                      <div className="grid grid-cols-6 gap-1">
-                        {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
-                          <button
-                            key={hour}
-                            type="button"
-                            onClick={() => setSelectedHour(hour)}
-                            className={`p-2 text-center rounded-lg border transition-all duration-200 text-white hover:scale-105 text-sm ${
-                              selectedHour === hour
-                                ? 'bg-purple-500/50 border-purple-400/50'
-                                : 'bg-slate-700/50 border-slate-600/50 hover:bg-purple-500/30 hover:border-purple-400/50'
-                            }`}
-                          >
-                            {hour.toString().padStart(2, '0')}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Minute</label>
-                      <div className="grid grid-cols-6 gap-1">
-                        {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => (
-                          <button
-                            key={minute}
-                            type="button"
-                            onClick={() => setSelectedMinute(minute)}
-                            className={`p-2 text-center rounded-lg border transition-all duration-200 text-white hover:scale-105 text-sm ${
-                              selectedMinute === minute
-                                ? 'bg-purple-500/50 border-purple-400/50'
-                                : 'bg-slate-700/50 border-slate-600/50 hover:bg-purple-500/30 hover:border-purple-400/50'
-                            }`}
-                          >
-                            {minute.toString().padStart(2, '0')}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Time Display and Confirm */}
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-white mb-4">
-                      {selectedHour.toString().padStart(2, '0')}:{selectedMinute.toString().padStart(2, '0')}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const timeString = `${selectedHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
-                          handleChange('entryTime', timeString);
-                          setShowTimePicker(false);
-                        }}
-                        className="flex-1 px-4 py-2 bg-purple-500/30 hover:bg-purple-500/50 border border-purple-400/50 rounded-lg transition-all duration-200 text-white"
-                      >
-                        Confirm
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const now = new Date();
-                          const timeString = now.toTimeString().slice(0, 5);
-                          handleChange('entryTime', timeString);
-                          setShowTimePicker(false);
-                        }}
-                        className="flex-1 px-4 py-2 bg-slate-700/50 hover:bg-purple-500/30 border border-slate-600/50 hover:border-purple-400/50 rounded-lg transition-all duration-200 text-white"
-                      >
-                        Now
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
 
           {/* Mood Parameters Section */}
           <motion.div
@@ -1503,6 +1386,7 @@ export default function NewEntry() {
                     <div className="grid grid-cols-3 gap-2">
                       {slot.hours.map((hour) => {
                         const hourKey = `${slot.id}-${hour}`;
+                        const exactTimeKey = `${slot.id}-${hour}-${new Date().toISOString()}`;
                         const isSelected = formData.selectedTimeSlots.includes(hourKey);
                         
                         return (
@@ -1514,6 +1398,31 @@ export default function NewEntry() {
                                 ? formData.selectedTimeSlots.filter(ts => ts !== hourKey)
                                 : [...formData.selectedTimeSlots, hourKey];
                               handleChange("selectedTimeSlots", newTimeSlots);
+                              
+                              // Also update activities with exact timestamps
+                              if (!isSelected) {
+                                // Add activity with exact time
+                                const currentDate = formData.entryDate || new Date().toISOString().split('T')[0];
+                                const exactTime = `${currentDate}T${hour.toString().padStart(2, '0')}:00:00`;
+                                
+                                // Create activity entries with exact timestamps for each selected activity
+                                const newActivityEntries = formData.activities.map(activity => ({
+                                  activity: activity,
+                                  exactTime: exactTime,
+                                  timeSlot: hourKey,
+                                  hour: hour
+                                }));
+                                
+                                // Store in a new field for exact activity timestamps
+                                const currentActivityEntries = formData.activityEntries || [];
+                                const updatedActivityEntries = [...currentActivityEntries, ...newActivityEntries];
+                                handleChange("activityEntries", updatedActivityEntries);
+                              } else {
+                                // Remove activity entries for this time slot
+                                const currentActivityEntries = formData.activityEntries || [];
+                                const updatedActivityEntries = currentActivityEntries.filter(entry => entry.timeSlot !== hourKey);
+                                handleChange("activityEntries", updatedActivityEntries);
+                              }
                             }}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
