@@ -77,9 +77,10 @@ export default function StatsPage() {
           setUserPreferences(preferencesData);
         }
 
-        // Fetch DSS data
+        // Fetch DSS data for today
         try {
-          const dssResponse = await fetch('/api/dss?userId=dummy-user');
+          const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+          const dssResponse = await fetch(`/api/dss?userId=dummy-user&date=${today}`);
           if (dssResponse.ok) {
             const dssData = await dssResponse.json();
             if (dssData.success && dssData.data) {
