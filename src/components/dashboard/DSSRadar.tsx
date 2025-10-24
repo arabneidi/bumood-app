@@ -5,9 +5,11 @@ import { motion } from 'framer-motion';
 
 interface DSSData {
   dssScore: number;
-  learningMomentum: number;
-  recoveryIndex: number;
-  connectionScore: number;
+  components: {
+    learningMomentum: number;
+    recoveryIndex: number;
+    connectionScore: number;
+  };
 }
 
 interface DSSRadarProps {
@@ -80,7 +82,7 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
     );
   }
 
-  const { learningMomentum, recoveryIndex, connectionScore } = data;
+  const { learningMomentum, recoveryIndex, connectionScore } = data.components;
   
   // Normalize values to 0-1 scale for radar chart (assuming values range from -3 to +3)
   const normalizeValue = (value: number) => Math.max(0, Math.min(1, (value + 3) / 6));
