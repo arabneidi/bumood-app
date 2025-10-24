@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import ProgressCircle from "@/components/ui/ProgressCircle";
 import AchievementBadge from "@/components/ui/AchievementBadge";
 import AISuggestions from "@/components/dashboard/AISuggestions";
+import ProTipsCard from "@/components/dashboard/ProTipsCard";
 import CongratulationModal, { useCongratulations } from "@/components/ui/CongratulationModal";
 import { MoodEntry } from "@prisma/client";
 // Removed unused import - now using API for coaching tips
@@ -34,6 +35,24 @@ export default function Home() {
   const [lastGoalsHash, setLastGoalsHash] = useState<string>('');
   const [lastAchievementsHash, setLastAchievementsHash] = useState<string>('');
   const [hasNewProTipData, setHasNewProTipData] = useState<boolean>(false);
+  const [proTipLoading, setProTipLoading] = useState(false);
+  
+  // Pro Tips refresh function
+  const refreshProTips = async () => {
+    setProTipLoading(true);
+    try {
+      const response = await fetch('/api/personalized-quotes');
+      if (response.ok) {
+        const data = await response.json();
+        setProTip(data.quote);
+        console.log('🎯 Pro Tips refreshed manually');
+      }
+    } catch (error) {
+      console.error('Failed to refresh Pro Tips:', error);
+    } finally {
+      setProTipLoading(false);
+    }
+  };
   
   // Check for mood entry creation signal
   const moodEntryCreated = typeof window !== 'undefined' ? localStorage.getItem('mood-entry-created') : null;
@@ -393,60 +412,6 @@ export default function Home() {
       {/* Hero Section - Floating Rounded Rectangle */}
       <div className="relative overflow-hidden py-12">
         
-        {/* Pro Tips Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-            🎯 Pro Tips
-          </h1>
-          <p className="text-slate-300 text-sm">Goal-oriented coaching for your success</p>
-        </motion.div>
-
-        {/* Quote Box - Rounded Rectangle with Float */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: [0, -8, 0] }}
-            transition={{
-              opacity: { duration: 0.6, delay: 0.2 },
-              y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
-            }}
-            className="relative"
-          >
-            
-            {/* Shimmer Effect */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent opacity-30"
-              animate={{
-                x: ['-100%', '200%'],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-            />
-            
-              
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="text-xl md:text-3xl font-bold text-center bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-relaxed relative z-10"
-            >
-              {proTip || "Your mental wellness journey starts here."}
-            </motion.h2>
-          </motion.div>
-        </motion.div>
       </div>
 
       {/* Dashboard Section */}
@@ -1207,6 +1172,13 @@ export default function Home() {
 
           </>
         )}
+
+        {/* Pro Tips Card - Fixed Position */}
+        <ProTipsCard 
+          proTip={proTip}
+          onRefresh={refreshProTips}
+          loading={proTipLoading}
+        />
 
         {/* Congratulations Modal */}
         <CongratulationModal
