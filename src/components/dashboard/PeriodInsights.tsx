@@ -55,7 +55,7 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
       const len = Math.round((cycleStarts[i].getTime() - cycleStarts[i - 1].getTime()) / (24 * 3600 * 1000));
       if (len > 15 && len < 60) cycleLengths.push(len);
     }
-    const avgCycle = cycleLengths.length ? Math.round(cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length) : 28;
+    const avgCycle = cycleLengths.length ? Math.round(cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length) : null;
 
     // Last period start
     const lastStart = cycleStarts[cycleStarts.length - 1];
@@ -74,12 +74,12 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
       const v = day.valence.length ? day.valence.reduce((a, b) => a + b, 0) / day.valence.length : 5;
       stressAvg += s; valenceAvg += v; n++;
     }
-    stressAvg = n ? +(stressAvg / n).toFixed(1) : 5;
-    valenceAvg = n ? +(valenceAvg / n).toFixed(1) : 5;
+    stressAvg = n ? +(stressAvg / n).toFixed(1) : null;
+    valenceAvg = n ? +(valenceAvg / n).toFixed(1) : null;
 
     // Simple heuristic alerts
     const todayKey = dateKeyUTC(new Date());
-    const todayWater = byDay[todayKey]?.water ?? 0;
+    const todayWater = byDay[todayKey]?.water ?? null;
     const todayAlcohol = byDay[todayKey]?.alcohol ?? 0;
     const preWindow = predictedNextStart ? Math.abs(Math.round((Date.UTC(predictedNextStart.getUTCFullYear(), predictedNextStart.getUTCMonth(), predictedNextStart.getUTCDate()) - Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())) / (24 * 3600 * 1000))) : null;
 
@@ -125,7 +125,7 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
           Period Insights
         </h3>
         <div className="text-sm text-slate-300">
-          Avg cycle: <span className="font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">{data.avgCycle} days</span>
+          Avg cycle: <span className="font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">{data.avgCycle ? `${data.avgCycle} days` : '—'}</span>
         </div>
       </div>
 
@@ -158,11 +158,11 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
           <div className="text-xs text-rose-300 font-medium uppercase tracking-wide">Predicted next start</div>
           <div className="text-white font-bold text-lg">{data.predictedNextStart ? new Date(data.predictedNextStart).toLocaleDateString() : '—'}</div>
           <div className="mt-2 text-xs text-slate-400 font-medium">Hydration today</div>
-          <div className="text-rose-300 font-semibold">{data.todayWater} glasses</div>
+          <div className="text-rose-300 font-semibold">{data.todayWater !== null ? `${data.todayWater} glasses` : '—'}</div>
         </div>
         <div className="p-4 rounded-lg bg-gradient-to-br from-slate-700/50 to-slate-600/50 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 shadow-lg">
           <div className="text-xs text-purple-300 font-medium uppercase tracking-wide">Stress/Valence (30d avg)</div>
-          <div className="text-white font-bold text-lg">{data.stressAvg}/10 stress, {data.valenceAvg}/10 happiness</div>
+          <div className="text-white font-bold text-lg">{data.stressAvg !== null && data.valenceAvg !== null ? `${data.stressAvg}/10 stress, ${data.valenceAvg}/10 happiness` : '—'}</div>
           <div className="mt-2 text-xs text-slate-400 font-medium">Note</div>
           <div className="text-purple-300 text-sm">Higher stress may shorten/shift cycles; we factor this when alerting.</div>
         </div>
