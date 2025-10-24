@@ -9,7 +9,6 @@ import MoodChart from '../charts/MoodChart';
 import ModernRadarChart from '../charts/ModernRadarChart';
 import DSSRadar from './DSSRadar';
 import ActivityChart from '../charts/ActivityChart';
-import HeatmapChart from '../charts/HeatmapChart';
 import ProgressCircle from '../ui/ProgressCircle';
 import { TrendingUp, TrendingDown, Activity, Brain, Heart, Zap, Sparkles, Star, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -440,64 +439,7 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
         </motion.div>
       </motion.div>
 
-      {/* Mood Heatmap */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 1 }}
-        whileHover={{ scale: 1.01 }}
-      >
-        <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-indigo-500/20 hover:shadow-xl transition-all duration-300">
-          <motion.h3 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.2 }}
-            className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4 flex items-center"
-          >
-            <Sparkles className="w-6 h-6 mr-2 text-indigo-500" />
-            Mood Heatmap
-          </motion.h3>
-          <HeatmapChart data={data} />
-        </Card>
-      </motion.div>
 
-      {/* Time of Day Analysis */}
-      {timeOfDayAverages.length > 0 && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 1.2 }}
-          whileHover={{ scale: 1.01 }}
-        >
-          <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-cyan-500/20 hover:shadow-xl transition-all duration-300">
-            <motion.h3 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1.4 }}
-              className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center"
-            >
-              <Brain className="w-6 h-6 mr-2 text-cyan-500" />
-              Mood by Time of Day
-            </motion.h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {timeOfDayAverages.map(({ time, avgMood, count }, index) => (
-                <motion.div 
-                  key={time} 
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 1.6 + index * 0.1, type: "spring" }}
-                  whileHover={{ scale: 1.05 }}
-                  className="text-center p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/80 transition-all duration-300"
-                >
-                  <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-1">{avgMood.toFixed(1)}</div>
-                  <div className="text-sm font-medium text-slate-300">{time}</div>
-                  <div className="text-xs text-slate-400">({count} entries)</div>
-                </motion.div>
-              ))}
-            </div>
-          </Card>
-        </motion.div>
-      )}
 
     </motion.div>
   );
