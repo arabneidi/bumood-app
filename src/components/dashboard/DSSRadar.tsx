@@ -84,23 +84,41 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
 
   const { learningMomentum, recoveryIndex, connectionScore } = data.components;
   
-  // Normalize values to 0-1 scale using the maximum value among all components
-  // This ensures proper relative scaling where LM (141) appears much larger than RI (8.4)
-  const maxValue = Math.max(learningMomentum || 0, recoveryIndex || 0, connectionScore || 0);
-  const normalizeValue = (value: number) => maxValue > 0 ? Math.max(0, Math.min(1, value / maxValue)) : 0;
+  // Normalize values to -1.0 to 1.0 scale like the Success Compass chart
+  // Convert raw values to z-scores and then map to -1 to 1 range
+  const normalizeToMinusOneToOne = (value: number, maxValue: number) => {
+    // Map value from 0-maxValue to -1 to 1 range
+    // 0 maps to -1, maxValue maps to 1
+    return (2 * value / maxValue) - 1;
+  };
 
-  const lmNormalized = normalizeValue(typeof learningMomentum === 'number' ? learningMomentum : 0);
-  const riNormalized = normalizeValue(typeof recoveryIndex === 'number' ? recoveryIndex : 0);
-  const cnNormalized = normalizeValue(typeof connectionScore === 'number' ? connectionScore : 0);
+  const maxValue = Math.max(learningMomentum || 0, recoveryIndex || 0, connectionScore || 0);
+  
+  const lmNormalized = normalizeToMinusOneToOne(typeof learningMomentum === 'number' ? learningMomentum : 0, maxValue);
+  const riNormalized = normalizeToMinusOneToOne(typeof recoveryIndex === 'number' ? recoveryIndex : 0, maxValue);
+  const cnNormalized = normalizeToMinusOneToOne(typeof connectionScore === 'number' ? connectionScore : 0, maxValue);
+  
+  // Debug logging
+  console.log('DSS Radar Debug (-1 to 1 scale):', {
+    learningMomentum,
+    recoveryIndex, 
+    connectionScore,
+    maxValue,
+    lmNormalized,
+    riNormalized,
+    cnNormalized
+  });
 
   const centerX = dimensions.width / 2;
   const centerY = dimensions.height / 2;
   const radius = Math.min(dimensions.width, dimensions.height) / 2 - 40;
 
-  // Calculate points for each axis
+  // Calculate points for each axis using -1 to 1 scale
   const getPoint = (angle: number, value: number) => {
-    const x = centerX + Math.cos(angle) * radius * value;
-    const y = centerY + Math.sin(angle) * radius * value;
+    // Convert -1 to 1 scale to 0 to 1 for positioning
+    const normalizedValue = (value + 1) / 2;
+    const x = centerX + Math.cos(angle) * radius * normalizedValue;
+    const y = centerY + Math.sin(angle) * radius * normalizedValue;
     return { x, y };
   };
 
@@ -116,18 +134,22 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   // Create path for the radar area
   const radarPath = `M ${lmPoint.x} ${lmPoint.y} L ${riPoint.x} ${riPoint.y} L ${cnPoint.x} ${cnPoint.y} Z`;
 
-  // Grid circles
-  const gridCircles = [0.2, 0.4, 0.6, 0.8, 1.0].map((scale, index) => (
-    <circle
-      key={index}
-      cx={centerX}
-      cy={centerY}
-      r={radius * scale}
-      fill="none"
-      stroke="rgba(59, 130, 246, 0.2)"
-      strokeWidth="1"
-    />
-  ));
+  // Grid circles for -1 to 1 scale
+  const gridCircles = [-1.0, -0.8, -0.6, -0.4, -0.2, 0.2, 0.4, 0.6, 0.8, 1.0].map((scale, index) => {
+    // Convert -1 to 1 scale to 0 to 1 for positioning
+    const normalizedScale = (scale + 1) / 2;
+    return (
+      <circle
+        key={index}
+        cx={centerX}
+        cy={centerY}
+        r={radius * normalizedScale}
+        fill="none"
+        stroke="rgba(59, 130, 246, 0.2)"
+        strokeWidth="1"
+      />
+    );
+  });
 
   // Axis lines
   const axisLines = [
