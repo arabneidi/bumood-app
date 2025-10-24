@@ -413,13 +413,13 @@ export default function Home() {
           className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
         >
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: [0, -8, 0] }}
-            transition={{
-              opacity: { duration: 0.6, delay: 0.2 },
-              y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="relative bg-slate-800/30 backdrop-blur-sm rounded-3xl shadow-2xl border border-purple-500/20 p-8 overflow-hidden"
+            style={{
+              boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), 0 0 60px rgba(59, 130, 246, 0.2)'
             }}
-            className="relative rounded-3xl p-8"
           >
             {/* Content */}
             <div className="relative z-10">
@@ -427,7 +427,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.8 }}
-                className="text-xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-relaxed text-left"
+                className="text-xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-relaxed text-justify"
               >
                 {proTip || "Your mental wellness journey starts here."}
               </motion.h2>
