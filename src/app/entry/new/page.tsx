@@ -646,7 +646,7 @@ export default function NewEntry() {
         // Reset first period entry flag after saving
         setIsFirstPeriodEntry(false);
         
-        router.push("/stats");
+        router.push("/");
       } else {
         const errorData = await response.json();
         alert(`Failed to save mood entry: ${errorData.error || response.statusText}`);
@@ -1188,7 +1188,6 @@ export default function NewEntry() {
                   }}>
                     Period Tracking
                   </h3>
-                  <span className="text-xs text-slate-400">Optional</span>
                 </div>
 
                 <div className="mt-4">
@@ -1196,7 +1195,7 @@ export default function NewEntry() {
                     type="button"
                     aria-pressed={formData.onPeriod}
                     onClick={() => handleChange('onPeriod', !formData.onPeriod)}
-                    className={`w-full md:w-auto inline-flex items-center space-x-3 px-5 py-3 rounded-full transition-all border-2 shadow-sm backdrop-blur-xl
+                    className={`w-full md:w-64 h-16 inline-flex items-center space-x-3 px-5 py-3 rounded-full transition-all border-2 shadow-sm backdrop-blur-xl
                       ${formData.onPeriod
                         ? 'bg-red-500/20 text-red-200 border-red-400/50 hover:bg-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
                         : 'bg-slate-800/50 text-red-400 border-red-400/50 hover:bg-slate-700/50'}
@@ -1207,12 +1206,12 @@ export default function NewEntry() {
                       <div className="font-semibold">
                         {formData.onPeriod 
                           ? `Period Day ${getPeriodDay()}` 
-                          : 'Start new period cycle'
+                          : 'Start period cycle'
                         }
                       </div>
                       {formData.onPeriod && (
                         <div className="text-xs text-red-300">
-                          Started {periodStartDate} • Click to end period
+                          Click to end period
                         </div>
                       )}
                       {!formData.onPeriod && (

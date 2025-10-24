@@ -64,6 +64,7 @@ export default function ProfilePage() {
   
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [success, setSuccess] = useState(false);
   // Custom categories removed from schema
 
   // Load AI configuration
@@ -208,6 +209,7 @@ export default function ProfilePage() {
       if (response.ok) {
         const data = await response.json();
         console.log('Saved successfully:', data);
+        setSuccess(true);
         setMessage('✅ Profile saved successfully!');
         setTimeout(() => {
           setMessage('');
@@ -1359,9 +1361,17 @@ export default function ProfilePage() {
                 disabled={loading}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative overflow-hidden px-10 py-4 bg-blue-900/20 backdrop-blur-xl border border-blue-400/30 rounded-2xl font-bold text-xl shadow-lg hover:shadow-blue-500/20 transition-all duration-300 disabled:opacity-50"
+                className={`relative overflow-hidden px-10 py-4 backdrop-blur-xl rounded-2xl font-bold text-xl shadow-lg transition-all duration-300 disabled:opacity-50 ${
+                  success 
+                    ? 'bg-green-900/20 border border-green-400/30 hover:shadow-green-500/20' 
+                    : 'bg-blue-900/20 border border-blue-400/30 hover:shadow-blue-500/20'
+                }`}
               >
-                <div className="absolute inset-0 rounded-2xl border border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+                <div className={`absolute inset-0 rounded-2xl border shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse ${
+                  success 
+                    ? 'border-green-400/50 shadow-[0_0_30px_rgba(34,197,94,0.4)]' 
+                    : 'border-purple-400/50'
+                }`}></div>
                 <div className="relative flex items-center justify-center space-x-3">
                   {loading ? (
                     <>
@@ -1373,6 +1383,17 @@ export default function ProfilePage() {
                         <Save className="w-6 h-6" />
                       </motion.div>
                       <span>Saving Profile...</span>
+                    </>
+                  ) : success ? (
+                    <>
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 0.5, repeat: 2 }}
+                        className="w-6 h-6"
+                      >
+                        <Save className="w-6 h-6 text-green-400" />
+                      </motion.div>
+                      <span className="text-green-400">Profile Saved!</span>
                     </>
                   ) : (
                     <>
