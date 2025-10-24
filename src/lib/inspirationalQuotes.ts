@@ -149,6 +149,19 @@ export async function generateAIMotivationalQuote(userProfile: {
   favoriteMovies?: string[];
   favoritePhilosophers?: string[];
   recentActivities?: string[];  // To detect what user has been doing
+  activeGoals?: {
+    id: string;
+    title: string;
+    description?: string;
+    category: string;
+    subcategory?: string;
+    targetValue: number;
+    currentValue: number;
+    progressPercentage: number;
+    difficulty: string;
+    streak: number;
+    completed: boolean;
+  }[];
 }): Promise<string> {
   try {
     const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
@@ -161,7 +174,7 @@ export async function generateAIMotivationalQuote(userProfile: {
     const { 
       currentMood, onPeriod, waterIntake, timeOfDay, gender, age, interests, quoteStyle, favoriteAuthors,
       favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers,
-      recentActivities
+      recentActivities, activeGoals
     } = userProfile;
     
     // Create personalized prompt
@@ -313,6 +326,50 @@ CRITICAL PERSONALIZATION RULES:
    - If user likes "Frida Kahlo" → suggest similar artists (Georgia O'Keeffe, Diego Rivera, Vincent van Gogh)
    - If user likes "Marcus Aurelius" → suggest similar philosophers (Seneca, Epictetus, Stoic thinkers)
    - **EXPAND BEYOND THEIR EXACT FAVORITES** - suggest artists/writers in the same style, era, or genre
+
+9. **PERSONALITY-SPECIFIC QUOTES:**
+   - **INTJ (The Architect)**: Use strategic, analytical, visionary quotes about systems thinking and long-term planning
+   - **INTP (The Thinker)**: Use intellectual, theoretical, problem-solving quotes about curiosity and knowledge
+   - **ENTJ (The Commander)**: Use leadership, achievement, strategic quotes about success and influence
+   - **ENTP (The Debater)**: Use innovative, creative, energetic quotes about possibilities and change
+   - **INFJ (The Advocate)**: Use meaningful, inspiring, humanitarian quotes about purpose and helping others
+   - **INFP (The Mediator)**: Use creative, authentic, personal quotes about self-expression and values
+   - **ENFJ (The Protagonist)**: Use motivational, social, leadership quotes about inspiring others and community
+   - **ENFP (The Campaigner)**: Use enthusiastic, creative, social quotes about passion and connection
+   - **ISTJ (The Logistician)**: Use practical, reliable, structured quotes about responsibility and consistency
+   - **ISFJ (The Protector)**: Use caring, supportive, service-oriented quotes about helping and nurturing
+
+10. **STUDENT-SPECIFIC QUOTES:**
+   - **UNDERGRADUATE**: Focus on growth, learning, exploration, campus life, social connections
+   - **GRADUATE**: Focus on research, thesis work, academic pressure, professional development
+   - **PHD**: Focus on dissertation stress, academic isolation, career planning, mentorship
+   - **COMPUTER SCIENCE**: Use tech-inspired quotes, innovation, problem-solving, coding motivation
+   - **PSYCHOLOGY**: Use mindfulness, mental health, self-awareness, therapeutic quotes
+   - **MEDICINE**: Use healing, service, medical ethics, patient care quotes
+   - **ENGINEERING**: Use innovation, problem-solving, technical achievement quotes
+   - **BUSINESS**: Use leadership, entrepreneurship, networking, success quotes
+   - **ARTS/HUMANITIES**: Use creativity, cultural awareness, artistic expression quotes
+
+11. **GOAL-ORIENTED QUOTES:**
+    ${activeGoals && activeGoals.length > 0 ? `
+    Active Goals:
+    ${activeGoals.map(goal => {
+      const progressText = goal.completed ? 'COMPLETED!' : `${goal.progressPercentage}% complete`;
+      const streakText = goal.streak > 0 ? ` (${goal.streak} day streak)` : '';
+      return `- "${goal.title}" (${goal.category}${goal.subcategory ? ` - ${goal.subcategory}` : ''}) - ${progressText}${streakText}`;
+    }).join('\n    ')}
+    
+    GOAL-BASED QUOTE RULES:
+    - For goals with low progress (<30%): Use motivational quotes about starting, taking first steps, building momentum
+    - For goals with medium progress (30-70%): Use quotes about persistence, staying the course, maintaining effort
+    - For goals with high progress (>70%): Use quotes about finishing strong, pushing to completion, final stretch
+    - For completed goals: Use celebration quotes about achievement, success, reaching milestones
+    - For health goals (quitting smoking, fitness): Use health-focused motivational quotes
+    - For learning goals (reading, courses): Use educational and growth-focused quotes
+    - For habit goals (gym, meditation): Use discipline and consistency quotes
+    - **MENTION THE SPECIFIC GOAL BY NAME** when creating goal-oriented quotes
+    - Use quotes that directly relate to the goal category (health, learning, habits, etc.)
+    ` : ''}
 
 FORMAT:
 If using a real quote: "Quote text" — Author Name

@@ -152,13 +152,43 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Learn from user activities and subcategories
+    console.log('🧠 Learning from user activities...');
+    try {
+      const learnResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/learn-user-preferences`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: dummyUserId,
+          activities: activitiesList,
+          subcategories: selectedSubcategories ? JSON.parse(selectedSubcategories) : [],
+          moodData: {
+            valence: parseInt(valence),
+            energy: parseInt(energy),
+            focus: parseInt(focus),
+            stress: parseInt(stress)
+          }
+        })
+      });
+      
+      if (learnResponse.ok) {
+        const learnData = await learnResponse.json();
+        console.log('✅ User preferences learned:', learnData.updates);
+      } else {
+        console.log('⚠️ Learning preferences failed, but mood entry was saved');
+      }
+    } catch (learnError) {
+      console.error('⚠️ Error learning preferences:', learnError);
+      // Don't fail the mood entry creation if learning fails
+    }
+
     // Check and unlock achievements after creating the mood entry
     console.log('🏆 Checking achievements...');
     try {
       const newAchievements = await calculateAchievements(dummyUserId);
       console.log(`✅ Found ${newAchievements.length} new achievements`);
       
-      // Save new achievements to database
+      // Save new achievements to database and create congratulations
       for (const achievement of newAchievements) {
         await db.achievement.create({
           data: {
@@ -172,6 +202,30 @@ export async function POST(request: NextRequest) {
           }
         });
         console.log(`🎉 Unlocked: ${achievement.title}`);
+
+        // Create congratulation for achievement unlock
+        try {
+          const congratulationResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/congratulations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: dummyUserId,
+              type: 'achievement_unlocked',
+              title: achievement.title,
+              description: achievement.description,
+              icon: achievement.icon,
+              stars: achievement.stars
+            })
+          });
+
+          if (congratulationResponse.ok) {
+            const congratulation = await congratulationResponse.json();
+            console.log('✅ Achievement congratulation created:', congratulation.congratulation.title);
+          }
+        } catch (congratulationError) {
+          console.error('⚠️ Error creating achievement congratulation:', congratulationError);
+          // Don't fail the achievement creation if congratulation fails
+        }
       }
     } catch (achievementError) {
       console.error('⚠️ Error calculating achievements:', achievementError);

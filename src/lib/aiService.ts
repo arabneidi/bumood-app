@@ -29,6 +29,9 @@ export interface UserMoodProfile {
   userInfo?: {
     gender?: string;  // male, female, non-binary, prefer-not-to-say
     age?: number;
+    personality?: string;  // introvert, extrovert, ambivert, etc.
+    universityLevel?: string;  // undergraduate, graduate, phd, etc.
+    fieldOfStudy?: string;  // computer science, psychology, medicine, etc.
     onPeriod?: boolean;  // Is currently on their period
     periodDay?: number;  // Which day of period (1-7)
     periodCycleLength?: number;  // Average cycle length (e.g., 28, 30 days)
@@ -44,6 +47,19 @@ export interface UserMoodProfile {
     favoriteMovies?: string[];  // For movie/TV suggestions
     favoritePhilosophers?: string[];  // For philosophical content
   };
+  activeGoals?: {
+    id: string;
+    title: string;
+    description?: string;
+    category: string;
+    subcategory?: string;
+    targetValue: number;
+    currentValue: number;
+    progressPercentage: number;
+    difficulty: string;
+    streak: number;
+    completed: boolean;
+  }[];
   dailyTracking?: {
     // Water & Nutrition
     waterIntake?: number;  // glasses of water
@@ -1023,7 +1039,7 @@ export function extractSuccessfulSolutions(entries: any[]): string[] {
 
 // Create prompts for different AI services
 function createOpenAIPrompt(profile: UserMoodProfile): string {
-  const { currentMood, timeOfDay, userFeedback, userInfo, userPreferences } = profile;
+  const { currentMood, timeOfDay, userFeedback, userInfo, userPreferences, activeGoals } = profile;
   
   let prompt = `Generate 5 personalized wellness suggestions for someone with this mood profile:
 
@@ -1068,6 +1084,31 @@ Current Mood:
     }
   }
 
+  // Add active goals for goal-oriented suggestions
+  if (activeGoals && activeGoals.length > 0) {
+    prompt += `\nActive Goals (CRITICAL - Use these to provide goal-oriented suggestions and motivation):\n`;
+    
+    activeGoals.forEach(goal => {
+      const progressText = goal.completed ? 'COMPLETED!' : `${goal.progressPercentage}% complete (${goal.currentValue}/${goal.targetValue})`;
+      const streakText = goal.streak > 0 ? ` (${goal.streak} day streak)` : '';
+      prompt += `- "${goal.title}" (${goal.category}${goal.subcategory ? ` - ${goal.subcategory}` : ''}) - ${progressText}${streakText}\n`;
+      
+      if (goal.description) {
+        prompt += `  Description: ${goal.description}\n`;
+      }
+    });
+    
+    prompt += `\nGOAL-ORIENTED SUGGESTIONS RULES:\n`;
+    prompt += `- For goals with low progress (<30%), provide motivational suggestions to get started\n`;
+    prompt += `- For goals with medium progress (30-70%), provide suggestions to maintain momentum\n`;
+    prompt += `- For goals with high progress (>70%), provide suggestions to push to completion\n`;
+    prompt += `- For completed goals, provide celebration and next-level suggestions\n`;
+    prompt += `- For health goals (quitting smoking, fitness), provide specific health-focused suggestions\n`;
+    prompt += `- For learning goals (reading books, courses), provide educational suggestions\n`;
+    prompt += `- For habit goals (gym attendance, meditation), provide habit-building suggestions\n`;
+    prompt += `- Always mention the specific goal by name when relevant\n`;
+  }
+
   // Add user info (age, gender, and period data) for more personalized suggestions
   if (userInfo) {
     prompt += `\nUser Demographics (CRITICAL for age-appropriate and gender-specific suggestions):\n`;
@@ -1078,6 +1119,19 @@ Current Mood:
     
     if (userInfo.gender) {
       prompt += `- Gender: ${userInfo.gender} (CONSIDER GENDER-SPECIFIC WELLNESS NEEDS!)\n`;
+    }
+    
+    if (userInfo.personality) {
+      prompt += `- Personality: ${userInfo.personality} (CRITICAL for suggestion type!)\n`;
+      console.log(`🎭 Personality detected: ${userInfo.personality}`);
+    }
+    
+    if (userInfo.universityLevel) {
+      prompt += `- University Level: ${userInfo.universityLevel} (ADJUST SUGGESTIONS FOR ACADEMIC LEVEL!)\n`;
+    }
+    
+    if (userInfo.fieldOfStudy) {
+      prompt += `- Field of Study: ${userInfo.fieldOfStudy} (PROVIDE FIELD-SPECIFIC SUGGESTIONS!)\n`;
     }
     
     if (userInfo.height && userInfo.weight) {
@@ -1212,6 +1266,43 @@ Current Mood:
   prompt += `
 
 CRITICAL INSTRUCTION - BE ULTRA-SPECIFIC IN YOUR SUGGESTIONS:
+
+PERSONALITY-BASED SUGGESTIONS (CRITICAL):
+- **INTJ (The Architect)**: Suggest strategic planning, independent projects, deep thinking activities, solo research, analytical tasks
+- **INTP (The Thinker)**: Suggest intellectual challenges, problem-solving, theoretical discussions, solo learning, analytical projects
+- **ENTJ (The Commander)**: Suggest leadership activities, group projects, strategic planning, team building, competitive activities
+- **ENTP (The Debater)**: Suggest brainstorming sessions, group discussions, creative challenges, social debates, innovative projects
+- **INFJ (The Advocate)**: Suggest meaningful causes, helping others, quiet reflection, creative writing, spiritual activities
+- **INFP (The Mediator)**: Suggest creative expression, personal projects, quiet activities, artistic pursuits, individual reflection
+- **ENFJ (The Protagonist)**: Suggest mentoring others, group activities, social causes, leadership roles, community involvement
+- **ENFP (The Campaigner)**: Suggest social activities, creative projects, group adventures, networking, inspiring others
+- **ISTJ (The Logistician)**: Suggest structured activities, detailed planning, routine tasks, organized projects, methodical approaches
+- **ISFJ (The Protector)**: Suggest helping others, caring activities, structured routines, service projects, nurturing tasks
+
+STUDENT-SPECIFIC SUGGESTIONS (CRITICAL):
+- **UNDERGRADUATE**: Focus on study groups, campus activities, dorm life, freshman stress, social integration
+- **GRADUATE**: Focus on research stress, thesis work, academic pressure, professional development, networking
+- **PHD**: Focus on dissertation stress, academic isolation, research burnout, career planning, mentorship
+- **COMPUTER SCIENCE**: Suggest coding breaks, tech meetups, hackathons, programming projects, tech communities
+- **PSYCHOLOGY**: Suggest mindfulness practices, therapy resources, mental health awareness, counseling services
+- **MEDICINE**: Suggest stress management for medical students, study techniques, clinical rotation support
+- **ENGINEERING**: Suggest problem-solving activities, technical projects, engineering communities, innovation challenges
+- **BUSINESS**: Suggest networking events, case studies, leadership development, entrepreneurship activities
+- **ARTS/HUMANITIES**: Suggest creative projects, cultural events, writing workshops, artistic communities
+- **STUDENT + HIGH STRESS**: Suggest study breaks, campus counseling, peer support groups, academic resources
+- **STUDENT + LOW ENERGY**: Suggest study snacks, power naps, study groups, academic motivation techniques
+
+PERSONALITY + STUDENT COMBINATIONS (CRITICAL):
+- **INTJ + COMPUTER SCIENCE**: Suggest system architecture projects, solo coding challenges, technical research, independent study
+- **INTP + COMPUTER SCIENCE**: Suggest algorithm challenges, theoretical computer science, solo programming projects, technical discussions
+- **ENTJ + COMPUTER SCIENCE**: Suggest leading tech teams, organizing hackathons, tech leadership roles, competitive programming
+- **ENTP + COMPUTER SCIENCE**: Suggest tech meetups, brainstorming sessions, innovative projects, group coding challenges
+- **INFJ + PSYCHOLOGY**: Suggest individual therapy work, personal reflection, helping others with mental health, quiet study
+- **INFP + PSYCHOLOGY**: Suggest creative therapy approaches, personal journaling, artistic expression, individual research
+- **ENFJ + PSYCHOLOGY**: Suggest group therapy sessions, mentoring peers, mental health advocacy, community workshops
+- **ENFP + PSYCHOLOGY**: Suggest psychology study groups, mental health awareness events, peer support groups, social activities
+- **ISTJ + ANY FIELD**: Suggest structured study plans, organized schedules, methodical approaches, routine-based activities
+- **ISFJ + ANY FIELD**: Suggest helping classmates, study groups, service projects, caring for others, structured support
 
 1. **If suggesting music/dance:**
    - DO NOT say "listen to music" or "dance"

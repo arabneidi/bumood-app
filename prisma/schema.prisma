@@ -79,6 +79,7 @@ model User {
   periodTracking PeriodTracking[]
   dailyTracking DailyTracking[]
   activityOutcomeConnections ActivityOutcomeConnection[]
+  congratulations Congratulation[]
 }
 
 model VerificationToken {
@@ -201,6 +202,20 @@ model AISuggestionAction {
   ratedAt     DateTime?
   createdAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Congratulation {
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   // goal_completed, achievement_unlocked, streak_milestone, progress_milestone
+  title         String
+  message       String
+  actionMessage String
+  icon          String
+  stars         Int      @default(1)
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PeriodTracking {

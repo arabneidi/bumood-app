@@ -28,6 +28,15 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
       take: 1
     });
+
+    // Get active goals for goal-oriented quotes
+    const activeGoals = await db.goal.findMany({
+      where: { 
+        userId,
+        completed: false
+      },
+      orderBy: { createdAt: 'desc' }
+    });
     
     // Get recent activities from the latest entry
     let recentActivities: string[] = [];
@@ -66,6 +75,9 @@ export async function GET(request: NextRequest) {
       currentMood,
       gender: user.gender,
       age: user.age,
+      personality: user.personality,
+      universityLevel: user.universityLevel,
+      fieldOfStudy: user.fieldOfStudy,
       interests,
       quoteStyle: quoteStyle.join(', '), // Convert array to string
       favoriteWriters,
@@ -75,6 +87,19 @@ export async function GET(request: NextRequest) {
       favoriteMovies,
       favoritePhilosophers,
       recentActivities,
+      activeGoals: activeGoals.map(goal => ({
+        id: goal.id,
+        title: goal.title,
+        description: goal.description,
+        category: goal.category,
+        subcategory: goal.subcategory,
+        targetValue: goal.targetValue,
+        currentValue: goal.currentValue,
+        progressPercentage: goal.targetValue > 0 ? Math.round((goal.currentValue / goal.targetValue) * 100) : 0,
+        difficulty: goal.difficulty,
+        streak: goal.streak,
+        completed: goal.completed
+      })),
       timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'
     };
     

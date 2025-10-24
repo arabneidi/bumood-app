@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import ProgressCircle from "@/components/ui/ProgressCircle";
 import AchievementBadge from "@/components/ui/AchievementBadge";
 import AISuggestions from "@/components/dashboard/AISuggestions";
+import { CongratulationModal, useCongratulations } from "@/components/ui/CongratulationModal";
 import { MoodEntry } from "@prisma/client";
 import { generateAIMotivationalQuote } from "@/lib/inspirationalQuotes";
 
@@ -27,6 +28,16 @@ export default function Home() {
   const [moodComposite, setMoodComposite] = useState<number | null>(null);
   const [mcLoading, setMcLoading] = useState(true);
   const [currentTimeBucket, setCurrentTimeBucket] = useState<string>('');
+
+  // Congratulations system
+  const {
+    congratulations,
+    currentCongratulation,
+    isModalOpen,
+    loading: congratulationsLoading,
+    markAsRead,
+    closeModal
+  } = useCongratulations('dummy-user');
 
   useEffect(() => {
     async function fetchData() {
@@ -992,6 +1003,14 @@ export default function Home() {
 
           </>
         )}
+
+        {/* Congratulations Modal */}
+        <CongratulationModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          congratulation={currentCongratulation}
+          onMarkAsRead={markAsRead}
+        />
       </div>
     </div>
   );

@@ -96,6 +96,10 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
       const userInfo = await fetchUserInfo();
       console.log('👤 User info loaded:', userInfo);
 
+      // Fetch active goals
+      const activeGoals = await fetchActiveGoals();
+      console.log('🎯 Active goals loaded:', activeGoals);
+
       // Create comprehensive user profile with feedback
       const userProfile: UserMoodProfile = {
         currentMood: moodData,
@@ -114,6 +118,7 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
         userFeedback, // Include user feedback for personalization
         userPreferences, // Include user favorites for SPECIFIC suggestions
         userInfo, // Include age, gender, period data for accurate suggestions
+        activeGoals, // Include active goals for goal-oriented suggestions
         dailyTracking: {
           waterIntake: todayWater,
           mealsEaten: todayMeals,
@@ -229,6 +234,9 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
         return {
           gender: user.gender,
           age: user.age,
+          personality: user.personality,
+          universityLevel: user.universityLevel,
+          fieldOfStudy: user.fieldOfStudy,
           height: user.height,
           weight: user.weight,
           timezone: user.timezone,
@@ -245,6 +253,9 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
     return {
       gender: undefined,
       age: undefined,
+      personality: undefined,
+      universityLevel: undefined,
+      fieldOfStudy: undefined,
       height: undefined,
       weight: undefined,
       timezone: undefined,
@@ -253,6 +264,31 @@ export default function AISuggestions({ moodEntries, currentMood }: AISuggestion
       periodCycleLength: 28,
       periodSymptoms: []
     };
+  };
+
+  const fetchActiveGoals = async () => {
+    try {
+      const response = await fetch('/api/goals');
+      if (response.ok) {
+        const goals = await response.json();
+        return goals.map((goal: any) => ({
+          id: goal.id,
+          title: goal.title,
+          description: goal.description,
+          category: goal.category,
+          subcategory: goal.subcategory,
+          targetValue: goal.targetValue,
+          currentValue: goal.currentValue,
+          progressPercentage: goal.targetValue > 0 ? Math.round((goal.currentValue / goal.targetValue) * 100) : 0,
+          difficulty: goal.difficulty,
+          streak: goal.streak,
+          completed: goal.completed
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching goals:', error);
+    }
+    return [];
   };
 
   const loadActionStates = async (suggestions: AISuggestion[]) => {
