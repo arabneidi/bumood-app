@@ -151,6 +151,25 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
     );
   });
 
+  // Scale labels for -1 to 1 (show only key values to avoid clutter)
+  const scaleLabels = [-1.0, -0.5, 0, 0.5, 1.0].map((scale, index) => {
+    const normalizedScale = (scale + 1) / 2;
+    const labelRadius = radius * normalizedScale + 20; // Position labels outside the circles
+    return (
+      <text
+        key={`label-${index}`}
+        x={centerX + labelRadius}
+        y={centerY - 8}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        className="text-xs fill-slate-300 font-medium"
+        fontSize="11"
+      >
+        {scale}
+      </text>
+    );
+  });
+
   // Axis lines
   const axisLines = [
     { angle: lmAngle, label: 'LM', color: '#3B82F6' },
@@ -251,6 +270,9 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
         <svg width={dimensions.width} height={dimensions.height} className="overflow-visible drop-shadow-lg">
           {/* Grid circles */}
           {gridCircles}
+          
+          {/* Scale labels */}
+          {scaleLabels}
           
           {/* Axis lines */}
           {axisLines}
