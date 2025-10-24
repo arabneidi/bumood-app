@@ -400,9 +400,12 @@ export default function Home() {
           className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
         >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: [0, -8, 0] }}
+            transition={{
+              opacity: { duration: 0.6, delay: 0.2 },
+              y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+            }}
             className="relative bg-slate-800/30 backdrop-blur-sm rounded-3xl shadow-2xl border border-purple-500/20 p-8 overflow-hidden"
             style={{
               boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), 0 0 60px rgba(59, 130, 246, 0.2)'
