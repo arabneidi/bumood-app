@@ -106,6 +106,13 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
     scaleMax: scaleMax,
     chartData: chartData
   });
+  
+  console.log('🎯 DSS Radar Chart Data for Display:', {
+    'Learning Momentum': `${zLM.toFixed(2)} (${learningMomentum} raw)`,
+    'Recovery Index': `${zRI.toFixed(2)} (${recoveryIndex} raw)`,
+    'Connection': `${zCN.toFixed(2)} (${connectionScore} raw)`,
+    'Scale Range': `-${scaleMax} to +${scaleMax}`
+  });
 
   return (
     <motion.div 
@@ -114,6 +121,22 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="w-full h-full"
     >
+      {/* Display actual values */}
+      <div className="mb-4 text-center">
+        <div className="text-sm text-slate-300 mb-2">Current DSS Components (Z-Scores)</div>
+        <div className="flex justify-center space-x-6 text-xs">
+          <div className="bg-blue-500/20 px-2 py-1 rounded">
+            <span className="text-blue-300">Learning Momentum:</span> <span className="text-white font-bold">{zLM.toFixed(2)}</span>
+          </div>
+          <div className="bg-green-500/20 px-2 py-1 rounded">
+            <span className="text-green-300">Recovery Index:</span> <span className="text-white font-bold">{zRI.toFixed(2)}</span>
+          </div>
+          <div className="bg-purple-500/20 px-2 py-1 rounded">
+            <span className="text-purple-300">Connection:</span> <span className="text-white font-bold">{zCN.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+      
       <ResponsiveContainer width="100%" height={400}>
         <RadarChart data={chartData} margin={{ top: 20, right: 80, bottom: 20, left: 20 }}>
           <PolarGrid 
