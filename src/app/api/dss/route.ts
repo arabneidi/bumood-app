@@ -18,18 +18,27 @@ export async function GET(request: NextRequest) {
         data: dssResult
       });
     } else {
-      // Get DSS trends
+      // Get DSS trends - use calculated DSS instead of stored values
       const trends = await getDSSTrends(userId, days);
+      
+      // Calculate current DSS score using the new calculation method
+      const currentDSS = await calculateDSS(userId, new Date());
       
       return NextResponse.json({
         success: true,
-        data: trends
+        data: {
+          ...trends,
+          dssScore: currentDSS.dssScore, // Use calculated z-score instead of stored raw score
+          currentDSS: currentDSS
+        }
       });
     }
   } catch (error) {
     console.error('Error fetching DSS data:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch DSS data' },
+      { success: false, error: 'Failed to fetch DSS data', details: error.message },
       { status: 500 }
     );
   }

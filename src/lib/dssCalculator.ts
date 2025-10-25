@@ -33,79 +33,200 @@ export interface DSSResult {
  * - CN (Connection) = positive_social_touchpoints
  */
 export async function calculateDSS(userId: string, date: Date): Promise<DSSResult> {
-  // Get today's tracking data
+  // Get today's date
   const today = new Date(date);
   today.setHours(0, 0, 0, 0);
   
-  const todayTracking = await prisma.dailyTracking.findFirst({
-    where: {
-      userId,
-      date: {
-        gte: today,
-        lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
-      }
-    }
-  });
+  // Calculate today's components from mood entries (will be calculated below)
+  let todayLM = 0;
+  let todayRI = 0;
+  let todayCN = 0;
 
-
-  // If no tracking data for today, return zero DSS
-  if (!todayTracking) {
-    return {
-      dssScore: 0,
-      components: {
-        learningMomentum: 0,
-        recoveryIndex: 0,
-        connectionScore: 0
-      },
-      zScores: {
-        zLM: 0,
-        zRI: 0,
-        zCN: 0
-      },
-      historicalData: {
-        lmHistory: [],
-        riHistory: [],
-        cnHistory: []
-      }
-    };
-  }
-
-  // Calculate today's components
-  const todayLM = await calculateLearningMomentum(todayTracking, userId, today);
-  const todayRI = await calculateRecoveryIndex(todayTracking, userId, today);
-  const todayCN = await calculateConnectionScore(todayTracking, userId, today);
-
-  // Get last 14 days of data for z-score calculation
+  // Get last 14 days of data for z-score calculation using ACTIVITY TIME
   const fourteenDaysAgo = new Date(today);
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
-  const historicalData = await prisma.dailyTracking.findMany({
+  // Get mood entries from last 14 days (using creation time for date range)
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const moodEntries = await prisma.moodEntry.findMany({
     where: {
       userId,
-      date: {
+      createdAt: {
         gte: fourteenDaysAgo,
-        lt: today
+        lt: tomorrow
       }
     },
     orderBy: {
-      date: 'desc'
+      createdAt: 'desc'
     }
   });
 
-  // Calculate historical components
-  const lmHistory = await Promise.all(historicalData.map(async entry => 
-    await calculateLearningMomentum(entry, userId, entry.date)
+  // Group mood entries by date and calculate DSS components for each day
+  const dailyData = new Map<string, any>();
+  
+  for (const entry of moodEntries) {
+    const entryDate = new Date(entry.createdAt);
+    const dateKey = entryDate.toISOString().split('T')[0];
+    
+    if (!dailyData.has(dateKey)) {
+      dailyData.set(dateKey, {
+        date: entryDate,
+        entries: [],
+        deepworkMinutes: 0,
+        tasksCompleted: 0,
+        sleepHours: 0,
+        recoveryAction: false,
+        positiveSocialTouchpoints: 0
+      });
+    }
+    
+    const dayData = dailyData.get(dateKey);
+    dayData.entries.push(entry);
+  }
+
+  // Process each day's entries to calculate DSS components
+  for (const [dateKey, dayData] of dailyData) {
+    console.log(`🔵 Processing ${dayData.entries.length} entries for ${dateKey}`);
+    
+    // Calculate deep work from ALL entries (sum all time slots)
+    let totalDeepWorkMinutes = 0;
+    let totalTasksCompleted = 0;
+    let totalSocialTouchpoints = 0;
+    let maxSleepHours = 0;
+    let hasRecoveryAction = false;
+
+    for (const entry of dayData.entries) {
+      // Calculate deep work from selected time slots (activity time)
+      if (entry.selectedTimeSlots) {
+        try {
+          const timeSlots = JSON.parse(entry.selectedTimeSlots);
+          if (Array.isArray(timeSlots)) {
+            const uniqueSlots = [...new Set(timeSlots)]; // Remove duplicates
+            totalDeepWorkMinutes += uniqueSlots.length * 60; // Each slot = 60 minutes
+          }
+        } catch (e) {
+          // Skip if parsing fails
+        }
+      }
+      
+      // Calculate tasks completed from activities with LM component
+      if (entry.activityEntries) {
+        try {
+          const activityEntries = JSON.parse(entry.activityEntries);
+          if (Array.isArray(activityEntries)) {
+            for (const activityEntry of activityEntries) {
+              const activityName = activityEntry.activity;
+              const predefinedActivity = await prisma.predefinedActivity.findFirst({
+                where: {
+                  name: activityName,
+                  dssComponent: 'LM',
+                  isActive: true
+                }
+              });
+              if (predefinedActivity) {
+                totalTasksCompleted += 1; // Count each time slot with LM activity
+              }
+            }
+          }
+        } catch (e) {
+          // Skip if parsing fails
+        }
+      }
+      
+      // Calculate social touchpoints from activities with Connection component
+      if (entry.activityEntries) {
+        try {
+          const activityEntries = JSON.parse(entry.activityEntries);
+          if (Array.isArray(activityEntries)) {
+            for (const activityEntry of activityEntries) {
+              const activityName = activityEntry.activity;
+              const predefinedActivity = await prisma.predefinedActivity.findFirst({
+                where: {
+                  name: activityName,
+                  dssComponent: 'Connection',
+                  isActive: true
+                }
+              });
+              if (predefinedActivity) {
+                totalSocialTouchpoints += 1; // Count each time slot with Connection activity
+                console.log(`🔵 Found Connection activity: ${activityName} -> +1 social touchpoint`);
+              } else {
+                console.log(`🔵 No Connection activity found for: ${activityName}`);
+              }
+            }
+          }
+        } catch (e) {
+          // Skip if parsing fails
+        }
+      }
+      
+      // Use max sleep hours from all entries
+      if (entry.sleep) {
+        maxSleepHours = Math.max(maxSleepHours, entry.sleep);
+      }
+      
+      // Recovery action (simplified - assume true if any entry has sleep > 7 hours)
+      if (entry.sleep && entry.sleep > 7) {
+        hasRecoveryAction = true;
+      }
+    }
+
+    // Set the calculated values for this day
+    dayData.deepworkMinutes = totalDeepWorkMinutes;
+    dayData.tasksCompleted = totalTasksCompleted;
+    dayData.positiveSocialTouchpoints = totalSocialTouchpoints;
+    dayData.sleepHours = maxSleepHours;
+    dayData.recoveryAction = hasRecoveryAction;
+
+    console.log(`🔵 ${dateKey}: DeepWork=${totalDeepWorkMinutes}min, Tasks=${totalTasksCompleted}, Social=${totalSocialTouchpoints}, Sleep=${maxSleepHours}h`);
+    console.log(`🔵 ${dateKey} entries:`, dayData.entries.map(e => ({
+      selectedTimeSlots: e.selectedTimeSlots,
+      activityEntries: e.activityEntries,
+      sleep: e.sleep
+    })));
+  }
+
+  // Convert to array and calculate historical components
+  const historicalData = Array.from(dailyData.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
+  
+  console.log(`🔵 DSS using ACTIVITY TIME - Found ${moodEntries.length} mood entries from last 14 days`);
+  console.log(`🔵 DSS grouped into ${historicalData.length} unique days with activity data`);
+  
+  // Get today's data (most recent day)
+  const todayData = historicalData[0];
+  if (todayData) {
+    todayLM = await calculateLearningMomentum(todayData, userId, todayData.date);
+    todayRI = await calculateRecoveryIndex(todayData, userId, todayData.date);
+    todayCN = await calculateConnectionScore(todayData, userId, todayData.date);
+    console.log(`🔵 Today's components: LM=${todayLM}, RI=${todayRI}, CN=${todayCN}`);
+    console.log(`🔵 Today's data:`, JSON.stringify(todayData, null, 2));
+  } else {
+    console.log(`🔵 No today's data found in historical data`);
+  }
+  
+  // Use 14 days PRIOR to today for historical calculation (exclude today from z-score)
+  const pastData = historicalData.slice(1); // Remove today (first element) for historical calculation
+  
+  const lmHistory = await Promise.all(pastData.map(async dayData => 
+    await calculateLearningMomentum(dayData, userId, dayData.date)
   ));
-  const riHistory = await Promise.all(historicalData.map(async entry => 
-    await calculateRecoveryIndex(entry, userId, entry.date)
+  const riHistory = await Promise.all(pastData.map(async dayData => 
+    await calculateRecoveryIndex(dayData, userId, dayData.date)
   ));
-  const cnHistory = await Promise.all(historicalData.map(async entry => 
-    await calculateConnectionScore(entry, userId, entry.date)
+  const cnHistory = await Promise.all(pastData.map(async dayData => 
+    await calculateConnectionScore(dayData, userId, dayData.date)
   ));
 
   // Calculate z-scores only if we have enough historical data
   let zLM = 0, zRI = 0, zCN = 0;
   let dssScore = 0;
+  
+  console.log(`🔵 Historical data for 14-day z-score calculation:`);
+  console.log(`🔵 LM History (${lmHistory.length} days):`, lmHistory.slice(0, 5), '...');
+  console.log(`🔵 RI History (${riHistory.length} days):`, riHistory.slice(0, 5), '...');
+  console.log(`🔵 CN History (${cnHistory.length} days):`, cnHistory.slice(0, 5), '...');
   
   // If we have less than 5 days of historical data, use raw scores instead of z-scores
   if (lmHistory.length >= 5 && riHistory.length >= 5 && cnHistory.length >= 5) {
@@ -113,6 +234,8 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
     zRI = calculateZScore(todayRI, riHistory);
     zCN = calculateZScore(todayCN, cnHistory);
     dssScore = 0.5 * zLM + 0.3 * zRI + 0.2 * zCN;
+    console.log(`🔵 Z-scores: zLM=${zLM.toFixed(3)}, zRI=${zRI.toFixed(3)}, zCN=${zCN.toFixed(3)}`);
+    console.log(`🔵 DSS = 0.5×${zLM.toFixed(3)} + 0.3×${zRI.toFixed(3)} + 0.2×${zCN.toFixed(3)} = ${dssScore.toFixed(3)}`);
   } else {
     // For new users with insufficient data, use normalized raw scores
     const maxLM = Math.max(todayLM, ...lmHistory);
@@ -172,7 +295,9 @@ async function calculateLearningMomentum(tracking: any, userId: string, date: Da
     goalProgress += progressValue * 2; // Each goal progress point = 2 LM points
   }
   
-  return deepworkMinutes + (10 * tasksCompleted) + goalProgress;
+  const result = deepworkMinutes + (10 * tasksCompleted) + goalProgress;
+  console.log(`🔵 calculateLearningMomentum: deepwork=${deepworkMinutes}, tasks=${tasksCompleted}, goals=${goalProgress}, result=${result}`);
+  return result;
 }
 
 /**
@@ -251,7 +376,11 @@ function calculateZScore(value: number, history: number[]): number {
   // Apply sigma floor of 0.5
   const adjustedStdDev = Math.max(stdDev, 0.5);
   
-  return (value - mean) / adjustedStdDev;
+  const zScore = (value - mean) / adjustedStdDev;
+  
+  console.log(`🔵 calculateZScore: value=${value}, mean=${mean.toFixed(3)}, stdDev=${stdDev.toFixed(3)}, adjustedStdDev=${adjustedStdDev.toFixed(3)}, zScore=${zScore.toFixed(3)}`);
+  
+  return zScore;
 }
 
 /**

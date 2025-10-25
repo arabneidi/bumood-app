@@ -62,7 +62,7 @@ export default function Home() {
           fetch("/api/achievements"),
           fetch("/api/goals"),
           fetch("/api/user?userId=dummy-user"),
-          fetch(`/api/dss?userId=dummy-user&date=${new Date().toISOString().split('T')[0]}`),
+          fetch("/api/dss?userId=dummy-user"),
           fetch("/api/mood-composite?userId=dummy-user&calculateCurrent=true")
         ]);
 
