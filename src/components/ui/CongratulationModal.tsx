@@ -56,8 +56,8 @@ export default function CongratulationModal({
   };
 
   const getBackgroundGradient = (type: string) => {
-    // Dashboard theme - purple transparent box for all types
-    return 'from-purple-600/90 to-purple-800/90 backdrop-blur-md';
+    // Transparent with glowing effect
+    return 'from-purple-500/20 to-purple-700/20 backdrop-blur-md';
   };
 
   return (
@@ -70,7 +70,7 @@ export default function CongratulationModal({
       
       {/* Modal */}
       <div className="relative w-full max-w-md mx-auto">
-        <Card className={`bg-gradient-to-br ${getBackgroundGradient(congratulation.type)} text-white border border-purple-400/30 shadow-2xl transform transition-all duration-300 ${isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+        <Card className={`bg-gradient-to-br ${getBackgroundGradient(congratulation.type)} text-white border border-purple-400/50 shadow-2xl shadow-purple-500/25 transform transition-all duration-300 ${isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'} ring-2 ring-purple-400/30`}>
           <div className="text-center p-6">
             {/* Icon and Stars */}
             <div className="mb-4">
@@ -96,7 +96,7 @@ export default function CongratulationModal({
             <div className="flex gap-3 justify-center">
               <Button
                 onClick={handleClose}
-                className="bg-white/20 backdrop-blur-sm text-white border border-white/30 hover:bg-white/30 hover:border-white/50 font-semibold px-6 py-3 rounded-lg transition-all duration-200"
+                className="bg-white/10 backdrop-blur-sm text-white border border-white/40 hover:bg-white/20 hover:border-white/60 font-semibold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30"
               >
                 Awesome! 🎉
               </Button>
@@ -105,7 +105,7 @@ export default function CongratulationModal({
             {/* Close button */}
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/10 rounded-full p-1 transition-all duration-200"
+              className="absolute top-4 right-4 text-white/70 hover:text-white hover:bg-white/5 rounded-full p-1 transition-all duration-200"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

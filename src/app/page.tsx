@@ -9,6 +9,7 @@ import ProgressCircle from "@/components/ui/ProgressCircle";
 import AchievementBadge from "@/components/ui/AchievementBadge";
 import AISuggestions from "@/components/dashboard/AISuggestions";
 import CongratulationModal, { useCongratulations } from "@/components/ui/CongratulationModal";
+import { achievementDefinitions } from "@/lib/achievements";
 import { MoodEntry } from "@prisma/client";
 // Removed unused import - now using API for coaching tips
 
@@ -819,14 +820,27 @@ export default function Home() {
                               
                               {/* Stars */}
                               <div className="flex items-center justify-center space-x-1">
-                                {Array.from({ length: 3 }, (_, i) => (
-                                  <span
-                                    key={i}
-                                    className={`text-sm ${i < achievement.stars ? 'text-yellow-300' : 'text-slate-400'}`}
-                                  >
-                                    ⭐
-                                  </span>
-                                ))}
+                                {(() => {
+                                  // Get correct star count from achievementDefinitions
+                                  const definition = achievementDefinitions.find(def => def.title === achievement.title);
+                                  const starCount = definition ? definition.stars : achievement.stars;
+                                  
+                                  return Array.from({ length: 3 }, (_, i) => {
+                                    const isActive = i < starCount;
+                                    return (
+                                      <span
+                                        key={i}
+                                        className={`text-sm ${isActive ? 'text-yellow-300' : 'text-slate-400'}`}
+                                        style={{
+                                          color: isActive ? '#fbbf24' : '#64748b',
+                                          opacity: isActive ? 1 : 0.4
+                                        }}
+                                      >
+                                        ⭐
+                                      </span>
+                                    );
+                                  });
+                                })()}
                               </div>
                             </div>
                           </div>
@@ -892,14 +906,27 @@ export default function Home() {
                                 
                                 {/* Stars */}
                                 <div className="flex items-center justify-center space-x-1 mb-3">
-                                  {Array.from({ length: 3 }, (_, i) => (
-                                    <span
-                                      key={i}
-                                      className="text-sm text-slate-500"
-                                    >
-                                      ⭐
-                                    </span>
-                                  ))}
+                                  {(() => {
+                                    // Get correct star count from achievementDefinitions
+                                    const definition = achievementDefinitions.find(def => def.title === achievement.title);
+                                    const starCount = definition ? definition.stars : achievement.stars;
+                                    
+                                    return Array.from({ length: 3 }, (_, i) => {
+                                      const isActive = i < starCount;
+                                      return (
+                                        <span
+                                          key={i}
+                                          className={`text-sm ${isActive ? 'text-slate-400' : 'text-slate-600'}`}
+                                          style={{
+                                            color: isActive ? '#94a3b8' : '#475569',
+                                            opacity: isActive ? 0.8 : 0.3
+                                          }}
+                                        >
+                                          ⭐
+                                        </span>
+                                      );
+                                    });
+                                  })()}
                                 </div>
                                 
                                 {/* Locked Status */}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Target, Plus, X, Star, Trophy, Minus } from "lucide-react";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
+import { achievementDefinitions } from "@/lib/achievements";
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState([]);
@@ -73,89 +74,8 @@ export default function GoalsPage() {
     locked: []
   });
 
-  // Import achievements from the main definitions
-  const allAchievements = [
-    {
-      id: "first-entry",
-      title: "Getting Started",
-      description: "Log your first mood entry",
-      icon: "🌟",
-      stars: 1,
-      type: "streak"
-    },
-    {
-      id: "week-streak",
-      title: "Week Warrior",
-      description: "Log mood for 7 consecutive days",
-      icon: "🔥",
-      stars: 2,
-      type: "streak"
-    },
-    {
-      id: "month-streak",
-      title: "Monthly Master",
-      description: "Log mood for 30 consecutive days",
-      icon: "💎",
-      stars: 3,
-      type: "streak"
-    },
-    {
-      id: "happy-week",
-      title: "Sunshine Week",
-      description: "Have 7 consecutive days with valence 8+",
-      icon: "☀️",
-      stars: 2,
-      type: "mood"
-    },
-    {
-      id: "energy-master",
-      title: "Energizer",
-      description: "Maintain energy 8+ for 14 days",
-      icon: "⚡",
-      stars: 3,
-      type: "mood"
-    },
-    {
-      id: "sleep-champion",
-      title: "Sleep Champion",
-      description: "Log 8+ hours sleep for 7 consecutive days",
-      icon: "😴",
-      stars: 2,
-      type: "habit"
-    },
-    {
-      id: "activity-explorer",
-      title: "Activity Explorer",
-      description: "Log 10 different activities",
-      icon: "🎯",
-      stars: 2,
-      type: "special"
-    },
-    {
-      id: "reflection-master",
-      title: "Reflection Master",
-      description: "Complete 25 micro-reflections",
-      icon: "💭",
-      stars: 2,
-      type: "special"
-    },
-    {
-      id: "early-bird",
-      title: "Early Bird",
-      description: "Log mood before 9 AM for 7 days",
-      icon: "🐦",
-      stars: 2,
-      type: "special"
-    },
-    {
-      id: "century-club",
-      title: "Century Club",
-      description: "Log 100 total mood entries",
-      icon: "🏆",
-      stars: 3,
-      type: "streak"
-    }
-  ];
+  // Use the imported achievement definitions for consistency
+  const allAchievements = achievementDefinitions;
   const [achievementsLoading, setAchievementsLoading] = useState(false);
 
   useEffect(() => {

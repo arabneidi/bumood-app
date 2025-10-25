@@ -541,7 +541,7 @@ function generateRandomizedSuggestions(profile: UserMoodProfile, aiInspo: string
       type: 'activity',
       title: 'Pop Music Energy Boost',
       description: 'Listen to current pop hits to get your energy flowing!',
-      action: 'Listen to "Levitating" by Dua Lipa and dance',
+      action: 'Listen to your favorite upbeat song and dance',
       priority: currentMood.energy < 5 ? 'high' : 'medium',
       category: 'energy',
       icon: '🎵',
@@ -1362,10 +1362,10 @@ PERSONALITY + STUDENT COMBINATIONS (CRITICAL):
    - **ENERGY MATCHING**: Match their current mood - high energy = upbeat songs, low energy = calming songs, stressed = relaxing music
    - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
    - If NO favorite musicians saved: Use age-appropriate suggestions:
-     * Age 18-25: "Listen to 'Levitating' by Dua Lipa" + "Discover 'Good 4 U' by Olivia Rodrigo"
-     * Age 26-35: "Listen to 'Blinding Lights' by The Weeknd" + "Try 'Watermelon Sugar' by Harry Styles"
-     * Age 36-45: "Listen to 'Shake It Off' by Taylor Swift" + "Explore 'Uptown Funk' by Bruno Mars"
-     * Age 46+: "Listen to 'Don't Stop Believin'' by Journey" + "Check out 'Sweet Caroline' by Neil Diamond"
+     * Age 18-25: "Listen to your favorite current pop song" + "Discover new artists in similar genres"
+     * Age 26-35: "Listen to your favorite contemporary hits" + "Try new artists in your preferred genre"
+     * Age 36-45: "Listen to your favorite popular songs" + "Explore new artists with similar vibes"
+     * Age 46+: "Listen to your favorite classic hits" + "Check out new artists with similar styles"
    - ALWAYS include specific song titles and artists!
    - MIX familiar comfort with exciting new discoveries!
 
@@ -1378,7 +1378,7 @@ PERSONALITY + STUDENT COMBINATIONS (CRITICAL):
    - **GENRE EXPANSION**: If they like Ernest Hemingway → suggest similar writers (F. Scott Fitzgerald, John Steinbeck, Jack London) + NEW discoveries (Cormac McCarthy, Haruki Murakami)
    - **GENRE EXPANSION**: If they like Carl Sagan → suggest similar science writers (Neil deGrasse Tyson, Stephen Hawking, Richard Feynman) + NEW discoveries (Bill Bryson, Mary Roach)
    - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
-   - Example: "Read 'Pride and Prejudice' by Jane Austen" + "Try 'The Seven Husbands of Evelyn Hugo' by Taylor Jenkins Reid for similar romance vibes"
+   - Example: "Read your favorite classic novel" + "Try a new author with similar themes and writing style"
    - MIX familiar comfort with exciting new discoveries!
 
 3. **If suggesting exercise/sports:**
@@ -1402,7 +1402,7 @@ PERSONALITY + STUDENT COMBINATIONS (CRITICAL):
    - **GENRE EXPANSION**: If they like Inception → suggest similar thrillers (Interstellar, Tenet) + NEW discoveries (Everything Everywhere All at Once, Dune)
    - **GENRE EXPANSION**: If they like Euphoria → suggest similar dramas (13 Reasons Why, Elite) + NEW discoveries (Heartstopper, Sex Education)
    - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
-   - Example: "Watch 'The Pursuit of Happyness'" + "Check out 'The Seven Husbands of Evelyn Hugo' adaptation for similar inspiring vibes"
+   - Example: "Watch your favorite inspiring movie" + "Check out a new film with similar themes and emotional impact"
    - MIX familiar comfort with exciting new discoveries!
 
 5. **If suggesting meditation/mindfulness:**
@@ -1414,7 +1414,7 @@ PERSONALITY + STUDENT COMBINATIONS (CRITICAL):
    - **TECHNIQUE EXPANSION**: If they like breathing exercises → suggest similar breathwork (4-7-8, box breathing) + NEW discoveries (Wim Hof method, pranayama)
    - **TECHNIQUE EXPANSION**: If they like guided meditation → suggest similar audio practices (Headspace, Calm) + NEW discoveries (Insight Timer, Ten Percent Happier)
    - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
-   - Example: "Try Thich Nhat Hanh's walking meditation" + "Explore Wim Hof's breathing technique for fresh perspective"
+   - Example: "Try your favorite meditation technique" + "Explore a new mindfulness practice for fresh perspective"
    - MIX familiar comfort with exciting new discoveries!
 
 6. **If suggesting art/creativity:**
@@ -1426,7 +1426,7 @@ PERSONALITY + STUDENT COMBINATIONS (CRITICAL):
    - **GENRE EXPANSION**: If they like Leonardo da Vinci → suggest similar Renaissance artists (Michelangelo, Raphael, Botticelli) + NEW discoveries (contemporary anatomical art, scientific illustration)
    - **GENRE EXPANSION**: If they like Van Gogh → suggest similar impressionist artists (Monet, Renoir, Degas) + NEW discoveries (contemporary landscape painting, digital impressionism)
    - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
-   - Example: "Draw self-portraits inspired by Frida Kahlo" + "Try Yayoi Kusama's polka dot technique for fresh perspective"
+   - Example: "Create art inspired by your favorite artist" + "Try a new artistic technique for fresh perspective"
    - MIX familiar comfort with exciting new discoveries!
 
 RESPONSE FORMAT:
@@ -1443,20 +1443,7 @@ RESPONSE FORMAT:
   }
 ]
 
-EXAMPLES OF GOOD SUGGESTIONS:
-✅ "Listen to 'Respect' by Nina Simone for energy boost" + "Discover 'Good as Hell' by Lizzo for similar empowering vibes"
-✅ "Read Chapter 1 of 'Pride and Prejudice' by Jane Austen" + "Try 'The Seven Husbands of Evelyn Hugo' by Taylor Jenkins Reid for similar romance vibes"
-✅ "Try Ronaldo's 10-minute leg workout from his Instagram" + "Explore Adriene Mishler's yoga flows for variety"
-✅ "Watch Season 1, Episode 7 of 'Friends'" + "Check out 'Brooklyn Nine-Nine' for similar comedy vibes"
-✅ "Practice Rumi-inspired gratitude meditation" + "Try Wim Hof's breathing technique for fresh perspective"
-✅ "Draw self-portraits inspired by Frida Kahlo" + "Try Yayoi Kusama's polka dot technique for fresh perspective"
-
-EXAMPLES OF BAD (TOO GENERIC) SUGGESTIONS:
-❌ "Listen to music"
-❌ "Read a book"
-❌ "Do some exercise"
-❌ "Watch something uplifting"
-❌ "Try meditation"
+IMPORTANT: Be creative and original! Do NOT copy examples from this prompt. Generate unique, personalized suggestions based on the user's actual preferences and current mood.
 
 ${userInfo?.onPeriod ? '\nCRITICAL: This person is currently menstruating - be sensitive and provide appropriate suggestions!' : ''}
 ${userFeedback ? '\nIMPORTANT: Personalize based on their preferences above!' : ''}
