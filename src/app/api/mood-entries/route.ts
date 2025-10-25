@@ -178,6 +178,19 @@ export async function POST(request: NextRequest) {
     });
     console.log('✅ Mood entry created successfully:', moodEntry.id);
 
+    // Invalidate AI drivers cache when new entry is created
+    try {
+      await db.aISuggestionAction.deleteMany({
+        where: {
+          userId: dummyUserId,
+          type: 'drivers_analysis'
+        }
+      });
+      console.log('🗑️ AI drivers cache invalidated due to new mood entry');
+    } catch (cacheError) {
+      console.error('❌ Error invalidating AI drivers cache:', cacheError);
+    }
+
     // Auto-create/update DailyTracking record based on mood entry data
     const trackingDate = new Date(entryDate);
     trackingDate.setHours(0, 0, 0, 0);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Helper function for category unselected styles
@@ -29,95 +29,119 @@ interface ActivitySelectorProps {
   onActivityToggle: (activity: string) => void;
 }
 
-const activityCategories = {
+interface PredefinedActivity {
+  id: string;
+  name: string;
+  icon: string;
+  category: string;
+  dssComponent: string;
+  color?: string;
+}
+
+// Category styling configuration
+const categoryStyles = {
   'Physical': {
     color: 'bg-gradient-to-r from-red-500 to-pink-500',
-    selectedColor: 'bg-gradient-to-r from-red-600 to-pink-600',
-    cardStyle: 'bg-gradient-to-br from-red-500/20 to-pink-500/15 border-red-400/30',
-    activities: [
-      { id: 'exercise', name: 'Exercise', icon: '💪', color: 'bg-red-100 text-red-800' },
-      { id: 'walking', name: 'Walking', icon: '🚶', color: 'bg-red-100 text-red-800' },
-      { id: 'yoga', name: 'Yoga', icon: '🧘', color: 'bg-red-100 text-red-800' },
-      { id: 'swimming', name: 'Swimming', icon: '🏊', color: 'bg-red-100 text-red-800' },
-    ]
+    selectedColor: 'bg-gradient-to-r from-red-600 to-pink-500',
+    cardStyle: 'bg-gradient-to-br from-red-500/20 to-pink-500/15 border-red-400/30'
   },
   'Mental': {
     color: 'bg-gradient-to-r from-blue-500 to-cyan-500',
     selectedColor: 'bg-gradient-to-r from-blue-600 to-cyan-600',
-    cardStyle: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/15 border-blue-400/30',
-    activities: [
-      { id: 'reading', name: 'Reading', icon: '📚', color: 'bg-blue-100 text-blue-800' },
-      { id: 'learning', name: 'Learning', icon: '🎓', color: 'bg-blue-100 text-blue-800' },
-      { id: 'meditation', name: 'Meditation', icon: '🧘‍♀️', color: 'bg-blue-100 text-blue-800' },
-      { id: 'puzzles', name: 'Puzzles', icon: '🧩', color: 'bg-blue-100 text-blue-800' },
-      { id: 'writing', name: 'Writing', icon: '✍️', color: 'bg-blue-100 text-blue-800' },
-      { id: 'planning', name: 'Planning', icon: '📋', color: 'bg-blue-100 text-blue-800' },
-    ]
+    cardStyle: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/15 border-blue-400/30'
   },
   'Social': {
     color: 'bg-gradient-to-r from-green-500 to-emerald-500',
     selectedColor: 'bg-gradient-to-r from-green-600 to-emerald-600',
-    cardStyle: 'bg-gradient-to-br from-green-500/20 to-emerald-500/15 border-green-400/30',
-    activities: [
-      { id: 'socializing', name: 'Socializing', icon: '👥', color: 'bg-green-100 text-green-800' },
-      { id: 'family_time', name: 'Family Time', icon: '👨‍👩‍👧‍👦', color: 'bg-green-100 text-green-800' },
-      { id: 'calling', name: 'Calling', icon: '📞', color: 'bg-green-100 text-green-800' },
-      { id: 'dating', name: 'Dating', icon: '💕', color: 'bg-green-100 text-green-800' },
-      { id: 'meeting', name: 'Meeting', icon: '🤝', color: 'bg-green-100 text-green-800' },
-      { id: 'volunteering', name: 'Volunteering', icon: '🤲', color: 'bg-green-100 text-green-800' },
-    ]
+    cardStyle: 'bg-gradient-to-br from-green-500/20 to-emerald-500/15 border-green-400/30'
   },
   'Creative': {
     color: 'bg-gradient-to-r from-purple-500 to-indigo-500',
     selectedColor: 'bg-gradient-to-r from-purple-600 to-indigo-600',
-    cardStyle: 'bg-gradient-to-br from-purple-500/20 to-indigo-500/15 border-purple-400/30',
-    activities: [
-      { id: 'cooking', name: 'Cooking', icon: '👨‍🍳', color: 'bg-purple-100 text-purple-800' },
-      { id: 'crafting', name: 'Crafting', icon: '✂️', color: 'bg-purple-100 text-purple-800' },
-      { id: 'photography', name: 'Photography', icon: '📸', color: 'bg-purple-100 text-purple-800' },
-      { id: 'gaming', name: 'Gaming', icon: '🎮', color: 'bg-purple-100 text-purple-800' },
-    ]
+    cardStyle: 'bg-gradient-to-br from-purple-500/20 to-indigo-500/15 border-purple-400/30'
   },
   'Relaxation': {
     color: 'bg-gradient-to-r from-amber-500 to-orange-500',
     selectedColor: 'bg-gradient-to-r from-amber-600 to-orange-600',
-    cardStyle: 'bg-gradient-to-br from-amber-500/20 to-orange-500/15 border-amber-400/30',
-    activities: [
-      { id: 'sleeping', name: 'Sleeping', icon: '😴', color: 'bg-yellow-100 text-yellow-800' },
-      { id: 'napping', name: 'Napping', icon: '💤', color: 'bg-yellow-100 text-yellow-800' },
-      { id: 'watching', name: 'Watching', icon: '📺', color: 'bg-yellow-100 text-yellow-800' },
-      { id: 'bathing', name: 'Bathing', icon: '🛁', color: 'bg-yellow-100 text-yellow-800' },
-      { id: 'massage', name: 'Massage', icon: '💆', color: 'bg-yellow-100 text-yellow-800' },
-      { id: 'nature', name: 'Nature', icon: '🌿', color: 'bg-yellow-100 text-yellow-800' },
-    ]
+    cardStyle: 'bg-gradient-to-br from-amber-500/20 to-orange-500/15 border-amber-400/30'
   },
   'Work': {
     color: 'bg-gradient-to-r from-slate-500 to-gray-500',
     selectedColor: 'bg-gradient-to-r from-slate-600 to-gray-600',
-    cardStyle: 'bg-gradient-to-br from-slate-500/20 to-gray-500/15 border-slate-400/30',
-    activities: [
-      { id: 'working', name: 'Working', icon: '💼', color: 'bg-gray-100 text-gray-800' },
-      { id: 'studying', name: 'Studying', icon: '📖', color: 'bg-gray-100 text-gray-800' },
-      { id: 'meeting', name: 'Meeting', icon: '👔', color: 'bg-gray-100 text-gray-800' },
-      { id: 'presenting', name: 'Presenting', icon: '📊', color: 'bg-gray-100 text-gray-800' },
-      { id: 'emailing', name: 'Emailing', icon: '📧', color: 'bg-gray-100 text-gray-800' },
-      { id: 'coding', name: 'Coding', icon: '💻', color: 'bg-gray-100 text-gray-800' },
-    ]
+    cardStyle: 'bg-gradient-to-br from-slate-500/20 to-gray-500/15 border-slate-400/30'
   }
 };
 
 export default function ActivitySelector({ selectedActivities, onActivityToggle }: ActivitySelectorProps) {
   const [activeCategory, setActiveCategory] = useState<string>('Physical');
+  const [predefinedActivities, setPredefinedActivities] = useState<PredefinedActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPredefinedActivities = async () => {
+      try {
+        const response = await fetch('/api/predefined-activities');
+        if (response.ok) {
+          const data = await response.json();
+          setPredefinedActivities(data.activities || []);
+        }
+      } catch (error) {
+        console.error('Error fetching predefined activities:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPredefinedActivities();
+  }, []);
+
+  // Generate activity categories from database data
+  const getActivityCategories = () => {
+    if (predefinedActivities.length === 0) return {};
+    
+    const categories = predefinedActivities.reduce((acc, activity) => {
+      if (!acc[activity.category]) {
+        acc[activity.category] = {
+          ...categoryStyles[activity.category as keyof typeof categoryStyles],
+          activities: []
+        };
+      }
+      acc[activity.category].activities.push({
+        id: activity.name.toLowerCase().replace(/\s+/g, '_'),
+        name: activity.name,
+        icon: activity.icon,
+        color: activity.color || 'bg-gray-100 text-gray-800'
+      });
+      return acc;
+    }, {} as any);
+    
+    return categories;
+  };
 
   const handleActivityClick = (activityId: string) => {
     onActivityToggle(activityId);
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-12 bg-slate-700 rounded-lg mb-4"></div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-24 bg-slate-700 rounded-2xl"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Category Tabs */}
       <div className="flex flex-wrap gap-3">
-        {Object.entries(activityCategories).map(([category, data]) => (
+        {Object.entries(getActivityCategories()).map(([category, data]) => (
           <motion.button
             key={category}
             type="button"
@@ -145,7 +169,7 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
           transition={{ duration: 0.2 }}
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
         >
-          {activityCategories[activeCategory as keyof typeof activityCategories].activities.map((activity) => {
+          {getActivityCategories()[activeCategory as keyof ReturnType<typeof getActivityCategories>]?.activities.map((activity) => {
             const isSelected = selectedActivities.includes(activity.id);
             return (
               <motion.button
@@ -154,7 +178,7 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
                 onClick={() => handleActivityClick(activity.id)}
                 className={`p-5 rounded-2xl border-2 transition-all duration-300 shadow-lg backdrop-blur-sm ${
                   isSelected
-                    ? `${activityCategories[activeCategory as keyof typeof activityCategories].cardStyle} scale-105 shadow-xl`
+                    ? `${getActivityCategories()[activeCategory as keyof ReturnType<typeof getActivityCategories>]?.cardStyle} scale-105 shadow-xl`
                     : 'bg-gradient-to-br from-slate-500/20 to-gray-500/15 border-slate-400/30 hover:shadow-md'
                 }`}
                 whileHover={{ scale: isSelected ? 1.05 : 1.02 }}

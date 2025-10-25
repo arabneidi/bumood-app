@@ -71,9 +71,9 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
   }
 
   // Calculate today's components
-  const todayLM = calculateLearningMomentum(todayTracking);
-  const todayRI = calculateRecoveryIndex(todayTracking);
-  const todayCN = calculateConnectionScore(todayTracking);
+  const todayLM = await calculateLearningMomentum(todayTracking, userId, today);
+  const todayRI = await calculateRecoveryIndex(todayTracking, userId, today);
+  const todayCN = await calculateConnectionScore(todayTracking, userId, today);
 
   // Get last 14 days of data for z-score calculation
   const fourteenDaysAgo = new Date(today);
@@ -93,9 +93,15 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
   });
 
   // Calculate historical components
-  const lmHistory = historicalData.map(entry => calculateLearningMomentum(entry));
-  const riHistory = historicalData.map(entry => calculateRecoveryIndex(entry));
-  const cnHistory = historicalData.map(entry => calculateConnectionScore(entry));
+  const lmHistory = await Promise.all(historicalData.map(async entry => 
+    await calculateLearningMomentum(entry, userId, entry.date)
+  ));
+  const riHistory = await Promise.all(historicalData.map(async entry => 
+    await calculateRecoveryIndex(entry, userId, entry.date)
+  ));
+  const cnHistory = await Promise.all(historicalData.map(async entry => 
+    await calculateConnectionScore(entry, userId, entry.date)
+  ));
 
   // Calculate z-scores only if we have enough historical data
   let zLM = 0, zRI = 0, zCN = 0;
@@ -141,36 +147,89 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
 }
 
 /**
- * Calculate Learning Momentum: LM = deepwork_minutes + 10*tasks_completed
+ * Calculate Learning Momentum: LM = deepwork_minutes + 10*tasks_completed + goal_progress
  */
-function calculateLearningMomentum(tracking: any): number {
+async function calculateLearningMomentum(tracking: any, userId: string, date: Date): Promise<number> {
   if (!tracking) return 0;
   
   const deepworkMinutes = tracking.deepworkMinutes || 0;
   const tasksCompleted = tracking.tasksCompleted || 0;
   
-  return deepworkMinutes + (10 * tasksCompleted);
+  // Get goal progress for LM goals (Learning Momentum)
+  const lmGoals = await prisma.goal.findMany({
+    where: {
+      userId: userId,
+      dssComponent: 'LM',
+      completed: false
+    }
+  });
+  
+  // Calculate goal progress contribution
+  let goalProgress = 0;
+  for (const goal of lmGoals) {
+    // Each +1 on goal progress contributes to LM
+    const progressValue = goal.currentValue || 0;
+    goalProgress += progressValue * 2; // Each goal progress point = 2 LM points
+  }
+  
+  return deepworkMinutes + (10 * tasksCompleted) + goalProgress;
 }
 
 /**
- * Calculate Recovery Index: RI = sleep_hours + (recovery_action ? 1 : 0)
+ * Calculate Recovery Index: RI = sleep_hours + (recovery_action ? 1 : 0) + goal_progress
  */
-function calculateRecoveryIndex(tracking: any): number {
+async function calculateRecoveryIndex(tracking: any, userId: string, date: Date): Promise<number> {
   if (!tracking) return 0;
   
   const sleepHours = tracking.sleepHours || 0;
   const recoveryAction = tracking.recoveryAction || false;
   
-  return sleepHours + (recoveryAction ? 1 : 0);
+  // Get goal progress for RI goals (Recovery Index)
+  const riGoals = await prisma.goal.findMany({
+    where: {
+      userId: userId,
+      dssComponent: 'RI',
+      completed: false
+    }
+  });
+  
+  // Calculate goal progress contribution
+  let goalProgress = 0;
+  for (const goal of riGoals) {
+    // Each +1 on goal progress contributes to RI
+    const progressValue = goal.currentValue || 0;
+    goalProgress += progressValue * 1.5; // Each goal progress point = 1.5 RI points
+  }
+  
+  return sleepHours + (recoveryAction ? 1 : 0) + goalProgress;
 }
 
 /**
- * Calculate Connection Score: CN = positive_social_touchpoints
+ * Calculate Connection Score: CN = positive_social_touchpoints + goal_progress
  */
-function calculateConnectionScore(tracking: any): number {
+async function calculateConnectionScore(tracking: any, userId: string, date: Date): Promise<number> {
   if (!tracking) return 0;
   
-  return tracking.positiveSocialTouchpoints || 0;
+  const socialTouchpoints = tracking.positiveSocialTouchpoints || 0;
+  
+  // Get goal progress for Connection goals
+  const connectionGoals = await prisma.goal.findMany({
+    where: {
+      userId: userId,
+      dssComponent: 'Connection',
+      completed: false
+    }
+  });
+  
+  // Calculate goal progress contribution
+  let goalProgress = 0;
+  for (const goal of connectionGoals) {
+    // Each +1 on goal progress contributes to Connection
+    const progressValue = goal.currentValue || 0;
+    goalProgress += progressValue * 1; // Each goal progress point = 1 Connection point
+  }
+  
+  return socialTouchpoints + goalProgress;
 }
 
 /**

@@ -142,9 +142,38 @@ model Goal {
   streak      Int      @default(0) // current streak
   bestStreak  Int      @default(0) // best streak achieved
   completed   Boolean  @default(false)
+  completedAt DateTime? // Date when goal was completed
+  dssComponent String?  // LM, RI, or Connection - which DSS component this goal contributes to
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PredefinedGoal {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  category    String   // health, mental, productivity, relationships
+  subcategory String   // exercise, nutrition, sleep, meditation, learning, work, organization, family, friends
+  dssComponent String  // LM, RI, or Connection
+  targetValue Int?     // default target value
+  unit        String?  // days, weeks, months, etc.
+  difficulty  String   @default("medium") // easy, medium, hard
+  isActive    Boolean  @default(true) // whether this predefined goal is available
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PredefinedActivity {
+  id          String   @id @default(cuid())
+  name        String   // activity name
+  icon        String   // emoji icon
+  category    String   // Physical, Mental, Social, Creative, Relaxation, Work
+  dssComponent String  // LM, RI, or Connection
+  color       String?  // color class for styling
+  isActive    Boolean  @default(true) // whether this predefined activity is available
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Achievement {

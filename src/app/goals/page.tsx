@@ -21,43 +21,42 @@ export default function GoalsPage() {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [completedGoal, setCompletedGoal] = useState<any>(null);
   const [completedGoals, setCompletedGoals] = useState<any[]>([]);
+  const [predefinedGoals, setPredefinedGoals] = useState<any[]>([]);
+  const [predefinedGoalsLoading, setPredefinedGoalsLoading] = useState(false);
 
-  const goalCategories = [
-    {
-      id: "health",
-      name: "Health & Fitness",
-      subcategories: [
-        { id: "exercise", name: "Exercise", examples: ["Run 5K", "Gym 3x/week", "Daily yoga"] },
-        { id: "nutrition", name: "Nutrition", examples: ["Drink 8 glasses water", "Eat 5 veggies", "No sugar"] },
-        { id: "sleep", name: "Sleep", examples: ["Sleep 8 hours", "Bed by 10pm", "No phone before bed"] },
-      ]
-    },
-    {
-      id: "mental",
-      name: "Mental Wellness",
-      subcategories: [
-        { id: "meditation", name: "Meditation", examples: ["Meditate 10 min", "Morning mindfulness", "Evening reflection"] },
-        { id: "breaking-bad-habits", name: "Break Bad Habits", examples: ["Quit smoking", "No alcohol", "Reduce caffeine"] },
-        { id: "learning", name: "Learning", examples: ["Read 30 min", "Learn new skill", "Take course"] },
-      ]
-    },
-    {
-      id: "productivity",
-      name: "Productivity",
-      subcategories: [
-        { id: "work", name: "Work", examples: ["Complete project", "Learn new tool", "Networking"] },
-        { id: "organization", name: "Organization", examples: ["Clean desk daily", "Plan tomorrow", "Declutter"] },
-      ]
-    },
-    {
-      id: "relationships",
-      name: "Relationships",
-      subcategories: [
-        { id: "family", name: "Family", examples: ["Call parents weekly", "Family dinner", "Quality time"] },
-        { id: "friends", name: "Friends", examples: ["Meet friend weekly", "Message friends", "Plan outing"] },
-      ]
-    }
-  ];
+  // Generate goal categories from predefined goals data
+  const getGoalCategories = () => {
+    if (predefinedGoals.length === 0) return [];
+    
+    const categories = predefinedGoals.reduce((acc, goal) => {
+      if (!acc[goal.category]) {
+        acc[goal.category] = {
+          id: goal.category,
+          name: goal.category.charAt(0).toUpperCase() + goal.category.slice(1),
+          dssComponent: goal.dssComponent,
+          subcategories: {}
+        };
+      }
+      
+      if (!acc[goal.category].subcategories[goal.subcategory]) {
+        acc[goal.category].subcategories[goal.subcategory] = {
+          id: goal.subcategory,
+          name: goal.subcategory.charAt(0).toUpperCase() + goal.subcategory.slice(1).replace(/-/g, ' '),
+          dssComponent: goal.dssComponent,
+          examples: []
+        };
+      }
+      
+      acc[goal.category].subcategories[goal.subcategory].examples.push(goal.title);
+      return acc;
+    }, {} as any);
+    
+    // Convert to array format
+    return Object.values(categories).map((category: any) => ({
+      ...category,
+      subcategories: Object.values(category.subcategories)
+    }));
+  };
 
   const [achievements, setAchievements] = useState<{
     achieved: any[];
@@ -231,8 +230,21 @@ export default function GoalsPage() {
       }
     };
 
+    const fetchPredefinedGoals = async () => {
+      try {
+        const response = await fetch("/api/predefined-goals");
+        if (response.ok) {
+          const data = await response.json();
+          setPredefinedGoals(data.goals || []);
+        }
+      } catch (error) {
+        console.error("Error fetching predefined goals:", error);
+      }
+    };
+
     fetchGoals();
     fetchAchievements();
+    fetchPredefinedGoals();
   }, []);
 
   const handleCreateGoal = async () => {
@@ -241,12 +253,21 @@ export default function GoalsPage() {
       return;
     }
 
+    // Get DSS component from the selected predefined goal
+    const selectedPredefinedGoal = predefinedGoals.find(goal => 
+      goal.title === newGoal.title && 
+      goal.category === selectedCategory && 
+      goal.subcategory === selectedSubcategory
+    );
+    const dssComponent = selectedPredefinedGoal?.dssComponent || 'LM';
+
     try {
       const response = await fetch("/api/goals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...newGoal,
+          dssComponent: dssComponent,
           userId: 1,
         }),
       });
@@ -942,7 +963,7 @@ export default function GoalsPage() {
                 <div>
                   <label className="block text-lg font-semibold text-slate-200 mb-3">Choose Your Goal Category</label>
                   <div className="space-y-6">
-                    {goalCategories.map((category, index) => {
+                    {getGoalCategories().map((category, index) => {
                       const colors = [
                         { bg: 'rgba(6, 182, 212, 0.1)', border: 'rgba(6, 182, 212, 0.4)', glow: 'rgba(6, 182, 212, 0.3)' }, // Cyan
                         { bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.4)', glow: 'rgba(34, 197, 94, 0.3)' }, // Green
@@ -994,11 +1015,21 @@ export default function GoalsPage() {
                                       setSelectedCategory(category.id);
                                       setSelectedSubcategory(subcategory.id);
                                       setSelectedGoal(example);
+                                      
+                                      // Find the predefined goal data
+                                      const predefinedGoal = predefinedGoals.find(goal => 
+                                        goal.title === example && 
+                                        goal.category === category.id && 
+                                        goal.subcategory === subcategory.id
+                                      );
+                                      
                                       setNewGoal({ 
                                         ...newGoal, 
                                         title: example,
                                         category: subcategory.name,
-                                        subcategory: example
+                                        subcategory: example,
+                                        targetValue: predefinedGoal?.targetValue || 30,
+                                        dssComponent: predefinedGoal?.dssComponent || 'LM'
                                       });
                                     }}
                                     className="relative overflow-hidden p-3 rounded-lg border transition-all duration-300 text-left"

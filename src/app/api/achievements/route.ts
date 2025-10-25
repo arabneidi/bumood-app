@@ -68,6 +68,19 @@ export async function POST(request: NextRequest) {
     // Signal dashboard to regenerate Pro Tips
     console.log('🏆 Achievement created - signaling dashboard for regeneration');
 
+    // Invalidate AI drivers cache when new achievement is unlocked
+    try {
+      await db.aISuggestionAction.deleteMany({
+        where: {
+          userId: dummyUserId,
+          type: 'drivers_analysis'
+        }
+      });
+      console.log('🗑️ AI drivers cache invalidated due to new achievement');
+    } catch (cacheError) {
+      console.error('❌ Error invalidating AI drivers cache:', cacheError);
+    }
+
     return NextResponse.json(achievement);
   } catch (error) {
     console.error("Error creating achievement:", error);

@@ -251,7 +251,7 @@ export default function StatsPage() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="mb-12"
         >
-          <DriversCard data={driversData} loading={driversLoading} />
+          <DriversCard data={driversData} loading={driversLoading} userInfo={userInfo} />
         </motion.div>
 
         {/* Network Graph Section */}
