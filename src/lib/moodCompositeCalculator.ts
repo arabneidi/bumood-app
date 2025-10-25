@@ -96,6 +96,168 @@ export async function calculateMoodComposite(
 }
 
 /**
+ * Calculate Mood Composite for Power Hours with exact hour matching
+ * Supports weekly, monthly, and yearly windows
+ */
+export async function calculateMoodCompositeForPowerHours(
+  userId: string,
+  valence: number,
+  energy: number,
+  focus: number,
+  stress: number,
+  targetHour: number, // Exact hour (0-23)
+  window: 'weekly' | 'monthly' | 'yearly' = 'weekly',
+  currentDate: Date = new Date()
+): Promise<MoodCompositeResult> {
+  console.log(`🧮 Calculating MC for Power Hours: hour=${targetHour}, window=${window}`);
+  
+  // Determine historical data range based on window
+  let startDate: Date;
+  let endDate: Date = new Date(currentDate);
+  
+  switch (window) {
+    case 'weekly':
+      startDate = new Date(currentDate);
+      startDate.setDate(currentDate.getDate() - 7);
+      break;
+    case 'monthly':
+      startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      break;
+    case 'yearly':
+      startDate = new Date(currentDate.getFullYear(), 0, 1);
+      break;
+  }
+  
+  console.log(`📅 Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+  
+  // Get ALL entries in the window (not just same time bucket)
+  const allEntries = await prisma.moodEntry.findMany({
+    where: {
+      userId,
+      createdAt: {
+        gte: startDate,
+        lt: endDate
+      }
+    },
+    select: {
+      createdAt: true,
+      valence: true,
+      energy: true,
+      focus: true,
+      stress: true,
+      activityEntries: true,
+      selectedTimeSlots: true
+    },
+    orderBy: {
+      createdAt: 'desc'
+    }
+  });
+  
+  console.log(`📊 Found ${allEntries.length} total entries in window`);
+  
+  // Filter entries that have the exact target hour
+  const entriesForHour = allEntries.filter(entry => {
+    // Check activityEntries first (more accurate)
+    if (entry.activityEntries) {
+      try {
+        const activityEntries = typeof entry.activityEntries === 'string' 
+          ? JSON.parse(entry.activityEntries) 
+          : entry.activityEntries;
+        
+        if (activityEntries && activityEntries.length > 0) {
+          return activityEntries.some((activity: any) => activity.hour === targetHour);
+        }
+      } catch (e) {
+        // ignore parsing errors
+      }
+    }
+    
+    // Fallback to selectedTimeSlots
+    if (entry.selectedTimeSlots) {
+      try {
+        const timeSlots = typeof entry.selectedTimeSlots === 'string' 
+          ? JSON.parse(entry.selectedTimeSlots) 
+          : entry.selectedTimeSlots;
+        
+        if (timeSlots && timeSlots.length > 0) {
+          return timeSlots.some((timeSlotStr: string) => {
+            const hourMatch = timeSlotStr.match(/[-]?(\d+)/);
+            if (hourMatch) {
+              const parsedHour = parseInt(hourMatch[1]);
+              return !isNaN(parsedHour) && parsedHour === targetHour;
+            }
+            return false;
+          });
+        }
+      } catch (e) {
+        // ignore parsing errors
+      }
+    }
+    
+    return false;
+  });
+  
+  console.log(`🎯 Found ${entriesForHour.length} entries for hour ${targetHour}`);
+  
+  // Group by date and average multiple entries on same day
+  const dailyAverages = new Map<string, { valence: number, energy: number, focus: number, stress: number, count: number }>();
+  
+  entriesForHour.forEach(entry => {
+    const dateKey = entry.createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    if (!dailyAverages.has(dateKey)) {
+      dailyAverages.set(dateKey, { valence: 0, energy: 0, focus: 0, stress: 0, count: 0 });
+    }
+    
+    const dayData = dailyAverages.get(dateKey)!;
+    dayData.valence += entry.valence;
+    dayData.energy += entry.energy;
+    dayData.focus += entry.focus;
+    dayData.stress += entry.stress;
+    dayData.count += 1;
+  });
+  
+  // Calculate daily averages
+  const historicalData = Array.from(dailyAverages.values()).map(dayData => ({
+    valence: dayData.valence / dayData.count,
+    energy: dayData.energy / dayData.count,
+    focus: dayData.focus / dayData.count,
+    stress: dayData.stress / dayData.count
+  }));
+  
+  console.log(`📈 Historical data points: ${historicalData.length}`);
+  
+  // Extract historical values
+  const valenceHistory = historicalData.map(entry => entry.valence);
+  const energyHistory = historicalData.map(entry => entry.energy);
+  const focusHistory = historicalData.map(entry => entry.focus);
+  const stressHistory = historicalData.map(entry => entry.stress);
+  
+  // Calculate z-scores
+  const zV = calculateZScore(valence, valenceHistory);
+  const zE = calculateZScore(energy, energyHistory);
+  const zF = calculateZScore(focus, focusHistory);
+  const zS = calculateZScore(stress, stressHistory);
+  
+  // Calculate Mood Composite
+  const moodComposite = 0.4 * zV + 0.3 * zE + 0.2 * zF - 0.2 * zS;
+  
+  console.log(`✅ MC calculated: ${moodComposite}, z-scores: V=${zV.toFixed(3)}, E=${zE.toFixed(3)}, F=${zF.toFixed(3)}, S=${zS.toFixed(3)}`);
+  
+  return {
+    moodComposite,
+    zScores: { zV, zE, zF, zS },
+    historicalData: {
+      valenceHistory,
+      energyHistory,
+      focusHistory,
+      stressHistory
+    },
+    timeBucket: getTimeBucket(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), targetHour))
+  };
+}
+
+/**
  * Calculate z-score: (value - mean) / stdDev
  * Uses sigma floor of 0.5 to prevent division by zero
  * If fewer than 5 historical entries, treat missing z-scores as 0

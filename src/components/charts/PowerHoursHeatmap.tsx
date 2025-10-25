@@ -85,21 +85,38 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
     return item.mcValue;
   };
 
-  // Normalize MC dynamically based on actual min/max in the data
+  // Normalize MC using actual data range from current window
   const normalizeMC = (mc: number) => {
-    if (range === 0) return 0.5; // All values are the same, use middle
-    return Math.max(0, Math.min(1, (mc - minMC) / range));
+    // Use actual min/max from current data
+    if (mcValues.length === 0) return 0.5; // Default to middle if no data
+    
+    const actualMin = minMC;
+    const actualMax = maxMC;
+    const actualRange = actualMax - actualMin;
+    
+    // Handle edge case where all values are the same
+    if (actualRange === 0) {
+      // If all values are the same, treat them as medium (0.5)
+      return 0.5;
+    }
+    
+    return Math.max(0, Math.min(1, (mc - actualMin) / actualRange));
   };
 
   const getColorClass = (mcValue: number | null) => {
     if (mcValue === null) return 'bg-slate-700/30'; // Grey for empty cells
     
-    const normalized = normalizeMC(mcValue);
-    // Heatmap color gradient: white (low) -> light red -> dark red (high)
-    // Divide into 3 equal ranges
-    if (normalized <= 0.33) return 'bg-white';            // Low MC - White
-    if (normalized <= 0.66) return 'bg-red-300';          // Medium MC - Light red
-    return 'bg-red-600';                                   // High MC - Dark red
+    // Normalize MC to 0-1 range using actual data range
+    const normalizedMC = normalizeMC(mcValue);
+    
+    // Color logic based on normalized MC (0-1):
+    // 0-0.33: Low (white)
+    // 0.33-0.66: Medium (light red)
+    // 0.66-1: High (intense red)
+    
+    if (normalizedMC < 0.33) return 'bg-white';      // Low MC (white)
+    if (normalizedMC < 0.66) return 'bg-red-200';   // Medium MC (light red)
+    return 'bg-red-600';                            // High MC (intense red)
   };
 
   const getTooltipContent = (day: string, hour: number) => {
@@ -139,7 +156,7 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
           <div className="flex items-center space-x-1">
             <div className="w-3 h-3 bg-slate-700/30 rounded"></div>
             <div className="w-3 h-3 bg-white border border-slate-600 rounded"></div>
-            <div className="w-3 h-3 bg-red-300 rounded"></div>
+            <div className="w-3 h-3 bg-red-200 rounded"></div>
             <div className="w-3 h-3 bg-red-600 rounded"></div>
           </div>
           <span className="text-slate-400">Higher MC</span>
