@@ -99,16 +99,8 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
     );
   }
 
-  // Calculate insights
-  const totalEntries = data.length;
-  const avgValence = data.reduce((sum, entry) => sum + entry.valence, 0) / totalEntries;
-  const avgEnergy = data.reduce((sum, entry) => sum + entry.energy, 0) / totalEntries;
-  const avgFocus = data.reduce((sum, entry) => sum + entry.focus, 0) / totalEntries;
-  const avgStress = data.reduce((sum, entry) => sum + entry.stress, 0) / totalEntries;
-  const avgSleep = data.reduce((sum, entry) => sum + (entry.sleep || 0), 0) / totalEntries;
-
-  // Calculate trends by grouping entries by date and averaging per day
-  // Group by date (YYYY-MM-DD format)
+  // Calculate insights using daily averages (not raw entry averages)
+  // First, group entries by date
   const entriesByDate = data.reduce((acc, entry) => {
     const dateKey = new Date(entry.createdAt).toISOString().split('T')[0];
     if (!acc[dateKey]) {
@@ -125,16 +117,30 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
     energy: entries.reduce((sum, e) => sum + e.energy, 0) / entries.length,
     focus: entries.reduce((sum, e) => sum + e.focus, 0) / entries.length,
     stress: entries.reduce((sum, e) => sum + e.stress, 0) / entries.length,
-  })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort newest first
+    sleep: entries.reduce((sum, e) => sum + (e.sleep || 0), 0) / entries.length,
+  }));
+
+  // Calculate weekly averages from daily averages
+  const totalEntries = data.length;
+  const avgValence = dailyAverages.reduce((sum, day) => sum + day.valence, 0) / dailyAverages.length;
+  const avgEnergy = dailyAverages.reduce((sum, day) => sum + day.energy, 0) / dailyAverages.length;
+  const avgFocus = dailyAverages.reduce((sum, day) => sum + day.focus, 0) / dailyAverages.length;
+  const avgStress = dailyAverages.reduce((sum, day) => sum + day.stress, 0) / dailyAverages.length;
+  const avgSleep = dailyAverages.reduce((sum, day) => sum + day.sleep, 0) / dailyAverages.length;
+
+  // Calculate trends by using the daily averages we already calculated
+  // Sort dailyAverages by date (newest first) for trend calculation
+  const sortedDailyAverages = [...dailyAverages].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Get last 7 days and previous 7 days based on calendar dates
-  const last7Days = dailyAverages.slice(0, 7);
-  const previous7Days = dailyAverages.slice(7, 14);
+  const last7Days = sortedDailyAverages.slice(0, 7);
+  const previous7Days = sortedDailyAverages.slice(7, 14);
   
   console.log('📊 Stats Analytics - Daily averages:', {
-    totalDays: dailyAverages.length,
+    totalDays: sortedDailyAverages.length,
     last7Dates: last7Days.map(d => d.date),
     previous7Dates: previous7Days.map(d => d.date),
+    weeklyAvgValence: avgValence,
     last7AvgValence: last7Days.reduce((sum, d) => sum + d.valence, 0) / last7Days.length,
     previous7AvgValence: previous7Days.reduce((sum, d) => sum + d.valence, 0) / previous7Days.length
   });
