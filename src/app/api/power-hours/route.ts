@@ -141,6 +141,10 @@ export async function GET(request: NextRequest) {
       });
     });
 
+    // Check if we have at least 5 total entries in the window
+    const totalEntries = moodEntries.length;
+    console.log(`📊 Total entries in window: ${totalEntries}`);
+    
     // Generate data for all days and hours in the period
     const powerHoursData = [];
     
@@ -155,8 +159,8 @@ export async function GET(request: NextRequest) {
         
         let avgMC = null; // Use null for empty cells instead of 0
         
-        // Only calculate average if we have at least 5 entries (to reduce noise)
-        if (timeSlotData && timeSlotData.mcValues.length >= 5) {
+        // Calculate average if we have entries for this time slot AND we have at least 5 total entries in the window
+        if (timeSlotData && timeSlotData.mcValues.length > 0 && totalEntries >= 5) {
           // Calculate average MC value for this time slot
           avgMC = timeSlotData.mcValues.reduce((sum, mc) => sum + mc, 0) / timeSlotData.mcValues.length;
         }
@@ -164,7 +168,7 @@ export async function GET(request: NextRequest) {
         powerHoursData.push({
           day: dayOfWeek,
           hour: hour,
-          mcValue: avgMC // null for empty cells or cells with < 5 entries
+          mcValue: avgMC // null for empty cells or if window has < 5 total entries
         });
       }
     }
@@ -179,7 +183,8 @@ export async function GET(request: NextRequest) {
       insights,
       mcAnalysis: {
         totalTimeSlots: mcDataByTimeSlot.size,
-        timeSlotsWithData: Array.from(mcDataByTimeSlot.values()).filter(slot => slot.mcValues.length >= 5).length,
+        timeSlotsWithData: Array.from(mcDataByTimeSlot.values()).filter(slot => slot.mcValues.length > 0).length,
+        totalEntries: totalEntries,
         avgMCValue: powerHoursData.filter(item => item.mcValue !== null).length > 0
           ? powerHoursData.filter(item => item.mcValue !== null).reduce((sum, item) => sum + (item.mcValue || 0), 0) / powerHoursData.filter(item => item.mcValue !== null).length
           : 0
