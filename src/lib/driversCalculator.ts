@@ -34,30 +34,40 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
     };
   }
 
-  // Extract all unique tags and count occurrences
-  const tagCounts = new Map<string, number>();
-  const tagDays = new Map<string, Set<string>>(); // tag -> set of dates when present
+  // Extract all unique activities and count occurrences
+  const activityCounts = new Map<string, number>();
+  const activityDays = new Map<string, Set<string>>(); // activity -> set of dates when present
   
   recentEntries.forEach(entry => {
     const entryDate = new Date(entry.createdAt).toDateString();
-    entry.tags.forEach(tag => {
-      tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
-      if (!tagDays.has(tag)) {
-        tagDays.set(tag, new Set());
+    
+    // Parse activities from JSON string
+    let activities = [];
+    try {
+      activities = JSON.parse(entry.activities || '[]');
+    } catch (error) {
+      console.log('⚠️ Could not parse activities for entry:', entry.id);
+      activities = [];
+    }
+    
+    activities.forEach(activity => {
+      activityCounts.set(activity, (activityCounts.get(activity) || 0) + 1);
+      if (!activityDays.has(activity)) {
+        activityDays.set(activity, new Set());
       }
-      tagDays.get(tag)!.add(entryDate);
+      activityDays.get(activity)!.add(entryDate);
     });
   });
 
-  // Filter tags with at least 3 occurrences
-  const qualifyingTags = Array.from(tagCounts.entries())
+  // Filter activities with at least 3 occurrences
+  const qualifyingActivities = Array.from(activityCounts.entries())
     .filter(([_, count]) => count >= 3)
-    .map(([tag, _]) => tag);
+    .map(([activity, _]) => activity);
 
   const drivers: DriverResult[] = [];
 
-  for (const tag of qualifyingTags) {
-    const presentDates = tagDays.get(tag)!;
+  for (const activity of qualifyingActivities) {
+    const presentDates = activityDays.get(activity)!;
     const presentDays = Array.from(presentDates);
     const absentDays = recentEntries
       .map(entry => new Date(entry.createdAt).toDateString())
@@ -103,8 +113,8 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
     const overallEffect = (dssEffect + mcEffect) / 2;
 
     drivers.push({
-      tag,
-      occurrences: tagCounts.get(tag)!,
+      tag: activity,
+      occurrences: activityCounts.get(activity)!,
       presentDays: presentDays.length,
       absentDays: absentDays.length,
       dssEffect,
