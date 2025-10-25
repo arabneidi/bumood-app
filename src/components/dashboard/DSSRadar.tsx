@@ -83,17 +83,17 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   
   const chartData = [
     {
-      subject: 'Learning\nMomentum',
+      subject: 'zLM',
       value: zLM,
       fullMark: scaleMax
     },
     {
-      subject: 'Recovery\nIndex', 
+      subject: 'zRI', 
       value: zRI,
       fullMark: scaleMax
     },
     {
-      subject: 'Connection',
+      subject: 'zCN',
       value: zCN,
       fullMark: scaleMax
     }
@@ -123,7 +123,6 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
     >
       {/* Display actual values */}
       <div className="mb-4 text-center">
-        <div className="text-sm text-slate-300 mb-2">Current DSS Components (Z-Scores)</div>
         <div className="flex justify-center space-x-6 text-xs">
           <div className="bg-blue-500/20 px-2 py-1 rounded">
             <span className="text-blue-300">Learning Momentum:</span> <span className="text-white font-bold">{zLM.toFixed(2)}</span>
