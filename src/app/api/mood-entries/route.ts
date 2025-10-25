@@ -178,6 +178,51 @@ export async function POST(request: NextRequest) {
     });
     console.log('✅ Mood entry created successfully:', moodEntry.id);
 
+    // Update user's recent activities with specific subcategories
+    if (selectedSubcategories && selectedSubcategories.length > 0) {
+      try {
+        // Get current user's recent activities
+        const user = await db.user.findUnique({
+          where: { id: dummyUserId },
+          select: { recentActivities: true }
+        });
+        
+        let recentActivities = [];
+        if (user?.recentActivities) {
+          try {
+            recentActivities = JSON.parse(user.recentActivities);
+          } catch (error) {
+            console.log('⚠️ Could not parse recentActivities, starting fresh');
+            recentActivities = [];
+          }
+        }
+        
+        // Add new subcategories to the beginning of the list
+        const newSubcategories = Array.isArray(selectedSubcategories) ? selectedSubcategories : [];
+        recentActivities = [...newSubcategories, ...recentActivities];
+        
+        // Remove duplicates while preserving order
+        const uniqueRecentActivities = recentActivities.filter((item, index, self) => 
+          self.indexOf(item) === index
+        );
+        
+        // Keep only the last 10 activities
+        const trimmedRecentActivities = uniqueRecentActivities.slice(0, 10);
+        
+        // Update user's recent activities
+        await db.user.update({
+          where: { id: dummyUserId },
+          data: {
+            recentActivities: JSON.stringify(trimmedRecentActivities)
+          }
+        });
+        
+        console.log('✅ Updated recent activities:', trimmedRecentActivities);
+      } catch (error) {
+        console.error('❌ Error updating recent activities:', error);
+      }
+    }
+
     // Invalidate AI drivers cache when new entry is created
     try {
       await db.aISuggestionAction.deleteMany({

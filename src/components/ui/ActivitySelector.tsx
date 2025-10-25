@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import RecentActivities from './RecentActivities';
 
 // Helper function for category unselected styles
 const getCategoryUnselectedStyle = (category: string) => {
@@ -75,24 +76,41 @@ const categoryStyles = {
 export default function ActivitySelector({ selectedActivities, onActivityToggle }: ActivitySelectorProps) {
   const [activeCategory, setActiveCategory] = useState<string>('Physical');
   const [predefinedActivities, setPredefinedActivities] = useState<PredefinedActivity[]>([]);
+  const [recentActivities, setRecentActivities] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPredefinedActivities = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/predefined-activities');
-        if (response.ok) {
-          const data = await response.json();
-          setPredefinedActivities(data.activities || []);
+        // Fetch predefined activities
+        const activitiesResponse = await fetch('/api/predefined-activities');
+        if (activitiesResponse.ok) {
+          const activitiesData = await activitiesResponse.json();
+          setPredefinedActivities(activitiesData.activities || []);
+        }
+
+        // Fetch user's recent activities
+        const userResponse = await fetch('/api/user?userId=dummy-user');
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          if (userData.recentActivities) {
+            try {
+              const recentActivitiesList = JSON.parse(userData.recentActivities);
+              setRecentActivities(recentActivitiesList);
+            } catch (error) {
+              console.log('Could not parse recent activities:', error);
+              setRecentActivities([]);
+            }
+          }
         }
       } catch (error) {
-        console.error('Error fetching predefined activities:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPredefinedActivities();
+    fetchData();
   }, []);
 
   // Generate activity categories from database data
@@ -139,6 +157,13 @@ export default function ActivitySelector({ selectedActivities, onActivityToggle 
 
   return (
     <div className="space-y-6">
+      {/* Recent Activities */}
+      <RecentActivities 
+        recentActivities={recentActivities}
+        onActivitySelect={onActivityToggle}
+        selectedActivities={selectedActivities}
+      />
+      
       {/* Category Tabs */}
       <div className="flex flex-wrap gap-3">
         {Object.entries(getActivityCategories()).map(([category, data]) => (

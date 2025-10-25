@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Target, Plus, X, Star, Trophy, Minus } from "lucide-react";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState([]);
@@ -21,6 +22,8 @@ export default function GoalsPage() {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [completedGoal, setCompletedGoal] = useState<any>(null);
   const [completedGoals, setCompletedGoals] = useState<any[]>([]);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [goalToDelete, setGoalToDelete] = useState<any>(null);
   const [predefinedGoals, setPredefinedGoals] = useState<any[]>([]);
   const [predefinedGoalsLoading, setPredefinedGoalsLoading] = useState(false);
 
@@ -253,22 +256,13 @@ export default function GoalsPage() {
       return;
     }
 
-    // Get DSS component from the selected predefined goal
-    const selectedPredefinedGoal = predefinedGoals.find(goal => 
-      goal.title === newGoal.title && 
-      goal.category === selectedCategory && 
-      goal.subcategory === selectedSubcategory
-    );
-    const dssComponent = selectedPredefinedGoal?.dssComponent || 'LM';
-
     try {
       const response = await fetch("/api/goals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...newGoal,
-          dssComponent: dssComponent,
-          userId: 1,
+          // Let the API handle DSS categorization
         }),
       });
 
@@ -340,23 +334,68 @@ export default function GoalsPage() {
     } catch (error) {
       console.error('Error updating goal progress:', error);
     }
+
+    // Track goal activity for DSS without creating a visible mood entry
+    if (change > 0) {
+      try {
+        const goal = goals.find(g => g.id === goalId);
+        if (goal) {
+          console.log('📊 Tracking goal activity for DSS:', goal.title);
+          
+          // Create a minimal activity tracking entry
+          const activityData = {
+            type: 'goal_progress',
+            goalId: goal.id,
+            goalTitle: goal.title,
+            goalCategory: goal.category,
+            goalSubcategory: goal.subcategory || goal.title,
+            dssComponent: goal.dssComponent || 'LM',
+            progressChange: change,
+            timestamp: new Date().toISOString()
+          };
+
+          // Store in a separate tracking system (not as a mood entry)
+          const trackingResponse = await fetch('/api/goal-activities', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(activityData),
+          });
+
+          if (trackingResponse.ok) {
+            console.log('✅ Goal activity tracked for DSS');
+          } else {
+            console.error('❌ Failed to track goal activity');
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error tracking goal activity:', error);
+      }
+    }
   };
 
   const deleteGoal = async (goalId: number) => {
-    // Confirm deletion
-    if (!confirm('Are you sure you want to delete this goal? This action cannot be undone.')) {
-      return;
-    }
+    // Find the goal to get its title for the confirmation
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    
+    setGoalToDelete(goal);
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDeleteGoal = async () => {
+    if (!goalToDelete) return;
 
     try {
       // Delete from database
-      const response = await fetch(`/api/goals/${goalId}`, {
+      const response = await fetch(`/api/goals/${goalToDelete.id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
         // Remove from local state
-        setGoals(prevGoals => prevGoals.filter(goal => goal.id !== goalId));
+        setGoals(prevGoals => prevGoals.filter(goal => goal.id !== goalToDelete.id));
         console.log('Goal deleted successfully');
       } else {
         console.error('Failed to delete goal from database');
@@ -365,6 +404,9 @@ export default function GoalsPage() {
     } catch (error) {
       console.error('Error deleting goal:', error);
       alert('Error deleting goal. Please try again.');
+    } finally {
+      setShowDeleteConfirmation(false);
+      setGoalToDelete(null);
     }
   };
 
@@ -1140,6 +1182,35 @@ export default function GoalsPage() {
                       </div>
                     </div>
 
+                    {/* Custom Goal Option */}
+                    <div className="border-t border-slate-600/50 pt-6">
+                      <div className="text-center mb-4">
+                        <span className="text-slate-400 text-sm">Don't see your goal category?</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">Custom Category</label>
+                          <input
+                            type="text"
+                            placeholder="e.g., Language Learning, Fitness, Career"
+                            value={newGoal.category}
+                            onChange={(e) => setNewGoal({...newGoal, category: e.target.value})}
+                            className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">Custom Subcategory</label>
+                          <input
+                            type="text"
+                            placeholder="e.g., Spanish, Weight Training, Promotion"
+                            value={newGoal.subcategory}
+                            onChange={(e) => setNewGoal({...newGoal, subcategory: e.target.value})}
+                            className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Save Button */}
                     <button
                       onClick={handleCreateGoal}
@@ -1206,6 +1277,20 @@ export default function GoalsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirmation}
+        onClose={() => {
+          setShowDeleteConfirmation(false);
+          setGoalToDelete(null);
+        }}
+        onConfirm={confirmDeleteGoal}
+        title="Delete Goal?"
+        message="This will permanently remove the goal."
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 }
