@@ -76,27 +76,33 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   const { zLM, zRI, zCN } = data.zScores;
   
   // Debug logging
-  console.log('DSS Radar Debug (raw z-scores):', {
+  console.log('🎯 DSS Radar Debug (raw z-scores):', {
     rawValues: { learningMomentum, recoveryIndex, connectionScore },
-    zScores: { zLM, zRI, zCN }
+    zScores: { zLM, zRI, zCN },
+    scaleMax: scaleMax,
+    chartData: chartData
   });
 
   // Prepare data for recharts radar chart - use z-scores directly
+  // Find the maximum absolute value to set appropriate scale
+  const maxAbsValue = Math.max(Math.abs(zLM), Math.abs(zRI), Math.abs(zCN));
+  const scaleMax = Math.ceil(maxAbsValue * 1.2); // Add 20% padding
+  
   const chartData = [
     {
-      subject: 'zLM',
+      subject: 'Learning\nMomentum',
       value: zLM,
-      fullMark: 1 // Set to match -1 to 1 scale
+      fullMark: scaleMax
     },
     {
-      subject: 'zRI', 
+      subject: 'Recovery\nIndex', 
       value: zRI,
-      fullMark: 1
+      fullMark: scaleMax
     },
     {
-      subject: 'zCN',
+      subject: 'Connection',
       value: zCN,
-      fullMark: 1
+      fullMark: scaleMax
     }
   ];
 
@@ -122,8 +128,8 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
           />
           <PolarRadiusAxis 
             angle={0} 
-            domain={[-1, 1]}
-            tickCount={5}
+            domain={[-scaleMax, scaleMax]}
+            tickCount={7}
             tick={{ fontSize: 10, fill: '#64748b' }}
             tickFormatter={(value) => value.toFixed(1)}
             axisLine={false}
