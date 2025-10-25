@@ -125,8 +125,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Use custom date if provided, otherwise use current date
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     const entryDate = customDate 
-      ? new Date(`${customDate}T12:00:00`) // Use noon as default time
+      ? (customDate === today 
+          ? new Date() // Use current time for today's entries
+          : new Date(`${customDate}T12:00:00`)) // Use noon for past/future dates
       : new Date();
     
     console.log('📅 Entry date:', entryDate.toISOString());

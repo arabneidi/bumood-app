@@ -628,7 +628,7 @@ export default function NewEntry() {
           sleep: formData.sleep,
           notes: reflection, // Save reflection as notes
           activities: formData.activities,
-          selectedTimeSlots: formData.selectedTimeSlots,
+          selectedTimeSlots: formData.activityEntries?.map((entry: any) => entry.timeSlot) || [],
           selectedSubcategories: formData.selectedSubcategories,
           activityEntries: formData.activityEntries,
           dssAnalysis: formData.dssAnalysis ? JSON.stringify(formData.dssAnalysis) : null,
@@ -1273,28 +1273,39 @@ export default function NewEntry() {
             </motion.div>
           )}
 
-{/* Time Slots Section */}
-<motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: [0, -5, 0] }}
-            transition={{
-              opacity: { duration: 0.6, delay: 0.4 },
-              y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
-            }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
-          >
-            {/* Glowing Edge Effect */}
-            <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
-            
-            <div className="relative z-10">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center" style={{ 
-                textShadow: (formData.onPeriod && isFirstPeriodEntry) 
-                  ? '0 0 10px rgba(239, 68, 68, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)'
-                  : '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
-                filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
-              }}>
-                Time Slots
-              </h2>
+{/* Time Slots Section - Per Activity */}
+{formData.activities.length > 0 && formData.activities.map((activity, activityIndex) => (
+            <motion.div
+              key={activity}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: [0, -5, 0] }}
+              transition={{
+                opacity: { duration: 0.6, delay: 0.4 + (activityIndex * 0.1) },
+                y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+              }}
+              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8 mb-8"
+            >
+              {/* Glowing Edge Effect */}
+              <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
+              
+              <div className="relative z-10">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center justify-between" style={{ 
+                  textShadow: '0 0 10px rgba(147, 51, 234, 0.6), 2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)',
+                  filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4))'
+                }}>
+                  <span>Time Slots for {activity.charAt(0).toUpperCase() + activity.slice(1)}</span>
+                  <span className="text-sm text-slate-400 font-normal">
+                    {(() => {
+                      const activityTimeSlots = (formData.activityEntries || []).filter((entry: any) => entry.activity === activity);
+                      const uniqueSlots = new Set(activityTimeSlots.map((entry: any) => entry.timeSlot));
+                      return uniqueSlots.size;
+                    })()} hour{(() => {
+                      const activityTimeSlots = (formData.activityEntries || []).filter((entry: any) => entry.activity === activity);
+                      const uniqueSlots = new Set(activityTimeSlots.map((entry: any) => entry.timeSlot));
+                      return uniqueSlots.size !== 1 ? 's' : '';
+                    })()} selected
+                  </span>
+                </h2>
               
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1316,41 +1327,38 @@ export default function NewEntry() {
                     <div className="grid grid-cols-3 gap-2">
                       {slot.hours.map((hour) => {
                         const hourKey = `${slot.id}-${hour}`;
-                        const exactTimeKey = `${slot.id}-${hour}-${new Date().toISOString()}`;
-                        const isSelected = formData.selectedTimeSlots.includes(hourKey);
+                        
+                        // Check if this time slot is selected for THIS SPECIFIC ACTIVITY
+                        const currentActivityEntries = formData.activityEntries || [];
+                        const isSelected = currentActivityEntries.some(
+                          (entry: any) => entry.activity === activity && entry.timeSlot === hourKey
+                        );
                         
                         return (
                           <motion.button
                             key={hourKey}
                             type="button"
                             onClick={() => {
-                              const newTimeSlots = isSelected
-                                ? formData.selectedTimeSlots.filter(ts => ts !== hourKey)
-                                : [...formData.selectedTimeSlots, hourKey];
-                              handleChange("selectedTimeSlots", newTimeSlots);
-                              
-                              // Also update activities with exact timestamps
+                              // Update activity entries for this specific activity
                               if (!isSelected) {
-                                // Add activity with exact time
+                                // Add activity entry with exact time for THIS activity only
                                 const currentDate = formData.entryDate || new Date().toISOString().split('T')[0];
                                 const exactTime = `${currentDate}T${hour.toString().padStart(2, '0')}:00:00`;
                                 
-                                // Create activity entries with exact timestamps for each selected activity
-                                const newActivityEntries = formData.activities.map(activity => ({
+                                const newActivityEntry = {
                                   activity: activity,
                                   exactTime: exactTime,
                                   timeSlot: hourKey,
                                   hour: hour
-                                }));
+                                };
                                 
-                                // Store in a new field for exact activity timestamps
-                                const currentActivityEntries = formData.activityEntries || [];
-                                const updatedActivityEntries = [...currentActivityEntries, ...newActivityEntries];
+                                const updatedActivityEntries = [...currentActivityEntries, newActivityEntry];
                                 handleChange("activityEntries", updatedActivityEntries);
                               } else {
-                                // Remove activity entries for this time slot
-                                const currentActivityEntries = formData.activityEntries || [];
-                                const updatedActivityEntries = currentActivityEntries.filter(entry => entry.timeSlot !== hourKey);
+                                // Remove activity entry for this specific activity and time slot
+                                const updatedActivityEntries = currentActivityEntries.filter(
+                                  (entry: any) => !(entry.activity === activity && entry.timeSlot === hourKey)
+                                );
                                 handleChange("activityEntries", updatedActivityEntries);
                               }
                             }}
@@ -1371,19 +1379,10 @@ export default function NewEntry() {
                 ))}
               </div>
 
-              {formData.selectedTimeSlots.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 p-3 bg-slate-700/30 rounded-lg"
-                >
-                  <p className="text-slate-300 text-sm">
-                    <span className="font-semibold">Selected hours:</span> {formData.selectedTimeSlots.length} hour{formData.selectedTimeSlots.length !== 1 ? 's' : ''}
-                  </p>
-                </motion.div>
-              )}
-            </div>
-          </motion.div>
+              </div>
+            </motion.div>
+          ))}
+
           {/* Period Tracking - Only for females */}
           {userGender === 'female' && (
             <motion.div
