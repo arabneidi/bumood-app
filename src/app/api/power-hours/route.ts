@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { calculateMoodComposite } from '@/lib/moodCompositeCalculator';
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,21 +38,22 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Get mood entries with activities and time slots to analyze activity patterns
+    // Get mood entries with MC values for power hours calculation
     const moodEntries = await db.moodEntry.findMany({
       where: {
         userId,
         createdAt: {
           gte: startDate,
           lte: endDate
+        },
+        moodComposite: {
+          not: null
         }
       },
       select: {
         createdAt: true,
-        activities: true,
-        selectedTimeSlots: true,
-        selectedSubcategories: true,
-        activityEntries: true,
+        moodComposite: true,
+        timeBucket: true,
         valence: true,
         energy: true,
         focus: true,
@@ -63,11 +65,11 @@ export async function GET(request: NextRequest) {
     });
 
     console.log(`📊 Found ${dailyTrackingData.length} daily tracking entries`);
-    console.log(`📊 Found ${moodEntries.length} mood entries with activities`);
+    console.log(`📊 Found ${moodEntries.length} mood entries with MC values`);
 
-    // For now, return simple data to test
-    if (dailyTrackingData.length === 0 && moodEntries.length === 0) {
-      console.log('📊 No data found, returning empty power hours');
+    // If no mood entries with MC values, return empty data
+    if (moodEntries.length === 0) {
+      console.log('📊 No mood entries with MC values found, returning empty power hours');
       return NextResponse.json({
         data: [],
         insights: {
@@ -88,165 +90,93 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Analyze activity patterns to determine LM-focused activities
-    const activityAnalysis = {
-      hourlyActivities: new Map(),
-      timeSlotActivities: new Map(),
-      deepWorkActivities: new Map(),
-      activityFrequency: new Map(),
-      lmPatterns: new Map(),
-      optimalHours: new Map(),
-      totalActivities: 0
-    };
-
-    // Process data to create power hours heatmap data
-    const powerHoursData = [];
+    // Group mood entries by weekday and hour, then average MC values
+    const mcDataByTimeSlot = new Map();
     const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    // For each day in the period, create hourly data
+    // Process each mood entry
+    moodEntries.forEach(entry => {
+      const entryDate = new Date(entry.createdAt);
+      const dayOfWeek = daysOfWeek[entryDate.getDay()];
+      const hour = entryDate.getHours();
+      const key = `${dayOfWeek}-${hour}`;
+      
+      if (!mcDataByTimeSlot.has(key)) {
+        mcDataByTimeSlot.set(key, {
+          mcValues: [],
+          entries: [],
+          day: dayOfWeek,
+          hour: hour
+        });
+      }
+      
+      const timeSlotData = mcDataByTimeSlot.get(key);
+      timeSlotData.mcValues.push(entry.moodComposite || 0);
+      timeSlotData.entries.push(entry);
+    });
+
+    // Calculate average MC values for each time slot
+    const powerHoursData = [];
+    
+    // Generate data for all days and hours in the period
     for (let i = 0; i < days; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
       const dayOfWeek = daysOfWeek[currentDate.getDay()];
 
-      // Get the daily tracking data for this date
-      const dayData = dailyTrackingData.find(d => 
-        d.date.toDateString() === currentDate.toDateString()
-      );
-
-      if (dayData) {
-        // Calculate productivity based on available tracking data
-        const exerciseMinutes = dayData.exerciseDuration || 0;
-        const readingMinutes = dayData.readingTime || 0;
-        const meditationMinutes = dayData.meditationDuration || 0;
-        const screenTime = dayData.screenTime || 0;
-        const steps = dayData.steps || 0;
-
-        // Use activity analysis to determine productive hours
-        const dayActivities = moodEntries.filter(entry => 
-          entry.createdAt.toDateString() === currentDate.toDateString()
-        ).flatMap(entry => JSON.parse(entry.activities || '[]'));
-
-        // Calculate base productivity for this day based on productive activities
-        const productiveMinutes = exerciseMinutes + readingMinutes + meditationMinutes;
-        const baseProductivity = Math.min(productiveMinutes / 480, 1); // Normalize to 0-1 (8 hours max)
-
-        // Create hourly data using enhanced activity analysis
-        for (let hour = 0; hour < 24; hour++) {
-          let productivity = 0;
-          let deepWorkMinutes = 0;
-          let tasksCompleted = 0;
-
-          // Check if this hour has LM-focused activities using exact activity entries
-          const hourActivities = moodEntries.filter(entry => {
-            const entryDate = new Date(entry.createdAt);
-            const isSameDay = entryDate.toDateString() === currentDate.toDateString();
-            
-            if (!isSameDay) return false;
-            
-            // Check if there are activity entries for this exact hour
-            const activityEntries = JSON.parse(entry.activityEntries || '[]');
-            const hasActivityAtHour = activityEntries.some((activityEntry: any) => {
-              const activityTime = new Date(activityEntry.exactTime);
-              return activityTime.getHours() === hour;
-            });
-            
-            // Also check time slots as fallback
-            const timeSlots = JSON.parse(entry.selectedTimeSlots || '[]');
-            const hasTimeSlot = timeSlots.some((slot: string) => {
-              const slotHour = parseInt(slot.split('-')[1]);
-              return slotHour === hour;
-            });
-            
-            return hasActivityAtHour || hasTimeSlot;
-          });
-
-          const hasLMActivities = hourActivities.some(entry => {
-            const activities = JSON.parse(entry.activities || '[]');
-            return activities.some((activity: string) => 
-              ['studying', 'working', 'reading', 'coding', 'writing', 'research', 'learning', 'programming'].includes(activity)
-            );
-          });
-
-          // Check if this hour is in user's optimal deep work hours
-          const isOptimalHour = activityAnalysis.optimalHours.has(hour);
-          const optimalData = activityAnalysis.optimalHours.get(hour);
-
-          // Check if this hour aligns with user's activity patterns (including time slots)
-          const isProductiveHour = activityAnalysis.lmPatterns.size > 0 ? 
-            Array.from(activityAnalysis.lmPatterns.values()).some(pattern => 
-              pattern.peakHours.includes(hour) || pattern.timeSlotHours.includes(hour)
-            ) : 
-            (hour >= 9 && hour <= 17) || (hour >= 19 && hour <= 22);
-
-          // Calculate productivity based on exact timestamps and mood scores
-          if (hourActivities.length > 0) {
-            // Calculate productivity based on actual mood scores and activities
-            const avgValence = hourActivities.reduce((sum, entry) => sum + entry.valence, 0) / hourActivities.length;
-            const avgEnergy = hourActivities.reduce((sum, entry) => sum + entry.energy, 0) / hourActivities.length;
-            const avgFocus = hourActivities.reduce((sum, entry) => sum + entry.focus, 0) / hourActivities.length;
-            const avgStress = hourActivities.reduce((sum, entry) => sum + entry.stress, 0) / hourActivities.length;
-            
-            // Power hours formula: (Valence + Energy + Focus - Stress) / 3
-            const moodProductivity = (avgValence + avgEnergy + avgFocus - avgStress) / 3;
-            productivity = Math.max(0, Math.min(1, moodProductivity / 10)); // Normalize to 0-1
-            
-            // Calculate deep work minutes based on focus and activities
-            if (hasLMActivities && avgFocus >= 7) {
-              deepWorkMinutes = Math.round(60 * (avgFocus / 10)); // Convert focus score to minutes
-              tasksCompleted = Math.round((avgEnergy + avgFocus) / 2); // Energy + Focus = task completion
-            }
-          } else if (isOptimalHour && optimalData) {
-            // Use historical optimal data if no current activities
-            productivity = Math.min(optimalData.productivity, 1);
-            deepWorkMinutes = Math.round(readingMinutes * 0.15);
-            tasksCompleted = Math.round((exerciseMinutes + meditationMinutes) * 0.1);
-          } else if (isProductiveHour) {
-            // Use pattern-based calculation for other productive hours
-            productivity = baseProductivity * 0.4;
-            
-            // Distribute productive activities across productive hours
-            if (hour >= 9 && hour <= 17) {
-              deepWorkMinutes = Math.round(readingMinutes * 0.1);
-              tasksCompleted = Math.round((exerciseMinutes + meditationMinutes) * 0.1);
-            }
+      for (let hour = 0; hour < 24; hour++) {
+        const key = `${dayOfWeek}-${hour}`;
+        const timeSlotData = mcDataByTimeSlot.get(key);
+        
+        let avgMC = null; // Use null for empty cells instead of 0
+        let deepWorkMinutes = 0;
+        let tasksCompleted = 0;
+        let productivity = 0; // Default to 0 for empty cells
+        
+        if (timeSlotData && timeSlotData.mcValues.length > 0) {
+          // Calculate average MC value for this time slot
+          avgMC = timeSlotData.mcValues.reduce((sum, mc) => sum + mc, 0) / timeSlotData.mcValues.length;
+          
+          // Calculate additional metrics based on mood scores
+          const avgValence = timeSlotData.entries.reduce((sum, entry) => sum + entry.valence, 0) / timeSlotData.entries.length;
+          const avgEnergy = timeSlotData.entries.reduce((sum, entry) => sum + entry.energy, 0) / timeSlotData.entries.length;
+          const avgFocus = timeSlotData.entries.reduce((sum, entry) => sum + entry.focus, 0) / timeSlotData.entries.length;
+          const avgStress = timeSlotData.entries.reduce((sum, entry) => sum + entry.stress, 0) / timeSlotData.entries.length;
+          
+          // Calculate deep work metrics based on focus and MC
+          if (avgFocus >= 7 && avgMC > 0) {
+            deepWorkMinutes = Math.round(60 * (avgFocus / 10));
+            tasksCompleted = Math.round((avgEnergy + avgFocus) / 2);
           }
-
-          // Apply time slot boost if user specifically selected this hour
-          const timeSlotBoost = activityAnalysis.timeSlotActivities.has(hour) ? 0.2 : 0;
-          productivity = Math.min(1, productivity + timeSlotBoost);
-
-          powerHoursData.push({
-            day: dayOfWeek,
-            hour: hour,
-            productivity: Math.max(0, Math.min(1, productivity)),
-            deepWorkMinutes,
-            tasksCompleted
-          });
+          
+          // Only calculate productivity if we have actual MC data
+          productivity = Math.max(0, Math.min(1, (avgMC + 2) / 4)); // Normalize MC (-2 to 2) to 0-1 scale
         }
-      } else {
-        // No data for this day, create empty hourly entries
-        for (let hour = 0; hour < 24; hour++) {
-          powerHoursData.push({
-            day: dayOfWeek,
-            hour: hour,
-            productivity: 0,
-            deepWorkMinutes: 0,
-            tasksCompleted: 0
-          });
-        }
+        
+        powerHoursData.push({
+          day: dayOfWeek,
+          hour: hour,
+          productivity, // 0 for empty cells, calculated value for cells with data
+          deepWorkMinutes,
+          tasksCompleted,
+          mcValue: avgMC // null for empty cells, actual MC value for cells with data
+        });
       }
     }
 
     console.log(`📊 Generated ${powerHoursData.length} power hours data points`);
 
-    // Calculate insights
-    const insights = calculateInsights(powerHoursData, activityAnalysis);
+    // Calculate insights based on MC values
+    const insights = calculateInsights(powerHoursData, null);
 
     return NextResponse.json({
       data: powerHoursData,
       insights,
-      activityAnalysis,
+      mcAnalysis: {
+        totalTimeSlots: mcDataByTimeSlot.size,
+        timeSlotsWithData: Array.from(mcDataByTimeSlot.values()).filter(slot => slot.mcValues.length > 0).length,
+        avgMCValue: powerHoursData.reduce((sum, item) => sum + (item.mcValue || 0), 0) / powerHoursData.length
+      },
       period: {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
@@ -263,169 +193,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function analyzeActivityPatterns(moodEntries: any[]) {
-  // Group activities by hour of day using both actual time and selected time slots
-  const hourlyActivities = new Map();
-  const timeSlotActivities = new Map();
-  const deepWorkActivities = new Map();
-  
-  moodEntries.forEach(entry => {
-    const actualHour = new Date(entry.createdAt).getHours();
-    const activities = JSON.parse(entry.activities || '[]');
-    const timeSlots = JSON.parse(entry.selectedTimeSlots || '[]');
-    const subcategories = JSON.parse(entry.selectedSubcategories || '[]');
-    const activityEntries = JSON.parse(entry.activityEntries || '[]');
-    
-    // Track activities by actual time
-    if (!hourlyActivities.has(actualHour)) {
-      hourlyActivities.set(actualHour, []);
-    }
-    hourlyActivities.get(actualHour).push(...activities);
-    
-    // Track activities by exact activity entries (preferred method)
-    activityEntries.forEach((activityEntry: any) => {
-      const activityTime = new Date(activityEntry.exactTime);
-      const hour = activityTime.getHours();
-      
-      if (!timeSlotActivities.has(hour)) {
-        timeSlotActivities.set(hour, []);
-      }
-      
-      // Store activity with exact timestamp and mood scores
-      timeSlotActivities.get(hour).push({
-        activity: activityEntry.activity,
-        exactTime: activityEntry.exactTime,
-        timeSlot: activityEntry.timeSlot,
-        hour: activityEntry.hour,
-        moodScores: {
-          valence: entry.valence,
-          energy: entry.energy,
-          focus: entry.focus,
-          stress: entry.stress
-        }
-      });
-    });
-    
-    // Fallback: Track activities by selected time slots (for backward compatibility)
-    timeSlots.forEach((timeSlot: string) => {
-      const hour = parseInt(timeSlot.split('-')[1]) || actualHour;
-      if (!timeSlotActivities.has(hour)) {
-        timeSlotActivities.set(hour, []);
-      }
-      // Only add if not already added via activityEntries
-      const hasExactEntry = activityEntries.some((ae: any) => {
-        const aeHour = new Date(ae.exactTime).getHours();
-        return aeHour === hour;
-      });
-      
-      if (!hasExactEntry) {
-        timeSlotActivities.get(hour).push({
-          activity: activities,
-          exactTime: entry.createdAt,
-          timeSlot: timeSlot,
-          moodScores: {
-            valence: entry.valence,
-            energy: entry.energy,
-            focus: entry.focus,
-            stress: entry.stress
-          }
-        });
-      }
-    });
-    
-    // Identify deep work activities based on mood scores and activities
-    const isDeepWork = activities.some((activity: string) => 
-      ['studying', 'working', 'reading', 'coding', 'writing', 'research', 'learning', 'programming'].includes(activity)
-    ) && entry.focus >= 7 && entry.stress <= 5;
-    
-    if (isDeepWork) {
-      const hour = timeSlots.length > 0 ? parseInt(timeSlots[0].split('-')[1]) || actualHour : actualHour;
-      if (!deepWorkActivities.has(hour)) {
-        deepWorkActivities.set(hour, []);
-      }
-      deepWorkActivities.get(hour).push({
-        activities,
-        subcategories,
-        valence: entry.valence,
-        energy: entry.energy,
-        focus: entry.focus,
-        stress: entry.stress
-      });
-    }
-  });
 
-  // Analyze which activities are most common during productive hours
-  const activityFrequency = new Map();
-  hourlyActivities.forEach((activities, hour) => {
-    activities.forEach((activity: string) => {
-      if (!activityFrequency.has(activity)) {
-        activityFrequency.set(activity, { count: 0, hours: [], timeSlots: [] });
-      }
-      activityFrequency.get(activity).count++;
-      activityFrequency.get(activity).hours.push(hour);
-    });
-  });
-
-  // Analyze time slot patterns
-  timeSlotActivities.forEach((activities, hour) => {
-    activities.forEach((activity: string) => {
-      if (activityFrequency.has(activity)) {
-        activityFrequency.get(activity).timeSlots.push(hour);
-      }
-    });
-  });
-
-  // Identify LM-focused activities (studying, working, reading, etc.)
-  const lmActivities = ['studying', 'working', 'reading', 'coding', 'writing', 'research', 'learning', 'programming'];
-  const lmPatterns = new Map();
-  
-  lmActivities.forEach(activity => {
-    if (activityFrequency.has(activity)) {
-      const data = activityFrequency.get(activity);
-      const timeSlotHours = data.timeSlots || [];
-      const allHours = Array.from(new Set([...data.hours, ...timeSlotHours]));
-      
-      lmPatterns.set(activity, {
-        frequency: data.count,
-        peakHours: allHours,
-        timeSlotHours,
-        isLM: true,
-        deepWorkHours: deepWorkActivities.has(activity) ? Array.from(deepWorkActivities.keys()) : []
-      });
-    }
-  });
-
-  // Calculate optimal hours for deep work based on user patterns
-  const optimalHours = new Map();
-  deepWorkActivities.forEach((sessions, hour) => {
-      const avgFocus = sessions.reduce((sum: number, session: any) => sum + session.focus, 0) / sessions.length;
-      const avgEnergy = sessions.reduce((sum: number, session: any) => sum + session.energy, 0) / sessions.length;
-      const avgStress = sessions.reduce((sum: number, session: any) => sum + session.stress, 0) / sessions.length;
-    
-    optimalHours.set(hour, {
-      focus: avgFocus,
-      energy: avgEnergy,
-      stress: avgStress,
-      sessions: sessions.length,
-      productivity: (avgFocus + avgEnergy - avgStress) / 3
-    });
-  });
-
-  return {
-    hourlyActivities,
-    timeSlotActivities,
-    deepWorkActivities,
-    activityFrequency,
-    lmPatterns,
-    optimalHours,
-    totalActivities: Array.from(activityFrequency.keys()).length
-  };
-}
-
-function calculateInsights(data: any[], activityAnalysis?: any) {
+function calculateInsights(data: any[], mcAnalysis?: any) {
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   
-  // Find most productive hours
+  // Find most productive hours based on MC values
   const hourlyProductivity = new Map();
   
   data.forEach(item => {
@@ -490,18 +262,14 @@ function calculateInsights(data: any[], activityAnalysis?: any) {
     .sort((a, b) => b.avgMinutes - a.avgMinutes)
     .slice(0, 3);
 
-  // Generate personalized recommendations
+  // Generate MC-based recommendations
   const recommendations = [];
   
-  if (activityAnalysis && activityAnalysis.optimalHours.size > 0) {
-    const optimalHours = Array.from(activityAnalysis.optimalHours.entries())
-      .sort((a: any, b: any) => b[1].productivity - a[1].productivity)
-      .slice(0, 3);
-    
+  if (mostProductiveHours.length > 0) {
     recommendations.push({
       type: 'optimal_hours',
-      title: 'Your Optimal Deep Work Hours',
-      description: `Based on your activity patterns, your most productive hours are: ${optimalHours.map((item: any) => `${item[0]}:00 (${Math.round(item[1].productivity * 100)}% productivity)`).join(', ')}`,
+      title: 'Your Optimal Power Hours (MC-based)',
+      description: `Based on your Mood Composite patterns, your most productive hours are: ${mostProductiveHours.map(item => `${item.day}s at ${item.hour}:00 (${Math.round(item.productivity * 100)}% productivity)`).join(', ')}`,
       priority: 'high'
     });
   }
@@ -515,15 +283,14 @@ function calculateInsights(data: any[], activityAnalysis?: any) {
     });
   }
 
-  if (activityAnalysis && activityAnalysis.lmPatterns.size > 0) {
-    const topActivities = Array.from(activityAnalysis.lmPatterns.entries())
-      .sort((a: any, b: any) => b[1].frequency - a[1].frequency)
-      .slice(0, 3);
-    
+  // MC-specific insights
+  const mcInsights = data.filter(item => item.mcValue !== undefined && item.mcValue !== 0);
+  if (mcInsights.length > 0) {
+    const avgMC = mcInsights.reduce((sum, item) => sum + item.mcValue, 0) / mcInsights.length;
     recommendations.push({
-      type: 'activity_focus',
-      title: 'Focus on Your Most Productive Activities',
-      description: `Your most productive activities are: ${topActivities.map((item: any) => `${item[0]} (${item[1].frequency} sessions)`).join(', ')}`,
+      type: 'mc_insights',
+      title: 'Mood Composite Insights',
+      description: `Your average Mood Composite is ${avgMC.toFixed(2)}. ${avgMC > 0 ? 'You tend to have positive mood patterns during productive hours.' : 'Consider focusing on mood-boosting activities during your power hours.'}`,
       priority: 'medium'
     });
   }
@@ -535,6 +302,7 @@ function calculateInsights(data: any[], activityAnalysis?: any) {
     recommendations,
     totalDataPoints: data.length,
     productiveDataPoints: data.filter(item => item.productivity > 0).length,
-    deepWorkDataPoints: data.filter(item => item.deepWorkMinutes > 0).length
+    deepWorkDataPoints: data.filter(item => item.deepWorkMinutes > 0).length,
+    mcDataPoints: data.filter(item => item.mcValue !== undefined && item.mcValue !== 0).length
   };
 }

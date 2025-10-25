@@ -66,10 +66,11 @@ export async function POST(request: NextRequest) {
           data: {
             userId: dummyUserId,
             date: today,
-            sleepHours: null,
             waterIntake: null,
             mealsEaten: null,
-            exerciseMinutes: null,
+            exercise: false,
+            exerciseType: null,
+            exerciseDuration: null,
             steps: null,
             deepworkMinutes: 0,
             tasksCompleted: 0,
@@ -84,15 +85,24 @@ export async function POST(request: NextRequest) {
       const updateData: any = {};
       
       if (dssComponent === 'LM') {
-        // Learning Momentum: increment deepwork minutes and tasks completed
-        updateData.deepworkMinutes = (dailyTracking.deepworkMinutes || 0) + 15; // 15 minutes of focused work
-        updateData.tasksCompleted = (dailyTracking.tasksCompleted || 0) + 1;
+        // Learning Momentum: add/subtract deepwork minutes and tasks completed
+        const timeChange = progressChange > 0 ? 15 : -15; // 15 minutes per +1, -15 minutes per -1
+        const taskChange = progressChange > 0 ? 1 : -1; // 1 task per +1, -1 task per -1
+        
+        updateData.deepworkMinutes = Math.max(0, (dailyTracking.deepworkMinutes || 0) + timeChange);
+        updateData.tasksCompleted = Math.max(0, (dailyTracking.tasksCompleted || 0) + taskChange);
       } else if (dssComponent === 'RI') {
-        // Recovery Index: mark recovery action
-        updateData.recoveryAction = true;
+        // Recovery Index: handle recovery action based on progress change
+        if (progressChange > 0) {
+          updateData.recoveryAction = true;
+        } else {
+          // For -1, we don't set recoveryAction to false as it might affect other activities
+          // Just track the decrease without changing the boolean
+        }
       } else if (dssComponent === 'Connection') {
-        // Connection: increment social touchpoints
-        updateData.positiveSocialTouchpoints = (dailyTracking.positiveSocialTouchpoints || 0) + 1;
+        // Connection: add/subtract social touchpoints
+        const touchpointChange = progressChange > 0 ? 1 : -1;
+        updateData.positiveSocialTouchpoints = Math.max(0, (dailyTracking.positiveSocialTouchpoints || 0) + touchpointChange);
       }
       
       // Update the daily tracking entry

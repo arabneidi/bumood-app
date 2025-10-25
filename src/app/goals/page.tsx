@@ -19,6 +19,10 @@ export default function GoalsPage() {
     currentValue: 0,
     difficulty: "medium"
   });
+  
+  // Separate state for custom categories
+  const [customCategory, setCustomCategory] = useState("");
+  const [customSubcategory, setCustomSubcategory] = useState("");
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [completedGoal, setCompletedGoal] = useState<any>(null);
   const [completedGoals, setCompletedGoals] = useState<any[]>([]);
@@ -69,10 +73,10 @@ export default function GoalsPage() {
     locked: []
   });
 
-  // Define all possible achievements
+  // Import achievements from the main definitions
   const allAchievements = [
     {
-      id: "getting-started",
+      id: "first-entry",
       title: "Getting Started",
       description: "Log your first mood entry",
       icon: "🌟",
@@ -80,74 +84,74 @@ export default function GoalsPage() {
       type: "streak"
     },
     {
-      id: "streak-3",
-      title: "3-Day Streak",
-      description: "Log mood entries for 3 consecutive days",
-      icon: "🔥",
-      stars: 1,
-      type: "streak"
-    },
-    {
-      id: "streak-7",
+      id: "week-streak",
       title: "Week Warrior",
-      description: "Log mood entries for 7 consecutive days",
-      icon: "⚡",
+      description: "Log mood for 7 consecutive days",
+      icon: "🔥",
       stars: 2,
       type: "streak"
     },
     {
-      id: "streak-30",
+      id: "month-streak",
       title: "Monthly Master",
-      description: "Log mood entries for 30 consecutive days",
-      icon: "🏆",
+      description: "Log mood for 30 consecutive days",
+      icon: "💎",
       stars: 3,
       type: "streak"
     },
     {
-      id: "entries-10",
-      title: "Mood Tracker",
-      description: "Log 10 mood entries total",
-      icon: "📊",
-      stars: 1,
-      type: "count"
-    },
-    {
-      id: "entries-50",
-      title: "Data Collector",
-      description: "Log 50 mood entries total",
-      icon: "📈",
+      id: "happy-week",
+      title: "Sunshine Week",
+      description: "Have 7 consecutive days with valence 8+",
+      icon: "☀️",
       stars: 2,
-      type: "count"
+      type: "mood"
     },
     {
-      id: "entries-100",
-      title: "Mood Expert",
-      description: "Log 100 mood entries total",
-      icon: "🎯",
+      id: "energy-master",
+      title: "Energizer",
+      description: "Maintain energy 8+ for 14 days",
+      icon: "⚡",
       stars: 3,
-      type: "count"
+      type: "mood"
     },
     {
-      id: "activities-5",
-      title: "Activity Explorer",
-      description: "Try 5 different activities",
-      icon: "🎪",
-      stars: 1,
-      type: "activity"
-    },
-    {
-      id: "activities-15",
-      title: "Activity Master",
-      description: "Try 15 different activities",
-      icon: "🎨",
+      id: "sleep-champion",
+      title: "Sleep Champion",
+      description: "Log 8+ hours sleep for 7 consecutive days",
+      icon: "😴",
       stars: 2,
-      type: "activity"
+      type: "habit"
     },
     {
-      id: "perfect-week",
-      title: "Perfect Week",
-      description: "Log entries every day for a week",
-      icon: "💎",
+      id: "activity-explorer",
+      title: "Activity Explorer",
+      description: "Log 10 different activities",
+      icon: "🎯",
+      stars: 2,
+      type: "special"
+    },
+    {
+      id: "reflection-master",
+      title: "Reflection Master",
+      description: "Complete 25 micro-reflections",
+      icon: "💭",
+      stars: 2,
+      type: "special"
+    },
+    {
+      id: "early-bird",
+      title: "Early Bird",
+      description: "Log mood before 9 AM for 7 days",
+      icon: "🐦",
+      stars: 2,
+      type: "special"
+    },
+    {
+      id: "century-club",
+      title: "Century Club",
+      description: "Log 100 total mood entries",
+      icon: "🏆",
       stars: 3,
       type: "streak"
     }
@@ -201,18 +205,17 @@ export default function GoalsPage() {
               locked: allAchievements
             });
           } else {
-            const achievedIds = achievedData.map((achievement: any) => achievement.id || achievement.title.toLowerCase().replace(/\s+/g, '-'));
-            console.log("Achieved IDs:", achievedIds);
+            // Map database achievements to definition IDs by title
+            const achievedTitles = achievedData.map((achievement: any) => achievement.title);
+            console.log("Achieved titles:", achievedTitles);
             
-            // Separate achieved and locked achievements
+            // Separate achieved and locked achievements by matching titles
             const achieved = allAchievements.filter(achievement => 
-              achievedIds.includes(achievement.id) || 
-              achievedIds.includes(achievement.title.toLowerCase().replace(/\s+/g, '-'))
+              achievedTitles.includes(achievement.title)
             );
             
             const locked = allAchievements.filter(achievement => 
-              !achievedIds.includes(achievement.id) && 
-              !achievedIds.includes(achievement.title.toLowerCase().replace(/\s+/g, '-'))
+              !achievedTitles.includes(achievement.title)
             );
             
             console.log("Achieved:", achieved.length, "Locked:", locked.length);
@@ -251,8 +254,13 @@ export default function GoalsPage() {
   }, []);
 
   const handleCreateGoal = async () => {
-    if (!newGoal.title.trim() || !newGoal.category || !newGoal.subcategory) {
-      alert("Please fill in all fields");
+    // If predefined goal is selected, use its data; otherwise use custom categories
+    const finalCategory = selectedGoal ? newGoal.category : customCategory.trim();
+    const finalSubcategory = selectedGoal ? newGoal.subcategory : customSubcategory.trim();
+    const finalTitle = selectedGoal ? newGoal.title : (customCategory.trim() + " - " + customSubcategory.trim());
+    
+    if (!finalCategory || !finalSubcategory) {
+      alert("Please fill in both category and subcategory");
       return;
     }
 
@@ -262,7 +270,9 @@ export default function GoalsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...newGoal,
-          // Let the API handle DSS categorization
+          title: finalTitle,
+          category: finalCategory,
+          subcategory: finalSubcategory,
         }),
       });
 
@@ -282,6 +292,8 @@ export default function GoalsPage() {
           currentValue: 0,
           difficulty: "medium"
         });
+        setCustomCategory("");
+        setCustomSubcategory("");
         setShowAddGoal(false);
         setSelectedCategory("");
         setSelectedSubcategory("");
@@ -336,11 +348,11 @@ export default function GoalsPage() {
     }
 
     // Track goal activity for DSS without creating a visible mood entry
-    if (change > 0) {
+    if (change !== 0) {
       try {
         const goal = goals.find(g => g.id === goalId);
         if (goal) {
-          console.log('📊 Tracking goal activity for DSS:', goal.title);
+          console.log('📊 Tracking goal activity for DSS:', goal.title, change > 0 ? '+1' : '-1');
           
           // Create a minimal activity tracking entry
           const activityData = {
@@ -364,7 +376,7 @@ export default function GoalsPage() {
           });
 
           if (trackingResponse.ok) {
-            console.log('✅ Goal activity tracked for DSS');
+            console.log('✅ Goal activity tracked for DSS:', change > 0 ? '+1' : '-1');
           } else {
             console.error('❌ Failed to track goal activity');
           }
@@ -737,6 +749,22 @@ export default function GoalsPage() {
                         </div>
                         <span className="text-white text-sm font-bold bg-emerald-500/20 px-3 py-1 rounded-full">{goal.currentValue}/{goal.targetValue} days</span>
                       </div>
+                      
+                      {/* DSS */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-400/20">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-indigo-400 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-indigo-300 text-sm font-medium">DSS</span>
+                        </div>
+                        <span className={`text-white text-sm font-bold px-3 py-1 rounded-full ${
+                          goal.dssComponent === 'LM' ? 'bg-blue-500/20 text-blue-300' :
+                          goal.dssComponent === 'RI' ? 'bg-green-500/20 text-green-300' :
+                          goal.dssComponent === 'Connection' ? 'bg-pink-500/20 text-pink-300' :
+                          'bg-gray-500/20 text-gray-300'
+                        }`}>
+                          {goal.dssComponent || 'LM'}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="mb-4">
@@ -868,6 +896,22 @@ export default function GoalsPage() {
                           <span className="text-cyan-300 text-sm font-medium">Duration</span>
                         </div>
                         <span className="text-white text-sm font-bold bg-cyan-500/20 px-3 py-1 rounded-full">{goal.targetValue} days</span>
+                      </div>
+                      
+                      {/* DSS */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-400/20">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-indigo-400 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-indigo-300 text-sm font-medium">DSS</span>
+                        </div>
+                        <span className={`text-white text-sm font-bold px-3 py-1 rounded-full ${
+                          goal.dssComponent === 'LM' ? 'bg-blue-500/20 text-blue-300' :
+                          goal.dssComponent === 'RI' ? 'bg-green-500/20 text-green-300' :
+                          goal.dssComponent === 'Connection' ? 'bg-pink-500/20 text-pink-300' :
+                          'bg-gray-500/20 text-gray-300'
+                        }`}>
+                          {goal.dssComponent || 'LM'}
+                        </span>
                       </div>
                     </div>
 
@@ -1115,112 +1159,82 @@ export default function GoalsPage() {
                   </div>
                 </div>
 
-                {/* Days and Difficulty */}
-                {selectedGoal && (
-                  <div className="space-y-6">
-                    {/* Editable Category and Subcategory */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-lg font-semibold text-slate-200 mb-3">Category</label>
-                        <input
-                          type="text"
-                          value={newGoal.category}
-                          onChange={(e) => setNewGoal({ ...newGoal, category: e.target.value })}
-                          placeholder="Enter category name"
-                          className="w-full p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-lg font-semibold text-slate-200 mb-3">Subcategory</label>
-                        <input
-                          type="text"
-                          value={newGoal.subcategory}
-                          onChange={(e) => setNewGoal({ ...newGoal, subcategory: e.target.value })}
-                          placeholder="Enter subcategory name"
-                          className="w-full p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
-                        />
-                      </div>
+                {/* Goal Details Form */}
+                <div className="space-y-6">
+                  {/* Custom Category and Subcategory - Always Visible */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-lg font-semibold text-slate-200 mb-3">Category</label>
+                      <input
+                        type="text"
+                        value={customCategory}
+                        onChange={(e) => setCustomCategory(e.target.value)}
+                        placeholder="e.g., Language Learning, Fitness, Career"
+                        className="w-full p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
+                      />
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-lg font-semibold text-slate-200 mb-3">Target Days</label>
-                        <div className="flex items-center space-x-3">
-                          <button
-                            onClick={() => setNewGoal({ ...newGoal, targetValue: Math.max(1, newGoal.targetValue - 1) })}
-                            className="p-2 rounded-full bg-slate-700/60 hover:bg-slate-600/60 transition-colors"
-                          >
-                            <Minus className="w-4 h-4 text-white" />
-                          </button>
-                          <input
-                            type="number"
-                            value={newGoal.targetValue}
-                            onChange={(e) => setNewGoal({ ...newGoal, targetValue: parseInt(e.target.value) || 1 })}
-                            min="1"
-                            className="w-20 p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white text-center focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
-                          />
-                          <button
-                            onClick={() => setNewGoal({ ...newGoal, targetValue: newGoal.targetValue + 1 })}
-                            className="p-2 rounded-full bg-slate-700/60 hover:bg-slate-600/60 transition-colors"
-                          >
-                            <Plus className="w-4 h-4 text-white" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-lg font-semibold text-slate-200 mb-3">Difficulty</label>
-                        <select
-                          value={newGoal.difficulty}
-                          onChange={(e) => setNewGoal({ ...newGoal, difficulty: e.target.value })}
-                          className="w-full p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
-                        >
-                          <option value="easy">Easy</option>
-                          <option value="medium">Medium</option>
-                          <option value="hard">Hard</option>
-                        </select>
-                      </div>
+                    <div>
+                      <label className="block text-lg font-semibold text-slate-200 mb-3">Subcategory</label>
+                      <input
+                        type="text"
+                        value={customSubcategory}
+                        onChange={(e) => setCustomSubcategory(e.target.value)}
+                        placeholder="e.g., Spanish, Weight Training, Promotion"
+                        className="w-full p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
+                      />
                     </div>
-
-                    {/* Custom Goal Option */}
-                    <div className="border-t border-slate-600/50 pt-6">
-                      <div className="text-center mb-4">
-                        <span className="text-slate-400 text-sm">Don't see your goal category?</span>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Custom Category</label>
-                          <input
-                            type="text"
-                            placeholder="e.g., Language Learning, Fitness, Career"
-                            value={newGoal.category}
-                            onChange={(e) => setNewGoal({...newGoal, category: e.target.value})}
-                            className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Custom Subcategory</label>
-                          <input
-                            type="text"
-                            placeholder="e.g., Spanish, Weight Training, Promotion"
-                            value={newGoal.subcategory}
-                            onChange={(e) => setNewGoal({...newGoal, subcategory: e.target.value})}
-                            className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Save Button */}
-                    <button
-                      onClick={handleCreateGoal}
-                      disabled={!newGoal.title.trim() || !newGoal.category.trim() || !newGoal.subcategory.trim()}
-                      className="w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white rounded-2xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Create Goal
-                    </button>
                   </div>
-                )}
+                  
+                  {/* Target Days and Difficulty - Always visible for customization */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-lg font-semibold text-slate-200 mb-3">Target Days</label>
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => setNewGoal({ ...newGoal, targetValue: Math.max(1, newGoal.targetValue - 1) })}
+                          className="p-2 rounded-full bg-slate-700/60 hover:bg-slate-600/60 transition-colors"
+                        >
+                          <Minus className="w-4 h-4 text-white" />
+                        </button>
+                        <input
+                          type="number"
+                          value={newGoal.targetValue}
+                          onChange={(e) => setNewGoal({ ...newGoal, targetValue: parseInt(e.target.value) || 1 })}
+                          min="1"
+                          className="w-20 p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white text-center focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
+                        />
+                        <button
+                          onClick={() => setNewGoal({ ...newGoal, targetValue: newGoal.targetValue + 1 })}
+                          className="p-2 rounded-full bg-slate-700/60 hover:bg-slate-600/60 transition-colors"
+                        >
+                          <Plus className="w-4 h-4 text-white" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-lg font-semibold text-slate-200 mb-3">Difficulty</label>
+                      <select
+                        value={newGoal.difficulty}
+                        onChange={(e) => setNewGoal({ ...newGoal, difficulty: e.target.value })}
+                        className="w-full p-3 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white focus:border-cyan-400/70 focus:outline-none transition-all duration-300"
+                      >
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <button
+                    onClick={handleCreateGoal}
+                    disabled={!selectedGoal && (!customCategory.trim() || !customSubcategory.trim())}
+                    className="w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white rounded-2xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Create Goal
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -56,18 +56,8 @@ export default function CongratulationModal({
   };
 
   const getBackgroundGradient = (type: string) => {
-    switch (type) {
-      case 'goal_completed':
-        return 'from-green-500 to-emerald-600';
-      case 'achievement_unlocked':
-        return 'from-yellow-500 to-orange-500';
-      case 'streak_milestone':
-        return 'from-red-500 to-pink-500';
-      case 'progress_milestone':
-        return 'from-blue-500 to-cyan-500';
-      default:
-        return 'from-purple-500 to-pink-500';
-    }
+    // Dashboard theme - purple transparent box for all types
+    return 'from-purple-600/90 to-purple-800/90 backdrop-blur-md';
   };
 
   return (
@@ -80,7 +70,7 @@ export default function CongratulationModal({
       
       {/* Modal */}
       <div className="relative w-full max-w-md mx-auto">
-        <Card className={`bg-gradient-to-br ${getBackgroundGradient(congratulation.type)} text-white border-0 shadow-2xl transform transition-all duration-300 ${isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+        <Card className={`bg-gradient-to-br ${getBackgroundGradient(congratulation.type)} text-white border border-purple-400/30 shadow-2xl transform transition-all duration-300 ${isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
           <div className="text-center p-6">
             {/* Icon and Stars */}
             <div className="mb-4">
@@ -106,7 +96,7 @@ export default function CongratulationModal({
             <div className="flex gap-3 justify-center">
               <Button
                 onClick={handleClose}
-                className="bg-white text-gray-800 hover:bg-gray-100 font-semibold px-6 py-3 rounded-lg transition-colors"
+                className="bg-white/20 backdrop-blur-sm text-white border border-white/30 hover:bg-white/30 hover:border-white/50 font-semibold px-6 py-3 rounded-lg transition-all duration-200"
               >
                 Awesome! 🎉
               </Button>
@@ -115,9 +105,9 @@ export default function CongratulationModal({
             {/* Close button */}
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
+              className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/10 rounded-full p-1 transition-all duration-200"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>

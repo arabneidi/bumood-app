@@ -288,6 +288,17 @@ export async function POST(request: NextRequest) {
         }
       },
       update: {
+        // Sync water and nutrition data from mood entry
+        waterIntake: waterIntake || 0,
+        mealsEaten: mealsEaten || 0,
+        mealQuality: mealQuality || null,
+        caffeine: caffeine || 0,
+        alcohol: alcohol || 0,
+        // Sync exercise data
+        exercise: activitiesList.length > 0,
+        exerciseType: activitiesList.length > 0 ? 'general' : null,
+        exerciseDuration: activitiesList.length > 0 ? 30 : 0, // Default 30 minutes
+        // DSS calculations
         deepworkMinutes: Math.max(0, learningMomentum), // Use LM as deep work proxy
         tasksCompleted: Math.floor(learningMomentum / 10), // Convert LM to tasks
         sleepHours: sleep ? parseFloat(sleep) : 0,
@@ -302,6 +313,17 @@ export async function POST(request: NextRequest) {
       create: {
         userId: dummyUserId,
         date: trackingDate,
+        // Sync water and nutrition data from mood entry
+        waterIntake: waterIntake || 0,
+        mealsEaten: mealsEaten || 0,
+        mealQuality: mealQuality || null,
+        caffeine: caffeine || 0,
+        alcohol: alcohol || 0,
+        // Sync exercise data
+        exercise: activitiesList.length > 0,
+        exerciseType: activitiesList.length > 0 ? 'general' : null,
+        exerciseDuration: activitiesList.length > 0 ? 30 : 0, // Default 30 minutes
+        // DSS calculations
         deepworkMinutes: Math.max(0, learningMomentum),
         tasksCompleted: Math.floor(learningMomentum / 10),
         sleepHours: sleep ? parseFloat(sleep) : 0,

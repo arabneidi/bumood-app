@@ -1062,7 +1062,7 @@ export default function NewEntry() {
                     />
 
                     <ParameterSlider
-                      label="Sleep"
+                      label={`Sleep ${formData.activities.some(activity => ['Sleeping', 'Napping'].includes(activity)) ? '😴 (Auto-updated)' : ''}`}
                       value={formData.sleep}
                       onChange={(val) => handleChange("sleep", val)}
                       min={0}
@@ -1123,7 +1123,30 @@ export default function NewEntry() {
                   const newActivities = formData.activities.includes(activity)
                     ? formData.activities.filter(a => a !== activity)
                     : [...formData.activities, activity];
-                  handleChange("activities", newActivities);
+                  
+                  // Handle sleep activity tracking
+                  const sleepActivities = ['Sleeping', 'Napping'];
+                  const isSleepActivity = sleepActivities.includes(activity);
+                  const wasSleepActivity = sleepActivities.some(sleepAct => formData.activities.includes(sleepAct));
+                  
+                  if (isSleepActivity && !formData.activities.includes(activity)) {
+                    // Adding a sleep activity - add 1 hour of sleep
+                    setFormData(prev => ({
+                      ...prev,
+                      activities: newActivities,
+                      sleep: prev.sleep + 1
+                    }));
+                  } else if (wasSleepActivity && !sleepActivities.some(sleepAct => newActivities.includes(sleepAct))) {
+                    // Removing the last sleep activity - subtract 1 hour of sleep
+                    setFormData(prev => ({
+                      ...prev,
+                      activities: newActivities,
+                      sleep: Math.max(0, prev.sleep - 1)
+                    }));
+                  } else {
+                    // No sleep activity change
+                    handleChange("activities", newActivities);
+                  }
                 }}
               />
             </div>

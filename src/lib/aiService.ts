@@ -1354,52 +1354,80 @@ PERSONALITY + STUDENT COMBINATIONS (CRITICAL):
 
 1. **If suggesting music/dance:**
    - DO NOT say "listen to music" or "dance"
-   - If they have favorite musicians: "Listen to [SPECIFIC SONG] by [FAVORITE MUSICIAN]"
-   - **GENRE EXPANSION**: If they like Taylor Swift → suggest similar pop artists (Ariana Grande, Olivia Rodrigo, Billie Eilish)
-   - **GENRE EXPANSION**: If they like Pink Floyd → suggest similar rock/prog artists (Led Zeppelin, Queen, Radiohead)
-   - **GENRE EXPANSION**: If they like classical → suggest similar composers (Mozart, Beethoven, Chopin)
+   - **PRIORITY 1**: If they have favorite musicians, suggest BOTH their favorites AND similar vibe artists
+   - **PRIORITY 2**: If no favorites saved, use age-appropriate suggestions with specific songs
+   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW artists with similar energy/vibe
+   - **GENRE EXPANSION**: If they like Taylor Swift → suggest similar pop artists (Ariana Grande, Olivia Rodrigo, Billie Eilish) + NEW discoveries (Sabrina Carpenter, Gracie Abrams)
+   - **GENRE EXPANSION**: If they like Pink Floyd → suggest similar rock/prog artists (Led Zeppelin, Queen, Radiohead) + NEW discoveries (Tame Impala, King Gizzard)
+   - **ENERGY MATCHING**: Match their current mood - high energy = upbeat songs, low energy = calming songs, stressed = relaxing music
+   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
    - If NO favorite musicians saved: Use age-appropriate suggestions:
-     * Age 18-25: "Listen to 'Levitating' by Dua Lipa" or "Dance to 'Good 4 U' by Olivia Rodrigo"
-     * Age 26-35: "Listen to 'Blinding Lights' by The Weeknd" or "Dance to 'Watermelon Sugar' by Harry Styles"
-     * Age 36-45: "Listen to 'Shake It Off' by Taylor Swift" or "Dance to 'Uptown Funk' by Bruno Mars"
-     * Age 46+: "Listen to 'Don't Stop Believin'' by Journey" or "Dance to 'Sweet Caroline' by Neil Diamond"
+     * Age 18-25: "Listen to 'Levitating' by Dua Lipa" + "Discover 'Good 4 U' by Olivia Rodrigo"
+     * Age 26-35: "Listen to 'Blinding Lights' by The Weeknd" + "Try 'Watermelon Sugar' by Harry Styles"
+     * Age 36-45: "Listen to 'Shake It Off' by Taylor Swift" + "Explore 'Uptown Funk' by Bruno Mars"
+     * Age 46+: "Listen to 'Don't Stop Believin'' by Journey" + "Check out 'Sweet Caroline' by Neil Diamond"
    - ALWAYS include specific song titles and artists!
+   - MIX familiar comfort with exciting new discoveries!
 
 2. **If suggesting reading:**
    - DO NOT say "read a book"
-   - DO say "Read [SPECIFIC BOOK TITLE] by [FAVORITE WRITER]"
-   - **GENRE EXPANSION**: If they like Maya Angelou → suggest similar poets (Langston Hughes, Rumi, Pablo Neruda)
-   - **GENRE EXPANSION**: If they like Ernest Hemingway → suggest similar writers (F. Scott Fitzgerald, John Steinbeck, Jack London)
-   - **GENRE EXPANSION**: If they like Carl Sagan → suggest similar science writers (Neil deGrasse Tyson, Stephen Hawking, Richard Feynman)
-   - Example: "Read 'Pride and Prejudice' by Jane Austen" or "Read Rumi's 'The Guest House' poem"
-   - Use their favorite writers list AND similar authors in the same genre!
+   - **PRIORITY 1**: If they have favorite writers, suggest BOTH their favorites AND similar vibe authors
+   - **PRIORITY 2**: If no favorites saved, use age-appropriate suggestions with specific titles
+   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW authors with similar themes/energy
+   - **GENRE EXPANSION**: If they like Maya Angelou → suggest similar poets (Langston Hughes, Rumi, Pablo Neruda) + NEW discoveries (Amanda Gorman, Rupi Kaur)
+   - **GENRE EXPANSION**: If they like Ernest Hemingway → suggest similar writers (F. Scott Fitzgerald, John Steinbeck, Jack London) + NEW discoveries (Cormac McCarthy, Haruki Murakami)
+   - **GENRE EXPANSION**: If they like Carl Sagan → suggest similar science writers (Neil deGrasse Tyson, Stephen Hawking, Richard Feynman) + NEW discoveries (Bill Bryson, Mary Roach)
+   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
+   - Example: "Read 'Pride and Prejudice' by Jane Austen" + "Try 'The Seven Husbands of Evelyn Hugo' by Taylor Jenkins Reid for similar romance vibes"
+   - MIX familiar comfort with exciting new discoveries!
 
 3. **If suggesting exercise/sports:**
    - DO NOT say "work out" or "exercise"
-   - DO say "Try [SPECIFIC WORKOUT] inspired by [FAVORITE ATHLETE]"
-   - **GENRE EXPANSION**: If they like Messi → suggest similar footballers (Neymar, Mbappé, Ronaldo) or other sports legends
-   - **GENRE EXPANSION**: If they like Serena Williams → suggest similar tennis players (Venus Williams, Roger Federer, Rafael Nadal)
-   - **GENRE EXPANSION**: If they like Michael Jordan → suggest similar basketball players (LeBron James, Kobe Bryant, Magic Johnson)
-   - Example: "Do Ronaldo's 30-min HIIT routine" or "Try Serena Williams' warmup stretches"
-   - Use their favorite athletes list AND similar athletes in the same sport!
+   - **PRIORITY 1**: If they have favorite athletes, suggest BOTH their favorites AND similar vibe workouts
+   - **PRIORITY 2**: If no favorites saved, use age-appropriate suggestions with specific routines
+   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW workout styles with similar energy/intensity
+   - **GENRE EXPANSION**: If they like Messi → suggest similar footballers (Neymar, Mbappé, Ronaldo) + NEW discoveries (Kylian Mbappé, Erling Haaland)
+   - **GENRE EXPANSION**: If they like Serena Williams → suggest similar tennis players (Venus Williams, Roger Federer, Rafael Nadal) + NEW discoveries (Naomi Osaka, Coco Gauff)
+   - **GENRE EXPANSION**: If they like Michael Jordan → suggest similar basketball players (LeBron James, Kobe Bryant, Magic Johnson) + NEW discoveries (Giannis Antetokounmpo, Luka Dončić)
+   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
+   - Example: "Do Ronaldo's 30-min HIIT routine" + "Try Adriene Mishler's yoga flows for variety"
+   - MIX familiar comfort with exciting new discoveries!
 
 4. **If suggesting movies/shows:**
    - DO NOT say "watch a movie"
-   - DO say "Watch [SPECIFIC MOVIE/SHOW]"
-   - Example: "Watch 'The Pursuit of Happyness'" or "Watch a TED Talk by Brené Brown"
+   - **PRIORITY 1**: If they have favorite movies/shows, suggest BOTH their favorites AND similar vibe content
+   - **PRIORITY 2**: If no favorites saved, use age-appropriate suggestions with specific titles
+   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW shows/movies with similar themes/energy
+   - **GENRE EXPANSION**: If they like Friends → suggest similar sitcoms (The Office, How I Met Your Mother) + NEW discoveries (Brooklyn Nine-Nine, The Good Place)
+   - **GENRE EXPANSION**: If they like Inception → suggest similar thrillers (Interstellar, Tenet) + NEW discoveries (Everything Everywhere All at Once, Dune)
+   - **GENRE EXPANSION**: If they like Euphoria → suggest similar dramas (13 Reasons Why, Elite) + NEW discoveries (Heartstopper, Sex Education)
+   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
+   - Example: "Watch 'The Pursuit of Happyness'" + "Check out 'The Seven Husbands of Evelyn Hugo' adaptation for similar inspiring vibes"
+   - MIX familiar comfort with exciting new discoveries!
 
 5. **If suggesting meditation/mindfulness:**
    - DO NOT say "meditate"
-   - DO say "Try [SPECIFIC TECHNIQUE] meditation"
-   - Example: "Try Thich Nhat Hanh's walking meditation" or "Practice 4-7-8 breathing technique"
+   - **PRIORITY 1**: If they have favorite meditation styles, suggest BOTH their favorites AND similar vibe techniques
+   - **PRIORITY 2**: If no favorites saved, use mood-appropriate suggestions with specific techniques
+   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW meditation styles with similar energy/benefits
+   - **TECHNIQUE EXPANSION**: If they like walking meditation → suggest similar movement practices (yoga, tai chi) + NEW discoveries (forest bathing, mindful running)
+   - **TECHNIQUE EXPANSION**: If they like breathing exercises → suggest similar breathwork (4-7-8, box breathing) + NEW discoveries (Wim Hof method, pranayama)
+   - **TECHNIQUE EXPANSION**: If they like guided meditation → suggest similar audio practices (Headspace, Calm) + NEW discoveries (Insight Timer, Ten Percent Happier)
+   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
+   - Example: "Try Thich Nhat Hanh's walking meditation" + "Explore Wim Hof's breathing technique for fresh perspective"
+   - MIX familiar comfort with exciting new discoveries!
 
 6. **If suggesting art/creativity:**
    - DO NOT say "do art"
-   - DO say "Try [SPECIFIC ART ACTIVITY] inspired by [FAVORITE ARTIST]"
-   - **GENRE EXPANSION**: If they like Frida Kahlo → suggest similar artists (Georgia O'Keeffe, Diego Rivera, Vincent van Gogh)
-   - **GENRE EXPANSION**: If they like Leonardo da Vinci → suggest similar Renaissance artists (Michelangelo, Raphael, Botticelli)
-   - **GENRE EXPANSION**: If they like Van Gogh → suggest similar impressionist artists (Monet, Renoir, Degas)
-   - Example: "Draw self-portraits inspired by Frida Kahlo" or "Try Van Gogh's color techniques"
+   - **PRIORITY 1**: If they have favorite artists, suggest BOTH their favorites AND similar vibe creative activities
+   - **PRIORITY 2**: If no favorites saved, use mood-appropriate suggestions with specific techniques
+   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW art styles with similar energy/creativity
+   - **GENRE EXPANSION**: If they like Frida Kahlo → suggest similar artists (Georgia O'Keeffe, Diego Rivera, Vincent van Gogh) + NEW discoveries (Yayoi Kusama, Frida Kahlo-inspired digital art)
+   - **GENRE EXPANSION**: If they like Leonardo da Vinci → suggest similar Renaissance artists (Michelangelo, Raphael, Botticelli) + NEW discoveries (contemporary anatomical art, scientific illustration)
+   - **GENRE EXPANSION**: If they like Van Gogh → suggest similar impressionist artists (Monet, Renoir, Degas) + NEW discoveries (contemporary landscape painting, digital impressionism)
+   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
+   - Example: "Draw self-portraits inspired by Frida Kahlo" + "Try Yayoi Kusama's polka dot technique for fresh perspective"
+   - MIX familiar comfort with exciting new discoveries!
 
 RESPONSE FORMAT:
 [
@@ -1416,11 +1444,12 @@ RESPONSE FORMAT:
 ]
 
 EXAMPLES OF GOOD SUGGESTIONS:
-✅ "Listen to 'Respect' by Nina Simone for energy boost"
-✅ "Read Chapter 1 of 'Pride and Prejudice' by Jane Austen"
-✅ "Try Ronaldo's 10-minute leg workout from his Instagram"
-✅ "Watch 'The Alchemist' audiobook by Paulo Coelho"
-✅ "Practice Rumi-inspired gratitude meditation"
+✅ "Listen to 'Respect' by Nina Simone for energy boost" + "Discover 'Good as Hell' by Lizzo for similar empowering vibes"
+✅ "Read Chapter 1 of 'Pride and Prejudice' by Jane Austen" + "Try 'The Seven Husbands of Evelyn Hugo' by Taylor Jenkins Reid for similar romance vibes"
+✅ "Try Ronaldo's 10-minute leg workout from his Instagram" + "Explore Adriene Mishler's yoga flows for variety"
+✅ "Watch Season 1, Episode 7 of 'Friends'" + "Check out 'Brooklyn Nine-Nine' for similar comedy vibes"
+✅ "Practice Rumi-inspired gratitude meditation" + "Try Wim Hof's breathing technique for fresh perspective"
+✅ "Draw self-portraits inspired by Frida Kahlo" + "Try Yayoi Kusama's polka dot technique for fresh perspective"
 
 EXAMPLES OF BAD (TOO GENERIC) SUGGESTIONS:
 ❌ "Listen to music"

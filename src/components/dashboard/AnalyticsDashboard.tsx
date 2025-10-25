@@ -110,12 +110,27 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
   // Calculate trends (last 7 days vs previous 7 days)
   const last7Days = data.slice(0, 7);
   const previous7Days = data.slice(7, 14);
+  
+  // Valence trend
   const last7AvgValence = last7Days.length > 0 ? last7Days.reduce((sum, entry) => sum + entry.valence, 0) / last7Days.length : 0;
   const previous7AvgValence = previous7Days.length > 0 ? previous7Days.reduce((sum, entry) => sum + entry.valence, 0) / previous7Days.length : 0;
   const valenceTrend = last7AvgValence - previous7AvgValence;
+  
+  // Energy trend
+  const last7AvgEnergy = last7Days.length > 0 ? last7Days.reduce((sum, entry) => sum + entry.energy, 0) / last7Days.length : 0;
+  const previous7AvgEnergy = previous7Days.length > 0 ? previous7Days.reduce((sum, entry) => sum + entry.energy, 0) / previous7Days.length : 0;
+  const energyTrend = last7AvgEnergy - previous7AvgEnergy;
+  
+  // Focus trend
+  const last7AvgFocus = last7Days.length > 0 ? last7Days.reduce((sum, entry) => sum + entry.focus, 0) / last7Days.length : 0;
+  const previous7AvgFocus = previous7Days.length > 0 ? previous7Days.reduce((sum, entry) => sum + entry.focus, 0) / previous7Days.length : 0;
+  const focusTrend = last7AvgFocus - previous7AvgFocus;
+  
+  // Stress trend (note: for stress, lower is better, so we invert the trend)
+  const last7AvgStress = last7Days.length > 0 ? last7Days.reduce((sum, entry) => sum + entry.stress, 0) / last7Days.length : 0;
+  const previous7AvgStress = previous7Days.length > 0 ? previous7Days.reduce((sum, entry) => sum + entry.stress, 0) / previous7Days.length : 0;
+  const stressTrend = previous7AvgStress - last7AvgStress; // Inverted: lower stress is better
 
-  // Calculate life rhythm score
-  const lifeRhythmScore = Math.round((avgValence + avgEnergy + avgFocus + (avgSleep / 2)) / 3.5 * 10);
 
   // Get most common activities
   const allActivities = data.flatMap(entry => {
@@ -255,6 +270,17 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
               </motion.span>
             </motion.div>
             <div className="text-sm font-medium text-slate-300">Average Energy</div>
+            {energyTrend !== 0 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className={`text-xs mt-2 flex items-center justify-center ${energyTrend > 0 ? 'text-green-600' : 'text-red-600'}`}
+              >
+                {energyTrend > 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+                {Math.abs(energyTrend).toFixed(1)} vs last week
+              </motion.div>
+            )}
           </Card>
         </motion.div>
 
@@ -287,6 +313,17 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
               </motion.span>
             </motion.div>
             <div className="text-sm font-medium text-slate-300">Average Focus</div>
+            {focusTrend !== 0 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className={`text-xs mt-2 flex items-center justify-center ${focusTrend > 0 ? 'text-green-600' : 'text-red-600'}`}
+              >
+                {focusTrend > 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+                {Math.abs(focusTrend).toFixed(1)} vs last week
+              </motion.div>
+            )}
           </Card>
         </motion.div>
 
@@ -295,7 +332,7 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 300, delay: 0.3 }}
         >
-          <Card className="p-6 text-center bg-slate-800/40 backdrop-blur-sm border border-purple-500/20 hover:shadow-xl transition-all duration-300">
+          <Card className="p-6 text-center bg-slate-800/40 backdrop-blur-sm border border-red-500/20 hover:shadow-xl transition-all duration-300">
             <motion.div 
               animate={{ 
                 scale: [1, 1.1, 1],
@@ -308,17 +345,28 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
               }}
               className="flex items-center justify-center mb-2"
             >
-              <Activity className="w-6 h-6 text-purple-500 mr-2" />
+              <Activity className="w-6 h-6 text-red-500 mr-2" />
               <motion.span 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.8, type: "spring" }}
-                className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent"
+                className="text-3xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent"
               >
-                {lifeRhythmScore}
+                {avgStress.toFixed(1)}
               </motion.span>
             </motion.div>
-            <div className="text-sm font-medium text-slate-300">Life Rhythm Score</div>
+            <div className="text-sm font-medium text-slate-300">Average Stress</div>
+            {stressTrend !== 0 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className={`text-xs mt-2 flex items-center justify-center ${stressTrend > 0 ? 'text-green-600' : 'text-red-600'}`}
+              >
+                {stressTrend > 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+                {Math.abs(stressTrend).toFixed(1)} vs last week
+              </motion.div>
+            )}
           </Card>
         </motion.div>
       </motion.div>
@@ -369,7 +417,7 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
         </motion.div>
       </motion.div>
 
-      {/* DSS Radar */}
+      {/* Success Compass */}
       <motion.div 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -388,7 +436,7 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
               className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 flex items-center"
             >
               <Target className="w-6 h-6 mr-2 text-purple-500" />
-              DSS Radar
+              Success Compass
             </motion.h3>
             <DSSRadar data={dssData} loading={dssLoading} />
           </Card>

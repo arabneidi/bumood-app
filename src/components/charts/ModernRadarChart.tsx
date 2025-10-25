@@ -57,7 +57,7 @@ export default function ModernRadarChart({ data, height = 300 }: ModernRadarChar
     valence: data.reduce((sum, entry) => sum + entry.valence, 0) / data.length,
     energy: data.reduce((sum, entry) => sum + entry.energy, 0) / data.length,
     focus: data.reduce((sum, entry) => sum + entry.focus, 0) / data.length,
-    sleep: (data.reduce((sum, entry) => sum + (entry.sleep || 0), 0) / data.length) * 1.25,
+    sleep: data.reduce((sum, entry) => sum + (entry.sleep || 0), 0) / data.length, // Average sleep hours
     stress: data.reduce((sum, entry) => sum + entry.stress, 0) / data.length,
   };
 
