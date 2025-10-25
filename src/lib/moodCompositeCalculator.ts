@@ -34,10 +34,11 @@ export function getTimeBucket(date: Date): TimeBucket {
 }
 
 /**
- * Calculate Mood Composite (MC) based on the formula:
+ * Calculate Mood Composite for DASHBOARD (MC) based on the formula:
  * MC = 0.4*zV + 0.3*zE + 0.2*zF - 0.2*zS
  * 
- * Where z-scores are calculated from the last ~14 days within the same time bucket
+ * Where z-scores are calculated from the last 14 days within the same time bucket
+ * Uses 4 time buckets: morning, midday, evening, night
  */
 export async function calculateMoodComposite(
   userId: string, 
@@ -47,11 +48,15 @@ export async function calculateMoodComposite(
   stress: number,
   date: Date = new Date()
 ): Promise<MoodCompositeResult> {
+  console.log(`🔵 Calculating DASHBOARD MC for date: ${date.toISOString()}`);
   const timeBucket = getTimeBucket(date);
+  console.log(`🔵 Time bucket: ${timeBucket} (morning/midday/evening/night)`);
   
-  // Get last 14 days of data for the same time bucket
+  // Get last 14 days of data for the same time bucket ONLY
   const fourteenDaysAgo = new Date(date);
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+  console.log(`🔵 Historical range: ${fourteenDaysAgo.toISOString()} to ${date.toISOString()}`);
 
   const historicalData = await prisma.moodEntry.findMany({
     where: {
@@ -66,6 +71,8 @@ export async function calculateMoodComposite(
       createdAt: 'desc'
     }
   });
+
+  console.log(`🔵 Found ${historicalData.length} historical entries for time bucket '${timeBucket}'`);
 
   // Extract historical values
   const valenceHistory = historicalData.map(entry => entry.valence);
@@ -82,6 +89,8 @@ export async function calculateMoodComposite(
   // Calculate Mood Composite
   const moodComposite = 0.4 * zV + 0.3 * zE + 0.2 * zF - 0.2 * zS;
 
+  console.log(`🔵 Dashboard MC calculated: ${moodComposite.toFixed(3)}, z-scores: V=${zV.toFixed(3)}, E=${zE.toFixed(3)}, F=${zF.toFixed(3)}, S=${zS.toFixed(3)}`);
+
   return {
     moodComposite,
     zScores: { zV, zE, zF, zS },
@@ -96,8 +105,12 @@ export async function calculateMoodComposite(
 }
 
 /**
- * Calculate Mood Composite for Power Hours with exact hour matching
- * Supports weekly, monthly, and yearly windows
+ * Calculate Mood Composite for POWER HOURS with exact hour matching
+ * 
+ * DIFFERENT from Dashboard MC:
+ * - Uses EXACT 24 hours (0-23), not 4 time buckets
+ * - Supports weekly/monthly/yearly windows (not fixed 14 days)
+ * - Filters by exact hour in activityEntries/selectedTimeSlots
  */
 export async function calculateMoodCompositeForPowerHours(
   userId: string,
