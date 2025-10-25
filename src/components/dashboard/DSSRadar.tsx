@@ -76,14 +76,6 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   const { learningMomentum, recoveryIndex, connectionScore } = data.components;
   const { zLM, zRI, zCN } = data.zScores;
   
-  // Debug logging
-  console.log('🎯 DSS Radar Debug (raw z-scores):', {
-    rawValues: { learningMomentum, recoveryIndex, connectionScore },
-    zScores: { zLM, zRI, zCN },
-    scaleMax: scaleMax,
-    chartData: chartData
-  });
-
   // Prepare data for recharts radar chart - use z-scores directly
   // Find the maximum absolute value to set appropriate scale
   const maxAbsValue = Math.max(Math.abs(zLM), Math.abs(zRI), Math.abs(zCN));
@@ -106,6 +98,14 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
       fullMark: scaleMax
     }
   ];
+
+  // Debug logging
+  console.log('🎯 DSS Radar Debug (raw z-scores):', {
+    rawValues: { learningMomentum, recoveryIndex, connectionScore },
+    zScores: { zLM, zRI, zCN },
+    scaleMax: scaleMax,
+    chartData: chartData
+  });
 
   return (
     <motion.div 
