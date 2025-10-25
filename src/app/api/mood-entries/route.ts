@@ -256,23 +256,47 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Calculate DSS components from mood entry data
-    let learningMomentum = 0;
+    // ============================================================================
+    // DSS COMPONENT CALCULATION (DO NOT MODIFY - FOLLOWS EXACT FORMULA)
+    // ============================================================================
+    // LM (Learning Momentum) = deepwork_minutes + 10 * tasks_completed
+    // RI (Recovery Index) = sleep_hours + (recovery_action ? 1 : 0)
+    // CN (Connection) = positive_social_touchpoints
+    // 
+    // Z-score normalization over 14 days, then:
+    // DSS = 0.5 × zLM + 0.3 × zRI + 0.2 × zCN
+    // ============================================================================
+    
+    let deepworkMinutes = 0;
     let recoveryIndex = sleep ? parseFloat(sleep) : 0; // Sleep hours contribute to RI
     let connectionScore = 0;
     
-    // Check if any activity contributes to DSS components
+    // Calculate actual deep work minutes from selected time slots
+    // Each selected time slot = 1 hour = 60 minutes of deep work
+    // Example: If you selected 1 hour (11 PM), you did 60 minutes of deep work
+    if (selectedTimeSlots && selectedTimeSlots.length > 0) {
+      const timeSlotsArray = typeof selectedTimeSlots === 'string' 
+        ? JSON.parse(selectedTimeSlots) 
+        : selectedTimeSlots;
+      deepworkMinutes = timeSlotsArray.length * 60; // Convert hours to minutes
+    }
+    
+    // Calculate tasks completed based on activities with LM component
+    // Each activity with primaryComponent='LM' counts as 1 completed task
+    let tasksCompleted = 0;
     for (const activity of activitiesList) {
       const activityDSS = (dssAnalysisData as any)[activity];
       if (activityDSS) {
         if (activityDSS.primaryComponent === 'LM') {
-          learningMomentum += 10; // Basic contribution for LM activities
+          tasksCompleted += 1; // Each LM activity = 1 completed task
         } else if (activityDSS.primaryComponent === 'CN') {
           connectionScore += 1; // Social interaction contribution
         }
-        // RI is already set from sleep hours
       }
     }
+    
+    // Calculate Learning Momentum according to formula: LM = deepwork_minutes + 10 * tasks_completed
+    const learningMomentum = deepworkMinutes + (10 * tasksCompleted);
     
     // Add recovery action if sleep is good (8+ hours)
     if (sleep && parseFloat(sleep) >= 8) {
@@ -298,9 +322,9 @@ export async function POST(request: NextRequest) {
         exercise: activitiesList.length > 0,
         exerciseType: activitiesList.length > 0 ? 'general' : null,
         exerciseDuration: activitiesList.length > 0 ? 30 : 0, // Default 30 minutes
-        // DSS calculations
-        deepworkMinutes: Math.max(0, learningMomentum), // Use LM as deep work proxy
-        tasksCompleted: Math.floor(learningMomentum / 10), // Convert LM to tasks
+        // DSS calculations - using actual deep work minutes and tasks
+        deepworkMinutes: deepworkMinutes,
+        tasksCompleted: tasksCompleted,
         sleepHours: sleep ? parseFloat(sleep) : 0,
         recoveryAction: sleep && parseFloat(sleep) >= 8,
         positiveSocialTouchpoints: connectionScore,
@@ -323,9 +347,9 @@ export async function POST(request: NextRequest) {
         exercise: activitiesList.length > 0,
         exerciseType: activitiesList.length > 0 ? 'general' : null,
         exerciseDuration: activitiesList.length > 0 ? 30 : 0, // Default 30 minutes
-        // DSS calculations
-        deepworkMinutes: Math.max(0, learningMomentum),
-        tasksCompleted: Math.floor(learningMomentum / 10),
+        // DSS calculations - using actual deep work minutes and tasks
+        deepworkMinutes: deepworkMinutes,
+        tasksCompleted: tasksCompleted,
         sleepHours: sleep ? parseFloat(sleep) : 0,
         recoveryAction: sleep && parseFloat(sleep) >= 8,
         positiveSocialTouchpoints: connectionScore,

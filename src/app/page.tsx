@@ -332,28 +332,15 @@ export default function Home() {
       const entryDate = new Date(entry.createdAt);
       
       if (timeRange === 'daily') {
-        // Today only - compare dates without time using UTC
+        // Today only - compare dates without time using local timezone
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const entryStart = new Date(entryDate.getUTCFullYear(), entryDate.getUTCMonth(), entryDate.getUTCDate());
+        todayStart.setHours(0, 0, 0, 0);
         
-        // Also check yesterday and tomorrow to be more flexible
-        const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
-        const tomorrowStart = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+        const entryStart = new Date(entryDate.getFullYear(), entryDate.getMonth(), entryDate.getDate());
+        entryStart.setHours(0, 0, 0, 0);
         
-        console.log('🔍 Date comparison (UTC):', {
-          entryDate: entryDate.toISOString(),
-          entryStart: entryStart.toISOString(),
-          todayStart: todayStart.toISOString(),
-          yesterdayStart: yesterdayStart.toISOString(),
-          tomorrowStart: tomorrowStart.toISOString(),
-          matchToday: entryStart.getTime() === todayStart.getTime(),
-          matchYesterday: entryStart.getTime() === yesterdayStart.getTime(),
-          matchTomorrow: entryStart.getTime() === tomorrowStart.getTime()
-        });
-        
-        return entryStart.getTime() === todayStart.getTime() || 
-               entryStart.getTime() === yesterdayStart.getTime() || 
-               entryStart.getTime() === tomorrowStart.getTime();
+        // Only match today's date
+        return entryStart.getTime() === todayStart.getTime();
       } else if (timeRange === 'weekly') {
         // Last 7 days
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);

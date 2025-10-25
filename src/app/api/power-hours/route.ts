@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         moodComposite: true,
         timeBucket: true,
+        selectedTimeSlots: true,
         valence: true,
         energy: true,
         focus: true,
@@ -98,7 +99,33 @@ export async function GET(request: NextRequest) {
     moodEntries.forEach(entry => {
       const entryDate = new Date(entry.createdAt);
       const dayOfWeek = daysOfWeek[entryDate.getDay()];
-      const hour = entryDate.getHours();
+      
+      // Extract hour from selectedTimeSlots if available, otherwise use createdAt
+      let hour = entryDate.getHours();
+      
+      if (entry.selectedTimeSlots) {
+        try {
+          const timeSlots = typeof entry.selectedTimeSlots === 'string' 
+            ? JSON.parse(entry.selectedTimeSlots) 
+            : entry.selectedTimeSlots;
+          
+          // Get the first time slot if multiple
+          if (timeSlots && timeSlots.length > 0) {
+            const timeSlotStr = timeSlots[0];
+            // Extract hour from format like "night-23" or "23"
+            const hourMatch = timeSlotStr.match(/[-]?(\d+)/);
+            if (hourMatch) {
+              const parsedHour = parseInt(hourMatch[1]);
+              if (!isNaN(parsedHour) && parsedHour >= 0 && parsedHour <= 23) {
+                hour = parsedHour;
+              }
+            }
+          }
+        } catch (e) {
+          console.log('⚠️ Could not parse selectedTimeSlots, using createdAt hour:', e.message);
+        }
+      }
+      
       const key = `${dayOfWeek}-${hour}`;
       
       if (!mcDataByTimeSlot.has(key)) {

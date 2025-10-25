@@ -242,13 +242,19 @@ COMPREHENSIVE USER PROFILE:
 - Favorite Movies: ${favoriteMovies || 'Not specified'}
 - Favorite Philosophers: ${favoritePhilosophers || 'Not specified'}
 
+IMPORTANT PERSONALIZATION RULES:
+1. If the activity is "studying" or "learning", feel free to use their field of study (${fieldOfStudy}) for relevance
+2. For ALL OTHER activities (socializing, exercising, relaxing, etc.), treat them as a NORMAL PERSON with varied interests
+3. Do NOT force tech/study themes into non-academic activities
+4. Include mainstream, popular, diverse options that anyone might enjoy
+
 TASK: Generate subcategories that are:
 1. Directly related to the activity "${activity}"
 2. Age-appropriate for a ${age}-year-old
-3. Aligned with their personality type (${personality})
-4. Relevant to their field of study (${fieldOfStudy})
-5. Diverse and modern
-6. Appealing to their preferences and interests
+3. Activity-appropriate: If studying → use field of study; If socializing/exercising → use general interests
+4. DIVERSE and MIXED - NOT overly focused on one interest
+5. Include BOTH professional AND personal interests (when relevant to the activity)
+6. Balance tech/non-tech, work/leisure, indoor/outdoor activities
 
 DAILY SUCCESS SCORE (DSS) ANALYSIS:
 Analyze which DSS component this activity primarily relates to:
@@ -308,13 +314,19 @@ COMPREHENSIVE USER PROFILE:
 
 EXISTING FAVORITES TO AVOID: ${existingFavorites.length > 0 ? existingFavorites.join(', ') : 'None'}
 
+IMPORTANT PERSONALIZATION RULES:
+1. If the activity is "studying" or "learning", feel free to use their field of study (${fieldOfStudy}) for relevance
+2. For ALL OTHER activities (socializing, exercising, relaxing, etc.), treat them as a NORMAL PERSON with varied interests
+3. Do NOT force tech/study themes into non-academic activities
+4. Include mainstream, popular, diverse options that anyone might enjoy
+
 TASK: Generate specific suggestions that are:
 1. Directly related to the selected subcategories: ${selectedGenres.join(', ')}
 2. Age-appropriate for a ${age}-year-old
-3. Aligned with their personality type (${personality})
-4. Relevant to their field of study (${fieldOfStudy})
-5. Modern and current
-6. Appealing to their preferences and interests
+3. Activity-appropriate: If studying → use field of study; If socializing/exercising → use general diverse interests
+4. DIVERSE and MIXED - include both tech and non-tech, work and leisure
+5. Include mainstream popular options that appeal to a NORMAL PERSON
+6. Balance professional interests with personal hobbies and relaxation
 7. NOT already in their favorites: ${existingFavorites.join(', ')}
 
 DAILY SUCCESS SCORE (DSS) ANALYSIS:

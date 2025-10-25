@@ -40,16 +40,16 @@ export default function DSSDashboard() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 1) return 'text-green-600';
-    if (score >= 0) return 'text-blue-600';
-    if (score >= -1) return 'text-yellow-600';
+    if (score >= 7) return 'text-green-600';
+    if (score >= 5) return 'text-yellow-600';
+    if (score >= 3) return 'text-orange-600';
     return 'text-red-600';
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 1) return 'Excellent';
-    if (score >= 0) return 'Good';
-    if (score >= -1) return 'Fair';
+    if (score >= 7) return 'Excellent';
+    if (score >= 5) return 'Good';
+    if (score >= 3) return 'Fair';
     return 'Needs Improvement';
   };
 

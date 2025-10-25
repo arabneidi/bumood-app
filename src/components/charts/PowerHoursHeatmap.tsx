@@ -78,11 +78,11 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
 
   const getColorClass = (productivity: number) => {
     if (productivity === 0) return 'bg-slate-700/30';
-    if (productivity <= 0.2) return 'bg-blue-500/20';
-    if (productivity <= 0.4) return 'bg-blue-500/40';
-    if (productivity <= 0.6) return 'bg-yellow-500/60';
-    if (productivity <= 0.8) return 'bg-orange-500/80';
-    return 'bg-red-500';
+    if (productivity <= 0.25) return 'bg-blue-400/30';    // Light blue - Low productivity
+    if (productivity <= 0.5) return 'bg-blue-500/50';     // Medium blue - Low-medium productivity
+    if (productivity <= 0.75) return 'bg-green-500/60';   // Green - Medium-high productivity
+    if (productivity <= 0.9) return 'bg-yellow-500/80';   // Yellow - High productivity
+    return 'bg-orange-500';                               // Orange - Very high productivity
   };
 
   const getTooltipContent = (day: string, hour: number) => {
@@ -121,11 +121,11 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
           <span className="text-slate-400">Less productive</span>
           <div className="flex items-center space-x-1">
             <div className="w-3 h-3 bg-slate-700/30 rounded"></div>
-            <div className="w-3 h-3 bg-blue-500/20 rounded"></div>
-            <div className="w-3 h-3 bg-blue-500/40 rounded"></div>
-            <div className="w-3 h-3 bg-yellow-500/60 rounded"></div>
-            <div className="w-3 h-3 bg-orange-500/80 rounded"></div>
-            <div className="w-3 h-3 bg-red-500 rounded"></div>
+            <div className="w-3 h-3 bg-blue-400/30 rounded"></div>
+            <div className="w-3 h-3 bg-blue-500/50 rounded"></div>
+            <div className="w-3 h-3 bg-green-500/60 rounded"></div>
+            <div className="w-3 h-3 bg-yellow-500/80 rounded"></div>
+            <div className="w-3 h-3 bg-orange-500 rounded"></div>
           </div>
           <span className="text-slate-400">Most productive</span>
         </div>
