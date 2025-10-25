@@ -90,8 +90,8 @@ export default function StatsPage() {
           const dssResponse = await fetch('/api/dss?userId=dummy-user');
           if (dssResponse.ok) {
             const dssData = await dssResponse.json();
-            if (dssData.success && dssData.data) {
-              setDssData(dssData.data);
+            if (dssData.success && dssData.data && dssData.data.currentDSS) {
+              setDssData(dssData.data.currentDSS);
             }
           }
         } catch (dssError) {

@@ -46,7 +46,7 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
     );
   }
 
-  if (!data) {
+  if (!data || !data.components || !data.zScores) {
     return (
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -68,6 +68,7 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
           📊
         </motion.div>
         <p className="text-slate-300 text-lg">No DSS data available</p>
+        {data && console.log('DSS Radar Debug - Invalid data structure:', data)}
       </motion.div>
     );
   }
