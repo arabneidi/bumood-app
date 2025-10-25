@@ -104,7 +104,8 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
   };
 
   const getColorClass = (mcValue: number | null) => {
-    if (mcValue === null) return 'bg-slate-700/30'; // Grey for empty cells
+    // Grey for null values OR zero values (insufficient data for meaningful z-score)
+    if (mcValue === null || mcValue === 0) return 'bg-slate-700/30';
     
     // Normalize MC to 0-1 range using actual data range
     const normalizedMC = normalizeMC(mcValue);

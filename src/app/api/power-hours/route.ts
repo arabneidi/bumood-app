@@ -239,6 +239,17 @@ export async function GET(request: NextRequest) {
             console.log(`📊 Sat 13:00 - Historical entries: ${historicalDataForTimeSlot.length} (need 5+), currentDate: ${currentEntryDate.toISOString()}`);
           }
           
+          if (dayOfWeek === 'Wed' && hour === 15) {
+            console.log(`📊 Wed 15:00 - Historical entries: ${historicalDataForTimeSlot.length} (need 5+), currentDate: ${currentEntryDate.toISOString()}`);
+            console.log(`📊 Wed 15:00 - historicalDataForTimeSlot:`, JSON.stringify(historicalDataForTimeSlot.map(e => ({
+              date: e.createdAt,
+              valence: e.valence,
+              energy: e.energy,
+              focus: e.focus,
+              stress: e.stress
+            }))));
+          }
+          
         // NEW APPROACH: Calculate MC using exact hour matching for power hours
         if (historicalDataForTimeSlot.length >= 5) {
           // We have sufficient historical data, calculate MC for this exact hour
