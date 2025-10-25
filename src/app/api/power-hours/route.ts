@@ -6,37 +6,31 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'dummy-user';
-    const days = parseInt(searchParams.get('days') || '14'); // Default to 14 days
+    const window = searchParams.get('window') || 'weekly'; // 'weekly', 'monthly', 'yearly'
 
-    console.log(`📊 GET /api/power-hours - Fetching power hours data for user: ${userId}, days: ${days}`);
+    console.log(`📊 GET /api/power-hours - Fetching power hours data for user: ${userId}, window: ${window}`);
 
-    // Get daily tracking data for the specified period
+    // Define date range based on window
     const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - days);
+    let startDate = new Date();
+    let days = 7; // Default to weekly
+
+    if (window === 'weekly') {
+      // Last 7 days from today
+      startDate.setDate(endDate.getDate() - 7);
+      days = 7;
+    } else if (window === 'monthly') {
+      // Current month from the 1st
+      startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+      days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    } else if (window === 'yearly') {
+      // Current year from January 1st
+      startDate = new Date(endDate.getFullYear(), 0, 1);
+      days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    }
 
     console.log(`📊 Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
-
-    const dailyTrackingData = await db.dailyTracking.findMany({
-      where: {
-        userId,
-        date: {
-          gte: startDate,
-          lte: endDate
-        }
-      },
-      select: {
-        date: true,
-        exerciseDuration: true,
-        readingTime: true,
-        meditationDuration: true,
-        screenTime: true,
-        steps: true
-      },
-      orderBy: {
-        date: 'asc'
-      }
-    });
+    console.log(`📊 Window: ${window}, Days: ${days}`);
 
     // Get mood entries with MC values for power hours calculation
     const moodEntries = await db.moodEntry.findMany({
@@ -65,7 +59,6 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    console.log(`📊 Found ${dailyTrackingData.length} daily tracking entries`);
     console.log(`📊 Found ${moodEntries.length} mood entries with MC values`);
 
     // If no mood entries with MC values, return empty data
@@ -86,7 +79,8 @@ export async function GET(request: NextRequest) {
         period: {
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
-          days
+          days,
+          window
         }
       });
     }
@@ -100,8 +94,8 @@ export async function GET(request: NextRequest) {
       const entryDate = new Date(entry.createdAt);
       const dayOfWeek = daysOfWeek[entryDate.getDay()];
       
-      // Extract hour from selectedTimeSlots if available, otherwise use createdAt
-      let hour = entryDate.getHours();
+      // Extract hours from selectedTimeSlots if available, otherwise use createdAt
+      let hoursToProcess: number[] = [entryDate.getHours()]; // Default to createdAt hour
       
       if (entry.selectedTimeSlots) {
         try {
@@ -109,43 +103,47 @@ export async function GET(request: NextRequest) {
             ? JSON.parse(entry.selectedTimeSlots) 
             : entry.selectedTimeSlots;
           
-          // Get the first time slot if multiple
           if (timeSlots && timeSlots.length > 0) {
-            const timeSlotStr = timeSlots[0];
-            // Extract hour from format like "night-23" or "23"
-            const hourMatch = timeSlotStr.match(/[-]?(\d+)/);
-            if (hourMatch) {
-              const parsedHour = parseInt(hourMatch[1]);
-              if (!isNaN(parsedHour) && parsedHour >= 0 && parsedHour <= 23) {
-                hour = parsedHour;
+            // Process ALL time slots, not just the first one
+            hoursToProcess = [];
+            timeSlots.forEach((timeSlotStr: string) => {
+              // Extract hour from format like "midday-12" or "night-23"
+              const hourMatch = timeSlotStr.match(/[-]?(\d+)/);
+              if (hourMatch) {
+                const parsedHour = parseInt(hourMatch[1]);
+                if (!isNaN(parsedHour) && parsedHour >= 0 && parsedHour <= 23) {
+                  hoursToProcess.push(parsedHour);
+                }
               }
-            }
+            });
           }
         } catch (e) {
           console.log('⚠️ Could not parse selectedTimeSlots, using createdAt hour:', e.message);
         }
       }
       
-      const key = `${dayOfWeek}-${hour}`;
-      
-      if (!mcDataByTimeSlot.has(key)) {
-        mcDataByTimeSlot.set(key, {
-          mcValues: [],
-          entries: [],
-          day: dayOfWeek,
-          hour: hour
-        });
-      }
-      
-      const timeSlotData = mcDataByTimeSlot.get(key);
-      timeSlotData.mcValues.push(entry.moodComposite || 0);
-      timeSlotData.entries.push(entry);
+      // Create a data point for each hour
+      hoursToProcess.forEach(hour => {
+        const key = `${dayOfWeek}-${hour}`;
+        
+        if (!mcDataByTimeSlot.has(key)) {
+          mcDataByTimeSlot.set(key, {
+            mcValues: [],
+            entries: [],
+            day: dayOfWeek,
+            hour: hour
+          });
+        }
+        
+        const timeSlotData = mcDataByTimeSlot.get(key);
+        timeSlotData.mcValues.push(entry.moodComposite || 0);
+        timeSlotData.entries.push(entry);
+      });
     });
 
-    // Calculate average MC values for each time slot
+    // Generate data for all days and hours in the period
     const powerHoursData = [];
     
-    // Generate data for all days and hours in the period
     for (let i = 0; i < days; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
@@ -156,37 +154,17 @@ export async function GET(request: NextRequest) {
         const timeSlotData = mcDataByTimeSlot.get(key);
         
         let avgMC = null; // Use null for empty cells instead of 0
-        let deepWorkMinutes = 0;
-        let tasksCompleted = 0;
-        let productivity = 0; // Default to 0 for empty cells
         
-        if (timeSlotData && timeSlotData.mcValues.length > 0) {
+        // Only calculate average if we have at least 5 entries (to reduce noise)
+        if (timeSlotData && timeSlotData.mcValues.length >= 5) {
           // Calculate average MC value for this time slot
           avgMC = timeSlotData.mcValues.reduce((sum, mc) => sum + mc, 0) / timeSlotData.mcValues.length;
-          
-          // Calculate additional metrics based on mood scores
-          const avgValence = timeSlotData.entries.reduce((sum, entry) => sum + entry.valence, 0) / timeSlotData.entries.length;
-          const avgEnergy = timeSlotData.entries.reduce((sum, entry) => sum + entry.energy, 0) / timeSlotData.entries.length;
-          const avgFocus = timeSlotData.entries.reduce((sum, entry) => sum + entry.focus, 0) / timeSlotData.entries.length;
-          const avgStress = timeSlotData.entries.reduce((sum, entry) => sum + entry.stress, 0) / timeSlotData.entries.length;
-          
-          // Calculate deep work metrics based on focus and MC
-          if (avgFocus >= 7 && avgMC > 0) {
-            deepWorkMinutes = Math.round(60 * (avgFocus / 10));
-            tasksCompleted = Math.round((avgEnergy + avgFocus) / 2);
-          }
-          
-          // Only calculate productivity if we have actual MC data
-          productivity = Math.max(0, Math.min(1, (avgMC + 2) / 4)); // Normalize MC (-2 to 2) to 0-1 scale
         }
         
         powerHoursData.push({
           day: dayOfWeek,
           hour: hour,
-          productivity, // 0 for empty cells, calculated value for cells with data
-          deepWorkMinutes,
-          tasksCompleted,
-          mcValue: avgMC // null for empty cells, actual MC value for cells with data
+          mcValue: avgMC // null for empty cells or cells with < 5 entries
         });
       }
     }
@@ -201,13 +179,16 @@ export async function GET(request: NextRequest) {
       insights,
       mcAnalysis: {
         totalTimeSlots: mcDataByTimeSlot.size,
-        timeSlotsWithData: Array.from(mcDataByTimeSlot.values()).filter(slot => slot.mcValues.length > 0).length,
-        avgMCValue: powerHoursData.reduce((sum, item) => sum + (item.mcValue || 0), 0) / powerHoursData.length
+        timeSlotsWithData: Array.from(mcDataByTimeSlot.values()).filter(slot => slot.mcValues.length >= 5).length,
+        avgMCValue: powerHoursData.filter(item => item.mcValue !== null).length > 0
+          ? powerHoursData.filter(item => item.mcValue !== null).reduce((sum, item) => sum + (item.mcValue || 0), 0) / powerHoursData.filter(item => item.mcValue !== null).length
+          : 0
       },
       period: {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        days
+        days,
+        window
       }
     });
 
@@ -225,69 +206,39 @@ function calculateInsights(data: any[], mcAnalysis?: any) {
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   
   // Find most productive hours based on MC values
-  const hourlyProductivity = new Map();
+  const hourlyMC = new Map();
   
   data.forEach(item => {
-    if (item.productivity > 0) {
+    if (item.mcValue !== null) {
       const key = `${item.day}-${item.hour}`;
-      if (!hourlyProductivity.has(key) || hourlyProductivity.get(key) < item.productivity) {
-        hourlyProductivity.set(key, item.productivity);
+      if (!hourlyMC.has(key) || hourlyMC.get(key) < item.mcValue) {
+        hourlyMC.set(key, item.mcValue);
       }
     }
   });
 
   // Get top productive hours
-  const sortedHours = Array.from(hourlyProductivity.entries())
+  const sortedHours = Array.from(hourlyMC.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
-  const mostProductiveHours = sortedHours.map(([key, productivity]) => {
+  const mostProductiveHours = sortedHours.map(([key, mcValue]) => {
     const [day, hour] = key.split('-');
-    return { day, hour: parseInt(hour), productivity };
+    return { day, hour: parseInt(hour), mcValue };
   });
 
-  // Calculate average productivity by day of week
-  const dayProductivity = new Map();
+  // Calculate average MC by day of week
+  const dayMC = new Map();
   daysOfWeek.forEach(day => {
-    const dayData = data.filter(item => item.day === day && item.productivity > 0);
-    const avgProductivity = dayData.length > 0 
-      ? dayData.reduce((sum, item) => sum + item.productivity, 0) / dayData.length 
+    const dayData = data.filter(item => item.day === day && item.mcValue !== null);
+    const avgMC = dayData.length > 0 
+      ? dayData.reduce((sum, item) => sum + item.mcValue, 0) / dayData.length 
       : 0;
-    dayProductivity.set(day, avgProductivity);
+    dayMC.set(day, avgMC);
   });
 
-  const bestDay = Array.from(dayProductivity.entries())
+  const bestDay = Array.from(dayMC.entries())
     .sort((a, b) => b[1] - a[1])[0];
-
-  // Calculate deep work insights
-  const deepWorkHours = new Map();
-  data.forEach(item => {
-    if (item.deepWorkMinutes > 0) {
-      const key = `${item.day}-${item.hour}`;
-      if (!deepWorkHours.has(key)) {
-        deepWorkHours.set(key, { minutes: 0, tasks: 0, count: 0 });
-      }
-      const current = deepWorkHours.get(key);
-      current.minutes += item.deepWorkMinutes;
-      current.tasks += item.tasksCompleted;
-      current.count += 1;
-    }
-  });
-
-  // Find best deep work hours
-  const bestDeepWorkHours = Array.from(deepWorkHours.entries())
-    .map(([key, data]) => {
-      const [day, hour] = key.split('-');
-      return {
-        day,
-        hour: parseInt(hour),
-        avgMinutes: data.minutes / data.count,
-        avgTasks: data.tasks / data.count,
-        sessions: data.count
-      };
-    })
-    .sort((a, b) => b.avgMinutes - a.avgMinutes)
-    .slice(0, 3);
 
   // Generate MC-based recommendations
   const recommendations = [];
@@ -295,23 +246,14 @@ function calculateInsights(data: any[], mcAnalysis?: any) {
   if (mostProductiveHours.length > 0) {
     recommendations.push({
       type: 'optimal_hours',
-      title: 'Your Optimal Power Hours (MC-based)',
-      description: `Based on your Mood Composite patterns, your most productive hours are: ${mostProductiveHours.map(item => `${item.day}s at ${item.hour}:00 (${Math.round(item.productivity * 100)}% productivity)`).join(', ')}`,
+      title: 'Your Optimal Power Hours',
+      description: `Your highest Mood Composite is during: ${mostProductiveHours.map(item => `${item.day}s at ${item.hour}:00 (MC: ${item.mcValue.toFixed(2)})`).join(', ')}`,
       priority: 'high'
     });
   }
 
-  if (bestDeepWorkHours.length > 0) {
-    recommendations.push({
-      type: 'deep_work_schedule',
-      title: 'Schedule Deep Work Sessions',
-      description: `Your best deep work times are ${bestDeepWorkHours[0].day}s at ${bestDeepWorkHours[0].hour}:00 (avg ${Math.round(bestDeepWorkHours[0].avgMinutes)} min sessions)`,
-      priority: 'medium'
-    });
-  }
-
   // MC-specific insights
-  const mcInsights = data.filter(item => item.mcValue !== undefined && item.mcValue !== 0);
+  const mcInsights = data.filter(item => item.mcValue !== null);
   if (mcInsights.length > 0) {
     const avgMC = mcInsights.reduce((sum, item) => sum + item.mcValue, 0) / mcInsights.length;
     recommendations.push({
@@ -324,12 +266,12 @@ function calculateInsights(data: any[], mcAnalysis?: any) {
 
   return {
     mostProductiveHours,
-    bestDay: bestDay ? { day: bestDay[0], productivity: bestDay[1] } : null,
-    bestDeepWorkHours,
+    bestDay: bestDay ? { day: bestDay[0], mcValue: bestDay[1] } : null,
+    bestDeepWorkHours: [],
     recommendations,
     totalDataPoints: data.length,
-    productiveDataPoints: data.filter(item => item.productivity > 0).length,
-    deepWorkDataPoints: data.filter(item => item.deepWorkMinutes > 0).length,
-    mcDataPoints: data.filter(item => item.mcValue !== undefined && item.mcValue !== 0).length
+    productiveDataPoints: data.filter(item => item.mcValue !== null).length,
+    deepWorkDataPoints: 0,
+    mcDataPoints: data.filter(item => item.mcValue !== null).length
   };
 }

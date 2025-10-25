@@ -6,9 +6,7 @@ import { motion } from 'framer-motion';
 interface PowerHoursData {
   day: string;
   hour: number;
-  productivity: number; // 0-1 scale
-  deepWorkMinutes: number;
-  tasksCompleted: number;
+  mcValue: number | null; // MC (Mood Composite) value, null for empty cells
 }
 
 interface PowerHoursHeatmapProps {
@@ -68,29 +66,35 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
     dataMap.set(key, item);
   });
 
-  // Get productivity levels for color coding
-  const getProductivityLevel = (day: string, hour: number) => {
+  // Get MC value
+  const getMCValue = (day: string, hour: number) => {
     const key = `${day}-${hour}`;
     const item = dataMap.get(key);
-    if (!item) return 0;
-    return item.productivity;
+    if (!item || item.mcValue === null) return null;
+    return item.mcValue;
   };
 
-  const getColorClass = (productivity: number) => {
-    if (productivity === 0) return 'bg-slate-700/30';
-    if (productivity <= 0.25) return 'bg-blue-400/30';    // Light blue - Low productivity
-    if (productivity <= 0.5) return 'bg-blue-500/50';     // Medium blue - Low-medium productivity
-    if (productivity <= 0.75) return 'bg-green-500/60';   // Green - Medium-high productivity
-    if (productivity <= 0.9) return 'bg-yellow-500/80';   // Yellow - High productivity
-    return 'bg-orange-500';                               // Orange - Very high productivity
+  // Normalize MC from -2 to 2 range to 0-1 for color coding
+  const normalizeMC = (mc: number) => {
+    return Math.max(0, Math.min(1, (mc + 2) / 4));
+  };
+
+  const getColorClass = (mcValue: number | null) => {
+    if (mcValue === null) return 'bg-slate-700/30'; // Grey for empty cells
+    
+    const normalized = normalizeMC(mcValue);
+    // Heatmap color gradient: white (low) -> light red -> dark red (high)
+    if (normalized <= 0.33) return 'bg-white';            // Low MC - White
+    if (normalized <= 0.66) return 'bg-red-300';          // Medium MC - Light red
+    return 'bg-red-600';                                   // High MC - Dark red
   };
 
   const getTooltipContent = (day: string, hour: number) => {
     const key = `${day}-${hour}`;
     const item = dataMap.get(key);
-    if (!item) return `${day} ${hour}:00 - No data`;
+    if (!item || item.mcValue === null) return `${day} ${hour}:00 - No data`;
     
-    return `${day} ${hour}:00 - Productivity: ${Math.round(item.productivity * 100)}% | Deep Work: ${item.deepWorkMinutes}min | Tasks: ${item.tasksCompleted}`;
+    return `${day} ${hour}:00 - MC: ${item.mcValue.toFixed(2)}`;
   };
 
   return (
@@ -118,16 +122,14 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
       <div className="space-y-4">
         {/* Legend */}
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-400">Less productive</span>
+          <span className="text-slate-400">Lower MC</span>
           <div className="flex items-center space-x-1">
             <div className="w-3 h-3 bg-slate-700/30 rounded"></div>
-            <div className="w-3 h-3 bg-blue-400/30 rounded"></div>
-            <div className="w-3 h-3 bg-blue-500/50 rounded"></div>
-            <div className="w-3 h-3 bg-green-500/60 rounded"></div>
-            <div className="w-3 h-3 bg-yellow-500/80 rounded"></div>
-            <div className="w-3 h-3 bg-orange-500 rounded"></div>
+            <div className="w-3 h-3 bg-white border border-slate-600 rounded"></div>
+            <div className="w-3 h-3 bg-red-300 rounded"></div>
+            <div className="w-3 h-3 bg-red-600 rounded"></div>
           </div>
-          <span className="text-slate-400">Most productive</span>
+          <span className="text-slate-400">Higher MC</span>
         </div>
 
         {/* Heatmap Grid */}
@@ -147,7 +149,7 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
                 {day}
               </div>
               {hours.map(hour => {
-                const productivity = getProductivityLevel(day, hour);
+                const mcValue = getMCValue(day, hour);
                 return (
                   <motion.div
                     key={`${day}-${hour}`}
@@ -157,7 +159,7 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
                       delay: (days.indexOf(day) * 24 + hour) * 0.001,
                       duration: 0.3 
                     }}
-                    className={`w-4 h-4 rounded-sm cursor-pointer transition-all duration-200 hover:scale-110 ${getColorClass(productivity)}`}
+                    className={`w-4 h-4 rounded-sm cursor-pointer transition-all duration-200 hover:scale-110 ${getColorClass(mcValue)}`}
                     title={getTooltipContent(day, hour)}
                     whileHover={{ scale: 1.2 }}
                   />
@@ -181,7 +183,7 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
           <div className="text-sm text-slate-300 space-y-1">
             {data.length > 0 ? (
               <>
-                <p>• Your most productive hours are when you're in deep work mode</p>
+                <p>• Your most productive hours are when your Mood Composite is highest</p>
                 <p>• Focus on high-priority tasks during your power hours</p>
                 <p>• Schedule breaks during your less productive times</p>
               </>

@@ -37,6 +37,7 @@ export default function StatsPage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [userPreferences, setUserPreferences] = useState<any>(null);
   const [networkTimeRange, setNetworkTimeRange] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
+  const [powerHoursWindow, setPowerHoursWindow] = useState<'weekly' | 'monthly' | 'yearly'>('weekly');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -113,9 +114,9 @@ export default function StatsPage() {
           setDriversLoading(false);
         }
 
-        // Fetch Power Hours data
+        // Fetch Power Hours data based on selected window
         try {
-          const powerHoursResponse = await fetch('/api/power-hours?userId=dummy-user&days=14');
+          const powerHoursResponse = await fetch(`/api/power-hours?userId=dummy-user&window=${powerHoursWindow}`);
           if (powerHoursResponse.ok) {
             const powerHoursData = await powerHoursResponse.json();
             setPowerHoursData(powerHoursData);
@@ -136,7 +137,7 @@ export default function StatsPage() {
     };
 
     fetchData();
-  }, []);
+  }, [powerHoursWindow]);
 
   if (loading) {
     return (
@@ -237,10 +238,46 @@ export default function StatsPage() {
           transition={{ duration: 0.6, delay: 0.25 }}
           className="mb-12"
         >
-          <PowerHoursHeatmap 
-            data={powerHoursData?.data || []} 
-            loading={powerHoursLoading} 
-          />
+          <div className="relative bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-purple-500/20 p-6 shadow-lg">
+            {/* Time Window Selector */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <span className="mr-2 text-3xl">⚡</span>
+                Power Hours
+              </h2>
+
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-slate-300">Window:</span>
+                <div className="flex bg-slate-700/50 backdrop-blur-sm rounded-lg p-1 border border-blue-500/20">
+                  {[
+                    { value: 'weekly', label: 'Week', icon: '📊' },
+                    { value: 'monthly', label: 'Month', icon: '📈' },
+                    { value: 'yearly', label: 'Year', icon: '🗓️' }
+                  ].map((option) => (
+                    <motion.button
+                      key={option.value}
+                      onClick={() => setPowerHoursWindow(option.value as any)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
+                        powerHoursWindow === option.value
+                          ? 'bg-blue-500/30 text-white shadow-lg'
+                          : 'text-slate-300 hover:text-white hover:bg-blue-500/20'
+                      }`}
+                    >
+                      <span className="mr-1">{option.icon}</span>
+                      {option.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <PowerHoursHeatmap 
+              data={powerHoursData?.data || []} 
+              loading={powerHoursLoading} 
+            />
+          </div>
         </motion.div>
 
 
