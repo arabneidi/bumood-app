@@ -63,7 +63,7 @@ export default function Home() {
           fetch("/api/goals"),
           fetch("/api/user?userId=dummy-user"),
           fetch(`/api/dss?userId=dummy-user&date=${new Date().toISOString().split('T')[0]}`),
-          fetch("/api/mood-composite?userId=dummy-user")
+          fetch("/api/mood-composite?userId=dummy-user&calculateCurrent=true")
         ]);
 
         // Process mood entries
@@ -191,7 +191,16 @@ export default function Home() {
         if (mcRes.ok) {
           const data = await mcRes.json();
           if (data.success && data.data) {
-            setMoodComposite(data.data.trends.moodComposites[data.data.trends.moodComposites.length - 1] || null);
+            // Use currentMC if calculated, otherwise fallback to last trend value
+            const mcValue = data.data.currentMC !== undefined ? data.data.currentMC : 
+                           (data.data.trends.moodComposites[data.data.trends.moodComposites.length - 1] || null);
+            console.log('🔵 Dashboard setting moodComposite:', {
+              currentMC: data.data.currentMC,
+              lastTrendMC: data.data.trends.moodComposites[data.data.trends.moodComposites.length - 1],
+              finalMC: mcValue,
+              arrayLength: data.data.trends.moodComposites.length
+            });
+            setMoodComposite(mcValue);
             setCurrentTimeBucket(data.data.currentTimeBucket);
           }
           setMcLoading(false);

@@ -58,10 +58,13 @@ export async function calculateMoodComposite(
 
   console.log(`🔵 Historical range: ${fourteenDaysAgo.toISOString()} to ${date.toISOString()}`);
 
-  const historicalData = await prisma.moodEntry.findMany({
+  // For Dashboard MC, we need to find entries that:
+  // 1. Were created in the current time bucket, OR
+  // 2. Have activities in the current time bucket (stored in selectedTimeSlots or activityEntries)
+  // Since selectedTimeSlots is a JSON string, we'll fetch all entries and filter in code
+  const allEntries = await prisma.moodEntry.findMany({
     where: {
       userId,
-      timeBucket,
       createdAt: {
         gte: fourteenDaysAgo,
         lt: date
@@ -72,13 +75,73 @@ export async function calculateMoodComposite(
     }
   });
 
+  // Filter to entries that belong to the current time bucket
+  // Dashboard MC uses ACTIVITY TIME, not creation time
+  const historicalData = allEntries.filter(entry => {
+    // Check if it has activities in the current time bucket (based on activity time, not creation time)
+    if (entry.selectedTimeSlots) {
+      try {
+        const slots = JSON.parse(entry.selectedTimeSlots);
+        // Check if any slot matches the current time bucket (e.g., "evening-18" for evening bucket)
+        const bucketPrefix = timeBucket + '-';
+        const hasActivitiesInBucket = Array.isArray(slots) && slots.some((slot: string) => slot.startsWith(bucketPrefix));
+        
+        if (hasActivitiesInBucket) {
+          console.log(`🔵 Entry match: Created in ${entry.timeBucket}, has activities in ${timeBucket} bucket:`, slots.filter((s: string) => s.startsWith(bucketPrefix)));
+        }
+        
+        return hasActivitiesInBucket;
+      } catch (e) {
+        // If parsing fails, skip this entry
+        return false;
+      }
+    }
+    
+    return false;
+  });
+
   console.log(`🔵 Found ${historicalData.length} historical entries for time bucket '${timeBucket}'`);
+  
+  // Group by date and average multiple entries on same day
+  const dailyAverages = new Map<string, { valence: number, energy: number, focus: number, stress: number, count: number }>();
+  
+  historicalData.forEach(entry => {
+    const dateKey = entry.createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    if (!dailyAverages.has(dateKey)) {
+      dailyAverages.set(dateKey, { valence: 0, energy: 0, focus: 0, stress: 0, count: 0 });
+    }
+    
+    const dayData = dailyAverages.get(dateKey)!;
+    dayData.valence += entry.valence;
+    dayData.energy += entry.energy;
+    dayData.focus += entry.focus;
+    dayData.stress += entry.stress;
+    dayData.count += 1;
+  });
+  
+  // Calculate daily averages
+  const averagedData = Array.from(dailyAverages.values()).map(dayData => ({
+    valence: dayData.valence / dayData.count,
+    energy: dayData.energy / dayData.count,
+    focus: dayData.focus / dayData.count,
+    stress: dayData.stress / dayData.count
+  }));
+  
+  console.log(`🔵 Averaged to ${averagedData.length} unique days (from ${historicalData.length} entries)`);
+  
+  // Print historical data for debugging
+  if (averagedData.length > 0) {
+    console.log(`🔵 Historical data for ${timeBucket}:`, averagedData);
+  } else {
+    console.log(`🔵 No historical data found for time bucket '${timeBucket}'`);
+  }
 
   // Extract historical values
-  const valenceHistory = historicalData.map(entry => entry.valence);
-  const energyHistory = historicalData.map(entry => entry.energy);
-  const focusHistory = historicalData.map(entry => entry.focus);
-  const stressHistory = historicalData.map(entry => entry.stress);
+  const valenceHistory = averagedData.map(entry => entry.valence);
+  const energyHistory = averagedData.map(entry => entry.energy);
+  const focusHistory = averagedData.map(entry => entry.focus);
+  const stressHistory = averagedData.map(entry => entry.stress);
 
   // Calculate z-scores
   const zV = calculateZScore(valence, valenceHistory);

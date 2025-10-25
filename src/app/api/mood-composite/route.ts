@@ -5,16 +5,47 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'dummy-user';
-    const days = parseInt(searchParams.get('days') || '7'); // Reduced from 30 to 7 days for faster loading
+    const days = parseInt(searchParams.get('days') || '14'); // Dashboard MC uses 14-day window
+    const calculateCurrent = searchParams.get('calculateCurrent') === 'true';
 
     // Get Mood Composite trends
     const trends = await getMoodCompositeTrends(userId, days);
+    
+    console.log('📊 Mood Composite API response:', {
+      moodCompositesCount: trends.moodComposites.length,
+      lastMC: trends.moodComposites[trends.moodComposites.length - 1],
+      allMCs: trends.moodComposites
+    });
+    
+    // If requested, calculate MC for current time using latest mood values
+    let currentMC = null;
+    if (calculateCurrent && trends.moodComposites.length > 0) {
+      // Get the most recent entry's mood values
+      const { db } = require('@/lib/db');
+      const latestEntry = await db.moodEntry.findFirst({
+        where: { userId },
+        orderBy: { createdAt: 'desc' }
+      });
+      
+      if (latestEntry) {
+        const mcResult = await calculateMoodComposite(
+          userId,
+          latestEntry.valence,
+          latestEntry.energy,
+          latestEntry.focus,
+          latestEntry.stress,
+          new Date() // Current time
+        );
+        currentMC = mcResult.moodComposite;
+      }
+    }
     
     return NextResponse.json({
       success: true,
       data: {
         trends,
-        currentTimeBucket: getCurrentTimeBucket()
+        currentTimeBucket: getCurrentTimeBucket(),
+        currentMC
       }
     });
   } catch (error) {
