@@ -76,42 +76,55 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
   const { learningMomentum, recoveryIndex, connectionScore } = data.components;
   const { zLM, zRI, zCN } = data.zScores;
   
-  // Prepare data for recharts radar chart - use z-scores directly
-  // Find the maximum absolute value to set appropriate scale
+  // Normalize z-scores to -1 to 1 range for better visualization
+  // Find the maximum absolute z-score to normalize against
   const maxAbsValue = Math.max(Math.abs(zLM), Math.abs(zRI), Math.abs(zCN));
-  const scaleMax = Math.ceil(maxAbsValue * 1.2); // Add 20% padding
+  
+  // Normalize each z-score to -1 to 1 range
+  const normalizeValue = (value: number) => {
+    if (maxAbsValue === 0) return 0;
+    return value / maxAbsValue;
+  };
+  
+  const normalized_zLM = normalizeValue(zLM);
+  const normalized_zRI = normalizeValue(zRI);
+  const normalized_zCN = normalizeValue(zCN);
+  
+  const scaleMax = 1; // Fixed scale from -1 to 1
   
   const chartData = [
     {
       subject: 'zLM',
-      value: zLM,
+      value: normalized_zLM,
       fullMark: scaleMax
     },
     {
       subject: 'zRI', 
-      value: zRI,
+      value: normalized_zRI,
       fullMark: scaleMax
     },
     {
       subject: 'zCN',
-      value: zCN,
+      value: normalized_zCN,
       fullMark: scaleMax
     }
   ];
 
   // Debug logging
-  console.log('🎯 DSS Radar Debug (raw z-scores):', {
+  console.log('🎯 DSS Radar Debug:', {
     rawValues: { learningMomentum, recoveryIndex, connectionScore },
-    zScores: { zLM, zRI, zCN },
+    originalZScores: { zLM, zRI, zCN },
+    normalizedZScores: { normalized_zLM, normalized_zRI, normalized_zCN },
+    maxAbsValue: maxAbsValue,
     scaleMax: scaleMax,
     chartData: chartData
   });
   
   console.log('🎯 DSS Radar Chart Data for Display:', {
-    'Learning Momentum': `${zLM.toFixed(2)} (${learningMomentum} raw)`,
-    'Recovery Index': `${zRI.toFixed(2)} (${recoveryIndex} raw)`,
-    'Connection': `${zCN.toFixed(2)} (${connectionScore} raw)`,
-    'Scale Range': `-${scaleMax} to +${scaleMax}`
+    'Learning Momentum': `z=${zLM.toFixed(2)} → normalized=${normalized_zLM.toFixed(2)}`,
+    'Recovery Index': `z=${zRI.toFixed(2)} → normalized=${normalized_zRI.toFixed(2)}`,
+    'Connection': `z=${zCN.toFixed(2)} → normalized=${normalized_zCN.toFixed(2)}`,
+    'Scale Range': `-${scaleMax} to +${scaleMax} (normalized)`
   });
 
   return (
