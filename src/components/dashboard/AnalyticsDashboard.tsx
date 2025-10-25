@@ -107,28 +107,56 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
   const avgStress = data.reduce((sum, entry) => sum + entry.stress, 0) / totalEntries;
   const avgSleep = data.reduce((sum, entry) => sum + (entry.sleep || 0), 0) / totalEntries;
 
-  // Calculate trends (last 7 days vs previous 7 days)
-  const last7Days = data.slice(0, 7);
-  const previous7Days = data.slice(7, 14);
+  // Calculate trends by grouping entries by date and averaging per day
+  // Group by date (YYYY-MM-DD format)
+  const entriesByDate = data.reduce((acc, entry) => {
+    const dateKey = new Date(entry.createdAt).toISOString().split('T')[0];
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
+    }
+    acc[dateKey].push(entry);
+    return acc;
+  }, {} as Record<string, typeof data>);
+
+  // Calculate daily averages
+  const dailyAverages = Object.entries(entriesByDate).map(([date, entries]) => ({
+    date,
+    valence: entries.reduce((sum, e) => sum + e.valence, 0) / entries.length,
+    energy: entries.reduce((sum, e) => sum + e.energy, 0) / entries.length,
+    focus: entries.reduce((sum, e) => sum + e.focus, 0) / entries.length,
+    stress: entries.reduce((sum, e) => sum + e.stress, 0) / entries.length,
+  })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort newest first
+
+  // Get last 7 days and previous 7 days based on calendar dates
+  const last7Days = dailyAverages.slice(0, 7);
+  const previous7Days = dailyAverages.slice(7, 14);
   
-  // Valence trend
-  const last7AvgValence = last7Days.length > 0 ? last7Days.reduce((sum, entry) => sum + entry.valence, 0) / last7Days.length : 0;
-  const previous7AvgValence = previous7Days.length > 0 ? previous7Days.reduce((sum, entry) => sum + entry.valence, 0) / previous7Days.length : 0;
+  console.log('📊 Stats Analytics - Daily averages:', {
+    totalDays: dailyAverages.length,
+    last7Dates: last7Days.map(d => d.date),
+    previous7Dates: previous7Days.map(d => d.date),
+    last7AvgValence: last7Days.reduce((sum, d) => sum + d.valence, 0) / last7Days.length,
+    previous7AvgValence: previous7Days.reduce((sum, d) => sum + d.valence, 0) / previous7Days.length
+  });
+  
+  // Valence trend (calculated from daily averages)
+  const last7AvgValence = last7Days.length > 0 ? last7Days.reduce((sum, day) => sum + day.valence, 0) / last7Days.length : 0;
+  const previous7AvgValence = previous7Days.length > 0 ? previous7Days.reduce((sum, day) => sum + day.valence, 0) / previous7Days.length : 0;
   const valenceTrend = last7AvgValence - previous7AvgValence;
   
   // Energy trend
-  const last7AvgEnergy = last7Days.length > 0 ? last7Days.reduce((sum, entry) => sum + entry.energy, 0) / last7Days.length : 0;
-  const previous7AvgEnergy = previous7Days.length > 0 ? previous7Days.reduce((sum, entry) => sum + entry.energy, 0) / previous7Days.length : 0;
+  const last7AvgEnergy = last7Days.length > 0 ? last7Days.reduce((sum, day) => sum + day.energy, 0) / last7Days.length : 0;
+  const previous7AvgEnergy = previous7Days.length > 0 ? previous7Days.reduce((sum, day) => sum + day.energy, 0) / previous7Days.length : 0;
   const energyTrend = last7AvgEnergy - previous7AvgEnergy;
   
   // Focus trend
-  const last7AvgFocus = last7Days.length > 0 ? last7Days.reduce((sum, entry) => sum + entry.focus, 0) / last7Days.length : 0;
-  const previous7AvgFocus = previous7Days.length > 0 ? previous7Days.reduce((sum, entry) => sum + entry.focus, 0) / previous7Days.length : 0;
+  const last7AvgFocus = last7Days.length > 0 ? last7Days.reduce((sum, day) => sum + day.focus, 0) / last7Days.length : 0;
+  const previous7AvgFocus = previous7Days.length > 0 ? previous7Days.reduce((sum, day) => sum + day.focus, 0) / previous7Days.length : 0;
   const focusTrend = last7AvgFocus - previous7AvgFocus;
   
   // Stress trend (note: for stress, lower is better, so we invert the trend)
-  const last7AvgStress = last7Days.length > 0 ? last7Days.reduce((sum, entry) => sum + entry.stress, 0) / last7Days.length : 0;
-  const previous7AvgStress = previous7Days.length > 0 ? previous7Days.reduce((sum, entry) => sum + entry.stress, 0) / previous7Days.length : 0;
+  const last7AvgStress = last7Days.length > 0 ? last7Days.reduce((sum, day) => sum + day.stress, 0) / last7Days.length : 0;
+  const previous7AvgStress = previous7Days.length > 0 ? previous7Days.reduce((sum, day) => sum + day.stress, 0) / previous7Days.length : 0;
   const stressTrend = previous7AvgStress - last7AvgStress; // Inverted: lower stress is better
 
 
