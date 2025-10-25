@@ -66,6 +66,17 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
     dataMap.set(key, item);
   });
 
+  // Calculate dynamic min/max MC values from actual data
+  const mcValues = data
+    .filter(item => item.mcValue !== null)
+    .map(item => item.mcValue as number);
+  
+  const minMC = mcValues.length > 0 ? Math.min(...mcValues) : -2;
+  const maxMC = mcValues.length > 0 ? Math.max(...mcValues) : 2;
+  const range = maxMC - minMC;
+
+  console.log('📊 Power Hours Dynamic Range:', { minMC, maxMC, range });
+
   // Get MC value
   const getMCValue = (day: string, hour: number) => {
     const key = `${day}-${hour}`;
@@ -74,9 +85,10 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
     return item.mcValue;
   };
 
-  // Normalize MC from -2 to 2 range to 0-1 for color coding
+  // Normalize MC dynamically based on actual min/max in the data
   const normalizeMC = (mc: number) => {
-    return Math.max(0, Math.min(1, (mc + 2) / 4));
+    if (range === 0) return 0.5; // All values are the same, use middle
+    return Math.max(0, Math.min(1, (mc - minMC) / range));
   };
 
   const getColorClass = (mcValue: number | null) => {
@@ -84,6 +96,7 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
     
     const normalized = normalizeMC(mcValue);
     // Heatmap color gradient: white (low) -> light red -> dark red (high)
+    // Divide into 3 equal ranges
     if (normalized <= 0.33) return 'bg-white';            // Low MC - White
     if (normalized <= 0.66) return 'bg-red-300';          // Medium MC - Light red
     return 'bg-red-600';                                   // High MC - Dark red

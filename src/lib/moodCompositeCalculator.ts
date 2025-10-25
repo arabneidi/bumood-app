@@ -105,6 +105,7 @@ function calculateZScore(value: number, history: number[]): number {
   const validHistory = history.filter(h => h !== null && h !== undefined && !isNaN(h));
   
   // If fewer than 5 historical entries, return 0 to avoid unstable swings
+  // This means we need at least 5 historical data points before we can calculate z-scores
   if (validHistory.length < 5) {
     return 0;
   }
