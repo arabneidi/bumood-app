@@ -40,14 +40,14 @@ export async function POST(request: NextRequest) {
           messages: [
             {
               role: "system",
-              content: "You are a clinical psychologist and behavioral analyst. Provide deep, analytical psychological insights based on behavioral data. Be profound, insightful, and clinically informed. Avoid generic advice and focus on underlying psychological mechanisms."
+              content: "You are a clinical psychologist and behavioral analyst. Provide deep, analytical psychological insights based on behavioral data. Be profound, insightful, and clinically informed. Avoid generic advice and focus on underlying psychological mechanisms.\n\nIMPORTANT: Format your response as clean, readable HTML with proper structure. Use <h3> for main sections, <h4> for subsections, <p> for paragraphs, <ul> and <li> for lists, and <strong> for emphasis. Make it visually appealing and easy to read."
             },
             {
               role: "user",
               content: prompt
             }
           ],
-          max_tokens: 1500,
+          max_tokens: 2000,
           temperature: 0.7,
           seed: Math.floor(Math.random() * 1000000)
         })

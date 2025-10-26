@@ -140,7 +140,9 @@ IMPORTANT ANALYTICAL GUIDELINES:
 - Avoid generic advice - provide specific psychological insights
 - Consider the individual's unique psychological makeup
 
-TONE: Professional, analytical, insightful, and clinically informed. Write as if providing a psychological assessment report to a colleague.`;
+TONE: Professional, analytical, insightful, and clinically informed. Write as if providing a psychological assessment report to a colleague.
+
+RESPONSE FORMAT: Provide a concise, well-structured analysis focusing on the most important insights. Use clear headings and bullet points for easy reading. Keep the response focused and actionable.`;
 
     // Call AI service
     const aiResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/ai-service`, {
