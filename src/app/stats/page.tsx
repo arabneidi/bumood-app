@@ -290,11 +290,25 @@ export default function StatsPage() {
           <DriversCard data={driversData} loading={driversLoading} userInfo={userInfo} />
         </motion.div>
 
+        {/* Period Insights Section */}
+        {userInfo?.gender === 'female' && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="mb-12"
+          >
+            <div className="relative bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-purple-500/20 p-6 shadow-lg">
+              <PeriodInsights moodEntries={moodEntries} userInfo={userInfo} />
+            </div>
+          </motion.div>
+        )}
+
         {/* Network Graph Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
           className="mb-12"
         >
           <div className="relative bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-purple-500/20 p-6 shadow-lg">
@@ -345,20 +359,6 @@ export default function StatsPage() {
             />
           </div>
         </motion.div>
-
-        {/* Period Insights Section */}
-        {userInfo?.gender === 'female' && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="mb-12"
-          >
-            <div className="relative bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-purple-500/20 p-6 shadow-lg">
-              <PeriodInsights moodEntries={moodEntries} userInfo={userInfo} />
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );

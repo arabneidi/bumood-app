@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import dynamic from 'next/dynamic';
 
@@ -46,6 +46,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showLegend, setShowLegend] = useState<boolean>(false);
   const [showLabels, setShowLabels] = useState<boolean>(true);
+  const [showSubcategories, setShowSubcategories] = useState<boolean>(true);
   const graphRef = React.useRef<any>(null);
 
   useEffect(() => {
@@ -136,6 +137,30 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
       }
     });
 
+    // Add subcategory nodes from mood entries
+    const subcategoryFreq: { [key: string]: number } = {};
+    filteredEntries.forEach(entry => {
+      if (entry.selectedSubcategories) {
+        const subcategories = Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories : JSON.parse(entry.selectedSubcategories || '[]');
+        subcategories.forEach((subcategory: string) => {
+          subcategoryFreq[subcategory] = (subcategoryFreq[subcategory] || 0) + 1;
+        });
+      }
+    });
+
+    // Add subcategory nodes
+    Object.entries(subcategoryFreq).forEach(([subcategory, freq]) => {
+      nodes.push({
+        id: subcategory,
+        label: subcategory,
+        category: 'subcategory',
+        frequency: freq,
+        val: freq * 2,
+        x: Math.random() * 800 + 100,
+        y: Math.random() * 600 + 100
+      });
+    });
+
     // Connect co-occurring activities
     const coOccurrenceMap: { [key: string]: { [key: string]: number } } = {};
     
@@ -174,6 +199,27 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
       });
     });
 
+    // Connect activities to their subcategories
+    filteredEntries.forEach(entry => {
+      if (entry.activities && entry.selectedSubcategories) {
+        const activities = Array.isArray(entry.activities) ? entry.activities : JSON.parse(entry.activities || '[]');
+        const subcategories = Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories : JSON.parse(entry.selectedSubcategories || '[]');
+        
+        activities.forEach((activity: string) => {
+          subcategories.forEach((subcategory: string) => {
+            // Check if both nodes exist
+            if (nodes.some(n => n.id === activity) && nodes.some(n => n.id === subcategory)) {
+              links.push({
+                source: activity,
+                target: subcategory,
+                strength: 0.5
+              });
+            }
+          });
+        });
+      }
+    });
+
     setGraphData({ nodes, links });
   };
 
@@ -196,6 +242,23 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
     // Zoom to node on click
     console.log('Node clicked:', node);
   }, []);
+
+  // Filter graph data based on subcategory visibility
+  const filteredGraphData = useMemo(() => {
+    const filteredNodes = graphData.nodes.filter(node => showSubcategories || node.category !== 'subcategory');
+    const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
+    
+    // Filter links to only include those where both source and target are in the filtered nodes
+    const filteredLinks = graphData.links.filter(link => {
+      // Handle both string and object IDs
+      const sourceId = typeof link.source === 'string' ? link.source : (link.source as any).id;
+      const targetId = typeof link.target === 'string' ? link.target : (link.target as any).id;
+      
+      return filteredNodeIds.has(sourceId) && filteredNodeIds.has(targetId);
+    });
+    
+    return { nodes: filteredNodes, links: filteredLinks };
+  }, [graphData, showSubcategories]);
 
   if (graphData.nodes.length === 0) {
     return (
@@ -221,7 +284,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
       )}
       
       <div 
-        className={`${isFullscreen ? 'fixed top-0 left-0 w-full h-full z-[9999]' : 'w-full h-[800px]'} bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 ${isFullscreen ? 'rounded-none' : 'rounded-2xl'} relative shadow-2xl flex flex-col`}
+        className={`${isFullscreen ? 'fixed top-0 left-0 w-full h-full z-[9999]' : 'w-full h-[800px]'} bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 ${isFullscreen ? 'rounded-none' : 'rounded-2xl'} shadow-2xl flex flex-col relative overflow-hidden`}
       >
         {/* Header */}
         <div className={`relative z-10 flex items-center justify-between p-6 ${isFullscreen ? 'border-b border-white/10 flex-shrink-0' : ''}`}>
@@ -238,25 +301,21 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
             </button>
             <button
               className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all font-medium"
-              onClick={() => setShowLegend(v => !v)}
+              onClick={() => setShowSubcategories(v => !v)}
             >
-              {showLegend ? 'Hide Legend' : 'Show Legend'}
-            </button>
-            <button
-              className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all font-medium"
-              onClick={() => setShowLabels(v => !v)}
-            >
-              {showLabels ? 'Hide Labels' : 'Show Labels'}
+              {showSubcategories ? 'Hide Subcategories' : 'Show Subcategories'}
             </button>
             {isFullscreen && <span className="hidden sm:inline text-sm text-indigo-200 ml-2">Drag nodes • Zoom with mouse wheel</span>}
           </div>
         </div>
         
         {/* Force Graph */}
-        <div className="flex-1 relative overflow-hidden" style={{ minHeight: 0 }}>
+        <div className="absolute inset-0" style={{ top: '80px', bottom: '100px' }}>
           <ForceGraph2D
             ref={graphRef}
-            graphData={graphData}
+            graphData={filteredGraphData}
+            width={undefined}
+            height={undefined}
             nodeCanvasObjectMode={() => 'after'}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
               const label = node.label || node.id;
