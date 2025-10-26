@@ -218,13 +218,20 @@ export default function NewEntry() {
 
     const fetchMoodEntries = async () => {
       try {
+        console.log('🔍 Fetching mood entries...');
         const response = await fetch('/api/mood-entries?userId=dummy-user');
+        console.log('📡 Mood entries response status:', response.status);
+        
         if (response.ok) {
           const entries = await response.json();
+          console.log('📊 Mood entries data received:', entries.length, 'entries');
+          console.log('📊 First entry:', entries[0]);
           setMoodEntries(entries);
+        } else {
+          console.error('❌ Failed to fetch mood entries:', response.status);
         }
       } catch (error) {
-        console.error('Error fetching mood entries:', error);
+        console.error('❌ Error fetching mood entries:', error);
       }
     };
     
