@@ -135,17 +135,26 @@ export default function DriversCard({ data, loading, userInfo }: DriversCardProp
           Activity Drivers
         </motion.h3>
 
-        {/* AI Insights Section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mt-6 pt-4 border-t border-slate-600/30"
-        >
+      </Card>
+
+      {/* Activity Drivers Chart */}
+      <ActivityDriversChart 
+        driversData={data} 
+        userInfo={userInfo}
+      />
+
+      {/* AI Insights Section */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="mt-8"
+      >
+        <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-purple-500/20">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Brain className="w-5 h-5 text-purple-500 mr-2" />
-              <h4 className="text-lg font-semibold text-purple-400">AI Insights</h4>
+              <h4 className="text-lg font-semibold text-purple-400">AI Psychological Analysis</h4>
             </div>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -193,14 +202,8 @@ export default function DriversCard({ data, loading, userInfo }: DriversCardProp
           <p className="text-xs text-slate-400 text-center mt-4">
             Analysis based on last 4 weeks • Updated {new Date(data.lastCalculated).toLocaleDateString()}
           </p>
-        </motion.div>
-      </Card>
-
-      {/* Activity Drivers Chart */}
-      <ActivityDriversChart 
-        driversData={data} 
-        userInfo={userInfo}
-      />
+        </Card>
+      </motion.div>
     </motion.div>
   );
 }
