@@ -121,7 +121,13 @@ export default function NewEntry() {
     caffeine: 0,
     alcohol: 0,
     // Date for past entries
-    entryDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+    entryDate: (() => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`; // YYYY-MM-DD format in local time
+    })(),
   });
 
   // Increment/Decrement helpers (no upper limit)

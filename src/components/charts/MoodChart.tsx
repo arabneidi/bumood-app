@@ -9,14 +9,32 @@ interface MoodChartProps {
 }
 
 export default function MoodChart({ data, type = 'line', height = 300 }: MoodChartProps) {
-  const chartData = data.slice(0, 14).reverse().map((entry, index) => ({
-    date: new Date(entry.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    mood: entry.valence,
-    energy: entry.energy,
-    focus: entry.focus,
-    stress: entry.stress,
-    sleep: entry.sleep,
-  }));
+  // Group entries by date and calculate daily averages
+  const entriesByDate = data.reduce((acc, entry) => {
+    const dateKey = new Date(entry.createdAt).toISOString().split('T')[0];
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
+    }
+    acc[dateKey].push(entry);
+    return acc;
+  }, {} as Record<string, typeof data>);
+
+  // Calculate daily averages
+  const dailyAverages = Object.entries(entriesByDate)
+    .map(([dateKey, entries]) => ({
+      dateKey,
+      date: new Date(dateKey).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      mood: entries.reduce((sum, e) => sum + e.valence, 0) / entries.length,
+      energy: entries.reduce((sum, e) => sum + e.energy, 0) / entries.length,
+      focus: entries.reduce((sum, e) => sum + e.focus, 0) / entries.length,
+      stress: entries.reduce((sum, e) => sum + e.stress, 0) / entries.length,
+      sleep: entries.reduce((sum, e) => sum + (e.sleep || 0), 0) / entries.length,
+    }))
+    .sort((a, b) => new Date(b.dateKey).getTime() - new Date(a.dateKey).getTime()) // Sort newest first
+    .slice(0, 14) // Take last 14 days
+    .reverse(); // Reverse to show oldest to newest
+
+  const chartData = dailyAverages;
 
   if (type === 'area') {
     return (
