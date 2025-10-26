@@ -269,18 +269,22 @@ export default function ProfilePage() {
           transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
           className="text-center mb-12"
         >
-          <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="inline-block mb-6"
+          <motion.h1 
+            className="text-6xl font-black mb-4"
+            animate={{ 
+              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+            }}
+            transition={{ duration: 3, repeat: Infinity }}
+            style={{
+              background: 'linear-gradient(45deg, #3b82f6, #6366f1, #8b5cf6, #a855f7, #3b82f6)',
+              backgroundSize: '400% 400%',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
           >
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full blur-lg opacity-75 animate-pulse"></div>
-              <div className="relative bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 p-6 rounded-full">
-                <User className="w-16 h-16 text-white" />
-              </div>
-            </div>
-          </motion.div>
+            Your Amazing Profile
+          </motion.h1>
           
           <div className="flex flex-col items-center gap-6">
             <div className="flex items-center gap-4">
@@ -387,6 +391,8 @@ export default function ProfilePage() {
               </motion.button>
             </div>
           </div>
+          
+        </motion.div>
 
         {/* Success Message */}
         <AnimatePresence>
