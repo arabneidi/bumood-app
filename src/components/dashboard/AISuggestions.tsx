@@ -30,32 +30,9 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
   const [actionStates, setActionStates] = useState<Record<string, { tried: boolean; helpful?: boolean }>>({});
   const [lastPayload, setLastPayload] = useState<UserMoodProfile | null>(null);
   const [showPayload, setShowPayload] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  // Load saved suggestions from localStorage on mount
-  useEffect(() => {
-    // Don't load suggestions if there are no mood entries
-    if (moodEntries.length === 0) {
-      setSuggestions([]);
-      return;
-    }
-
-    const savedSuggestions = localStorage.getItem('ai-suggestions');
-    if (savedSuggestions) {
-      try {
-        const parsed = JSON.parse(savedSuggestions);
-        setSuggestions(parsed);
-        console.log('📱 Loaded saved AI suggestions from localStorage');
-      } catch (error) {
-        console.error('Error loading saved suggestions:', error);
-        // If parsing fails, generate new suggestions
-        generateSuggestions();
-      }
-    } else {
-      // No saved suggestions, generate new ones
-      generateSuggestions();
-    }
-  }, [moodEntries.length]);
-
+  // Consolidated useEffect to handle all AI suggestions logic
   useEffect(() => {
     console.log('🤖 AI Suggestions useEffect triggered:', {
       hasNewMoodData,
@@ -70,15 +47,35 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
       setSuggestions([]);
       return;
     }
+
+    // Check if we should regenerate suggestions
+    const shouldRegenerate = hasNewMoodData || refreshTrigger;
     
-    // Only regenerate if we have new mood data OR manual refresh trigger
-    if (hasNewMoodData || refreshTrigger) {
-      console.log('🤖 AI Suggestions regenerating...');
+    if (shouldRegenerate && !isGenerating) {
+      console.log('🤖 AI Suggestions regenerating due to new data or manual trigger...');
       generateSuggestions();
+    } else if (shouldRegenerate && isGenerating) {
+      console.log('🚫 AI Suggestions already generating, skipping duplicate request');
     } else {
-      console.log('🤖 AI Suggestions keeping existing suggestions');
+      // Try to load from localStorage first
+      const savedSuggestions = localStorage.getItem('ai-suggestions');
+      if (savedSuggestions) {
+        try {
+          const parsed = JSON.parse(savedSuggestions);
+          setSuggestions(parsed);
+          console.log('📱 Loaded saved AI suggestions from localStorage');
+        } catch (error) {
+          console.error('Error loading saved suggestions:', error);
+          // If parsing fails, generate new suggestions
+          console.log('🤖 Generating new suggestions due to localStorage parse error...');
+          generateSuggestions();
+        }
+      } else {
+        // No saved suggestions, generate new ones
+        console.log('🤖 No saved suggestions, generating new ones...');
+        generateSuggestions();
+      }
     }
-    // If no new data and no refresh trigger, keep existing suggestions
   }, [moodEntries, currentMood, refreshTrigger, hasNewMoodData]);
 
   const generateSuggestions = async () => {
@@ -90,6 +87,13 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
       return;
     }
 
+    // Prevent duplicate requests
+    if (isGenerating) {
+      console.log('🚫 Already generating suggestions, skipping duplicate request');
+      return;
+    }
+
+    setIsGenerating(true);
     setLoading(true);
     setError(null);
     try {
@@ -190,8 +194,14 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
         reflection: latestTodayReflection
       };
 
-      console.log('Generating AI suggestions with profile (server-side):', userProfile);
+      console.log('🤖 Generating AI suggestions with profile (server-side):', userProfile);
       setLastPayload(userProfile);
+      
+      // Log the exact prompt being sent to AI
+      const { createOpenAIPrompt } = await import('@/lib/aiService');
+      const prompt = createOpenAIPrompt(userProfile);
+      console.log('📝 EXACT PROMPT SENT TO AI:', prompt);
+      
       const res = await fetch('/api/ai-suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -203,6 +213,9 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
       }
       const data = await res.json();
       const newSuggestions: AISuggestion[] = data.suggestions || [];
+      
+      // Log the AI response
+      console.log('🤖 AI RESPONSE:', data);
       
       // Clear existing action states for fresh suggestions
       setActionStates({});
@@ -222,6 +235,7 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
       setError('Failed to generate AI suggestions. Please try again.');
     } finally {
       setLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -298,6 +312,11 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
       if (response.ok) {
         const user = await response.json();
         
+        // Get period status from the most recent mood entry
+        const mostRecentEntry = moodEntries.length > 0 
+          ? moodEntries.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+          : null;
+        
         return {
           gender: user.gender,
           age: user.age,
@@ -307,15 +326,20 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
           height: user.height,
           weight: user.weight,
           timezone: user.timezone,
-          onPeriod: false, // This would come from the latest mood entry
-          periodDay: 0,
-          periodCycleLength: 28, // Default cycle length
+          onPeriod: mostRecentEntry?.onPeriod || false, // Get from actual mood entry
+          periodDay: mostRecentEntry?.periodDay || 0, // Get from actual mood entry
+          periodCycleLength: user.periodCycleLength || 28,
           periodSymptoms: []
         };
       }
     } catch (error) {
       console.error('Error fetching user info:', error);
     }
+    
+    // Get period status from the most recent mood entry even if user fetch fails
+    const mostRecentEntry = moodEntries.length > 0 
+      ? moodEntries.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+      : null;
     
     return {
       gender: undefined,
@@ -326,8 +350,8 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
       height: undefined,
       weight: undefined,
       timezone: undefined,
-      onPeriod: false,
-      periodDay: 0,
+      onPeriod: mostRecentEntry?.onPeriod || false, // Get from actual mood entry
+      periodDay: mostRecentEntry?.periodDay || 0, // Get from actual mood entry
       periodCycleLength: 28,
       periodSymptoms: []
     };

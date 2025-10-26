@@ -107,7 +107,13 @@ export async function GET(req: NextRequest) {
       },
       successfulSolutions: [],
       commonActivities: recentActivities,
-      timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening',
+      timeOfDay: (() => {
+        const hour = new Date().getHours();
+        if ([5, 6, 7, 8, 9, 10].includes(hour)) return 'morning';
+        if ([11, 12, 13, 14, 15, 16].includes(hour)) return 'midday';
+        if ([17, 18, 19, 20, 21, 22].includes(hour)) return 'evening';
+        return 'night'; // [23, 0, 1, 2, 3, 4]
+      })(),
       activeGoals: activeGoals.map(goal => ({
         id: goal.id,
         title: goal.title,

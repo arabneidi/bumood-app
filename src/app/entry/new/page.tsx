@@ -155,18 +155,34 @@ export default function NewEntry() {
         return entryDate === today && entry.onPeriod;
       });
       
-      // Only mark as first period entry if no other period entries exist today
+      // Mark as first period entry if no other period entries exist today
       setIsFirstPeriodEntry(!hasPeriodEntryToday);
+      
+      console.log('🩸 Period started:', {
+        today,
+        hasPeriodEntryToday,
+        isFirstPeriodEntry: !hasPeriodEntryToday,
+        periodDay: 1
+      });
     } else if (name === 'onPeriod' && value === false) {
       // Clear period start date when period ends - resets to Day 1 for next cycle
       setPeriodStartDate(null);
       setIsFirstPeriodEntry(false);
+      
+      console.log('🩸 Period ended - reset for next cycle');
     }
   };
 
   // Calculate period day (1, 2, 3, etc.)
   const getPeriodDay = () => {
-    if (!periodStartDate) return 0;
+    if (!periodStartDate) {
+      // If no period start date but user is on period, it's Day 1
+      if (formData.onPeriod) {
+        return 1;
+      }
+      return 0;
+    }
+    
     const start = new Date(periodStartDate);
     const today = new Date();
     const diffTime = today.getTime() - start.getTime();
@@ -187,32 +203,47 @@ export default function NewEntry() {
 
   // Get current period day from database if user is on period
   const getCurrentPeriodDay = () => {
-    if (!isCurrentlyOnPeriod()) {
+    // If user is currently on period (either from formData or existing entries)
+    const isOnPeriod = formData.onPeriod || isCurrentlyOnPeriod();
+    
+    if (!isOnPeriod) {
       console.log('🔍 getCurrentPeriodDay: Not currently on period, returning 0');
       return 0;
+    }
+    
+    // If user just toggled period on in this session, it's Day 1
+    if (formData.onPeriod && isFirstPeriodEntry) {
+      console.log('🔍 getCurrentPeriodDay: First period entry in this session, returning 1');
+      return 1;
     }
     
     // Find the most recent entry that has onPeriod: true
     const periodEntries = moodEntries.filter(entry => entry.onPeriod);
     if (periodEntries.length === 0) {
-      console.log('🔍 getCurrentPeriodDay: No period entries found, returning 0');
-      return 0;
+      // If no period entries exist but user is on period, it's Day 1
+      console.log('🔍 getCurrentPeriodDay: No period entries found but user is on period, returning 1');
+      return 1;
     }
     
     const mostRecentPeriodEntry = periodEntries
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
     
     console.log('🔍 getCurrentPeriodDay Debug:', {
+      formDataOnPeriod: formData.onPeriod,
+      isCurrentlyOnPeriod: isCurrentlyOnPeriod(),
+      isOnPeriod,
+      isFirstPeriodEntry,
       mostRecentPeriodEntry: mostRecentPeriodEntry ? {
         id: mostRecentPeriodEntry.id,
         createdAt: mostRecentPeriodEntry.createdAt,
         onPeriod: mostRecentPeriodEntry.onPeriod,
         periodDay: mostRecentPeriodEntry.periodDay
       } : null,
-      calculatedPeriodDay: mostRecentPeriodEntry?.periodDay || 0
+      calculatedPeriodDay: mostRecentPeriodEntry?.periodDay || 1
     });
     
-    return mostRecentPeriodEntry?.periodDay || 0;
+    // Return the period day from the most recent entry, or 1 if none exists
+    return mostRecentPeriodEntry?.periodDay || 1;
   };
 
   // Load user preferences and mood entries on component mount

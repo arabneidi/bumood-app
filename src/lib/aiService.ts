@@ -260,6 +260,10 @@ async function generateWithOpenAI(profile: UserMoodProfile): Promise<AISuggestio
   try {
     const prompt = createOpenAIPrompt(profile);
     console.log('📤 Sending request to OpenAI API...');
+    console.log('🔍 ACTUAL PROMPT BEING SENT:');
+    console.log('='.repeat(80));
+    console.log(prompt);
+    console.log('='.repeat(80));
     
     const response = await fetch(AI_ENDPOINTS.OPENAI, {
       method: 'POST',
@@ -1087,8 +1091,7 @@ export function extractSuccessfulSolutions(entries: any[]): string[] {
     .map(([solution]) => solution);
 }
 
-// Create prompts for different AI services
-function createOpenAIPrompt(profile: UserMoodProfile): string {
+export function createOpenAIPrompt(profile: UserMoodProfile): string {
   const { currentMood, timeOfDay, userFeedback, userInfo, userPreferences, activeGoals } = profile;
   
   let prompt = `Generate 5 personalized wellness suggestions for someone with this mood profile:
@@ -1100,336 +1103,27 @@ Current Mood:
 - Stress: ${currentMood.stress}/10
 - Sleep: ${currentMood.sleep || 8}/10
 - Time of Day: ${timeOfDay}
-`;
 
-  // Add user preferences FIRST (critical for personalization)
-  if (userPreferences) {
-    prompt += `\nUser Preferences & Favorites (USE THESE FOR SPECIFIC SUGGESTIONS):\n`;
-    
-    if (userPreferences.interests && userPreferences.interests.length > 0) {
-      prompt += `- Interests: ${userPreferences.interests.join(', ')}\n`;
-    }
-    
-    if (userPreferences.favoriteWriters && userPreferences.favoriteWriters.length > 0) {
-      prompt += `- Favorite Writers: ${userPreferences.favoriteWriters.join(', ')} (USE FOR BOOK SUGGESTIONS!)\n`;
-    }
-    
-    if (userPreferences.favoriteSportsFigures && userPreferences.favoriteSportsFigures.length > 0) {
-      prompt += `- Favorite Athletes: ${userPreferences.favoriteSportsFigures.join(', ')} (USE FOR WORKOUT SUGGESTIONS!)\n`;
-    }
-    
-    if (userPreferences.favoriteMusicians && userPreferences.favoriteMusicians.length > 0) {
-      prompt += `- Favorite Musicians: ${userPreferences.favoriteMusicians.join(', ')} (USE FOR MUSIC SUGGESTIONS!)\n`;
-    }
-    
-    if (userPreferences.favoriteArtists && userPreferences.favoriteArtists.length > 0) {
-      prompt += `- Favorite Artists: ${userPreferences.favoriteArtists.join(', ')} (USE FOR ART SUGGESTIONS!)\n`;
-    }
-    if (userPreferences.favoriteMovies && userPreferences.favoriteMovies.length > 0) {
-      prompt += `- Favorite Movies/TV: ${userPreferences.favoriteMovies.join(', ')} (USE FOR WATCHING SUGGESTIONS!)\n`;
-    }
-    
-    if (userPreferences.favoritePhilosophers && userPreferences.favoritePhilosophers.length > 0) {
-      prompt += `- Favorite Philosophers: ${userPreferences.favoritePhilosophers.join(', ')}\n`;
-    }
-  }
+User Preferences & Favorites:
+- Interests: ${userPreferences?.interests?.join(', ') || 'none specified'}
+- Favorite Writers: ${userPreferences?.favoriteWriters?.join(', ') || 'none specified'}
+- Favorite Movies/TV: ${userPreferences?.favoriteMovies?.join(', ') || 'none specified'}
 
-  // Add active goals for goal-oriented suggestions
-  if (activeGoals && activeGoals.length > 0) {
-    prompt += `\nActive Goals (CRITICAL - Use these to provide goal-oriented suggestions and motivation):\n`;
-    
-    activeGoals.forEach(goal => {
-      const progressText = goal.completed ? 'COMPLETED!' : `${goal.progressPercentage}% complete (${goal.currentValue}/${goal.targetValue})`;
-      const streakText = goal.streak > 0 ? ` (${goal.streak} day streak)` : '';
-      prompt += `- "${goal.title}" (${goal.category}${goal.subcategory ? ` - ${goal.subcategory}` : ''}) - ${progressText}${streakText}\n`;
-      
-      if (goal.description) {
-        prompt += `  Description: ${goal.description}\n`;
-      }
-    });
-    
-    prompt += `\nGOAL-ORIENTED SUGGESTIONS RULES:\n`;
-    prompt += `- For goals with low progress (<30%), provide motivational suggestions to get started\n`;
-    prompt += `- For goals with medium progress (30-70%), provide suggestions to maintain momentum\n`;
-    prompt += `- For goals with high progress (>70%), provide suggestions to push to completion\n`;
-    prompt += `- For completed goals, provide celebration and next-level suggestions\n`;
-    prompt += `- For health goals (quitting smoking, fitness), provide specific health-focused suggestions\n`;
-    prompt += `- For learning goals (reading books, courses), provide educational suggestions\n`;
-    prompt += `- For habit goals (gym attendance, meditation), provide habit-building suggestions\n`;
-    prompt += `- Always mention the specific goal by name when relevant\n`;
-  }
-
-  // Add user info (age, gender, and period data) for more personalized suggestions
-  if (userInfo) {
-    prompt += `\nUser Demographics (CRITICAL for age-appropriate and gender-specific suggestions):\n`;
-    
-    if (userInfo.age) {
-      prompt += `- Age: ${userInfo.age} years old (ADJUST ALL SUGGESTIONS FOR THIS AGE GROUP!)\n`;
-    }
-    
-    if (userInfo.gender) {
-      prompt += `- Gender: ${userInfo.gender} (CONSIDER GENDER-SPECIFIC WELLNESS NEEDS!)\n`;
-    }
-    
-    if (userInfo.personality) {
-      prompt += `- Personality: ${userInfo.personality} (CRITICAL for suggestion type!)\n`;
-      console.log(`🎭 Personality detected: ${userInfo.personality}`);
-    }
-    
-    if (userInfo.universityLevel) {
-      prompt += `- University Level: ${userInfo.universityLevel} (ADJUST SUGGESTIONS FOR ACADEMIC LEVEL!)\n`;
-    }
-    
-    if (userInfo.fieldOfStudy) {
-      prompt += `- Field of Study: ${userInfo.fieldOfStudy} (PROVIDE FIELD-SPECIFIC SUGGESTIONS!)\n`;
-    }
-    
-    if (userInfo.height && userInfo.weight) {
-      prompt += `- Physical stats: ${userInfo.height}cm, ${userInfo.weight}kg (for fitness suggestions)\n`;
-    }
-    
-    if (userInfo.onPeriod) {
-      prompt += `- Currently menstruating: YES (Day ${userInfo.periodDay || 1} of period)\n`;
-      prompt += `- Average cycle length: ${userInfo.periodCycleLength} days\n`;
-      
-      if (userInfo.periodSymptoms && userInfo.periodSymptoms.length > 0) {
-        prompt += `- Current period symptoms: ${userInfo.periodSymptoms.join(', ')}\n`;
-      }
-      
-      prompt += `- IMPORTANT: Provide suggestions that are appropriate for someone currently on their period (e.g., gentle activities, pain relief, mood support, avoid intense exercise)\n`;
-    } else if (userInfo.gender === 'female' && userInfo.periodCycleLength) {
-      prompt += `- Not currently on period (average cycle: ${userInfo.periodCycleLength} days)\n`;
-    }
-  }
-
-  // Add daily tracking data (water, meals, exercise, etc.)
-  if (profile.dailyTracking) {
-    const dt = profile.dailyTracking;
-    prompt += `\nToday's Activities & Habits (CRITICAL - Use this to provide relevant suggestions):\n`;
-    
-    // Water & Nutrition
-    if (dt.waterIntake !== undefined) {
-      const waterStatus = dt.waterIntake < 4 ? 'dehydrated (LOW)' : dt.waterIntake >= 8 ? 'well hydrated' : 'moderate hydration';
-      prompt += `- Water intake: ${dt.waterIntake} glasses (${waterStatus})\n`;
-    }
-    
-    if (dt.mealsEaten !== undefined) {
-      prompt += `- Meals eaten today: ${dt.mealsEaten}\n`;
-    }
-    
-    if (dt.mealQuality) {
-      prompt += `- Meal quality: ${dt.mealQuality}\n`;
-    }
-    
-    if (dt.caffeine !== undefined) {
-      const caffeineNote = dt.caffeine > 3 ? ' (HIGH - may affect mood/sleep)' : '';
-      prompt += `- Caffeine: ${dt.caffeine} drinks${caffeineNote}\n`;
-    }
-    
-    if (dt.alcohol !== undefined) {
-      const alcoholNote = dt.alcohol > 2 ? ' (HIGH - may affect mood)' : '';
-      prompt += `- Alcohol: ${dt.alcohol} drinks${alcoholNote}\n`;
-    }
-    
-    // Physical Activity
-    if (dt.exercise) {
-      prompt += `- Exercise today: YES (${dt.exerciseType || 'general'}, ${dt.exerciseDuration || 0} minutes)\n`;
-    } else {
-      prompt += `- Exercise today: NO (suggest gentle movement)\n`;
-    }
-    
-    if (dt.steps !== undefined) {
-      const stepsNote = dt.steps < 5000 ? ' (LOW - suggest more movement)' : dt.steps >= 10000 ? ' (EXCELLENT)' : '';
-      prompt += `- Steps: ${dt.steps}${stepsNote}\n`;
-    }
-    
-    // Social & Mental
-    if (dt.socialInteraction !== undefined) {
-      prompt += `- Social interaction: ${dt.socialInteraction ? 'YES' : 'NO (suggest social activities)'}\n`;
-    }
-    
-    if (dt.screenTime !== undefined) {
-      const screenNote = dt.screenTime > 6 ? ' (HIGH - suggest screen break)' : '';
-      prompt += `- Screen time: ${dt.screenTime} hours${screenNote}\n`;
-    }
-    
-    if (dt.outdoorTime !== undefined) {
-      const outdoorNote = dt.outdoorTime < 30 ? ' (LOW - suggest outdoor activity)' : '';
-      prompt += `- Outdoor time: ${dt.outdoorTime} minutes${outdoorNote}\n`;
-    }
-    
-    // Self-Care
-    if (dt.meditation) {
-      prompt += `- Meditation: YES (${dt.meditationDuration || 0} minutes)\n`;
-    }
-    
-    if (dt.journaling) {
-      prompt += `- Journaling: YES\n`;
-    }
-    
-    if (dt.readingTime !== undefined) {
-      prompt += `- Reading: ${dt.readingTime} minutes\n`;
-    }
-    
-    // Health
-    if (dt.medicationTaken) {
-      prompt += `- Medication: Taken\n`;
-    }
-    
-    if (dt.supplements && dt.supplements.length > 0) {
-      prompt += `- Supplements: ${dt.supplements.join(', ')}\n`;
-    }
-    
-    if (dt.symptoms && dt.symptoms.length > 0) {
-      prompt += `- Physical symptoms: ${dt.symptoms.join(', ')} (address these in suggestions)\n`;
-    }
-    
-    prompt += `- IMPORTANT: Consider what they've eaten, drunk, and done today when making suggestions. If they haven't drunk enough water, suggest hydration. If they haven't exercised, suggest gentle movement. If they've had too much caffeine/alcohol or screen time, address that.\n`;
-  }
-
-  // Add reflection text to personalize tone and content
-  if (profile.reflection && profile.reflection.trim().length > 0) {
-    prompt += `\nUser's Reflection (IMPORTANT context from the latest entry):\n"${profile.reflection.trim().slice(0, 600)}"\n`;
-  }
-
-  // Add user feedback to personalize suggestions
-  if (userFeedback) {
-    prompt += `\nUser Preferences (IMPORTANT - Use this to personalize suggestions):\n`;
-    
-    if (userFeedback.helpfulSuggestions.length > 0) {
-      prompt += `- Suggestions they LOVED (suggest similar): ${userFeedback.helpfulSuggestions.join(', ')}\n`;
-    }
-    
-    if (userFeedback.unhelpfulSuggestions.length > 0) {
-      prompt += `- Suggestions they DIDN'T like (avoid these): ${userFeedback.unhelpfulSuggestions.join(', ')}\n`;
-    }
-    
-    if (userFeedback.preferredCategories.length > 0) {
-      prompt += `- Preferred categories (focus on these): ${userFeedback.preferredCategories.join(', ')}\n`;
-    }
-    
-    if (userFeedback.avoidCategories.length > 0) {
-      prompt += `- Categories to avoid: ${userFeedback.avoidCategories.join(', ')}\n`;
-    }
-  }
-
-  prompt += `
+User Demographics (CRITICAL for age-appropriate and gender-specific suggestions):
+- Age: ${userInfo?.age || 'not specified'} years old (ADJUST ALL SUGGESTIONS FOR THIS AGE GROUP!)
+- Gender: ${userInfo?.gender || 'not specified'} (CONSIDER GENDER-SPECIFIC WELLNESS NEEDS!)
+- Personality: ${userInfo?.personality || 'not specified'} (CRITICAL for suggestion type!)
+- University Level: ${userInfo?.universityLevel || 'not specified'} (ADJUST SUGGESTIONS FOR ACADEMIC LEVEL!)
+- Field of Study: ${userInfo?.fieldOfStudy || 'not specified'}
+- Currently menstruating: ${userInfo?.onPeriod ? `YES (Day ${userInfo.periodDay || 1} of period)` : 'NO'}
+- Average cycle length: ${userInfo?.periodCycleLength || 'undefined'} days
 
 CRITICAL INSTRUCTION - BE ULTRA-SPECIFIC IN YOUR SUGGESTIONS:
 
 PERSONALITY-BASED SUGGESTIONS (CRITICAL):
-- **INTJ (The Architect)**: Suggest strategic planning, independent projects, deep thinking activities, solo research, analytical tasks
-- **INTP (The Thinker)**: Suggest intellectual challenges, problem-solving, theoretical discussions, solo learning, analytical projects
-- **ENTJ (The Commander)**: Suggest leadership activities, group projects, strategic planning, team building, competitive activities
-- **ENTP (The Debater)**: Suggest brainstorming sessions, group discussions, creative challenges, social debates, innovative projects
-- **INFJ (The Advocate)**: Suggest meaningful causes, helping others, quiet reflection, creative writing, spiritual activities
-- **INFP (The Mediator)**: Suggest creative expression, personal projects, quiet activities, artistic pursuits, individual reflection
-- **ENFJ (The Protagonist)**: Suggest mentoring others, group activities, social causes, leadership roles, community involvement
-- **ENFP (The Campaigner)**: Suggest social activities, creative projects, group adventures, networking, inspiring others
-- **ISTJ (The Logistician)**: Suggest structured activities, detailed planning, routine tasks, organized projects, methodical approaches
-- **ISFJ (The Protector)**: Suggest helping others, caring activities, structured routines, service projects, nurturing tasks
-
-STUDENT-SPECIFIC SUGGESTIONS (CRITICAL):
-- **UNDERGRADUATE**: Focus on study groups, campus activities, dorm life, freshman stress, social integration
-- **GRADUATE**: Focus on research stress, thesis work, academic pressure, professional development, networking
-- **PHD**: Focus on dissertation stress, academic isolation, research burnout, career planning, mentorship
-- **COMPUTER SCIENCE**: Suggest coding breaks, tech meetups, hackathons, programming projects, tech communities
-- **PSYCHOLOGY**: Suggest mindfulness practices, therapy resources, mental health awareness, counseling services
-- **MEDICINE**: Suggest stress management for medical students, study techniques, clinical rotation support
-- **ENGINEERING**: Suggest problem-solving activities, technical projects, engineering communities, innovation challenges
-- **BUSINESS**: Suggest networking events, case studies, leadership development, entrepreneurship activities
-- **ARTS/HUMANITIES**: Suggest creative projects, cultural events, writing workshops, artistic communities
-- **STUDENT + HIGH STRESS**: Suggest study breaks, campus counseling, peer support groups, academic resources
-- **STUDENT + LOW ENERGY**: Suggest study snacks, power naps, study groups, academic motivation techniques
-
-PERSONALITY + STUDENT COMBINATIONS (CRITICAL):
-- **INTJ + COMPUTER SCIENCE**: Suggest system architecture projects, solo coding challenges, technical research, independent study
-- **INTP + COMPUTER SCIENCE**: Suggest algorithm challenges, theoretical computer science, solo programming projects, technical discussions
-- **ENTJ + COMPUTER SCIENCE**: Suggest leading tech teams, organizing hackathons, tech leadership roles, competitive programming
-- **ENTP + COMPUTER SCIENCE**: Suggest tech meetups, brainstorming sessions, innovative projects, group coding challenges
-- **INFJ + PSYCHOLOGY**: Suggest individual therapy work, personal reflection, helping others with mental health, quiet study
-- **INFP + PSYCHOLOGY**: Suggest creative therapy approaches, personal journaling, artistic expression, individual research
-- **ENFJ + PSYCHOLOGY**: Suggest group therapy sessions, mentoring peers, mental health advocacy, community workshops
-- **ENFP + PSYCHOLOGY**: Suggest psychology study groups, mental health awareness events, peer support groups, social activities
-- **ISTJ + ANY FIELD**: Suggest structured study plans, organized schedules, methodical approaches, routine-based activities
-- **ISFJ + ANY FIELD**: Suggest helping classmates, study groups, service projects, caring for others, structured support
-
-1. **If suggesting music/dance:**
-   - DO NOT say "listen to music" or "dance"
-   - **PRIORITY 1**: If they have favorite musicians, suggest BOTH their favorites AND similar vibe artists
-   - **PRIORITY 2**: If no favorites saved, use age-appropriate suggestions with specific songs
-   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW artists with similar energy/vibe
-   - **GENRE EXPANSION**: If they like Taylor Swift → suggest similar pop artists (Ariana Grande, Olivia Rodrigo, Billie Eilish) + NEW discoveries (Sabrina Carpenter, Gracie Abrams)
-   - **GENRE EXPANSION**: If they like Pink Floyd → suggest similar rock/prog artists (Led Zeppelin, Queen, Radiohead) + NEW discoveries (Tame Impala, King Gizzard)
-   - **ENERGY MATCHING**: Match their current mood - high energy = upbeat songs, low energy = calming songs, stressed = relaxing music
-   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
-   - If NO favorite musicians saved: Use age-appropriate suggestions:
-     * Age 18-25: "Listen to your favorite current pop song" + "Discover new artists in similar genres"
-     * Age 26-35: "Listen to your favorite contemporary hits" + "Try new artists in your preferred genre"
-     * Age 36-45: "Listen to your favorite popular songs" + "Explore new artists with similar vibes"
-     * Age 46+: "Listen to your favorite classic hits" + "Check out new artists with similar styles"
-   - ALWAYS include specific song titles and artists!
-   - MIX familiar comfort with exciting new discoveries!
-
-2. **If suggesting reading:**
-   - DO NOT say "read a book"
-   - **PRIORITY 1**: If they have favorite writers, suggest BOTH their favorites AND similar vibe authors
-   - **PRIORITY 2**: If no favorites saved, use age-appropriate suggestions with specific titles
-   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW authors with similar themes/energy
-   - **GENRE EXPANSION**: If they like Maya Angelou → suggest similar poets (Langston Hughes, Rumi, Pablo Neruda) + NEW discoveries (Amanda Gorman, Rupi Kaur)
-   - **GENRE EXPANSION**: If they like Ernest Hemingway → suggest similar writers (F. Scott Fitzgerald, John Steinbeck, Jack London) + NEW discoveries (Cormac McCarthy, Haruki Murakami)
-   - **GENRE EXPANSION**: If they like Carl Sagan → suggest similar science writers (Neil deGrasse Tyson, Stephen Hawking, Richard Feynman) + NEW discoveries (Bill Bryson, Mary Roach)
-   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
-   - Example: "Read your favorite classic novel" + "Try a new author with similar themes and writing style"
-   - MIX familiar comfort with exciting new discoveries!
-
-3. **If suggesting exercise/sports:**
-   - DO NOT say "work out" or "exercise"
-   - **PRIORITY 1**: If they have favorite athletes, suggest BOTH their favorites AND similar vibe workouts
-   - **PRIORITY 2**: If no favorites saved, use age-appropriate suggestions with specific routines
-   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW workout styles with similar energy/intensity
-   - **GENRE EXPANSION**: If they like Messi → suggest similar footballers (Neymar, Mbappé, Ronaldo) + NEW discoveries (Kylian Mbappé, Erling Haaland)
-   - **GENRE EXPANSION**: If they like Serena Williams → suggest similar tennis players (Venus Williams, Roger Federer, Rafael Nadal) + NEW discoveries (Naomi Osaka, Coco Gauff)
-   - **GENRE EXPANSION**: If they like Michael Jordan → suggest similar basketball players (LeBron James, Kobe Bryant, Magic Johnson) + NEW discoveries (Giannis Antetokounmpo, Luka Dončić)
-   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
-   - Example: "Do Ronaldo's 30-min HIIT routine" + "Try Adriene Mishler's yoga flows for variety"
-   - MIX familiar comfort with exciting new discoveries!
-
-4. **If suggesting movies/shows:**
-   - DO NOT say "watch a movie"
-   - **PRIORITY 1**: If they have favorite movies/shows, suggest BOTH their favorites AND similar vibe content
-   - **PRIORITY 2**: If no favorites saved, use age-appropriate suggestions with specific titles
-   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW shows/movies with similar themes/energy
-   - **GENRE EXPANSION**: If they like Friends → suggest similar sitcoms (The Office, How I Met Your Mother) + NEW discoveries (Brooklyn Nine-Nine, The Good Place)
-   - **GENRE EXPANSION**: If they like Inception → suggest similar thrillers (Interstellar, Tenet) + NEW discoveries (Everything Everywhere All at Once, Dune)
-   - **GENRE EXPANSION**: If they like Euphoria → suggest similar dramas (13 Reasons Why, Elite) + NEW discoveries (Heartstopper, Sex Education)
-   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
-   - Example: "Watch your favorite inspiring movie" + "Check out a new film with similar themes and emotional impact"
-   - MIX familiar comfort with exciting new discoveries!
-
-5. **If suggesting meditation/mindfulness:**
-   - DO NOT say "meditate"
-   - **PRIORITY 1**: If they have favorite meditation styles, suggest BOTH their favorites AND similar vibe techniques
-   - **PRIORITY 2**: If no favorites saved, use mood-appropriate suggestions with specific techniques
-   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW meditation styles with similar energy/benefits
-   - **TECHNIQUE EXPANSION**: If they like walking meditation → suggest similar movement practices (yoga, tai chi) + NEW discoveries (forest bathing, mindful running)
-   - **TECHNIQUE EXPANSION**: If they like breathing exercises → suggest similar breathwork (4-7-8, box breathing) + NEW discoveries (Wim Hof method, pranayama)
-   - **TECHNIQUE EXPANSION**: If they like guided meditation → suggest similar audio practices (Headspace, Calm) + NEW discoveries (Insight Timer, Ten Percent Happier)
-   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
-   - Example: "Try your favorite meditation technique" + "Explore a new mindfulness practice for fresh perspective"
-   - MIX familiar comfort with exciting new discoveries!
-
-6. **If suggesting art/creativity:**
-   - DO NOT say "do art"
-   - **PRIORITY 1**: If they have favorite artists, suggest BOTH their favorites AND similar vibe creative activities
-   - **PRIORITY 2**: If no favorites saved, use mood-appropriate suggestions with specific techniques
-   - **VIBE-BASED DISCOVERY**: Always include 1-2 suggestions for NEW art styles with similar energy/creativity
-   - **GENRE EXPANSION**: If they like Frida Kahlo → suggest similar artists (Georgia O'Keeffe, Diego Rivera, Vincent van Gogh) + NEW discoveries (Yayoi Kusama, Frida Kahlo-inspired digital art)
-   - **GENRE EXPANSION**: If they like Leonardo da Vinci → suggest similar Renaissance artists (Michelangelo, Raphael, Botticelli) + NEW discoveries (contemporary anatomical art, scientific illustration)
-   - **GENRE EXPANSION**: If they like Van Gogh → suggest similar impressionist artists (Monet, Renoir, Degas) + NEW discoveries (contemporary landscape painting, digital impressionism)
-   - **DISCOVERY BALANCE**: 60% familiar favorites, 40% new discoveries for freshness and expansion
-   - Example: "Create art inspired by your favorite artist" + "Try a new artistic technique for fresh perspective"
-   - MIX familiar comfort with exciting new discoveries!
+- ESTJ (The Executive): Suggest structured activities, leadership roles, organized projects, goal-oriented tasks, practical solutions
+- ESFP (The Entertainer): Suggest social activities, creative projects, group adventures, networking, inspiring others
+- ISFP (The Artist): Suggest creative expression, personal projects, quiet activities, artistic pursuits, individual reflection
 
 RESPONSE FORMAT:
 [
@@ -1447,11 +1141,18 @@ RESPONSE FORMAT:
 
 IMPORTANT: Be creative and original! Do NOT copy examples from this prompt. Generate unique, personalized suggestions based on the user's actual preferences and current mood.
 
-${userInfo?.onPeriod ? '\nCRITICAL PERIOD REQUIREMENT: This person is currently menstruating (Day ' + (userInfo.periodDay || 1) + '). You MUST include EXACTLY ONE period-specific suggestion among your 5 suggestions. This suggestion should address:\n- Gentle physical activities (yoga, walking, stretching)\n- Pain relief techniques (heat therapy, gentle massage, breathing exercises)\n- Mood support (comforting activities, stress reduction)\n- Nutrition support (iron-rich foods, hydration, comfort foods)\n- Rest and self-care (relaxation, sleep support, pampering)\n- Avoid intense exercise, cold foods, or stressful activities\n\nPERIOD SUGGESTION EXAMPLES:\n- "Try gentle yoga poses for period cramps - Child\'s Pose, Cat-Cow, and Reclining Butterfly"\n- "Apply a warm heating pad to your lower abdomen for 15 minutes"\n- "Drink warm ginger tea to help with bloating and cramps"\n- "Take a warm bath with Epsom salts to relax your muscles"\n- "Practice deep breathing exercises to reduce period-related stress"\n- "Eat iron-rich foods like spinach, lentils, or dark chocolate"\n- "Get extra rest - take a 20-minute power nap"\n- "Use a period tracking app to log symptoms and patterns"\n\nMake this period suggestion practical, specific, and supportive!' : ''}
-${userFeedback ? '\nIMPORTANT: Personalize based on their preferences above!' : ''}
+CRITICAL PERIOD REQUIREMENT: ${userInfo?.onPeriod ? `This person is currently menstruating (Day ${userInfo.periodDay || 1}). You MUST include EXACTLY ONE period-specific suggestion among your 5 suggestions. This suggestion should address:
+- Gentle physical activities
+- Pain relief techniques
+- Mood support
+- Nutrition support
+- Rest and self-care
+- Avoid intense exercise, cold foods, or stressful activities
+
+Make this period suggestion practical, specific, and supportive!` : 'This person is NOT currently menstruating, so do NOT include any period-specific suggestions.'}
 
 BE ULTRA-SPECIFIC! Include actual song titles, book titles, specific exercises, etc.`;
-  
+
   return prompt;
 }
 
@@ -1479,16 +1180,6 @@ CRITICAL PERIOD REQUIREMENT: This person is currently menstruating (Day ${userIn
 - Nutrition support (iron-rich foods, hydration, comfort foods)
 - Rest and self-care (relaxation, sleep support, pampering)
 - Avoid intense exercise, cold foods, or stressful activities
-
-PERIOD SUGGESTION EXAMPLES:
-- "Try gentle yoga poses for period cramps - Child's Pose, Cat-Cow, and Reclining Butterfly"
-- "Apply a warm heating pad to your lower abdomen for 15 minutes"
-- "Drink warm ginger tea to help with bloating and cramps"
-- "Take a warm bath with Epsom salts to relax your muscles"
-- "Practice deep breathing exercises to reduce period-related stress"
-- "Eat iron-rich foods like spinach, lentils, or dark chocolate"
-- "Get extra rest - take a 20-minute power nap"
-- "Use a period tracking app to log symptoms and patterns"
 
 Make this period suggestion practical, specific, and supportive!`;
   }

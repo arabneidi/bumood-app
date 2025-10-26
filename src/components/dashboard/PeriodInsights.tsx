@@ -95,7 +95,7 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
     // Detect current period status
     const mostRecentEntry = entries[0];
     const currentlyOnPeriod = mostRecentEntry && mostRecentEntry.onPeriod === true;
-    const currentDay = currentlyOnPeriod ? (mostRecentEntry.periodDay || 0) : 0;
+    const currentDay = currentlyOnPeriod ? (mostRecentEntry.periodDay || 1) : 0;
 
     // Simple heuristic alerts
     const todayKey = dateKeyUTC(new Date());

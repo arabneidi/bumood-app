@@ -35,6 +35,8 @@ export default function Home() {
   const [lastGoalsHash, setLastGoalsHash] = useState<string>('');
   const [lastAchievementsHash, setLastAchievementsHash] = useState<string>('');
   const [hasNewProTipData, setHasNewProTipData] = useState<boolean>(false);
+  const [isGeneratingProTip, setIsGeneratingProTip] = useState<boolean>(false);
+  const [isFetchingData, setIsFetchingData] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
   
@@ -54,6 +56,13 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchData() {
+      // Prevent duplicate fetchData calls
+      if (isFetchingData) {
+        console.log('🚫 Dashboard already fetching data, skipping duplicate request');
+        return;
+      }
+      
+      setIsFetchingData(true);
       try {
         console.log('🔄 Dashboard fetching data...');
         // Fetch all data in parallel
@@ -219,8 +228,9 @@ export default function Home() {
           shouldRegenerateProTips
         });
         
-        // Generate personalized quote only if we have new data
-        if (shouldRegenerateProTips) {
+        // Generate personalized quote only if we have new data and not already generating
+        if (shouldRegenerateProTips && !isGeneratingProTip) {
+          setIsGeneratingProTip(true);
           try {
             const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
             if (quoteRes.ok) {
@@ -246,28 +256,26 @@ export default function Home() {
           } catch (error) {
             console.error('Error generating personalized quote:', error);
             setProTip("Your mental wellness journey starts here.");
+          } finally {
+            setIsGeneratingProTip(false);
           }
+        } else if (shouldRegenerateProTips && isGeneratingProTip) {
+          console.log('🚫 Pro Tips already generating, skipping duplicate request');
         } else {
-          // Check if we should regenerate Pro Tips (only when there's new data)
-          const shouldRegenerateProTips = hasNewProTipData || localStorage.getItem('goals-changed') || localStorage.getItem('mood-entry-created') || localStorage.getItem('badge-achieved');
-          
-          if (shouldRegenerateProTips) {
-            // Generate new AI Pro Tips
+          // Load saved Pro Tip from localStorage (no regeneration needed)
+          const savedProTip = localStorage.getItem('pro-tip');
+          if (savedProTip) {
+            setProTip(savedProTip);
+            console.log('📱 Loaded saved Pro Tip from localStorage (no regeneration needed)');
+          } else {
+            // No saved Pro Tip, generate one
             try {
               const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
               if (quoteRes.ok) {
                 const quoteData = await quoteRes.json();
                 setProTip(quoteData.quote);
                 localStorage.setItem('pro-tip', quoteData.quote);
-                console.log('🎯 Generated new AI Pro Tip:', quoteData.quote);
-                
-                // Clear the regeneration flags
-                if (hasNewProTipData) {
-                  setHasNewProTipData(false);
-                }
-                localStorage.removeItem('goals-changed');
-                localStorage.removeItem('mood-entry-created');
-                localStorage.removeItem('badge-achieved');
+                console.log('🎯 Generated initial Pro Tip');
               } else {
                 console.log('⚠️ Personalized quote API failed, using fallback');
                 setProTip("Your mental wellness journey starts here.");
@@ -275,30 +283,6 @@ export default function Home() {
             } catch (error) {
               console.error('Error generating personalized quote:', error);
               setProTip("Your mental wellness journey starts here.");
-            }
-          } else {
-            // Load saved Pro Tip from localStorage (no regeneration needed)
-            const savedProTip = localStorage.getItem('pro-tip');
-            if (savedProTip) {
-              setProTip(savedProTip);
-              console.log('📱 Loaded saved Pro Tip from localStorage (no regeneration needed)');
-            } else {
-              // No saved Pro Tip, generate one
-              try {
-                const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
-                if (quoteRes.ok) {
-                  const quoteData = await quoteRes.json();
-                  setProTip(quoteData.quote);
-                  localStorage.setItem('pro-tip', quoteData.quote);
-                  console.log('🎯 Generated initial Pro Tip');
-                } else {
-                  console.log('⚠️ Personalized quote API failed, using fallback');
-                  setProTip("Your mental wellness journey starts here.");
-                }
-              } catch (error) {
-                console.error('Error generating personalized quote:', error);
-                setProTip("Your mental wellness journey starts here.");
-              }
             }
           }
         }
@@ -310,6 +294,7 @@ export default function Home() {
         setAchievementsLoading(false);
         setDssLoading(false);
         setMcLoading(false);
+        setIsFetchingData(false);
       }
     }
 
