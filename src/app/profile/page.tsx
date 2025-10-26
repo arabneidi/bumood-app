@@ -1673,12 +1673,19 @@ export default function ProfilePage() {
             const predefinedActivitiesData = await predefinedActivitiesRes.json();
             const predefinedActivities = predefinedActivitiesData.activities || [];
             
-            // Get AI API key connections
+            // Get AI API key connections and encrypted keys
             const { getDecryptedApiKey, hasApiKey } = await import('@/lib/encryption');
             const aiConnections = {
               openai: hasApiKey('openai'),
               gemini: hasApiKey('gemini'),
               textcortex: hasApiKey('textcortex')
+            };
+            
+            // Get encrypted API keys for export
+            const aiApiKeys = {
+              openai: localStorage.getItem('openai_api_key_encrypted'),
+              gemini: localStorage.getItem('gemini_api_key_encrypted'),
+              textcortex: localStorage.getItem('textcortex_api_key_encrypted')
             };
             
             // Helper function to parse JSON strings safely
@@ -1725,8 +1732,11 @@ export default function ProfilePage() {
               // 2. Goals
               rows.push('GOALS');
               if (goals.length > 0) {
-                rows.push('Title,Description,Category,Subcategory,Difficulty,Target Value,Current Value,Unit,Status,DSS Component,Start Date,Target Date,Created Date');
+                rows.push('Title,Description,Category,Subcategory,Difficulty,Target Value,Current Value,Unit,Status,Completed,Progress %,Streak,Best Streak,DSS Component,Start Date,Target Date,Completed Date,Created Date');
                 for (const goal of goals) {
+                  const progress = goal.currentValue && goal.targetValue 
+                    ? Math.round((goal.currentValue / goal.targetValue) * 100) 
+                    : 0;
                   rows.push([
                     escapeCsv(goal.title),
                     escapeCsv(goal.description),
@@ -1736,10 +1746,15 @@ export default function ProfilePage() {
                     escapeCsv(goal.targetValue),
                     escapeCsv(goal.currentValue),
                     escapeCsv(goal.unit),
-                    escapeCsv(goal.status),
+                    escapeCsv(goal.status || (goal.completed ? 'completed' : 'in_progress')),
+                    escapeCsv(goal.completed ? 'Yes' : 'No'),
+                    escapeCsv(progress),
+                    escapeCsv(goal.streak || 0),
+                    escapeCsv(goal.bestStreak || 0),
                     escapeCsv(goal.dssComponent),
                     escapeCsv(goal.startDate ? new Date(goal.startDate).toLocaleDateString() : ''),
                     escapeCsv(goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : ''),
+                    escapeCsv(goal.completedAt ? new Date(goal.completedAt).toLocaleDateString() : ''),
                     escapeCsv(goal.createdAt ? new Date(goal.createdAt).toLocaleDateString() : '')
                   ].join(','));
                 }
@@ -1774,10 +1789,10 @@ export default function ProfilePage() {
               
               // 4. AI Connections
               rows.push('AI API CONNECTIONS');
-              rows.push('Service,Connected');
-              rows.push(`OpenAI,${aiConnections.openai ? 'Yes' : 'No'}`);
-              rows.push(`Gemini,${aiConnections.gemini ? 'Yes' : 'No'}`);
-              rows.push(`TextCortex,${aiConnections.textcortex ? 'Yes' : 'No'}`);
+              rows.push('Service,Connected,Encrypted API Key');
+              rows.push(`OpenAI,${aiConnections.openai ? 'Yes' : 'No'},${escapeCsv(aiApiKeys.openai)}`);
+              rows.push(`Gemini,${aiConnections.gemini ? 'Yes' : 'No'},${escapeCsv(aiApiKeys.gemini)}`);
+              rows.push(`TextCortex,${aiConnections.textcortex ? 'Yes' : 'No'},${escapeCsv(aiApiKeys.textcortex)}`);
               
               rows.push('');
               rows.push('');
@@ -1924,7 +1939,10 @@ export default function ProfilePage() {
               const exportData = {
                 exportDate: new Date().toISOString(),
                 userProfile: userData,
-                aiConnections: aiConnections,
+                aiConnections: {
+                  ...aiConnections,
+                  encryptedApiKeys: aiApiKeys
+                },
                 predefinedActivities: predefinedActivities.map((activity: any) => ({
                   id: activity.id,
                   name: activity.name,
@@ -2019,11 +2037,18 @@ export default function ProfilePage() {
                   targetValue: goal.targetValue,
                   currentValue: goal.currentValue,
                   unit: goal.unit,
-                  status: goal.status,
+                  status: goal.status || (goal.completed ? 'completed' : 'in_progress'),
+                  completed: goal.completed || false,
+                  completedAt: goal.completedAt,
+                  streak: goal.streak || 0,
+                  bestStreak: goal.bestStreak || 0,
                   dssComponent: goal.dssComponent,
                   startDate: goal.startDate,
                   targetDate: goal.targetDate,
-                  createdAt: goal.createdAt
+                  createdAt: goal.createdAt,
+                  progress: goal.currentValue && goal.targetValue 
+                    ? Math.round((goal.currentValue / goal.targetValue) * 100) 
+                    : 0
                 })),
                 achievements: achievements.map((achievement: any) => ({
                   id: achievement.id,
