@@ -45,7 +45,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
   const [learnedConnections, setLearnedConnections] = useState<LearnedConnection[]>([]);
   const [showLegend, setShowLegend] = useState<boolean>(false);
   const [showLabels, setShowLabels] = useState<boolean>(true);
-  const [showSubcategories, setShowSubcategories] = useState<boolean>(true);
+  const [showSubcategories, setShowSubcategories] = useState<boolean>(false);
   const graphRef = React.useRef<any>(null);
 
   useEffect(() => {

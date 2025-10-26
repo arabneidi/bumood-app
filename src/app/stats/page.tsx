@@ -114,19 +114,6 @@ export default function StatsPage() {
           setDriversLoading(false);
         }
 
-        // Fetch Power Hours data based on selected window
-        try {
-          const powerHoursResponse = await fetch(`/api/power-hours?userId=dummy-user&window=${powerHoursWindow}`);
-          if (powerHoursResponse.ok) {
-            const powerHoursData = await powerHoursResponse.json();
-            setPowerHoursData(powerHoursData);
-          }
-        } catch (powerHoursError) {
-          console.error('Error fetching power hours data:', powerHoursError);
-        } finally {
-          setPowerHoursLoading(false);
-        }
-
 
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -137,6 +124,26 @@ export default function StatsPage() {
     };
 
     fetchData();
+  }, []); // Remove powerHoursWindow from dependencies
+
+  // Separate effect for power hours window changes
+  useEffect(() => {
+    const fetchPowerHours = async () => {
+      setPowerHoursLoading(true);
+      try {
+        const powerHoursResponse = await fetch(`/api/power-hours?userId=dummy-user&window=${powerHoursWindow}`);
+        if (powerHoursResponse.ok) {
+          const powerHoursData = await powerHoursResponse.json();
+          setPowerHoursData(powerHoursData);
+        }
+      } catch (powerHoursError) {
+        console.error('Error fetching power hours data:', powerHoursError);
+      } finally {
+        setPowerHoursLoading(false);
+      }
+    };
+
+    fetchPowerHours();
   }, [powerHoursWindow]);
 
   if (loading) {

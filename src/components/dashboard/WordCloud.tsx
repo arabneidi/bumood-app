@@ -194,8 +194,6 @@ export default function WordCloud({ moodEntries, userPreferences, timeRange }: W
           </div>
         </div>
       </div>
-
-
     </div>
   );
 }
