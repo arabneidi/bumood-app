@@ -148,8 +148,15 @@ export default function NewEntry() {
       // Set period start date to today (Day 1)
       const today = new Date().toISOString().split('T')[0];
       setPeriodStartDate(today);
-      // Mark this as the first period entry of the cycle
-      setIsFirstPeriodEntry(true);
+      
+      // Check if this is the first period entry today
+      const hasPeriodEntryToday = moodEntries.some(entry => {
+        const entryDate = new Date(entry.createdAt).toISOString().split('T')[0];
+        return entryDate === today && entry.onPeriod;
+      });
+      
+      // Only mark as first period entry if no other period entries exist today
+      setIsFirstPeriodEntry(!hasPeriodEntryToday);
     } else if (name === 'onPeriod' && value === false) {
       // Clear period start date when period ends - resets to Day 1 for next cycle
       setPeriodStartDate(null);
@@ -694,8 +701,7 @@ export default function NewEntry() {
         
         // Reset period tracking state after successful save
         handleChange('onPeriod', false);
-        // Reset first period entry flag after saving
-        setIsFirstPeriodEntry(false);
+        // Note: isFirstPeriodEntry will be automatically managed by handleChange logic
         
         router.push("/");
       } else {
