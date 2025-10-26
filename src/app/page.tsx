@@ -232,9 +232,26 @@ export default function Home() {
         if (shouldRegenerateProTips && !isGeneratingProTip) {
           setIsGeneratingProTip(true);
           try {
+            console.log('🎯 CLIENT: Fetching pro tips from API...');
+            
+            // First fetch the prompt to see what's being sent to AI
+            try {
+              const promptRes = await fetch(`/api/debug-prompt?userId=dummy-user`);
+              if (promptRes.ok) {
+                const promptData = await promptRes.json();
+                console.log('📝 EXACT LIVE PROMPT SENT TO AI FOR PRO TIPS:');
+                console.log('==========================================');
+                console.log(promptData.prompt);
+                console.log('==========================================');
+              }
+            } catch (error) {
+              console.log('⚠️ Could not fetch prompt:', error);
+            }
+            
             const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
             if (quoteRes.ok) {
               const quoteData = await quoteRes.json();
+              console.log('📝 CLIENT: Pro tip response received:', quoteData.quote);
               setProTip(quoteData.quote);
               // Save to localStorage for persistence
               localStorage.setItem('pro-tip', quoteData.quote);

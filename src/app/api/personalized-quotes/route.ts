@@ -110,6 +110,7 @@ export async function GET(request: NextRequest) {
       currentMood = {
         valence: recentEntries[0].valence,
         energy: recentEntries[0].energy,
+        focus: recentEntries[0].focus,
         stress: recentEntries[0].stress
       };
     }
@@ -144,17 +145,25 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Get Power Hours data for the user's most productive times
+    // Get Power Hours data for TODAY ONLY - using monthly window (same as dashboard)
     let powerHoursData = undefined;
     try {
-      const powerHoursResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/power-hours?userId=${userId}&days=7`);
+      const powerHoursResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/power-hours?userId=${userId}&window=monthly`);
       if (powerHoursResponse.ok) {
         const powerHours = await powerHoursResponse.json();
+        
+        // Filter to only show today's power hours
+        const currentDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
+        const todayPowerHours = powerHours.insights?.mostProductiveHours?.filter((hour: any) => hour.day === currentDay) || [];
+        
         powerHoursData = {
-          mostProductiveHours: powerHours.insights?.mostProductiveHours || [],
+          data: powerHours.data || [], // Full Power Hours data for all days
+          mostProductiveHours: todayPowerHours,
           bestDay: powerHours.insights?.bestDay || null,
           bestDeepWorkHours: powerHours.insights?.bestDeepWorkHours || [],
-          recommendations: powerHours.insights?.recommendations || []
+          recommendations: powerHours.insights?.recommendations || [],
+          currentDay: currentDay,
+          hasTodayData: todayPowerHours.length > 0
         };
       }
     } catch (error) {

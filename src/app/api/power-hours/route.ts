@@ -292,6 +292,11 @@ export async function GET(request: NextRequest) {
           hour: hour,
           mcValue: avgMC // null for empty cells or insufficient historical data
         });
+        
+        // Log Sunday data for debugging
+        if (dayOfWeek === 'Sun' && window === 'monthly') {
+          console.log(`📊 SUNDAY ${hour}:00 - MC: ${avgMC}, Historical entries: ${historicalDataForTimeSlot.length}, TimeSlot data: ${timeSlotData?.mcValues?.length || 0}`);
+        }
       }
     }
 

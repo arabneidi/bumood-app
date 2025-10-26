@@ -4,6 +4,7 @@ export interface UserProfile {
   currentMood?: {
     valence: number;
     energy: number;
+    focus: number;
     stress: number;
   };
   todayMoodAverages?: {
@@ -116,6 +117,55 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
   if (interests && interests.length > 0) {
     prompt += `Interests: ${interests.join(', ')}\n`;
   }
+
+  // Current mood averages
+  if (todayMoodAverages) {
+    prompt += `\nToday's Mood Averages:\n`;
+    prompt += `- Valence: ${todayMoodAverages.valence}/10\n`;
+    prompt += `- Energy: ${todayMoodAverages.energy}/10\n`;
+    prompt += `- Focus: ${todayMoodAverages.focus}/10\n`;
+    prompt += `- Stress: ${todayMoodAverages.stress}/10\n`;
+    prompt += `- Sleep: ${todayMoodAverages.sleep}/10\n`;
+    prompt += `- Entries Today: ${todayMoodAverages.entryCount}\n`;
+  }
+
+  // Recent activities with time
+  if (recentActivities && recentActivities.length > 0) {
+    prompt += `\nToday's Activities: ${recentActivities.join(', ')}\n`;
+    prompt += `Activity Time: ${userProfile.currentTime}\n`;
+  }
+
+  // Active goals
+  if (activeGoals && activeGoals.length > 0) {
+    prompt += `\nActive Goals:\n`;
+    activeGoals.forEach(goal => {
+      prompt += `- ${goal.title}: ${goal.currentValue}/${goal.targetValue} (${goal.progressPercentage}%)\n`;
+    });
+  }
+
+  // Activity drivers (helpful/harmful)
+  try {
+    const driversResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/drivers?userId=dummy-user`);
+    if (driversResponse.ok) {
+      const driversData = await driversResponse.json();
+      
+      if (driversData.helpful && driversData.helpful.length > 0) {
+        prompt += `\nHelpful Activities:\n`;
+        driversData.helpful.forEach(activity => {
+          prompt += `- ${activity.tag}: +${activity.overallEffect.toFixed(2)} overall effect (DSS: +${activity.dssEffect.toFixed(2)}, MC: +${activity.mcEffect.toFixed(2)})\n`;
+        });
+      }
+      
+      if (driversData.harmful && driversData.harmful.length > 0) {
+        prompt += `\nHarmful Activities:\n`;
+        driversData.harmful.forEach(activity => {
+          prompt += `- ${activity.tag}: ${activity.overallEffect.toFixed(2)} overall effect (DSS: ${activity.dssEffect.toFixed(2)}, MC: ${activity.mcEffect.toFixed(2)})\n`;
+        });
+      }
+    }
+  } catch (error) {
+    console.log('⚠️ Could not fetch activity drivers:', error);
+  }
   
   
   if (favoriteWriters && favoriteWriters.length > 0) {
@@ -151,7 +201,7 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
 
   // Current mood and state
   if (currentMood) {
-    prompt += `\nCurrent Mood: Happiness ${currentMood.valence}/10, Energy ${currentMood.energy}/10, Stress ${currentMood.stress}/10\n`;
+    prompt += `\nCurrent Mood: Valence ${currentMood.valence}/10, Energy ${currentMood.energy}/10, Focus ${currentMood.focus || 5}/10, Stress ${currentMood.stress}/10\n`;
     
     if (currentMood.valence < 4) {
       prompt += `⚠️ User is feeling low - focus on actionable steps to improve mood\n`;
@@ -185,30 +235,62 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
     }
   }
 
-  // Power Hours data for optimal timing
-  if (powerHoursData && powerHoursData.mostProductiveHours && powerHoursData.mostProductiveHours.length > 0) {
-    prompt += `\nPower Hours (Most Productive Times):\n`;
-    powerHoursData.mostProductiveHours.slice(0, 3).forEach((hour, index) => {
-      prompt += `- ${hour.day}s at ${hour.hour}:00 (${Math.round(hour.productivity * 100)}% productivity)\n`;
-    });
-    
-    if (powerHoursData.bestDay) {
-      prompt += `- Best day: ${powerHoursData.bestDay.day} (${Math.round(powerHoursData.bestDay.productivity * 100)}% productivity)\n`;
-    }
-    
-    // Add time-based coaching
-    const currentHour = new Date().getHours();
-    const currentDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
-    const isPowerHour = powerHoursData.mostProductiveHours.some(hour => 
-      hour.day === currentDay && Math.abs(hour.hour - currentHour) <= 1
-    );
-    
-    if (isPowerHour) {
-      prompt += `\n🎯 CURRENTLY IN YOUR POWER HOUR! Focus on high-priority tasks now.\n`;
-    } else {
-      prompt += `\n⏰ Not in power hour - suggest lighter tasks or preparation work.\n`;
-    }
-  }
+        // Power Hours data for optimal timing - CURRENT DAY ONLY
+        if (powerHoursData) {
+          prompt += `\n📊 TODAY'S POWER HOURS ANALYSIS:\n`;
+          
+          // Get current day and hour
+          const currentHour = new Date().getHours();
+          const currentDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
+          
+          // Process Power Hours data for TODAY ONLY
+          const allPowerHours = powerHoursData.data || [];
+          const todayPowerHours = allPowerHours
+            .filter(item => item.day === currentDay && item.mcValue !== null)
+            .sort((a, b) => b.mcValue - a.mcValue);
+          
+          // Just show current day info, AI will analyze the 24 hours data
+          prompt += `\n📅 TODAY (${currentDay}): Complete 24-hour MC data provided below for analysis.\n`;
+          
+          // Calculate min/max for normalization (same as Power Hours chart)
+          const todayMCValues = allPowerHours
+            .filter(item => item.day === currentDay && item.mcValue !== null)
+            .map(item => item.mcValue);
+          
+          let minMC = 0, maxMC = 0, rangeMC = 0;
+          if (todayMCValues.length > 0) {
+            minMC = Math.min(...todayMCValues);
+            maxMC = Math.max(...todayMCValues);
+            rangeMC = maxMC - minMC;
+          }
+          
+          const normalizeMC = (mc: number) => {
+            if (rangeMC === 0) return 0.5;
+            return Math.max(0, Math.min(1, (mc - minMC) / rangeMC));
+          };
+          
+          const getColorLabel = (normalizedMC: number) => {
+            if (normalizedMC < 0.33) return 'White (Low)';
+            if (normalizedMC < 0.66) return 'Light Red (Medium)';
+            return 'Intense Red (High)';
+          };
+          
+          // Add all 24 hours with raw MC data for AI analysis
+          prompt += `\n📊 ALL 24 HOURS TODAY (${currentDay}) - MC Data:\n`;
+          prompt += `Hour | MC Value\n`;
+          prompt += `-----|--------\n`;
+          
+          for (let hour = 0; hour < 24; hour++) {
+            const hourData = allPowerHours.find(item => item.day === currentDay && item.hour === hour && item.mcValue !== null);
+            const mcValue = hourData ? hourData.mcValue : null;
+            
+            if (mcValue !== null) {
+              prompt += `${hour.toString().padStart(2, '0')}:00 | ${mcValue.toFixed(2)}\n`;
+            } else {
+              prompt += `${hour.toString().padStart(2, '0')}:00 | No data\n`;
+            }
+          }
+        }
   
   if (onPeriod) {
     prompt += `\n⚠️ User is on their period - consider this in suggestions\n`;
@@ -222,7 +304,8 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
   }
   
   if (timeOfDay) {
-    prompt += `\nTime of day: ${timeOfDay}\n`;
+    prompt += `\nTime of day: ${timeOfDay}
+Current time: ${new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })}\n`;
   }
 
   // Enhanced data for better coaching
@@ -369,82 +452,20 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
     prompt += `\nUse these badges to recognize the user's proven capabilities and encourage them!\n`;
   }
 
-  // Add randomness and subtlety instructions
-  prompt += `\n🎲 RANDOMNESS & SUBTLETY RULES:
-- Only reference past achievements 30% of the time (not every coaching tip)
-- When mentioning past successes, be subtle and natural
-- Mix coaching approaches: sometimes focus on current goals, sometimes on capabilities, sometimes on fresh starts
-- Vary the tone: sometimes encouraging, sometimes challenging, sometimes supportive
-- Don't repeat the same achievement references in consecutive tips
-- Use past achievements to build confidence when user seems stuck or demotivated
-- Focus on current momentum when user is already progressing well
-- Be random and unpredictable in your approach - surprise the user with variety`;
-
   prompt += `\nCOACHING TIP RULES:
-1. **GOAL-FOCUSED COACHING**: Always relate to their active goals and progress
-2. **ACTIONABLE ADVICE**: Provide specific, actionable steps for getting things done
-3. **PROGRESS-ORIENTED**: Focus on moving forward, not just motivation
-4. **TASK-SPECIFIC**: Give concrete steps for their specific goals
-5. **COACHING TONE**: Be direct, practical, and results-focused
-6. **POSITIVE REINFORCEMENT**: Reference their completed goals and achieved badges to build confidence
-7. **CAPABILITY RECOGNITION**: Remind them of their past successes and proven abilities
-8. **SUBTLE & RANDOM APPROACH**: Don't always mention past achievements - use them strategically and randomly
-9. **VARIETY IN COACHING**: Mix between goal-focused, capability-focused, and fresh-start approaches
+10. **POWER HOURS INTEGRATION**: Use their Power Hours data to give timing-specific advice:
+    - If in HIGH PRODUCTIVITY window: Suggest important, challenging tasks
+    - If in LOWER PRODUCTIVITY window: Suggest lighter tasks, planning, or self-care
+    - If near productive hours: Suggest preparing for upcoming productive time
+    - Always consider their current time vs. their optimal hours
 
-6. **GOAL-BASED COACHING TIPS:**
-    ${activeGoals && activeGoals.length > 0 ? `
-    Active Goals:
-    ${activeGoals.map(goal => {
-      const progressText = goal.completed ? 'COMPLETED!' : `${goal.progressPercentage}% complete`;
-      const streakText = goal.streak > 0 ? ` (${goal.streak} day streak)` : '';
-      return `- "${goal.title}" (${goal.category}${goal.subcategory ? ` - ${goal.subcategory}` : ''}) - ${progressText}${streakText}`;
-    }).join('\n    ')}
-    
-    COACHING TIP RULES:
-    - For goals with low progress (<30%): Give specific first steps, break down the goal, create momentum
-    - For goals with medium progress (30-70%): Focus on consistency, maintaining progress, overcoming obstacles
-    - For goals with high progress (>70%): Push to completion, final stretch strategies, finishing strong
-    - For completed goals: Celebrate achievement and set next-level goals
-    - For health goals: Give specific health actions and habit-building strategies
-    - For learning goals: Provide study techniques, learning strategies, knowledge application
-    - For habit goals: Give habit-stacking techniques, consistency strategies, accountability methods
-    - **ALWAYS MENTION THE SPECIFIC GOAL BY NAME**
-    - Give concrete, actionable steps they can take TODAY
-    ` : ''}
+Focus on timing and Power Hours data. Give ONE short, actionable tip based on their current time and productivity patterns.
 
-7. **PERSONALITY-BASED COACHING:**
-    - **INTJ**: Focus on systems, strategy, long-term planning, efficiency
-    - **INTP**: Focus on learning, analysis, problem-solving, knowledge building
-    - **ENTJ**: Focus on leadership, achievement, goal-setting, influence
-    - **ENTP**: Focus on innovation, creativity, possibilities, change
-    - **INFJ**: Focus on purpose, meaning, helping others, vision
-    - **INFP**: Focus on values, authenticity, personal growth, creativity
-    - **ENFJ**: Focus on inspiring others, community, leadership, impact
-    - **ENFP**: Focus on passion, connection, enthusiasm, possibilities
-    - **ISTJ**: Focus on structure, reliability, consistency, responsibility
-    - **ISFJ**: Focus on service, helping others, care, support
-
-8. **STUDENT-SPECIFIC COACHING:**
-    - **UNDERGRADUATE**: Focus on study habits, time management, skill building, networking
-    - **GRADUATE**: Focus on research methods, thesis writing, academic pressure, career prep
-    - **PHD**: Focus on dissertation completion, academic writing, research methodology, mentorship
-    - **COMPUTER SCIENCE**: Focus on coding practice, algorithm study, project building, tech skills
-    - **PSYCHOLOGY**: Focus on research methods, clinical skills, theoretical understanding
-    - **MEDICINE**: Focus on study techniques, clinical skills, medical knowledge, patient care
-    - **ENGINEERING**: Focus on problem-solving, technical skills, project management, innovation
-    - **BUSINESS**: Focus on networking, leadership, entrepreneurship, market analysis
-    - **ARTS/HUMANITIES**: Focus on creative expression, critical thinking, cultural awareness
-
-FORMAT:
-Give a short, powerful COACHING TIP (not a quote) that is:
-- Specific and actionable
-- Goal-oriented
-- Practical and results-focused
-- Direct and coaching-style
-
-Respond with ONLY the coaching tip, nothing else.`;
+Respond with ONLY the tip text - no formatting, no "Coaching Tip:" prefix, no extra text.`;
 
   console.log('🎯 Generating AI coaching tip...');
+  console.log('📝 EXACT PROMPT SENT TO AI FOR PRO TIPS:');
+  console.log(prompt);
   
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
