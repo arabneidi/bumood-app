@@ -1,24 +1,28 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
+
+// Dynamically import react-force-graph-2d to avoid SSR issues
+const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
+  ssr: false
+});
 
 interface TagNode {
   id: string;
   label: string;
   category: string;
   frequency: number;
-  x: number;
-  y: number;
-  size: number;
+  val: number;
+  x?: number;
+  y?: number;
 }
 
 interface TagConnection {
-  from: string;
-  to: string;
+  source: string;
+  target: string;
   strength: number;
-  width: number;
 }
 
 interface TagsNetworkGraphProps {
@@ -37,18 +41,19 @@ interface LearnedConnection {
 }
 
 export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRange }: TagsNetworkGraphProps) {
-  const [nodes, setNodes] = useState<TagNode[]>([]);
-  const [connections, setConnections] = useState<TagConnection[]>([]);
+  const [graphData, setGraphData] = useState<{ nodes: TagNode[], links: TagConnection[] }>({ nodes: [], links: [] });
   const [learnedConnections, setLearnedConnections] = useState<LearnedConnection[]>([]);
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showLegend, setShowLegend] = useState<boolean>(false);
-  const [scale, setScale] = useState<number>(1);
-  const [translate, setTranslate] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState<boolean>(false);
-  const [panStart, setPanStart] = useState<{ x: number; y: number } | null>(null);
+  const [showLabels, setShowLabels] = useState<boolean>(true);
+  const graphRef = React.useRef<any>(null);
 
-  // Fullscreen lifecycle: escape to exit and lock body scroll
+  useEffect(() => {
+    fetchLearnedConnections();
+    generateNetworkData();
+  }, [moodEntries, userPreferences, timeRange]);
+
+  // Fullscreen lifecycle
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setIsFullscreen(false);
@@ -65,11 +70,6 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
     };
   }, [isFullscreen]);
 
-  useEffect(() => {
-    fetchLearnedConnections();
-    generateNetworkData();
-  }, [moodEntries, userPreferences, timeRange]);
-
   const fetchLearnedConnections = async () => {
     try {
       const response = await fetch('/api/learn-connections?userId=dummy-user');
@@ -84,7 +84,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
 
   const generateNetworkData = () => {
     const nodes: TagNode[] = [];
-    const connections: TagConnection[] = [];
+    const links: TagConnection[] = [];
     
     // Filter entries based on time range
     const now = new Date();
@@ -93,20 +93,16 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
       
       switch (timeRange) {
         case 'daily':
-          // Today only
           const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
           const entryStart = new Date(entryDate.getUTCFullYear(), entryDate.getUTCMonth(), entryDate.getUTCDate());
           return entryStart.getTime() === todayStart.getTime();
         case 'weekly':
-          // Last 7 days
           const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           return entryDate >= weekAgo;
         case 'monthly':
-          // Last 30 days
           const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
           return entryDate >= monthAgo;
         case 'yearly':
-          // Last 365 days
           const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
           return entryDate >= yearAgo;
         default:
@@ -114,7 +110,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
       }
     });
     
-    // Calculate activity frequencies from filtered entries
+    // Calculate activity frequencies
     const activityFreq: { [key: string]: number } = {};
     filteredEntries.forEach(entry => {
       if (entry.activities) {
@@ -125,424 +121,223 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
       }
     });
 
-    // Add activity nodes
+    // Add activity nodes with random initial positions
     Object.entries(activityFreq).forEach(([activity, freq]) => {
-      nodes.push({
-        id: activity,
-        label: activity,
-        category: 'activity',
-        frequency: freq,
-        x: 0, // Will be calculated
-        y: 0, // Will be calculated
-        size: Math.max(20, Math.min(60, 20 + (freq * 8)))
-      });
-    });
-
-    // Add category nodes from user preferences
-    const categories = [
-      { key: 'favoriteWriters', label: 'Writers', icon: '📚', color: 'green' },
-      { key: 'favoriteMusicians', label: 'Musicians', icon: '🎵', color: 'blue' },
-      { key: 'favoriteSportsFigures', label: 'Athletes', icon: '⚽', color: 'orange' },
-      { key: 'favoriteArtists', label: 'Artists', icon: '🎨', color: 'purple' },
-      { key: 'favoritePhilosophers', label: 'Philosophers', icon: '🤔', color: 'indigo' },
-      { key: 'interests', label: 'Interests', icon: '✨', color: 'pink' }
-    ];
-
-    categories.forEach(category => {
-      const items = userPreferences?.[category.key];
-      if (items && items.length > 0) {
+      if (freq > 0) {
         nodes.push({
-          id: category.key,
-          label: `${category.icon} ${category.label}`,
-          category: 'category',
-          frequency: items.length,
-          x: 0,
-          y: 0,
-          size: Math.max(30, Math.min(80, 30 + (items.length * 5)))
+          id: activity,
+          label: activity,
+          category: 'activity',
+          frequency: freq,
+          val: freq * 2,
+          x: Math.random() * 800 + 100,
+          y: Math.random() * 600 + 100
         });
       }
     });
 
-    // Add specific favorite nodes
-    categories.forEach(category => {
-      const items = userPreferences?.[category.key];
-      if (items && items.length > 0) {
-        items.forEach((item: string) => {
-          nodes.push({
-            id: `${category.key}_${item}`,
-            label: item,
-            category: category.key,
-            frequency: 1,
-            x: 0,
-            y: 0,
-            size: 15
-          });
-
-          // Connect to category
-          connections.push({
-            from: category.key,
-            to: `${category.key}_${item}`,
-            strength: 1,
-            width: 2
-          });
-        });
+    // Connect co-occurring activities
+    const coOccurrenceMap: { [key: string]: { [key: string]: number } } = {};
+    
+    filteredEntries.forEach(entry => {
+      if (entry.activities) {
+        const activities = Array.isArray(entry.activities) ? entry.activities : JSON.parse(entry.activities || '[]');
+        for (let i = 0; i < activities.length; i++) {
+          for (let j = i + 1; j < activities.length; j++) {
+            const activity1 = activities[i];
+            const activity2 = activities[j];
+            
+            if (!coOccurrenceMap[activity1]) {
+              coOccurrenceMap[activity1] = {};
+            }
+            if (!coOccurrenceMap[activity2]) {
+              coOccurrenceMap[activity2] = {};
+            }
+            
+            coOccurrenceMap[activity1][activity2] = (coOccurrenceMap[activity1][activity2] || 0) + 1;
+            coOccurrenceMap[activity2][activity1] = (coOccurrenceMap[activity2][activity1] || 0) + 1;
+          }
+        }
       }
     });
 
-    // Connect activities to related categories
-    const activityToCategoryMap: { [key: string]: string[] } = {
-      'reading': ['favoriteWriters', 'interests'],
-      'music': ['favoriteMusicians', 'interests'],
-      'dancing': ['favoriteMusicians', 'interests'],
-      'gym': ['favoriteSportsFigures', 'interests'],
-      'football': ['favoriteSportsFigures', 'interests'],
-      'running': ['favoriteSportsFigures', 'interests'],
-      'art': ['favoriteArtists', 'interests'],
-      'painting': ['favoriteArtists', 'interests'],
-      'drawing': ['favoriteArtists', 'interests'],
-      'philosophy': ['favoritePhilosophers', 'interests'],
-      'meditation': ['favoritePhilosophers', 'interests']
-    };
-
-    Object.entries(activityFreq).forEach(([activity, freq]) => {
-      const relatedCategories = activityToCategoryMap[activity] || [];
-      relatedCategories.forEach(categoryKey => {
-        if (userPreferences?.[categoryKey] && userPreferences[categoryKey].length > 0) {
-          connections.push({
-            from: activity,
-            to: categoryKey,
-            strength: freq,
-            width: Math.max(1, Math.min(8, freq * 2))
+    // Add links for co-occurring activities (at least 1 time)
+    Object.entries(coOccurrenceMap).forEach(([activity1, coActivities]) => {
+      Object.entries(coActivities).forEach(([activity2, count]) => {
+        if (count >= 1 && activity1 < activity2) {
+          links.push({
+            source: activity1,
+            target: activity2,
+            strength: Math.min(count / 3, 1)
           });
         }
       });
     });
 
-    // Add learned connections from AI feedback
-    learnedConnections.forEach(connection => {
-      // Create outcome nodes if they don't exist
-      const outcomeNode = nodes.find(n => n.id === connection.outcome);
-      if (!outcomeNode) {
-        nodes.push({
-          id: connection.outcome,
-          label: connection.outcome,
-          category: 'outcome',
-          frequency: 1,
-          x: 0,
-          y: 0,
-          size: 20
-        });
-      }
-
-      // Add learned connection
-      connections.push({
-        from: connection.activity,
-        to: connection.outcome,
-        strength: connection.strength,
-        width: Math.max(2, Math.min(12, connection.strength * 6))
-      });
-    });
-
-    // Position nodes in a dynamic layout
-    const centerX = 300;
-    const centerY = 200;
-    const radius = 120;
-
-    nodes.forEach((node, index) => {
-      if (node.category === 'activity') {
-        // Activities in center with dynamic positioning
-        const angle = (index * 2 * Math.PI) / Math.max(Object.keys(activityFreq).length, 1);
-        node.x = centerX + Math.cos(angle) * 60;
-        node.y = centerY + Math.sin(angle) * 60;
-      } else if (node.category === 'category') {
-        // Categories in outer ring
-        const categoryIndex = categories.findIndex(c => c.key === node.id);
-        const angle = (categoryIndex * 2 * Math.PI) / Math.max(categories.length, 1);
-        node.x = centerX + Math.cos(angle) * radius;
-        node.y = centerY + Math.sin(angle) * radius;
-      } else if (node.category === 'outcome') {
-        // Outcomes in a separate area (right side)
-        const outcomeIndex = nodes.filter(n => n.category === 'outcome').indexOf(node);
-        node.x = centerX + 200 + (outcomeIndex % 3) * 80;
-        node.y = centerY - 100 + Math.floor(outcomeIndex / 3) * 60;
-      } else {
-        // Specific favorites around their categories
-        const parentCategory = node.id.split('_')[0];
-        const parentNode = nodes.find(n => n.id === parentCategory);
-        if (parentNode) {
-          const angle = Math.random() * 2 * Math.PI;
-          node.x = parentNode.x + Math.cos(angle) * 50;
-          node.y = parentNode.y + Math.sin(angle) * 50;
-        }
-      }
-    });
-
-    setNodes(nodes);
-    setConnections(connections);
+    setGraphData({ nodes, links });
   };
 
   const getNodeColor = (category: string) => {
     const colors: { [key: string]: string } = {
-      'activity': '#00D4FF', // Bright cyan
-      'favoriteWriters': '#00FF88', // Bright green
-      'favoriteMusicians': '#FF6B9D', // Bright pink
-      'favoriteSportsFigures': '#FFB800', // Bright orange
-      'favoriteArtists': '#B800FF', // Bright purple
-      'favoritePhilosophers': '#0066FF', // Bright blue
-      'interests': '#FF0080', // Bright magenta
-      'outcome': '#FFD700' // Gold for outcomes
+      'activity': '#00D4FF',
+      'subcategory': '#00E6FF',
+      'favoriteWriters': '#00FF88',
+      'favoriteMusicians': '#FF6B9D',
+      'favoriteSportsFigures': '#FFB800',
+      'favoriteArtists': '#B800FF',
+      'favoritePhilosophers': '#0066FF',
+      'interests': '#FF0080',
+      'outcome': '#FFD700'
     };
     return colors[category] || '#FF6B6B';
   };
 
-  if (nodes.length === 0) {
+  const handleNodeClick = useCallback((node: any) => {
+    // Zoom to node on click
+    console.log('Node clicked:', node);
+  }, []);
+
+  if (graphData.nodes.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="text-6xl mb-4">🕸️</div>
         <h3 className="text-xl font-semibold text-gray-900 mb-2">No Network Data Yet</h3>
         <p className="text-gray-600">
-          Add more entries and preferences to see your personal network!
+          Add more entries to see your personal network!
         </p>
       </div>
     );
   }
 
-  const Container = (
-    <div className={`${isFullscreen ? 'fixed inset-0 z-[1000] p-4' : 'w-full h-96 p-6'} bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 ${isFullscreen ? 'rounded-none' : 'rounded-2xl'} relative overflow-hidden shadow-2xl`}
-      onWheel={(e) => {
-        e.preventDefault();
-        const delta = -e.deltaY;
-        const zoomFactor = delta > 0 ? 1.1 : 0.9;
-        setScale(prev => Math.max(0.4, Math.min(3, prev * zoomFactor)));
-      }}
-      onMouseDown={(e) => {
-        setIsPanning(true);
-        setPanStart({ x: e.clientX - translate.x, y: e.clientY - translate.y });
-      }}
-      onMouseMove={(e) => {
-        if (!isPanning || !panStart) return;
-        setTranslate({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
-      }}
-      onMouseUp={() => setIsPanning(false)}
-      onMouseLeave={() => setIsPanning(false)}
-    >
-      {/* Animated background particles */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full opacity-30"
-            animate={{
-              x: [0, Math.random() * 600],
-              y: [0, Math.random() * 400],
-              opacity: [0.1, 0.8, 0.1],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-            style={{
-              left: Math.random() * 100 + '%',
-              top: Math.random() * 100 + '%',
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="relative z-10 flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-white flex items-center">
-          <span className="mr-3 text-2xl">🕸️</span>
-          Your Personal Network
-        </h3>
-        <div className="flex items-center space-x-2">
-          <button
-            className="px-3 py-1.5 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20"
-            onClick={() => setIsFullscreen(v => !v)}
-          >
-            {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-          </button>
-          <button
-            className="px-3 py-1.5 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20"
-            onClick={() => setShowLegend(v => !v)}
-          >
-            {showLegend ? 'Hide Legend' : 'Show Legend'}
-          </button>
-          <span className="hidden sm:inline text-sm text-indigo-200 ml-2">Zoom: scroll • Pan: drag</span>
-        </div>
-      </div>
+  return (
+    <>
+      {/* Fullscreen backdrop */}
+      {isFullscreen && (
+        <div 
+          className="fixed inset-0 z-[9998] bg-black/30"
+          onClick={() => setIsFullscreen(false)}
+          aria-hidden="true"
+        />
+      )}
       
-      <svg width="100%" height="100%" viewBox="0 0 600 400" className="absolute inset-0">
-        {/* Gradient definitions */}
-        <defs>
-          <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#00D4FF" />
-            <stop offset="50%" stopColor="#B800FF" />
-            <stop offset="100%" stopColor="#FF6B9D" />
-          </linearGradient>
-          <linearGradient id="learnedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#FFD700" />
-            <stop offset="100%" stopColor="#FF6B00" />
-          </linearGradient>
-        </defs>
-
-        <g transform={`translate(${translate.x}, ${translate.y}) scale(${scale})`}>
-        {/* Connections */}
-        {connections.map((connection, index) => {
-          const fromNode = nodes.find(n => n.id === connection.from);
-          const toNode = nodes.find(n => n.id === connection.to);
-          
-          if (!fromNode || !toNode) return null;
-
-          // Determine if this is a learned connection (activity -> outcome)
-          const isLearnedConnection = fromNode.category === 'activity' && toNode.category === 'outcome';
-          const isHovered = hoveredNode === connection.from || hoveredNode === connection.to;
-
-          return (
-            <g key={index}>
-              {/* Glow effect for hovered connections */}
-              {isHovered && (
-                <line
-                  x1={fromNode.x}
-                  y1={fromNode.y}
-                  x2={toNode.x}
-                  y2={toNode.y}
-                  stroke={isLearnedConnection ? "#FFD700" : "#00D4FF"}
-                  strokeWidth={connection.width + 4}
-                  opacity={0.3}
-                  className="animate-pulse"
-                />
-              )}
-              {/* Main connection line */}
-              <line
-                x1={fromNode.x}
-                y1={fromNode.y}
-                x2={toNode.x}
-                y2={toNode.y}
-                stroke={isLearnedConnection ? "url(#learnedGradient)" : "url(#connectionGradient)"}
-                strokeWidth={connection.width}
-                opacity={hoveredNode ? (isHovered ? 1 : 0.2) : 0.8}
-                className="transition-all duration-300"
-                strokeLinecap="round"
-              />
-            </g>
-          );
-        })}
-
-        {/* Nodes */}
-        {nodes.map((node) => (
-          <motion.g
-            key={node.id}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: Math.random() * 0.5 }}
-            onMouseEnter={() => setHoveredNode(node.id)}
-            onMouseLeave={() => setHoveredNode(null)}
-            className="cursor-pointer"
-          >
-            {/* Glow effect for hovered nodes */}
-            {hoveredNode === node.id && (
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={node.size / 2 + 8}
-                fill={getNodeColor(node.category)}
-                opacity={0.3}
-                className="animate-pulse"
-              />
-            )}
-            
-            {/* Main node circle */}
-            <circle
-              cx={node.x}
-              cy={node.y}
-              r={node.size / 2}
-              fill={getNodeColor(node.category)}
-              opacity={hoveredNode ? (hoveredNode === node.id ? 1 : 0.4) : 0.9}
-              className="transition-all duration-300 drop-shadow-lg"
-              stroke="white"
-              strokeWidth={hoveredNode === node.id ? 3 : 1}
-            />
-            
-            {/* Node text with better contrast */}
-            <text
-              x={node.x}
-              y={node.y + 4}
-              textAnchor="middle"
-              fontSize={node.category === 'activity' ? 11 : 9}
-              fill="white"
-              fontWeight="bold"
-              className="pointer-events-none drop-shadow-lg"
-              stroke="rgba(0,0,0,0.5)"
-              strokeWidth="0.5"
+      <div 
+        className={`${isFullscreen ? 'fixed top-0 left-0 w-full h-full z-[9999]' : 'w-full h-[800px]'} bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 ${isFullscreen ? 'rounded-none' : 'rounded-2xl'} relative shadow-2xl flex flex-col`}
+      >
+        {/* Header */}
+        <div className={`relative z-10 flex items-center justify-between p-6 ${isFullscreen ? 'border-b border-white/10 flex-shrink-0' : ''}`}>
+          <h3 className="text-xl font-bold text-white flex items-center">
+            <span className="mr-3 text-2xl">🕸️</span>
+            Your Personal Network
+          </h3>
+          <div className="flex items-center space-x-2">
+            <button
+              className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all font-medium"
+              onClick={() => setIsFullscreen(v => !v)}
             >
-              {node.label.length > 12 ? node.label.substring(0, 12) + '...' : node.label}
-            </text>
-          </motion.g>
-        ))}
-        </g>
-      </svg>
-
-      {/* Stats and Legend */}
-      <div className={`absolute bottom-2 left-2 right-2 ${showLegend ? 'bg-white/95 backdrop-blur-sm p-3' : 'p-0'} rounded-lg ${showLegend ? '' : 'pointer-events-none'} `}>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center space-x-4 text-xs">
-            <div className="flex items-center space-x-1">
-              <span className="font-semibold text-gray-700">Nodes:</span>
-              <span className="text-gray-600">{nodes.length}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <span className="font-semibold text-gray-700">Connections:</span>
-              <span className="text-gray-600">{connections.length}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <span className="font-semibold text-gray-700">Period:</span>
-              <span className="text-gray-600">
-                {timeRange === 'daily' ? 'Today' :
-                 timeRange === 'weekly' ? 'Last 7 days' :
-                 timeRange === 'monthly' ? 'Last 30 days' :
-                 'Last 365 days'}
-              </span>
-            </div>
+              {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+            </button>
+            <button
+              className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all font-medium"
+              onClick={() => setShowLegend(v => !v)}
+            >
+              {showLegend ? 'Hide Legend' : 'Show Legend'}
+            </button>
+            <button
+              className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all font-medium"
+              onClick={() => setShowLabels(v => !v)}
+            >
+              {showLabels ? 'Hide Labels' : 'Show Labels'}
+            </button>
+            {isFullscreen && <span className="hidden sm:inline text-sm text-indigo-200 ml-2">Drag nodes • Zoom with mouse wheel</span>}
           </div>
         </div>
         
-        <div className="flex flex-wrap gap-3 text-xs">
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-cyan-400 shadow-lg"></div>
-            <span className="font-semibold text-gray-800">Activities</span>
+        {/* Force Graph */}
+        <div className="flex-1 relative overflow-hidden" style={{ minHeight: 0 }}>
+          <ForceGraph2D
+            ref={graphRef}
+            graphData={graphData}
+            nodeCanvasObjectMode={() => 'after'}
+            nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+              const label = node.label || node.id;
+              const nodeColor = getNodeColor(node.category);
+              const fontSize = 14 / globalScale;
+              
+              // Measure text
+              ctx.font = `bold ${fontSize}px Sans-Serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              
+              // Draw text with stroke for visibility
+              const labelY = node.y! + (node.__size! || 8) / globalScale + 10;
+              ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+              ctx.lineWidth = 3 / globalScale;
+              ctx.strokeText(label, node.x!, labelY);
+              ctx.fillStyle = 'white';
+              ctx.fillText(label, node.x!, labelY);
+            }}
+            nodeColor={(node: any) => {
+              const color = getNodeColor(node.category);
+              // Convert hex to rgba with opacity
+              return color + '66'; // 66 = approximately 40% opacity in hex
+            }}
+            nodeVal={(node: any) => node.val}
+            nodeRelSize={8}
+            linkWidth={(link: any) => Math.max(2, link.strength * 4)}
+            linkColor={() => 'rgba(255,255,255,0.6)'}
+            linkDirectionalArrowLength={4}
+            linkDirectionalArrowRelPos={1}
+            onNodeClick={handleNodeClick}
+            cooldownTicks={100}
+            onEngineStop={() => {}}
+            enableNodeDrag={true}
+            enablePanInteraction={true}
+            enableZoomInteraction={true}
+            minZoom={0.1}
+            maxZoom={10}
+          />
+        </div>
+
+        {/* Stats and Legend */}
+        <div className={`absolute bottom-2 left-2 right-2 ${showLegend ? 'bg-white/95 backdrop-blur-sm p-3' : 'p-0'} rounded-lg ${showLegend ? '' : 'pointer-events-none'} ${isFullscreen ? 'flex-shrink-0' : ''}`}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-4 text-xs">
+              <div className="flex items-center space-x-1">
+                <span className="font-semibold text-gray-700">Nodes:</span>
+                <span className="text-gray-600">{graphData.nodes.length}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="font-semibold text-gray-700">Connections:</span>
+                <span className="text-gray-600">{graphData.links.length}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="font-semibold text-gray-700">Period:</span>
+                <span className="text-gray-600">
+                  {timeRange === 'daily' ? 'Today' :
+                   timeRange === 'weekly' ? 'Last 7 days' :
+                   timeRange === 'monthly' ? 'Last 30 days' :
+                   'Last 365 days'}
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-green-400 shadow-lg"></div>
-            <span className="font-semibold text-gray-800">Writers</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-orange-400 shadow-lg"></div>
-            <span className="font-semibold text-gray-800">Athletes</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-purple-400 shadow-lg"></div>
-            <span className="font-semibold text-gray-800">Artists</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-pink-400 shadow-lg"></div>
-            <span className="font-semibold text-gray-800">Interests</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-lg"></div>
-            <span className="font-semibold text-gray-800">Outcomes</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 shadow-lg"></div>
-            <span className="font-semibold text-gray-800">Learned</span>
+          
+          <div className="flex flex-wrap gap-3 text-xs">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-cyan-400 shadow-lg"></div>
+              <span className="font-semibold text-gray-800">Activities</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-teal-400 shadow-lg"></div>
+              <span className="font-semibold text-gray-800">Subcategories</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-lg"></div>
+              <span className="font-semibold text-gray-800">Outcomes</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
-
-  if (isFullscreen) {
-    return ReactDOM.createPortal(Container, document.body);
-  }
-  return Container;
 }
