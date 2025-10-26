@@ -176,21 +176,11 @@ export default function NewEntry() {
 
   // Check if user is currently on period based on recent entries
   const isCurrentlyOnPeriod = () => {
-    if (!moodEntries || moodEntries.length === 0) {
-      console.log('🔍 isCurrentlyOnPeriod: No mood entries available');
-      return false;
-    }
+    if (!moodEntries || moodEntries.length === 0) return false;
     
     // Get the most recent entry
     const mostRecentEntry = moodEntries
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-    
-    console.log('🔍 isCurrentlyOnPeriod: Most recent entry:', {
-      id: mostRecentEntry.id,
-      createdAt: mostRecentEntry.createdAt,
-      onPeriod: mostRecentEntry.onPeriod,
-      periodDay: mostRecentEntry.periodDay
-    });
     
     return mostRecentEntry && mostRecentEntry.onPeriod === true;
   };
@@ -201,13 +191,6 @@ export default function NewEntry() {
     
     const mostRecentEntry = moodEntries
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-    
-    console.log('🔍 getCurrentPeriodDay: Most recent entry:', {
-      id: mostRecentEntry?.id,
-      createdAt: mostRecentEntry?.createdAt,
-      onPeriod: mostRecentEntry?.onPeriod,
-      periodDay: mostRecentEntry?.periodDay
-    });
     
     return mostRecentEntry?.periodDay || 0;
   };
@@ -253,11 +236,6 @@ export default function NewEntry() {
   useEffect(() => {
     if (moodEntries && moodEntries.length > 0) {
       const currentlyOnPeriod = isCurrentlyOnPeriod();
-      console.log('🔍 useEffect: Updating formData.onPeriod:', {
-        currentlyOnPeriod,
-        currentFormDataOnPeriod: formData.onPeriod,
-        willUpdate: currentlyOnPeriod !== formData.onPeriod
-      });
       if (currentlyOnPeriod !== formData.onPeriod) {
         setFormData(prev => ({
           ...prev,
@@ -265,7 +243,7 @@ export default function NewEntry() {
         }));
       }
     }
-  }, [moodEntries, formData.onPeriod]);
+  }, [moodEntries]);
 
   // Set AI icon based on connected services
   useEffect(() => {
