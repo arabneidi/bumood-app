@@ -77,17 +77,17 @@ ${analysisContext.productivityMetrics.achievements.recentAchievements.length > 0
 BEHAVIORAL DATA (DSS = Daily Success Score, MC = Mood Composite):
 HELPFUL ACTIVITIES (positive behavioral drivers):
 ${analysisContext.helpfulActivities.map(activity => {
-  const dssPoints = activity.dssEffect.toFixed(3);
-  const mcPoints = activity.mcEffect.toFixed(3);
-  const overallPoints = activity.overallEffect.toFixed(3);
+  const dssPoints = (activity.dssEffect || 0).toFixed(3);
+  const mcPoints = (activity.mcEffect || 0).toFixed(3);
+  const overallPoints = (activity.effect || 0).toFixed(3);
   return `- ${activity.activity}: +${overallPoints} points overall impact (DSS: +${dssPoints}, MC: +${mcPoints}) - ${activity.daysWith} days with, ${activity.daysWithout} days without`;
 }).join('\n')}
 
 HARMFUL ACTIVITIES (negative behavioral drivers):
 ${analysisContext.harmfulActivities.map(activity => {
-  const dssPoints = activity.dssEffect.toFixed(3);
-  const mcPoints = activity.mcEffect.toFixed(3);
-  const overallPoints = activity.overallEffect.toFixed(3);
+  const dssPoints = (activity.dssEffect || 0).toFixed(3);
+  const mcPoints = (activity.mcEffect || 0).toFixed(3);
+  const overallPoints = (activity.effect || 0).toFixed(3);
   return `- ${activity.activity}: ${overallPoints} points negative impact (DSS: ${dssPoints}, MC: ${mcPoints}) - ${activity.daysWith} days with, ${activity.daysWithout} days without`;
 }).join('\n')}
 
@@ -178,17 +178,15 @@ TONE: Professional, analytical, insightful, and clinically informed. Write as if
     // Fallback response if AI is unavailable
     const fallbackInsights = `**BEHAVIORAL ANALYSIS SUMMARY**
 
-${driversData.helpful?.length > 0 ? 
-  `**POSITIVE BEHAVIORAL DRIVERS:** ${driversData.helpful.slice(0, 3).map(d => `${d.tag} (+${d.overallEffect.toFixed(3)} points)`).join(', ')} - These activities demonstrate consistent positive impact on both cognitive performance and emotional regulation.` : 
-  '**INSUFFICIENT DATA:** No statistically significant positive behavioral drivers identified. Continue tracking to establish baseline patterns.'
-}
+**AI SERVICE UNAVAILABLE**
 
-${driversData.harmful?.length > 0 ? 
-  `**NEGATIVE BEHAVIORAL DRIVERS:** ${driversData.harmful.slice(0, 3).map(d => `${d.tag} (${d.overallEffect.toFixed(3)} points)`).join(', ')} - These activities show measurable negative impact on performance metrics and may indicate underlying stress or cognitive load issues.` : 
-  '**OPTIMAL PATTERNS:** No significant negative behavioral drivers detected. Current activity patterns appear well-calibrated.'
-}
+The AI analysis service is currently experiencing technical difficulties. 
 
-**CLINICAL OBSERVATION:** The data suggests ${driversData.helpful?.length > 0 ? 'a mixed behavioral profile with both adaptive and maladaptive patterns' : 'insufficient behavioral data for comprehensive analysis'}. Further tracking will reveal deeper psychological patterns and optimal intervention strategies.`;
+**FALLBACK ANALYSIS:**
+Based on the behavioral data provided, this appears to be a mixed behavioral profile requiring further analysis when the AI service is restored.
+
+**RECOMMENDATION:** 
+Please try again later or contact support if the issue persists.`;
 
     return NextResponse.json({
       success: true,
