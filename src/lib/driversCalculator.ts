@@ -1,4 +1,9 @@
+import { PrismaClient } from '@prisma/client';
 import { MoodEntry } from '@prisma/client';
+import { calculateDSS } from './dssCalculator';
+import { calculateMoodComposite } from './moodCompositeCalculator';
+
+const prisma = new PrismaClient();
 
 export interface DriverResult {
   tag: string;
@@ -17,14 +22,21 @@ export interface DriversAnalysis {
   lastCalculated: Date;
 }
 
+/**
+ * Calculate activity drivers based on proper DSS methodology
+ * STEP 1: Calculate DSS for each day of last 4 weeks (exactly like DSS vs MC chart)
+ * STEP 2: Filter by activities and compare DSS of present vs absent days
+ */
 export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<DriversAnalysis> {
-  // Filter entries from last 2-4 weeks (28 days)
+  // Filter entries from last 4 weeks (28 days)
   const fourWeeksAgo = new Date();
   fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
   
   const recentEntries = moodEntries.filter(entry => 
     new Date(entry.createdAt) >= fourWeeksAgo
   );
+
+  console.log(`📊 Calculating drivers from ${recentEntries.length} entries in last 28 days`);
 
   if (recentEntries.length < 5) {
     return {
@@ -34,12 +46,49 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
     };
   }
 
-  // Extract all unique activities and count occurrences
+  // STEP 1: Calculate DSS for each day (exactly like DSS vs MC chart)
+  const entriesByDate = new Map<string, MoodEntry[]>();
+  
+  // Group entries by date
+  recentEntries.forEach(entry => {
+    const dateKey = new Date(entry.createdAt).toISOString().split('T')[0];
+    if (!entriesByDate.has(dateKey)) {
+      entriesByDate.set(dateKey, []);
+    }
+    entriesByDate.get(dateKey)!.push(entry);
+  });
+
+  // Calculate DSS for each day (EXACT logic from DSS vs MC chart)
+  const dailyDSS = new Map<string, number>();
+  const sortedDates = Array.from(entriesByDate.keys()).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  
+  for (const dateKey of sortedDates) {
+    const entries = entriesByDate.get(dateKey)!;
+    
+    try {
+      // Create date object from YYYY-MM-DD string in local timezone
+      const [year, month, day] = dateKey.split('-').map(Number);
+      
+      // Calculate DSS for this day (use noon for DSS) - EXACT from DSS vs MC chart
+      const dssDate = new Date(year, month - 1, day, 12, 0, 0);
+      const dssResult = await calculateDSS(entries[0].userId, dssDate);
+      
+      dailyDSS.set(dateKey, dssResult.dssScore);
+      console.log(`📊 Day ${dateKey}: DSS=${dssResult.dssScore.toFixed(3)}`);
+    } catch (error) {
+      console.error(`Error calculating DSS for ${dateKey}:`, error);
+      // Skip this day if DSS calculation fails
+    }
+  }
+
+  console.log(`📊 Calculated DSS for ${dailyDSS.size} days`);
+
+  // STEP 2: Extract activities and map to days
   const activityCounts = new Map<string, number>();
   const activityDays = new Map<string, Set<string>>(); // activity -> set of dates when present
   
   recentEntries.forEach(entry => {
-    const entryDate = new Date(entry.createdAt).toDateString();
+    const entryDate = new Date(entry.createdAt).toISOString().split('T')[0];
     
     // Parse activities from JSON string
     let activities = [];
@@ -59,58 +108,60 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
     });
   });
 
+  console.log(`📊 Found ${activityCounts.size} unique activities`);
+
   // Filter activities with at least 3 occurrences
   const qualifyingActivities = Array.from(activityCounts.entries())
     .filter(([_, count]) => count >= 3)
     .map(([activity, _]) => activity);
 
+  console.log(`📊 ${qualifyingActivities.length} activities with ≥3 occurrences:`, qualifyingActivities);
+
   const drivers: DriverResult[] = [];
 
+  // STEP 3: For each activity, compare DSS of present vs absent days
   for (const activity of qualifyingActivities) {
     const presentDates = activityDays.get(activity)!;
     const presentDays = Array.from(presentDates);
-    const absentDays = recentEntries
-      .map(entry => new Date(entry.createdAt).toDateString())
-      .filter(date => !presentDates.has(date));
+    const allDaysWithDSS = Array.from(dailyDSS.keys());
+    const absentDays = allDaysWithDSS.filter(date => !presentDates.has(date));
 
-    // Get entries for present and absent days
-    const presentEntries = recentEntries.filter(entry => 
-      presentDays.includes(new Date(entry.createdAt).toDateString())
-    );
-    const absentEntries = recentEntries.filter(entry => 
-      absentDays.includes(new Date(entry.createdAt).toDateString())
-    );
+    console.log(`📊 Processing ${activity}: ${presentDays.length} present days, ${absentDays.length} absent days`);
 
-    if (presentEntries.length < 2 || absentEntries.length < 2) continue;
+    // Ensure we have enough data points for comparison
+    if (presentDays.length < 2 || absentDays.length < 2) continue;
 
-    // Calculate DSS and MC for present days
-    const presentDSS = presentEntries.map(entry => {
-      // Simple DSS calculation: (valence + energy + focus - stress) / 4 * 10
-      return (entry.valence + entry.energy + entry.focus - entry.stress) / 4 * 10;
-    });
-    const presentMC = presentEntries.map(entry => {
-      // Simple MC calculation: (valence + energy + focus - stress) / 4 * 10
-      return (entry.valence + entry.energy + entry.focus - entry.stress) / 4 * 10;
-    });
+    // Get DSS values for present and absent days
+    const presentDSSValues = presentDays
+      .map(day => dailyDSS.get(day))
+      .filter(dss => dss !== undefined) as number[];
+    
+    const absentDSSValues = absentDays
+      .map(day => dailyDSS.get(day))
+      .filter(dss => dss !== undefined) as number[];
 
-    // Calculate DSS and MC for absent days
-    const absentDSS = absentEntries.map(entry => {
-      return (entry.valence + entry.energy + entry.focus - entry.stress) / 4 * 10;
-    });
-    const absentMC = absentEntries.map(entry => {
-      return (entry.valence + entry.energy + entry.focus - entry.stress) / 4 * 10;
-    });
+    if (presentDSSValues.length === 0 || absentDSSValues.length === 0) continue;
 
     // Calculate means
-    const presentDSSMean = presentDSS.reduce((sum, val) => sum + val, 0) / presentDSS.length;
-    const absentDSSMean = absentDSS.reduce((sum, val) => sum + val, 0) / absentDSS.length;
-    const presentMCMean = presentMC.reduce((sum, val) => sum + val, 0) / presentMC.length;
-    const absentMCMean = absentMC.reduce((sum, val) => sum + val, 0) / absentMC.length;
+    const presentDSSMean = presentDSSValues.reduce((sum, val) => sum + val, 0) / presentDSSValues.length;
+    const absentDSSMean = absentDSSValues.reduce((sum, val) => sum + val, 0) / absentDSSValues.length;
 
-    // Calculate effect sizes (difference of means)
+    // Calculate effect size (difference of means)
     const dssEffect = presentDSSMean - absentDSSMean;
-    const mcEffect = presentMCMean - absentMCMean;
-    const overallEffect = (dssEffect + mcEffect) / 2;
+
+    // Debug for exercise
+    if (activity === 'exercise') {
+      console.log(`🔍 EXERCISE CALCULATION DEBUG:`, {
+        activity,
+        presentDays: presentDays.length,
+        absentDays: absentDays.length,
+        presentDSSValues,
+        absentDSSValues: absentDSSValues.slice(0, 10), // First 10 for brevity
+        presentDSSMean,
+        absentDSSMean,
+        dssEffect
+      });
+    }
 
     drivers.push({
       tag: activity,
@@ -118,9 +169,9 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
       presentDays: presentDays.length,
       absentDays: absentDays.length,
       dssEffect,
-      mcEffect,
-      overallEffect,
-      isHelpful: overallEffect > 0
+      mcEffect: 0, // Skip MC for now
+      overallEffect: dssEffect, // Use DSS effect as overall effect
+      isHelpful: dssEffect > 0
     });
   }
 
@@ -134,6 +185,8 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
   const harmful = sortedDrivers
     .filter(driver => !driver.isHelpful)
     .slice(0, 5);
+
+  console.log(`📊 Final results: ${helpful.length} helpful, ${harmful.length} harmful activities`);
 
   return {
     helpful,

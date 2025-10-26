@@ -47,9 +47,9 @@ export default function ActivityDriversChart({ driversData, userInfo }: Activity
   // Get top 5 activities by absolute effect size
   const allActivities = [...driversData.helpful, ...driversData.harmful];
   const sortedActivities = allActivities.sort((a, b) => {
-    const aEffect = Number(a.overallEffect);
-    const bEffect = Number(b.overallEffect);
-    return Math.abs(bEffect) - Math.abs(aEffect);
+    const aEffect = Math.abs(Number(a.overallEffect));
+    const bEffect = Math.abs(Number(b.overallEffect));
+    return bEffect - aEffect; // Descending order by absolute effect
   });
   const topActivities = sortedActivities.slice(0, 5);
   
