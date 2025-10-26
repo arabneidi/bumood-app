@@ -699,8 +699,7 @@ export default function NewEntry() {
         localStorage.setItem('mood-entry-created', Date.now().toString());
         console.log('📝 Mood entry created - signaling dashboard for regeneration');
         
-        // Reset period tracking state after successful save
-        handleChange('onPeriod', false);
+        // Note: Period tracking state is preserved - only reset when user manually toggles
         // Note: isFirstPeriodEntry will be automatically managed by handleChange logic
         
         router.push("/");
