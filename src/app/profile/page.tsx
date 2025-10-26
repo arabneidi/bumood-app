@@ -279,22 +279,128 @@ export default function ProfilePage() {
             </div>
           </motion.div>
           
-          <motion.h1 
-            className="text-6xl font-black mb-4"
-            animate={{ 
-              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-            }}
-            transition={{ duration: 3, repeat: Infinity }}
-            style={{
-              background: 'linear-gradient(45deg, #3b82f6, #6366f1, #8b5cf6, #a855f7, #3b82f6)',
-              backgroundSize: '400% 400%',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            Your Amazing Profile
-          </motion.h1>
+          <div className="flex flex-col items-center gap-6">
+            <div className="flex items-center gap-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={async () => {
+                  try {
+                    // Fetch all mood entries
+                    const response = await fetch('/api/mood-entries');
+                    const data = await response.json();
+                    
+                    // Convert to Excel format (CSV for simplicity)
+                    const headers = ['Date', 'Valence', 'Energy', 'Focus', 'Stress', 'Sleep', 'Activities', 'Subcategories', 'Notes'];
+                    const rows = data.map((entry: any) => [
+                      new Date(entry.createdAt).toLocaleDateString(),
+                      entry.valence,
+                      entry.energy,
+                      entry.focus,
+                      entry.stress,
+                      entry.sleep,
+                      Array.isArray(entry.activities) ? entry.activities.join('; ') : entry.activities || '',
+                      Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories.join('; ') : entry.selectedSubcategories || '',
+                      entry.notes || ''
+                    ]);
+                    
+                    const csvContent = [
+                      headers.join(','),
+                      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+                    ].join('\n');
+                    
+                    // Create download link
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `moodpilot-export-${new Date().toISOString().split('T')[0]}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    setMessage('✅ Data exported successfully!');
+                    setTimeout(() => setMessage(''), 3000);
+                  } catch (error) {
+                    console.error('Export error:', error);
+                    setMessage('❌ Failed to export data');
+                    setTimeout(() => setMessage(''), 3000);
+                  }
+                }}
+                className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center gap-3"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export Data
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  // Create file input
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.csv';
+                  input.onchange = async (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (!file) return;
+                    
+                    try {
+                      const text = await file.text();
+                      const lines = text.split('\n');
+                      const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
+                      
+                      // Parse CSV and create entries
+                      const entries = lines.slice(1).filter(line => line.trim()).map(line => {
+                        const values = line.split(',').map(v => v.replace(/^"|"$/g, ''));
+                        return {
+                          date: values[0],
+                          valence: parseFloat(values[1]),
+                          energy: parseFloat(values[2]),
+                          focus: parseFloat(values[3]),
+                          stress: parseFloat(values[4]),
+                          sleep: parseFloat(values[5]),
+                          activities: values[6] ? values[6].split('; ').map(a => a.trim()) : [],
+                          subcategories: values[7] ? values[7].split('; ').map(s => s.trim()) : [],
+                          notes: values[8] || ''
+                        };
+                      });
+                      
+                      // Send to API
+                      const response = await fetch('/api/mood-entries/import', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ entries })
+                      });
+                      
+                      if (response.ok) {
+                        setMessage('✅ Data imported successfully!');
+                        setTimeout(() => setMessage(''), 3000);
+                        loadProfile(); // Refresh data
+                      } else {
+                        setMessage('❌ Failed to import data');
+                        setTimeout(() => setMessage(''), 3000);
+                      }
+                    } catch (error) {
+                      console.error('Import error:', error);
+                      setMessage('❌ Failed to import data');
+                      setTimeout(() => setMessage(''), 3000);
+                    }
+                  };
+                  input.click();
+                }}
+                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center gap-3"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Import Data
+              </motion.button>
+            </div>
+          </div>
           
         </motion.div>
 
