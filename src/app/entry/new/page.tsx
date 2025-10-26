@@ -842,7 +842,7 @@ export default function NewEntry() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Date Picker */}
-                <div className="space-y-3 relative">
+                <div className="space-y-3">
                   <label className="block text-sm font-medium text-slate-300">Date</label>
                   <div className="relative">
                     <input
@@ -869,11 +869,11 @@ export default function NewEntry() {
                         <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                       </svg>
                     </div>
+                    {/* Glowing border effect for period - matches input field exactly */}
+                    {((formData.onPeriod && isFirstPeriodEntry) || isCurrentlyOnPeriod()) && (
+                      <div className="absolute inset-0 rounded-xl border-2 border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)] animate-pulse pointer-events-none"></div>
+                    )}
                   </div>
-                  {/* Glowing border effect for period */}
-                  {((formData.onPeriod && isFirstPeriodEntry) || isCurrentlyOnPeriod()) && (
-                    <div className="absolute inset-0 rounded-xl border-2 border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)] animate-pulse"></div>
-                  )}
                 </div>
                 
               </div>
