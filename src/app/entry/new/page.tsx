@@ -1512,10 +1512,18 @@ export default function NewEntry() {
                     <span className={`w-8 h-8 rounded-full flex items-center justify-center text-lg shadow ${(formData.onPeriod || isCurrentlyOnPeriod()) ? 'bg-red-500/30 text-red-200' : 'bg-red-900/30 text-red-400'}`}>🩸</span>
                     <div className="text-left">
                       <div className="font-semibold">
-                        {(formData.onPeriod || isCurrentlyOnPeriod())
-                          ? `Period Day ${formData.onPeriod ? getPeriodDay() : getCurrentPeriodDay()}` 
-                          : 'Start period cycle'
-                        }
+                        {(() => {
+                          const isOnPeriod = formData.onPeriod || isCurrentlyOnPeriod();
+                          const periodDay = formData.onPeriod ? getPeriodDay() : getCurrentPeriodDay();
+                          console.log('🔍 Period Button Debug:', {
+                            formDataOnPeriod: formData.onPeriod,
+                            isCurrentlyOnPeriod: isCurrentlyOnPeriod(),
+                            isOnPeriod,
+                            periodDay,
+                            moodEntriesLength: moodEntries.length
+                          });
+                          return isOnPeriod ? `Period Day ${periodDay}` : 'Start period cycle';
+                        })()}
                       </div>
                       {(formData.onPeriod || isCurrentlyOnPeriod()) && (
                         <div className="text-xs text-red-300">
