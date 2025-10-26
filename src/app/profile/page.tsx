@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Save, Sparkles, Heart, Star, Zap, Palette, Music, BookOpen, Gamepad2, Plus, Minus, Settings, Bot } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import AISettings from '@/components/settings/AISettings';
+import ExportModal from '@/components/ui/ExportModal';
 import { hasApiKey } from '@/lib/encryption';
 
 export default function ProfilePage() {
@@ -53,6 +54,7 @@ export default function ProfilePage() {
 
   // AI Settings
   const [showAISettings, setShowAISettings] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [aiConfig, setAiConfig] = useState<{
     openai: { isConnected: boolean; lastUsed: string | null };
     gemini: { isConnected: boolean; lastUsed: string | null };
@@ -285,66 +287,7 @@ export default function ProfilePage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={async () => {
-                  try {
-                    // Fetch all mood entries
-                    const response = await fetch('/api/mood-entries');
-                    const data = await response.json();
-                    
-                    // Let user choose format
-                    const format = window.confirm('Choose export format:\n\nOK = CSV (Excel compatible)\nCancel = JSON (Full data)');
-                    
-                    if (format) {
-                      // CSV format
-                      const headers = ['Date', 'Valence', 'Energy', 'Focus', 'Stress', 'Sleep', 'Activities', 'Subcategories', 'Notes'];
-                      const rows = data.map((entry: any) => [
-                        new Date(entry.createdAt).toLocaleDateString(),
-                        entry.valence,
-                        entry.energy,
-                        entry.focus,
-                        entry.stress,
-                        entry.sleep,
-                        Array.isArray(entry.activities) ? entry.activities.join('; ') : entry.activities || '',
-                        Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories.join('; ') : entry.selectedSubcategories || '',
-                        entry.notes || ''
-                      ]);
-                      
-                      const csvContent = [
-                        headers.join(','),
-                        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-                      ].join('\n');
-                      
-                      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                      const link = document.createElement('a');
-                      const url = URL.createObjectURL(blob);
-                      link.setAttribute('href', url);
-                      link.setAttribute('download', `moodpilot-export-${new Date().toISOString().split('T')[0]}.csv`);
-                      link.style.visibility = 'hidden';
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    } else {
-                      // JSON format
-                      const jsonContent = JSON.stringify(data, null, 2);
-                      const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
-                      const link = document.createElement('a');
-                      const url = URL.createObjectURL(blob);
-                      link.setAttribute('href', url);
-                      link.setAttribute('download', `moodpilot-export-${new Date().toISOString().split('T')[0]}.json`);
-                      link.style.visibility = 'hidden';
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }
-                    
-                    setMessage('✅ Data exported successfully!');
-                    setTimeout(() => setMessage(''), 3000);
-                  } catch (error) {
-                    console.error('Export error:', error);
-                    setMessage('❌ Failed to export data');
-                    setTimeout(() => setMessage(''), 3000);
-                  }
-                }}
+                onClick={() => setShowExportModal(true)}
                 className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center gap-3"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -444,8 +387,6 @@ export default function ProfilePage() {
               </motion.button>
             </div>
           </div>
-          
-        </motion.div>
 
         {/* Success Message */}
         <AnimatePresence>
@@ -1615,6 +1556,70 @@ export default function ProfilePage() {
           />
         )}
       </AnimatePresence>
+      
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onSelect={async (format: 'csv' | 'json') => {
+          setShowExportModal(false);
+          try {
+            // Fetch all mood entries
+            const response = await fetch('/api/mood-entries');
+            const data = await response.json();
+            
+            if (format === 'csv') {
+              // CSV format
+              const headers = ['Date', 'Valence', 'Energy', 'Focus', 'Stress', 'Sleep', 'Activities', 'Subcategories', 'Notes'];
+              const rows = data.map((entry: any) => [
+                new Date(entry.createdAt).toLocaleDateString(),
+                entry.valence,
+                entry.energy,
+                entry.focus,
+                entry.stress,
+                entry.sleep,
+                Array.isArray(entry.activities) ? entry.activities.join('; ') : entry.activities || '',
+                Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories.join('; ') : entry.selectedSubcategories || '',
+                entry.notes || ''
+              ]);
+              
+              const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+              ].join('\n');
+              
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+              const link = document.createElement('a');
+              const url = URL.createObjectURL(blob);
+              link.setAttribute('href', url);
+              link.setAttribute('download', `moodpilot-export-${new Date().toISOString().split('T')[0]}.csv`);
+              link.style.visibility = 'hidden';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            } else {
+              // JSON format
+              const jsonContent = JSON.stringify(data, null, 2);
+              const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+              const link = document.createElement('a');
+              const url = URL.createObjectURL(blob);
+              link.setAttribute('href', url);
+              link.setAttribute('download', `moodpilot-export-${new Date().toISOString().split('T')[0]}.json`);
+              link.style.visibility = 'hidden';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }
+            
+            setMessage('✅ Data exported successfully!');
+            setTimeout(() => setMessage(''), 3000);
+          } catch (error) {
+            console.error('Export error:', error);
+            setMessage('❌ Failed to export data');
+            setTimeout(() => setMessage(''), 3000);
+          }
+        }}
+        onClose={() => setShowExportModal(false)}
+      />
     </div>
   );
 }
