@@ -5,12 +5,13 @@ import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Calendar, BarChart3, Target } from 'lucide-react';
 
 interface ActivityData {
-  activity: string;
-  effect: number;
-  daysWith: number;
-  daysWithout: number;
+  tag: string;
+  occurrences: number;
+  presentDays: number;
+  absentDays: number;
   dssEffect: number;
   mcEffect: number;
+  overallEffect: number;
   isHelpful: boolean;
 }
 
@@ -34,36 +35,46 @@ interface ActivityDriversChartProps {
 }
 
 export default function ActivityDriversChart({ driversData, userInfo }: ActivityDriversChartProps) {
-  const [selectedActivity, setSelectedActivity] = useState<ActivityData | null>(null);
-  const [chartData, setChartData] = useState<DayData[]>([]);
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Get top 5 activities (3 helpful + 2 harmful)
-  const topActivities = [
-    ...driversData.helpful.slice(0, 3),
-    ...driversData.harmful.slice(0, 2)
-  ];
+  // Get top 5 activities by absolute effect size
+  const allActivities = [...driversData.helpful, ...driversData.harmful];
+  const topActivities = allActivities
+    .sort((a, b) => Math.abs(b.overallEffect) - Math.abs(a.overallEffect))
+    .slice(0, 5);
 
-  const fetchActivityData = async (activity: string) => {
+  const fetchMonthlyData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/activity-drivers-chart?activity=${encodeURIComponent(activity)}&userId=dummy-user`);
-      if (response.ok) {
-        const data = await response.json();
-        setChartData(data.chartData || []);
-      }
+      const monthlyPromises = topActivities.map(async (activity) => {
+        const response = await fetch(`/api/activity-drivers-chart?activity=${encodeURIComponent(activity.tag)}&userId=dummy-user`);
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            activity: activity.tag,
+            effect: activity.overallEffect,
+            isHelpful: activity.isHelpful,
+            chartData: data.chartData || []
+          };
+        }
+        return null;
+      });
+
+      const results = await Promise.all(monthlyPromises);
+      setMonthlyData(results.filter(Boolean));
     } catch (error) {
-      console.error('Error fetching activity data:', error);
+      console.error('Error fetching monthly data:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (selectedActivity) {
-      fetchActivityData(selectedActivity.activity);
+    if (topActivities.length > 0) {
+      fetchMonthlyData();
     }
-  }, [selectedActivity]);
+  }, [topActivities.length]);
 
   const getActivityColor = (activity: ActivityData) => {
     if (activity.isHelpful) {
@@ -83,8 +94,58 @@ export default function ActivityDriversChart({ driversData, userInfo }: Activity
     }
   };
 
+  const getActivityDotColor = (activityName: string) => {
+    const colorMap: { [key: string]: string } = {
+      'exercise': 'bg-green-500',
+      'yoga': 'bg-red-500',
+      'walking': 'bg-blue-500',
+      'watching': 'bg-purple-500',
+      'coding': 'bg-orange-500',
+      'calling': 'bg-cyan-500',
+      'puzzles': 'bg-pink-500',
+      'meeting': 'bg-yellow-500'
+    };
+    return colorMap[activityName.toLowerCase()] || 'bg-gray-500';
+  };
+
+  const getActivityCellColor = (activitiesPresent: any[]) => {
+    if (activitiesPresent.length === 0) {
+      return 'bg-slate-700/30';
+    } else if (activitiesPresent.length === 1) {
+      const activityName = activitiesPresent[0].activity.toLowerCase();
+      const colorMap: { [key: string]: string } = {
+        'exercise': 'bg-green-500/80',
+        'yoga': 'bg-red-500/80',
+        'walking': 'bg-blue-500/80',
+        'watching': 'bg-purple-500/80',
+        'coding': 'bg-orange-500/80',
+        'calling': 'bg-cyan-500/80',
+        'puzzles': 'bg-pink-500/80',
+        'meeting': 'bg-yellow-500/80'
+      };
+      return colorMap[activityName] || 'bg-gray-500/80';
+    } else {
+      // Multiple activities - use a gradient or pattern
+      return 'bg-gradient-to-br from-blue-500/60 to-purple-500/60';
+    }
+  };
+
+  const getActivityColorClass = (activityName: string) => {
+    const colorMap: { [key: string]: string } = {
+      'exercise': 'bg-green-500',
+      'yoga': 'bg-red-500',
+      'walking': 'bg-blue-500',
+      'watching': 'bg-purple-500',
+      'coding': 'bg-orange-500',
+      'calling': 'bg-cyan-500',
+      'puzzles': 'bg-pink-500',
+      'meeting': 'bg-yellow-500'
+    };
+    return colorMap[activityName.toLowerCase()] || 'bg-gray-500';
+  };
+
   const getPercentageEffect = (effect: number) => {
-    return Math.round(effect * 10);
+    return Math.round(effect);
   };
 
   return (
@@ -107,184 +168,157 @@ export default function ActivityDriversChart({ driversData, userInfo }: Activity
           </h3>
         </motion.div>
 
-        {/* Top 5 Activities Selection */}
+        {/* Activity Drivers Heatmap */}
         <div className="mb-6">
-          <h4 className="text-lg font-semibold text-slate-300 mb-4 flex items-center">
+          <h4 className="text-lg font-semibold text-slate-300 mb-6 flex items-center">
             <Target className="w-5 h-5 mr-2 text-blue-400" />
-            Top 5 Activities by Impact
+            Activity Impact Heatmap
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {topActivities.map((activity, index) => {
-              const colors = getActivityColor(activity);
-              const percentageEffect = getPercentageEffect(activity.effect);
-              
-              return (
-                <motion.button
-                  key={activity.activity}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setSelectedActivity(activity)}
-                  className={`p-4 rounded-lg border transition-all duration-200 ${
-                    selectedActivity?.activity === activity.activity
-                      ? `${colors.bg} ${colors.border} ring-2 ring-blue-400/50`
-                      : `${colors.bg} ${colors.border} hover:ring-1 hover:ring-blue-400/30`
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`font-semibold capitalize ${colors.text}`}>
-                      {activity.activity}
-                    </span>
-                    <span className={`text-sm font-bold ${colors.accent}`}>
-                      {activity.isHelpful ? '+' : ''}{percentageEffect}%
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    {activity.daysWith} days with • {activity.daysWithout} days without
-                  </div>
-                  {activity.isHelpful ? (
-                    <TrendingUp className="w-4 h-4 text-green-400 mt-1" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4 text-red-400 mt-1" />
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Selected Activity Chart */}
-        {selectedActivity && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-slate-900/40 rounded-xl p-6 border border-slate-600/30"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h4 className="text-xl font-bold text-slate-200 capitalize">
-                  {selectedActivity.activity} Impact
-                </h4>
-                <p className="text-sm text-slate-400">
-                  Last 14 days • {selectedActivity.daysWith} days with activity
-                </p>
-              </div>
-              <div className="text-right">
-                <div className={`text-2xl font-bold ${
-                  selectedActivity.isHelpful ? 'text-green-400' : 'text-red-400'
-                }`}>
-                  {selectedActivity.isHelpful ? '+' : ''}{getPercentageEffect(selectedActivity.effect)}%
+          
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+              <span className="ml-3 text-slate-400">Loading activity data...</span>
+            </div>
+          ) : (
+            <div className="bg-slate-900/40 rounded-xl p-6 border border-slate-600/30">
+              {/* Monthly Calendar View */}
+              <div className="bg-slate-800/30 rounded-lg p-6">
+                <h5 className="text-lg font-semibold text-slate-300 mb-4 flex items-center">
+                  <Calendar className="w-5 h-5 mr-2 text-blue-400" />
+                  Monthly Activity Calendar
+                </h5>
+                
+                <div className="grid grid-cols-7 gap-1 mb-4">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                    <div key={day} className="text-center text-xs font-medium text-slate-400 p-2">
+                      {day}
+                    </div>
+                  ))}
                 </div>
-                <div className="text-xs text-slate-400">Overall Impact</div>
+                
+                <div className="grid grid-cols-7 gap-1">
+                  {monthlyData[0]?.chartData.map((day: any, index: number) => {
+                    const date = new Date(day.date);
+                    const dayOfWeek = date.getDay();
+                    const dayNumber = date.getDate();
+                    
+                    // Find activities present on this day
+                    const activitiesPresent = monthlyData.filter(activityData => 
+                      activityData.chartData[index]?.hasActivity
+                    );
+                    
+                    return (
+                      <div
+                        key={index}
+                        className="aspect-square p-1 border border-slate-600/30 rounded hover:bg-slate-700/50 transition-colors relative overflow-hidden"
+                        title={`${day.date}: ${activitiesPresent.length} activities - ${activitiesPresent.map(a => a.activity).join(', ')}`}
+                      >
+                        {activitiesPresent.length === 0 && (
+                          <div className="w-full h-full bg-slate-700/30 rounded flex items-center justify-center">
+                            <div className="text-xs text-slate-300 font-medium">{dayNumber}</div>
+                          </div>
+                        )}
+                        
+                        {activitiesPresent.length === 1 && (
+                          <div className={`w-full h-full ${getActivityColorClass(activitiesPresent[0].activity)}/80 rounded flex items-center justify-center`}>
+                            <div className="text-xs text-white font-medium">{dayNumber}</div>
+                          </div>
+                        )}
+                        
+                        {activitiesPresent.length === 2 && (
+                          <>
+                            <div className={`absolute top-0 left-0 w-1/2 h-full ${getActivityColorClass(activitiesPresent[0].activity)}/80`}></div>
+                            <div className={`absolute top-0 right-0 w-1/2 h-full ${getActivityColorClass(activitiesPresent[1].activity)}/80`}></div>
+                            <div className="relative z-10 flex items-center justify-center h-full">
+                              <div className="text-xs text-white font-medium">{dayNumber}</div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {activitiesPresent.length > 2 && (
+                          <div className="w-full h-full relative">
+                            {activitiesPresent.map((activity, activityIndex) => {
+                              const sectionWidth = 100 / activitiesPresent.length;
+                              const leftPosition = (activityIndex * sectionWidth);
+                              return (
+                                <div
+                                  key={activityIndex}
+                                  className={`absolute top-0 h-full ${getActivityColorClass(activity.activity)}/80`}
+                                  style={{
+                                    width: `${sectionWidth}%`,
+                                    left: `${leftPosition}%`
+                                  }}
+                                />
+                              );
+                            })}
+                            <div className="relative z-10 flex items-center justify-center h-full">
+                              <div className="text-xs text-white font-medium">{dayNumber}</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                <div className="mt-4 text-xs text-slate-400 text-center mb-4">
+                  Each cell is colored based on activities present. Multiple activities split the cell equally.
+                </div>
+                
+                {/* Activity Color Legend */}
+                <div className="flex flex-wrap justify-center gap-3 text-xs">
+                  {topActivities.map((activity, index) => (
+                    <div key={activity.tag} className="flex items-center">
+                      <div className={`w-2 h-2 rounded-full mr-2 ${getActivityDotColor(activity.tag)}`} />
+                      <span className="text-slate-300 capitalize">{activity.tag}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Impact Summary */}
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-green-900/20 rounded-lg p-4 border border-green-500/20">
+                  <h6 className="text-green-400 font-semibold mb-3 flex items-center">
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Positive Impact Activities
+                  </h6>
+                  <div className="space-y-2">
+                    {topActivities.filter(a => a.isHelpful).map(activity => (
+                      <div key={activity.tag} className="flex justify-between text-sm">
+                        <div className="flex flex-col">
+                          <span className="text-green-300 capitalize">{activity.tag}</span>
+                          <span className="text-xs text-green-300/70">{activity.presentDays} present • {activity.absentDays} absent</span>
+                        </div>
+                        <span className="text-green-400 font-medium">+{activity.overallEffect.toFixed(1)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="bg-red-900/20 rounded-lg p-4 border border-red-500/20">
+                  <h6 className="text-red-400 font-semibold mb-3 flex items-center">
+                    <TrendingDown className="w-4 h-4 mr-2" />
+                    Negative Impact Activities
+                  </h6>
+                  <div className="space-y-2">
+                    {topActivities.filter(a => !a.isHelpful).map(activity => (
+                      <div key={activity.tag} className="flex justify-between text-sm">
+                        <div className="flex flex-col">
+                          <span className="text-red-300 capitalize">{activity.tag}</span>
+                          <span className="text-xs text-red-300/70">{activity.presentDays} present • {activity.absentDays} absent</span>
+                        </div>
+                        <span className="text-red-400 font-medium">{activity.overallEffect.toFixed(1)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
+          )}
+        </div>
 
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
-                <span className="ml-3 text-slate-400">Loading chart data...</span>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* DSS & MC Chart */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* DSS Chart */}
-                  <div className="bg-slate-800/30 rounded-lg p-4">
-                    <h5 className="text-lg font-semibold text-blue-400 mb-4">Daily Success Score (DSS)</h5>
-                    <div className="space-y-2">
-                      {chartData.slice(-14).map((day, index) => (
-                        <div key={index} className="flex items-center">
-                          <div className="w-16 text-xs text-slate-400">
-                            {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </div>
-                          <div className="flex-1 mx-3">
-                            <div className="bg-slate-700 rounded-full h-2 relative">
-                              <div 
-                                className={`h-2 rounded-full transition-all duration-300 ${
-                                  day.hasActivity 
-                                    ? (selectedActivity.isHelpful ? 'bg-green-500' : 'bg-red-500')
-                                    : 'bg-slate-600'
-                                }`}
-                                style={{ width: `${Math.max(10, Math.min(100, (day.dss / 10) * 100))}%` }}
-                              />
-                            </div>
-                          </div>
-                          <div className="w-12 text-right text-sm font-medium text-slate-300">
-                            {day.dss.toFixed(1)}
-                          </div>
-                          <div className="w-8 text-center">
-                            {day.hasActivity ? (
-                              <div className={`w-3 h-3 rounded-full ${
-                                selectedActivity.isHelpful ? 'bg-green-500' : 'bg-red-500'
-                              }`} />
-                            ) : (
-                              <div className="w-3 h-3 rounded-full bg-slate-600" />
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* MC Chart */}
-                  <div className="bg-slate-800/30 rounded-lg p-4">
-                    <h5 className="text-lg font-semibold text-purple-400 mb-4">Mood Composite (MC)</h5>
-                    <div className="space-y-2">
-                      {chartData.slice(-14).map((day, index) => (
-                        <div key={index} className="flex items-center">
-                          <div className="w-16 text-xs text-slate-400">
-                            {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </div>
-                          <div className="flex-1 mx-3">
-                            <div className="bg-slate-700 rounded-full h-2 relative">
-                              <div 
-                                className={`h-2 rounded-full transition-all duration-300 ${
-                                  day.hasActivity 
-                                    ? (selectedActivity.isHelpful ? 'bg-green-500' : 'bg-red-500')
-                                    : 'bg-slate-600'
-                                }`}
-                                style={{ width: `${Math.max(10, Math.min(100, (day.mc / 10) * 100))}%` }}
-                              />
-                            </div>
-                          </div>
-                          <div className="w-12 text-right text-sm font-medium text-slate-300">
-                            {day.mc.toFixed(1)}
-                          </div>
-                          <div className="w-8 text-center">
-                            {day.hasActivity ? (
-                              <div className={`w-3 h-3 rounded-full ${
-                                selectedActivity.isHelpful ? 'bg-green-500' : 'bg-red-500'
-                              }`} />
-                            ) : (
-                              <div className="w-3 h-3 rounded-full bg-slate-600" />
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Legend */}
-                <div className="flex items-center justify-center space-x-6 text-sm">
-                  <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full mr-2 ${
-                      selectedActivity.isHelpful ? 'bg-green-500' : 'bg-red-500'
-                    }`} />
-                    <span className="text-slate-300">Days with {selectedActivity.activity}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded-full bg-slate-600 mr-2" />
-                    <span className="text-slate-300">Days without {selectedActivity.activity}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
       </div>
     </motion.div>
   );

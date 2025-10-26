@@ -5,7 +5,7 @@ import { calculateDrivers } from '@/lib/driversCalculator';
 export async function GET(request: NextRequest) {
   try {
     // For now, use a dummy user ID - in production, get from auth
-    const dummyUserId = 'dummy-user-id';
+    const dummyUserId = 'dummy-user';
     
     // Fetch mood entries from the last 4 weeks
     const fourWeeksAgo = new Date();

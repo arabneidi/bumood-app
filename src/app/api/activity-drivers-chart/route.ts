@@ -16,15 +16,15 @@ export async function GET(request: NextRequest) {
 
     console.log(`📊 Fetching chart data for activity: ${activity}`);
 
-    // Get mood entries from the last 14 days
-    const fourteenDaysAgo = new Date();
-    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    // Get mood entries from the last 30 days (full month)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const moodEntries = await db.moodEntry.findMany({
       where: {
         userId,
         createdAt: {
-          gte: fourteenDaysAgo
+          gte: thirtyDaysAgo
         }
       },
       orderBy: {
@@ -32,13 +32,13 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    console.log(`📊 Found ${moodEntries.length} mood entries in last 14 days`);
+    console.log(`📊 Found ${moodEntries.length} mood entries in last 30 days`);
 
     // Create chart data for each day
     const chartData = [];
     const today = new Date();
     
-    for (let i = 13; i >= 0; i--) {
+    for (let i = 29; i >= 0; i--) {
       const currentDate = new Date(today);
       currentDate.setDate(today.getDate() - i);
       const dateString = currentDate.toISOString().split('T')[0];
@@ -105,9 +105,9 @@ export async function GET(request: NextRequest) {
       chartData,
       activity,
       period: {
-        startDate: fourteenDaysAgo.toISOString(),
+        startDate: thirtyDaysAgo.toISOString(),
         endDate: new Date().toISOString(),
-        days: 14
+        days: 30
       }
     });
 
