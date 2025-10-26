@@ -1594,63 +1594,160 @@ export default function ProfilePage() {
             };
             
             if (format === 'csv') {
-              // CSV format - Split each activity into separate rows
-              const rows: string[][] = [];
+              // CSV format - Export multiple CSV files (one per data type)
+              const dateStr = new Date().toISOString().split('T')[0];
               
+              // Helper to download CSV
+              const downloadCSV = (filename: string, headers: string[], rows: any[][]) => {
+                const csvContent = [
+                  headers.join(','),
+                  ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+                ].join('\n');
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                // Small delay between downloads
+                return new Promise(resolve => setTimeout(resolve, 100));
+              };
+              
+              // 1. Export Mood Entries
+              const moodRows: string[][] = [];
               for (const entry of moodEntries) {
                 const date = new Date(entry.createdAt).toLocaleDateString();
                 const activities = parseJSON(entry.activities, []);
                 const subcategories = parseJSON(entry.selectedSubcategories, []);
                 
                 if (activities.length > 0) {
-                  // Create a row for each activity
                   for (let i = 0; i < activities.length; i++) {
-                    const activity = activities[i] || '';
-                    const subcategory = subcategories[i] || '';
-                    
-                    rows.push([
+                    moodRows.push([
                       date,
                       entry.valence,
                       entry.energy,
                       entry.focus,
                       entry.stress,
-                      entry.sleep,
-                      activity,
-                      subcategory,
-                      entry.notes || ''
+                      entry.sleep || '',
+                      activities[i] || '',
+                      subcategories[i] || '',
+                      entry.notes || '',
+                      entry.moodComposite || '',
+                      entry.waterIntake || '',
+                      entry.mealsEaten || '',
+                      entry.mealQuality || '',
+                      entry.caffeine || '',
+                      entry.alcohol || '',
+                      entry.onPeriod ? 'Yes' : 'No',
+                      entry.periodDay || '',
+                      entry.timeBucket || '',
+                      entry.reflection || ''
                     ]);
                   }
                 } else {
-                  // No activities, create single row
-                  rows.push([
+                  moodRows.push([
                     date,
                     entry.valence,
                     entry.energy,
                     entry.focus,
                     entry.stress,
-                    entry.sleep,
+                    entry.sleep || '',
                     '',
                     '',
-                    entry.notes || ''
+                    entry.notes || '',
+                    entry.moodComposite || '',
+                    entry.waterIntake || '',
+                    entry.mealsEaten || '',
+                    entry.mealQuality || '',
+                    entry.caffeine || '',
+                    entry.alcohol || '',
+                    entry.onPeriod ? 'Yes' : 'No',
+                    entry.periodDay || '',
+                    entry.timeBucket || '',
+                    entry.reflection || ''
                   ]);
                 }
               }
               
-              const headers = ['Date', 'Valence', 'Energy', 'Focus', 'Stress', 'Sleep', 'Activity', 'Subcategory', 'Notes'];
-              const csvContent = [
-                headers.join(','),
-                ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-              ].join('\n');
+              const moodHeaders = [
+                'Date', 'Valence', 'Energy', 'Focus', 'Stress', 'Sleep Hours',
+                'Activity', 'Subcategory', 'Notes', 'Mood Composite',
+                'Water Intake', 'Meals Eaten', 'Meal Quality', 'Caffeine', 'Alcohol',
+                'On Period', 'Period Day', 'Time Bucket', 'Reflection'
+              ];
+              await downloadCSV(`moodpilot-mood-entries-${dateStr}.csv`, moodHeaders, moodRows);
               
-              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-              const link = document.createElement('a');
-              const url = URL.createObjectURL(blob);
-              link.setAttribute('href', url);
-              link.setAttribute('download', `moodpilot-export-${new Date().toISOString().split('T')[0]}.csv`);
-              link.style.visibility = 'hidden';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
+              // 2. Export Goals
+              if (goals.length > 0) {
+                const goalRows = goals.map((goal: any) => [
+                  goal.title || '',
+                  goal.description || '',
+                  goal.category || '',
+                  goal.subcategory || '',
+                  goal.difficulty || '',
+                  goal.targetValue || '',
+                  goal.currentValue || '',
+                  goal.unit || '',
+                  goal.status || '',
+                  goal.dssComponent || '',
+                  goal.startDate ? new Date(goal.startDate).toLocaleDateString() : '',
+                  goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : '',
+                  goal.createdAt ? new Date(goal.createdAt).toLocaleDateString() : ''
+                ]);
+                
+                const goalHeaders = [
+                  'Title', 'Description', 'Category', 'Subcategory', 'Difficulty',
+                  'Target Value', 'Current Value', 'Unit', 'Status',
+                  'DSS Component', 'Start Date', 'Target Date', 'Created Date'
+                ];
+                await downloadCSV(`moodpilot-goals-${dateStr}.csv`, goalHeaders, goalRows);
+              }
+              
+              // 3. Export Achievements
+              if (achievements.length > 0) {
+                const achievementRows = achievements.map((achievement: any) => [
+                  achievement.title || '',
+                  achievement.description || '',
+                  achievement.icon || '',
+                  achievement.stars || '',
+                  achievement.type || '',
+                  achievement.category || '',
+                  achievement.unlockedAt ? new Date(achievement.unlockedAt).toLocaleDateString() : ''
+                ]);
+                
+                const achievementHeaders = [
+                  'Title', 'Description', 'Icon', 'Stars', 'Type', 'Category', 'Unlocked Date'
+                ];
+                await downloadCSV(`moodpilot-achievements-${dateStr}.csv`, achievementHeaders, achievementRows);
+              }
+              
+              // 4. Export User Profile
+              if (userData) {
+                const profileData = [
+                  ['Field', 'Value'],
+                  ['Name', userData.name || ''],
+                  ['Gender', userData.gender || ''],
+                  ['Age', userData.age || ''],
+                  ['Height (cm)', userData.height || ''],
+                  ['Weight (kg)', userData.weight || ''],
+                  ['University Level', userData.universityLevel || ''],
+                  ['Field of Study', userData.fieldOfStudy || ''],
+                  ['Interests', parseJSON(userData.interests, []).join('; ')],
+                  ['Favorite Authors', userData.favoriteAuthors || ''],
+                  ['Favorite Writers', userData.favoriteWriters || ''],
+                  ['Favorite Movies', userData.favoriteMovies || ''],
+                  ['Favorite Philosophers', userData.favoritePhilosophers || ''],
+                  ['Custom Favorites', JSON.stringify(parseJSON(userData.customFavorites, []))]
+                ];
+                
+                await downloadCSV(`moodpilot-profile-${dateStr}.csv`, profileData[0], profileData.slice(1));
+              }
             } else {
               // JSON format - Complete data export
               const exportData = {
