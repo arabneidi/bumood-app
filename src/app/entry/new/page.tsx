@@ -908,6 +908,12 @@ export default function NewEntry() {
                     </div>
                     
                     <div className="grid grid-cols-7 gap-1">
+                      {/* Empty cells for days before the first day of the month */}
+                      {Array.from({ length: new Date(selectedYear, selectedMonth, 1).getDay() }, (_, i) => (
+                        <div key={`empty-${i}`} className="p-2"></div>
+                      ))}
+                      
+                      {/* Days of the month */}
                       {Array.from({ length: new Date(selectedYear, selectedMonth + 1, 0).getDate() }, (_, i) => i + 1).map((day) => {
                         const isToday = selectedYear === new Date().getFullYear() && 
                                       selectedMonth === new Date().getMonth() && 
