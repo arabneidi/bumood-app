@@ -1187,7 +1187,7 @@ Current Mood:
     }
     
     if (userInfo.onPeriod) {
-      prompt += `- Currently menstruating: YES (Day ${userInfo.periodDay} of period)\n`;
+      prompt += `- Currently menstruating: YES (Day ${userInfo.periodDay || 1} of period)\n`;
       prompt += `- Average cycle length: ${userInfo.periodCycleLength} days\n`;
       
       if (userInfo.periodSymptoms && userInfo.periodSymptoms.length > 0) {
@@ -1445,7 +1445,7 @@ RESPONSE FORMAT:
 
 IMPORTANT: Be creative and original! Do NOT copy examples from this prompt. Generate unique, personalized suggestions based on the user's actual preferences and current mood.
 
-${userInfo?.onPeriod ? '\nCRITICAL PERIOD REQUIREMENT: This person is currently menstruating (Day ' + userInfo.periodDay + '). You MUST include EXACTLY ONE period-specific suggestion among your 5 suggestions. This suggestion should address:\n- Gentle physical activities (yoga, walking, stretching)\n- Pain relief techniques (heat therapy, gentle massage, breathing exercises)\n- Mood support (comforting activities, stress reduction)\n- Nutrition support (iron-rich foods, hydration, comfort foods)\n- Rest and self-care (relaxation, sleep support, pampering)\n- Avoid intense exercise, cold foods, or stressful activities\n\nPERIOD SUGGESTION EXAMPLES:\n- "Try gentle yoga poses for period cramps - Child\'s Pose, Cat-Cow, and Reclining Butterfly"\n- "Apply a warm heating pad to your lower abdomen for 15 minutes"\n- "Drink warm ginger tea to help with bloating and cramps"\n- "Take a warm bath with Epsom salts to relax your muscles"\n- "Practice deep breathing exercises to reduce period-related stress"\n- "Eat iron-rich foods like spinach, lentils, or dark chocolate"\n- "Get extra rest - take a 20-minute power nap"\n- "Use a period tracking app to log symptoms and patterns"\n\nMake this period suggestion practical, specific, and supportive!' : ''}
+${userInfo?.onPeriod ? '\nCRITICAL PERIOD REQUIREMENT: This person is currently menstruating (Day ' + (userInfo.periodDay || 1) + '). You MUST include EXACTLY ONE period-specific suggestion among your 5 suggestions. This suggestion should address:\n- Gentle physical activities (yoga, walking, stretching)\n- Pain relief techniques (heat therapy, gentle massage, breathing exercises)\n- Mood support (comforting activities, stress reduction)\n- Nutrition support (iron-rich foods, hydration, comfort foods)\n- Rest and self-care (relaxation, sleep support, pampering)\n- Avoid intense exercise, cold foods, or stressful activities\n\nPERIOD SUGGESTION EXAMPLES:\n- "Try gentle yoga poses for period cramps - Child\'s Pose, Cat-Cow, and Reclining Butterfly"\n- "Apply a warm heating pad to your lower abdomen for 15 minutes"\n- "Drink warm ginger tea to help with bloating and cramps"\n- "Take a warm bath with Epsom salts to relax your muscles"\n- "Practice deep breathing exercises to reduce period-related stress"\n- "Eat iron-rich foods like spinach, lentils, or dark chocolate"\n- "Get extra rest - take a 20-minute power nap"\n- "Use a period tracking app to log symptoms and patterns"\n\nMake this period suggestion practical, specific, and supportive!' : ''}
 ${userFeedback ? '\nIMPORTANT: Personalize based on their preferences above!' : ''}
 
 BE ULTRA-SPECIFIC! Include actual song titles, book titles, specific exercises, etc.`;
@@ -1470,7 +1470,7 @@ Current Mood:
   if (userInfo?.onPeriod) {
     prompt += `
 
-CRITICAL PERIOD REQUIREMENT: This person is currently menstruating (Day ${userInfo.periodDay}). You MUST include EXACTLY ONE period-specific suggestion among your 5 suggestions. This suggestion should address:
+CRITICAL PERIOD REQUIREMENT: This person is currently menstruating (Day ${userInfo.periodDay || 1}). You MUST include EXACTLY ONE period-specific suggestion among your 5 suggestions. This suggestion should address:
 - Gentle physical activities (yoga, walking, stretching)
 - Pain relief techniques (heat therapy, gentle massage, breathing exercises)
 - Mood support (comforting activities, stress reduction)
