@@ -364,6 +364,7 @@ export default function StatsPage() {
               moodEntries={moodEntries}
               userPreferences={userPreferences}
               timeRange={networkTimeRange}
+              driversData={driversData}
             />
           </div>
         </motion.div>

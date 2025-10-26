@@ -29,6 +29,10 @@ interface TagsNetworkGraphProps {
   moodEntries: any[];
   userPreferences: any;
   timeRange: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  driversData?: {
+    helpful?: Array<{ tag: string }>;
+    harmful?: Array<{ tag: string }>;
+  } | null;
 }
 
 interface LearnedConnection {
@@ -40,7 +44,7 @@ interface LearnedConnection {
   negativeCount: number;
 }
 
-export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRange }: TagsNetworkGraphProps) {
+export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRange, driversData }: TagsNetworkGraphProps) {
   const [graphData, setGraphData] = useState<{ nodes: TagNode[], links: TagConnection[] }>({ nodes: [], links: [] });
   const [learnedConnections, setLearnedConnections] = useState<LearnedConnection[]>([]);
   const [showLegend, setShowLegend] = useState<boolean>(false);
@@ -207,7 +211,21 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
     setGraphData({ nodes, links });
   };
 
-  const getNodeColor = (category: string) => {
+  const getNodeColor = (node: any) => {
+    // Check if this node is an activity and has drivers data
+    if (node.category === 'activity' && driversData) {
+      const helpfulActivities = driversData.helpful?.map(d => d.tag) || [];
+      const harmfulActivities = driversData.harmful?.map(d => d.tag) || [];
+      
+      if (helpfulActivities.includes(node.id)) {
+        return '#00FF88'; // Green for helpful
+      }
+      if (harmfulActivities.includes(node.id)) {
+        return '#FF6B6B'; // Red for harmful
+      }
+    }
+    
+    // Default colors for other categories
     const colors: { [key: string]: string } = {
       'activity': '#00D4FF',
       'subcategory': '#00E6FF',
@@ -219,7 +237,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
       'interests': '#FF0080',
       'outcome': '#FFD700'
     };
-    return colors[category] || '#FF6B6B';
+    return colors[node.category] || '#FF6B6B';
   };
 
   const handleNodeClick = useCallback((node: any) => {
@@ -287,7 +305,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
             nodeCanvasObjectMode={() => 'after'}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
               const label = node.label || node.id;
-              const nodeColor = getNodeColor(node.category);
+              const nodeColor = getNodeColor(node);
               const fontSize = 14 / globalScale;
               
               // Measure text
@@ -304,7 +322,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
               ctx.fillText(label, node.x!, labelY);
             }}
             nodeColor={(node: any) => {
-              const color = getNodeColor(node.category);
+              const color = getNodeColor(node);
               // Convert hex to rgba with opacity
               return color + '66'; // 66 = approximately 40% opacity in hex
             }}
@@ -351,16 +369,20 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
           
           <div className="flex flex-wrap gap-3 text-xs">
             <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-green-400 shadow-lg"></div>
+              <span className="font-semibold text-gray-800">Helpful Activities</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-red-400 shadow-lg"></div>
+              <span className="font-semibold text-gray-800">Harmful Activities</span>
+            </div>
+            <div className="flex items-center space-x-2">
               <div className="w-4 h-4 rounded-full bg-cyan-400 shadow-lg"></div>
-              <span className="font-semibold text-gray-800">Activities</span>
+              <span className="font-semibold text-gray-800">Other Activities</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 rounded-full bg-teal-400 shadow-lg"></div>
               <span className="font-semibold text-gray-800">Subcategories</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-lg"></div>
-              <span className="font-semibold text-gray-800">Outcomes</span>
             </div>
           </div>
         </div>
