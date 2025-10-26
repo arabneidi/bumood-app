@@ -243,11 +243,20 @@ export default function NewEntry() {
   useEffect(() => {
     if (moodEntries && moodEntries.length > 0) {
       const currentlyOnPeriod = isCurrentlyOnPeriod();
+      console.log('🔄 Updating formData.onPeriod:', { 
+        currentlyOnPeriod, 
+        currentFormDataOnPeriod: formData.onPeriod,
+        moodEntriesLength: moodEntries.length 
+      });
+      
       if (currentlyOnPeriod !== formData.onPeriod) {
         setFormData(prev => ({
           ...prev,
           onPeriod: currentlyOnPeriod
         }));
+        console.log('✅ Updated formData.onPeriod to:', currentlyOnPeriod);
+      } else {
+        console.log('⏭️ No update needed - formData.onPeriod already matches');
       }
     }
   }, [moodEntries]);
