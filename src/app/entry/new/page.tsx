@@ -187,10 +187,23 @@ export default function NewEntry() {
 
   // Get current period day from database if user is on period
   const getCurrentPeriodDay = () => {
-    if (!isCurrentlyOnPeriod()) return 0;
+    if (!isCurrentlyOnPeriod()) {
+      console.log('🔍 getCurrentPeriodDay: Not currently on period, returning 0');
+      return 0;
+    }
     
     const mostRecentEntry = moodEntries
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+    
+    console.log('🔍 getCurrentPeriodDay Debug:', {
+      mostRecentEntry: mostRecentEntry ? {
+        id: mostRecentEntry.id,
+        createdAt: mostRecentEntry.createdAt,
+        onPeriod: mostRecentEntry.onPeriod,
+        periodDay: mostRecentEntry.periodDay
+      } : null,
+      calculatedPeriodDay: mostRecentEntry?.periodDay || 0
+    });
     
     return mostRecentEntry?.periodDay || 0;
   };
