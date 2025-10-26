@@ -1826,6 +1826,12 @@ export default function ProfilePage() {
                 const activities = parseJSON(entry.activities, []);
                 const subcategories = parseJSON(entry.selectedSubcategories, []);
                 
+                // Debug logging
+                if (entry.activities) {
+                  console.log('Raw activities:', entry.activities);
+                  console.log('Parsed activities:', activities);
+                }
+                
                 // Parse activity entries with exact timestamps
                 const activityEntries = parseJSON(entry.activityEntries, []);
                 
@@ -2035,7 +2041,7 @@ export default function ProfilePage() {
                   subcategory: goal.subcategory,
                   difficulty: goal.difficulty,
                   targetValue: goal.targetValue,
-                  currentValue: goal.currentValue,
+                  currentValue: goal.currentValue || 0,
                   unit: goal.unit,
                   status: goal.status || (goal.completed ? 'completed' : 'in_progress'),
                   completed: goal.completed || false,
@@ -2043,9 +2049,10 @@ export default function ProfilePage() {
                   streak: goal.streak || 0,
                   bestStreak: goal.bestStreak || 0,
                   dssComponent: goal.dssComponent,
-                  startDate: goal.startDate,
+                  startDate: goal.startDate || goal.createdAt,
                   targetDate: goal.targetDate,
                   createdAt: goal.createdAt,
+                  updatedAt: goal.updatedAt,
                   progress: goal.currentValue && goal.targetValue 
                     ? Math.round((goal.currentValue / goal.targetValue) * 100) 
                     : 0
