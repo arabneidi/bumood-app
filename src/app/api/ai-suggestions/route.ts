@@ -90,12 +90,12 @@ export async function GET(req: NextRequest) {
       },
       userPreferences: {
         interests,
-        favoriteWriters: user.favoriteWriters ? JSON.parse(user.favoriteWriters) : [],
-        favoriteSportsFigures: user.favoriteSportsFigures ? JSON.parse(user.favoriteSportsFigures) : [],
-        favoriteMusicians: user.favoriteMusicians ? JSON.parse(user.favoriteMusicians) : [],
-        favoriteArtists: user.favoriteArtists ? JSON.parse(user.favoriteArtists) : [],
-        favoriteMovies: user.favoriteMovies ? JSON.parse(user.favoriteMovies) : [],
-        favoritePhilosophers: user.favoritePhilosophers ? JSON.parse(user.favoritePhilosophers) : []
+        favoriteWriters: user.favoriteWriters ? (user.favoriteWriters.startsWith('[') ? JSON.parse(user.favoriteWriters) : user.favoriteWriters.split(',').map(s => s.trim())) : [],
+        favoriteSportsFigures: user.favoriteSportsFigures ? (user.favoriteSportsFigures.startsWith('[') ? JSON.parse(user.favoriteSportsFigures) : user.favoriteSportsFigures.split(',').map(s => s.trim())) : [],
+        favoriteMusicians: user.favoriteMusicians ? (user.favoriteMusicians.startsWith('[') ? JSON.parse(user.favoriteMusicians) : user.favoriteMusicians.split(',').map(s => s.trim())) : [],
+        favoriteArtists: user.favoriteArtists ? (user.favoriteArtists.startsWith('[') ? JSON.parse(user.favoriteArtists) : user.favoriteArtists.split(',').map(s => s.trim())) : [],
+        favoriteMovies: user.favoriteMovies ? (user.favoriteMovies.startsWith('[') ? JSON.parse(user.favoriteMovies) : user.favoriteMovies.split(',').map(s => s.trim())) : [],
+        favoritePhilosophers: user.favoritePhilosophers ? (user.favoritePhilosophers.startsWith('[') ? JSON.parse(user.favoritePhilosophers) : user.favoritePhilosophers.split(',').map(s => s.trim())) : []
       },
       recentEntries: recentEntries,
       moodHistory: {
