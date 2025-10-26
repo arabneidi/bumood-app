@@ -242,10 +242,12 @@ async function generateWithOpenAI(profile: UserMoodProfile): Promise<AISuggestio
   // Check for user's stored API key first, then environment variables
   let apiKey = null;
   
+  // Only try localStorage on client side
   if (typeof window !== 'undefined') {
     apiKey = localStorage.getItem('openai_api_key');
   }
   
+  // Always fall back to environment variables (works on server side)
   if (!apiKey) {
     apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
   }
