@@ -413,6 +413,10 @@ export async function POST(request: NextRequest) {
           }
         });
         console.log(`🎉 Unlocked: ${achievement.title}`);
+        
+        // Set flag to regenerate Pro Tips when new badge is achieved
+        // This will be picked up by the frontend to trigger AI regeneration
+        console.log('🏆 New badge achieved - Pro Tips will regenerate');
 
         // Create congratulation for achievement unlock
         try {

@@ -249,7 +249,7 @@ export default function Home() {
           }
         } else {
           // Check if we should regenerate Pro Tips (only when there's new data)
-          const shouldRegenerateProTips = hasNewProTipData || localStorage.getItem('goals-changed') || localStorage.getItem('mood-entry-created');
+          const shouldRegenerateProTips = hasNewProTipData || localStorage.getItem('goals-changed') || localStorage.getItem('mood-entry-created') || localStorage.getItem('badge-achieved');
           
           if (shouldRegenerateProTips) {
             // Generate new AI Pro Tips
@@ -267,6 +267,7 @@ export default function Home() {
                 }
                 localStorage.removeItem('goals-changed');
                 localStorage.removeItem('mood-entry-created');
+                localStorage.removeItem('badge-achieved');
               } else {
                 console.log('⚠️ Personalized quote API failed, using fallback');
                 setProTip("Your mental wellness journey starts here.");
