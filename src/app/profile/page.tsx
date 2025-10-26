@@ -1570,17 +1570,20 @@ export default function ProfilePage() {
           setShowExportModal(false);
           try {
             // Fetch all data
-            const [moodEntriesRes, userRes, goalsRes, achievementsRes] = await Promise.all([
+            const [moodEntriesRes, userRes, goalsRes, achievementsRes, predefinedActivitiesRes] = await Promise.all([
               fetch('/api/mood-entries'),
               fetch('/api/user?userId=dummy-user'),
               fetch('/api/goals'),
-              fetch('/api/achievements')
+              fetch('/api/achievements'),
+              fetch('/api/predefined-activities')
             ]);
             
             const moodEntries = await moodEntriesRes.json();
             const userData = await userRes.json();
             const goals = await goalsRes.json();
             const achievements = await achievementsRes.json();
+            const predefinedActivitiesData = await predefinedActivitiesRes.json();
+            const predefinedActivities = predefinedActivitiesData.activities || [];
             
             // Helper function to parse JSON strings safely
             const parseJSON = (str: string | null | undefined, fallback: any = []) => {
@@ -1673,17 +1676,65 @@ export default function ProfilePage() {
               rows.push('');
               rows.push('');
               
-              // 4. Mood Entries
+              // 4. Predefined Activities with DSS Info
+              rows.push('PREDEFINED ACTIVITIES');
+              if (predefinedActivities.length > 0) {
+                rows.push('Activity Name,Category,DSS Component');
+                for (const activity of predefinedActivities) {
+                  rows.push([
+                    escapeCsv(activity.name),
+                    escapeCsv(activity.category),
+                    escapeCsv(activity.dssComponent)
+                  ].join(','));
+                }
+              } else {
+                rows.push('No predefined activities found');
+              }
+              
+              rows.push('');
+              rows.push('');
+              
+              // 5. Mood Entries
               rows.push('MOOD ENTRIES');
-              rows.push('Date,Valence,Energy,Focus,Stress,Sleep Hours,Activity,Subcategory,Notes,Mood Composite,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,On Period,Period Day,Time Bucket,Reflection');
+              rows.push('Date,Valence,Energy,Focus,Stress,Sleep Hours,Activity,Subcategory,DSS Component,Notes,Mood Composite,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,On Period,Period Day,Time Bucket,Reflection');
               
               for (const entry of moodEntries) {
                 const date = new Date(entry.createdAt).toLocaleDateString();
                 const activities = parseJSON(entry.activities, []);
                 const subcategories = parseJSON(entry.selectedSubcategories, []);
                 
+                // Parse DSS analysis
+                let dssAnalysisData: any = {};
+                if (entry.dssAnalysis) {
+                  try {
+                    const parsedDSS = typeof entry.dssAnalysis === 'string' 
+                      ? JSON.parse(entry.dssAnalysis) 
+                      : entry.dssAnalysis;
+                    dssAnalysisData = parsedDSS || {};
+                  } catch (e) {
+                    console.error('Error parsing DSS analysis:', e);
+                  }
+                }
+                
                 if (activities.length > 0) {
                   for (let i = 0; i < activities.length; i++) {
+                    const activityName = activities[i];
+                    const subcategory = subcategories[i] || '';
+                    
+                    // Get DSS component from analysis or predefined activities
+                    let dssComponent = '';
+                    if (dssAnalysisData[activityName]) {
+                      dssComponent = dssAnalysisData[activityName].component || '';
+                    } else {
+                      // Find from predefined activities
+                      const predefinedActivity = predefinedActivities.find(
+                        (a: any) => a.name === activityName
+                      );
+                      if (predefinedActivity) {
+                        dssComponent = predefinedActivity.dssComponent;
+                      }
+                    }
+                    
                     rows.push([
                       escapeCsv(date),
                       escapeCsv(entry.valence),
@@ -1691,8 +1742,9 @@ export default function ProfilePage() {
                       escapeCsv(entry.focus),
                       escapeCsv(entry.stress),
                       escapeCsv(entry.sleep),
-                      escapeCsv(activities[i]),
-                      escapeCsv(subcategories[i]),
+                      escapeCsv(activityName),
+                      escapeCsv(subcategory),
+                      escapeCsv(dssComponent),
                       escapeCsv(entry.notes),
                       escapeCsv(entry.moodComposite),
                       escapeCsv(entry.waterIntake),
@@ -1714,6 +1766,7 @@ export default function ProfilePage() {
                     escapeCsv(entry.focus),
                     escapeCsv(entry.stress),
                     escapeCsv(entry.sleep),
+                    escapeCsv(''),
                     escapeCsv(''),
                     escapeCsv(''),
                     escapeCsv(entry.notes),
@@ -1748,28 +1801,78 @@ export default function ProfilePage() {
               const exportData = {
                 exportDate: new Date().toISOString(),
                 userProfile: userData,
-                moodEntries: moodEntries.map((entry: any) => ({
-                  id: entry.id,
-                  date: entry.createdAt,
-                  valence: entry.valence,
-                  energy: entry.energy,
-                  focus: entry.focus,
-                  stress: entry.stress,
-                  sleep: entry.sleep,
-                  activities: parseJSON(entry.activities, []),
-                  subcategories: parseJSON(entry.selectedSubcategories, []),
-                  notes: entry.notes,
-                  moodComposite: entry.moodComposite,
-                  waterIntake: entry.waterIntake,
-                  mealsEaten: entry.mealsEaten,
-                  mealQuality: entry.mealQuality,
-                  caffeine: entry.caffeine,
-                  alcohol: entry.alcohol,
-                  onPeriod: entry.onPeriod,
-                  periodDay: entry.periodDay,
-                  timeBucket: entry.timeBucket,
-                  reflection: entry.reflection
+                predefinedActivities: predefinedActivities.map((activity: any) => ({
+                  id: activity.id,
+                  name: activity.name,
+                  icon: activity.icon,
+                  category: activity.category,
+                  dssComponent: activity.dssComponent
                 })),
+                moodEntries: moodEntries.map((entry: any) => {
+                  const activities = parseJSON(entry.activities, []);
+                  const subcategories = parseJSON(entry.selectedSubcategories, []);
+                  
+                  // Parse DSS analysis
+                  let dssAnalysisData: any = {};
+                  if (entry.dssAnalysis) {
+                    try {
+                      const parsedDSS = typeof entry.dssAnalysis === 'string' 
+                        ? JSON.parse(entry.dssAnalysis) 
+                        : entry.dssAnalysis;
+                      dssAnalysisData = parsedDSS || {};
+                    } catch (e) {
+                      console.error('Error parsing DSS analysis:', e);
+                    }
+                  }
+                  
+                  // Build activities with DSS information
+                  const activitiesWithDSS = activities.map((activityName: string, index: number) => {
+                    const subcategory = subcategories[index] || '';
+                    
+                    // Get DSS component from analysis or predefined activities
+                    let dssComponent = '';
+                    if (dssAnalysisData[activityName]) {
+                      dssComponent = dssAnalysisData[activityName].component || '';
+                    } else {
+                      // Find from predefined activities
+                      const predefinedActivity = predefinedActivities.find(
+                        (a: any) => a.name === activityName
+                      );
+                      if (predefinedActivity) {
+                        dssComponent = predefinedActivity.dssComponent;
+                      }
+                    }
+                    
+                    return {
+                      name: activityName,
+                      subcategory: subcategory,
+                      dssComponent: dssComponent,
+                      dssAnalysis: dssAnalysisData[activityName] || null
+                    };
+                  });
+                  
+                  return {
+                    id: entry.id,
+                    date: entry.createdAt,
+                    valence: entry.valence,
+                    energy: entry.energy,
+                    focus: entry.focus,
+                    stress: entry.stress,
+                    sleep: entry.sleep,
+                    activities: activitiesWithDSS,
+                    notes: entry.notes,
+                    moodComposite: entry.moodComposite,
+                    waterIntake: entry.waterIntake,
+                    mealsEaten: entry.mealsEaten,
+                    mealQuality: entry.mealQuality,
+                    caffeine: entry.caffeine,
+                    alcohol: entry.alcohol,
+                    onPeriod: entry.onPeriod,
+                    periodDay: entry.periodDay,
+                    timeBucket: entry.timeBucket,
+                    reflection: entry.reflection
+                  };
+                }),
                 goals: goals.map((goal: any) => ({
                   id: goal.id,
                   title: goal.title,
