@@ -248,34 +248,21 @@ export default function Home() {
             setProTip("Your mental wellness journey starts here.");
           }
         } else {
-          // Only show pro tips if we have mood entries
-          if (moodEntries.length === 0) {
-            setProTip("");
-            console.log('🚫 No mood entries - hiding pro tips');
-          } else {
-            // Load saved Pro Tip from localStorage
-            const savedProTip = localStorage.getItem('pro-tip');
-            if (savedProTip) {
-              setProTip(savedProTip);
-              console.log('📱 Loaded saved Pro Tip from localStorage');
+          // Always generate AI Pro Tips
+          try {
+            const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
+            if (quoteRes.ok) {
+              const quoteData = await quoteRes.json();
+              setProTip(quoteData.quote);
+              localStorage.setItem('pro-tip', quoteData.quote);
+              console.log('🎯 Generated AI Pro Tip:', quoteData.quote);
             } else {
-              // No saved Pro Tip, generate one
-              try {
-                const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
-                if (quoteRes.ok) {
-                  const quoteData = await quoteRes.json();
-                  setProTip(quoteData.quote);
-                  localStorage.setItem('pro-tip', quoteData.quote);
-                  console.log('🎯 Generated initial Pro Tip');
-                } else {
-                  console.log('⚠️ Personalized quote API failed, using fallback');
-                  setProTip("Your mental wellness journey starts here.");
-                }
-              } catch (error) {
-                console.error('Error generating personalized quote:', error);
-                setProTip("Your mental wellness journey starts here.");
-              }
+              console.log('⚠️ Personalized quote API failed, using fallback');
+              setProTip("Your mental wellness journey starts here.");
             }
+          } catch (error) {
+            console.error('Error generating personalized quote:', error);
+            setProTip("Your mental wellness journey starts here.");
           }
         }
 
@@ -470,8 +457,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hero Section - Pro Tips - Only show if we have mood entries */}
-      {moodEntries.length > 0 && (
+      {/* Hero Section - Pro Tips - Always show */}
+      {true && (
         <div className="relative overflow-hidden py-12">
         {/* Pro Tips Content Box */}
         <motion.div
