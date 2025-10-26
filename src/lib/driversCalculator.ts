@@ -163,15 +163,90 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
       });
     }
 
+    // Calculate MC effect for this activity using EXACT logic from DSS vs MC chart
+    let mcEffect = 0;
+    try {
+      // Get MC values for present and absent days
+      const presentMCValues: number[] = [];
+      const absentMCValues: number[] = [];
+      
+      // Calculate MC for present days - EXACT copy from DSS vs MC chart
+      for (const dayKey of presentDays) {
+        const entries = entriesByDate.get(dayKey)!;
+        
+        // Average all entries for this day (same as DSS vs MC chart logic)
+        const avgValence = entries.reduce((sum, e) => sum + e.valence, 0) / entries.length;
+        const avgEnergy = entries.reduce((sum, e) => sum + e.energy, 0) / entries.length;
+        const avgFocus = entries.reduce((sum, e) => sum + e.focus, 0) / entries.length;
+        const avgStress = entries.reduce((sum, e) => sum + e.stress, 0) / entries.length;
+
+        // For MC calculation - EXACTLY like DSS vs MC chart:
+        // Always use new Date() (current time) to determine the time bucket
+        // This ensures the same bucket is used for historical data filtering
+        const mcDate = now;
+        
+        const mcResult = await calculateMoodComposite(
+          entries[0].userId,
+          avgValence,
+          avgEnergy,
+          avgFocus,
+          avgStress,
+          mcDate
+        );
+        
+        presentMCValues.push(mcResult.moodComposite);
+      }
+
+      // Calculate MC for absent days - EXACT copy from DSS vs MC chart
+      for (const dayKey of absentDays) {
+        const entries = entriesByDate.get(dayKey)!;
+        
+        // Average all entries for this day (same as DSS vs MC chart logic)
+        const avgValence = entries.reduce((sum, e) => sum + e.valence, 0) / entries.length;
+        const avgEnergy = entries.reduce((sum, e) => sum + e.energy, 0) / entries.length;
+        const avgFocus = entries.reduce((sum, e) => sum + e.focus, 0) / entries.length;
+        const avgStress = entries.reduce((sum, e) => sum + e.stress, 0) / entries.length;
+
+        // For MC calculation - EXACTLY like DSS vs MC chart:
+        // Always use new Date() (current time) to determine the time bucket
+        // This ensures the same bucket is used for historical data filtering
+        const mcDate = now;
+        
+        const mcResult = await calculateMoodComposite(
+          entries[0].userId,
+          avgValence,
+          avgEnergy,
+          avgFocus,
+          avgStress,
+          mcDate
+        );
+        
+        absentMCValues.push(mcResult.moodComposite);
+      }
+
+      // Calculate MC effect (difference of means)
+      if (presentMCValues.length > 0 && absentMCValues.length > 0) {
+        const presentMCMean = presentMCValues.reduce((sum, val) => sum + val, 0) / presentMCValues.length;
+        const absentMCMean = absentMCValues.reduce((sum, val) => sum + val, 0) / absentMCValues.length;
+        mcEffect = presentMCMean - absentMCMean;
+      }
+      
+      console.log(`📊 ${activity} MC calculation: present=${presentMCValues.length} days, absent=${absentMCValues.length} days, effect=${mcEffect.toFixed(3)}`);
+      console.log(`📊 ${activity} MC values - Present: [${presentMCValues.map(v => v.toFixed(3)).join(', ')}], Absent: [${absentMCValues.slice(0, 5).map(v => v.toFixed(3)).join(', ')}]`);
+    } catch (error) {
+      console.error(`Error calculating MC for ${activity}:`, error);
+      mcEffect = 0;
+    }
+
     drivers.push({
       tag: activity,
       occurrences: activityCounts.get(activity)!,
       presentDays: presentDays.length,
       absentDays: absentDays.length,
       dssEffect,
-      mcEffect: 0, // Skip MC for now
-      overallEffect: dssEffect, // Use DSS effect as overall effect
-      isHelpful: dssEffect > 0
+      mcEffect,
+      overallEffect: (dssEffect + mcEffect) / 2, // Average of DSS and MC effects
+      isHelpful: (dssEffect + mcEffect) / 2 > 0
     });
   }
 
