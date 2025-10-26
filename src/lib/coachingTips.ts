@@ -129,10 +129,26 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
     prompt += `- Entries Today: ${todayMoodAverages.entryCount}\n`;
   }
 
-  // Recent activities with time
-  if (recentActivities && recentActivities.length > 0) {
-    prompt += `\nToday's Activities: ${recentActivities.join(', ')}\n`;
-    prompt += `Activity Time: ${userProfile.currentTime}\n`;
+  // Today's activities with times
+  const today = new Date().toISOString().split('T')[0];
+  const todayEntries = userProfile.recentEntries.filter((entry: any) => {
+    const entryDate = new Date(entry.createdAt).toISOString().split('T')[0];
+    return entryDate === today && entry.activities && entry.activities.length > 0;
+  });
+
+  if (todayEntries.length > 0) {
+    prompt += `\nToday's Activities:\n`;
+    todayEntries.forEach((entry: any) => {
+      const time = new Date(entry.createdAt).toLocaleTimeString('en-US', { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      const activities = Array.isArray(entry.activities) ? entry.activities.join(', ') : entry.activities;
+      prompt += `- ${time}: ${activities}\n`;
+    });
+  } else {
+    prompt += `\nToday's Activities: None logged yet\n`;
   }
 
   // Active goals
@@ -464,8 +480,6 @@ Focus on timing and Power Hours data. Give ONE short, actionable tip based on th
 Respond with ONLY the tip text - no formatting, no "Coaching Tip:" prefix, no extra text.`;
 
   console.log('🎯 Generating AI coaching tip...');
-  console.log('📝 EXACT PROMPT SENT TO AI FOR PRO TIPS:');
-  console.log(prompt);
   
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',

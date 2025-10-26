@@ -233,21 +233,6 @@ export default function Home() {
           setIsGeneratingProTip(true);
           try {
             console.log('🎯 CLIENT: Fetching pro tips from API...');
-            
-            // First fetch the prompt to see what's being sent to AI
-            try {
-              const promptRes = await fetch(`/api/debug-prompt?userId=dummy-user`);
-              if (promptRes.ok) {
-                const promptData = await promptRes.json();
-                console.log('📝 EXACT LIVE PROMPT SENT TO AI FOR PRO TIPS:');
-                console.log('==========================================');
-                console.log(promptData.prompt);
-                console.log('==========================================');
-              }
-            } catch (error) {
-              console.log('⚠️ Could not fetch prompt:', error);
-            }
-            
             const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
             if (quoteRes.ok) {
               const quoteData = await quoteRes.json();
@@ -277,7 +262,7 @@ export default function Home() {
             setIsGeneratingProTip(false);
           }
         } else if (shouldRegenerateProTips && isGeneratingProTip) {
-          console.log('🚫 Pro Tips already generating, skipping duplicate request');
+          console.log('⏳ Pro Tips already generating, skipping duplicate request');
         } else {
           // Load saved Pro Tip from localStorage (no regeneration needed)
           const savedProTip = localStorage.getItem('pro-tip');
@@ -317,6 +302,11 @@ export default function Home() {
 
     fetchData();
   }, [timeRange]); // Refetch when time range changes or component mounts
+  
+  // Debug logging for timeRange changes
+  useEffect(() => {
+    console.log('🔄 TimeRange changed to:', timeRange);
+  }, [timeRange]);
 
   // Delete entry function
   const handleDeleteEntry = (entryId: string) => {

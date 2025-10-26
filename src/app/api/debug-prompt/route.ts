@@ -145,10 +145,26 @@ export async function GET(request: NextRequest) {
         prompt += `- Entries Today: ${profile.todayMoodAverages.entryCount}\n`;
       }
 
-      // Recent activities with time
-      if (profile.recentActivities && profile.recentActivities.length > 0) {
-        prompt += `\nToday's Activities: ${profile.recentActivities.join(', ')}\n`;
-        prompt += `Activity Time: ${profile.currentTime}\n`;
+      // Today's activities with times
+      const today = new Date().toISOString().split('T')[0];
+      const todayEntries = profile.recentEntries.filter((entry: any) => {
+        const entryDate = new Date(entry.createdAt).toISOString().split('T')[0];
+        return entryDate === today && entry.activities && entry.activities.length > 0;
+      });
+
+      if (todayEntries.length > 0) {
+        prompt += `\nToday's Activities:\n`;
+        todayEntries.forEach((entry: any) => {
+          const time = new Date(entry.createdAt).toLocaleTimeString('en-US', { 
+            hour12: false, 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+          const activities = Array.isArray(entry.activities) ? entry.activities.join(', ') : entry.activities;
+          prompt += `- ${time}: ${activities}\n`;
+        });
+      } else {
+        prompt += `\nToday's Activities: None logged yet\n`;
       }
 
       // Active goals

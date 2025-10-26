@@ -175,6 +175,7 @@ export async function GET(request: NextRequest) {
       currentMood,
       todayMoodAverages, // Today's mood averages
       powerHoursData, // Power Hours insights
+      recentEntries: todayEntries, // Add today's entries for activity filtering
       gender: user.gender || undefined,
       age: user.age || undefined,
       personality: user.personality || undefined,
