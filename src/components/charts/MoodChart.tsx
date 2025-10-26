@@ -23,7 +23,7 @@ export default function MoodChart({ data, type = 'line', height = 300 }: MoodCha
   const dailyAverages = Object.entries(entriesByDate)
     .map(([dateKey, entries]) => ({
       dateKey,
-      date: new Date(dateKey).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      date: `${dateKey.split('-')[0]}-${dateKey.split('-')[1]}-${dateKey.split('-')[2]}`,
       mood: entries.reduce((sum, e) => sum + e.valence, 0) / entries.length,
       energy: entries.reduce((sum, e) => sum + e.energy, 0) / entries.length,
       focus: entries.reduce((sum, e) => sum + e.focus, 0) / entries.length,

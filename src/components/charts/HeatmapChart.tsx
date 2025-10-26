@@ -65,7 +65,7 @@ export default function HeatmapChart({ data }: HeatmapChartProps) {
           return (
             <div key={weekKey} className="space-y-1">
               <div className="text-xs text-gray-500 text-center">
-                {new Date(weekKey).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {`${new Date(weekKey).getUTCFullYear()}-${String(new Date(weekKey).getUTCMonth() + 1).padStart(2, '0')}-${String(new Date(weekKey).getUTCDate()).padStart(2, '0')}`}
               </div>
               <div className="grid grid-cols-7 gap-1">
                 {Array.from({ length: 7 }, (_, dayIndex) => {

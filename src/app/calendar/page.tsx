@@ -153,7 +153,7 @@ export default function CalendarPage() {
                 <ChevronLeft className="w-6 h-6" />
               </button>
               <h2 className="text-3xl font-bold">
-                {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                {currentMonth.getUTCFullYear()} {currentMonth.toLocaleDateString('en-US', { month: 'long' })}
               </h2>
               <button
                 onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
@@ -200,7 +200,7 @@ export default function CalendarPage() {
 
           <div className="lg:col-span-1 bg-slate-800/40 backdrop-blur-xl rounded-3xl p-8 border border-slate-700/50">
             <h3 className="text-2xl font-bold mb-6">
-              {selectedDate ? selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Select a date'}
+              {selectedDate ? `${selectedDate.getUTCFullYear()} ${selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}` : 'Select a date'}
             </h3>
             
             {selectedEntry ? (

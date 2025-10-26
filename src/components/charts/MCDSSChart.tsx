@@ -24,7 +24,7 @@ export default function MCDSSChart({ data, height = 300 }: MCDSSChartProps) {
     const itemDate = new Date(year, month - 1, day); // Local timezone
     
     return {
-      date: itemDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      date: `${itemDate.getUTCFullYear()}-${String(itemDate.getUTCMonth() + 1).padStart(2, '0')}-${String(itemDate.getUTCDate()).padStart(2, '0')}`,
       mc: parseFloat(item.mc.toFixed(2)),
       dss: parseFloat(item.dss.toFixed(2))
     };

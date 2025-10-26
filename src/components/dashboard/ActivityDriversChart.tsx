@@ -369,7 +369,7 @@ export default function ActivityDriversChart({
               {isCached && (
                 <div className="flex items-center mb-3 text-xs text-purple-300">
                   <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                  <span>Cached analysis • Last updated: {cacheTimestamp ? new Date(cacheTimestamp).toLocaleString() : 'Unknown'}</span>
+                  <span>Cached analysis • Last updated: {cacheTimestamp ? new Date(cacheTimestamp).toISOString().split('T')[0] : 'Unknown'}</span>
                 </div>
               )}
               
@@ -381,7 +381,7 @@ export default function ActivityDriversChart({
           )}
 
           <p className="text-xs text-slate-400 text-center mt-4">
-            Analysis based on last 4 weeks • Updated {new Date().toLocaleDateString()}
+            Analysis based on last 4 weeks • Updated {new Date().toISOString().split('T')[0]}
           </p>
         </motion.div>
       </div>

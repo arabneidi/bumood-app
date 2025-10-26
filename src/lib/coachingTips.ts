@@ -311,7 +311,7 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
     
     if (todayActivities.moodEntry) {
       prompt += `\nMood Entry Today:\n`;
-      prompt += `- Time: ${new Date(todayActivities.moodEntry.time).toLocaleString()}\n`;
+      prompt += `- Time: ${new Date(todayActivities.moodEntry.time).toISOString().split('T')[0]}\n`;
       prompt += `- Mood: Happiness ${todayActivities.moodEntry.valence}/10, Energy ${todayActivities.moodEntry.energy}/10, Stress ${todayActivities.moodEntry.stress}/10, Sleep ${todayActivities.moodEntry.sleep}/10\n`;
       if (todayActivities.moodEntry.activities && Array.isArray(todayActivities.moodEntry.activities) && todayActivities.moodEntry.activities.length > 0) {
         prompt += `- Activities Done: ${todayActivities.moodEntry.activities.join(', ')}\n`;
@@ -344,7 +344,7 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
   if (completedGoals && completedGoals.length > 0) {
     prompt += `\n🏆 COMPLETED GOALS (Past Achievements):\n`;
     completedGoals.forEach(goal => {
-      const completedDate = new Date(goal.completedAt).toLocaleDateString();
+      const completedDate = new Date(goal.completedAt).toISOString().split('T')[0];
       prompt += `- "${goal.title}" (${goal.category}${goal.subcategory ? ` - ${goal.subcategory}` : ''}) - Completed ${completedDate}\n`;
       if (goal.description) {
         prompt += `  Description: ${goal.description}\n`;
@@ -360,7 +360,7 @@ export async function generateCoachingTip(userProfile: UserProfile): Promise<str
   if (achievedBadges && achievedBadges.length > 0) {
     prompt += `\n🎖️ ACHIEVED BADGES (Capabilities & Milestones):\n`;
     achievedBadges.forEach(badge => {
-      const unlockedDate = new Date(badge.unlockedAt).toLocaleDateString();
+      const unlockedDate = new Date(badge.unlockedAt).toISOString().split('T')[0];
       prompt += `- ${badge.icon} "${badge.title}" (${badge.stars}⭐) - ${badge.type} - Unlocked ${unlockedDate}\n`;
       if (badge.description) {
         prompt += `  ${badge.description}\n`;

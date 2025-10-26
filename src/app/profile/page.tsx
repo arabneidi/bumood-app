@@ -989,7 +989,7 @@ export default function ProfilePage() {
                   </p>
                   {aiConfig.openai.lastUsed && (
                     <p className="text-slate-400 text-xs">
-                      Last used: {new Date(aiConfig.openai.lastUsed).toLocaleDateString()}
+                      Last used: {new Date(aiConfig.openai.lastUsed).toISOString().split('T')[0]}
                     </p>
                   )}
                 </motion.div>
@@ -1024,7 +1024,7 @@ export default function ProfilePage() {
                   </p>
                   {aiConfig.gemini.lastUsed && (
                     <p className="text-slate-400 text-xs">
-                      Last used: {new Date(aiConfig.gemini.lastUsed).toLocaleDateString()}
+                      Last used: {new Date(aiConfig.gemini.lastUsed).toISOString().split('T')[0]}
                     </p>
                   )}
                 </motion.div>
@@ -1059,7 +1059,7 @@ export default function ProfilePage() {
                   </p>
                   {aiConfig.textcortex.lastUsed && (
                     <p className="text-slate-400 text-xs">
-                      Last used: {new Date(aiConfig.textcortex.lastUsed).toLocaleDateString()}
+                      Last used: {new Date(aiConfig.textcortex.lastUsed).toISOString().split('T')[0]}
                     </p>
                   )}
                 </motion.div>
