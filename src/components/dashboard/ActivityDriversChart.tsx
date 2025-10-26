@@ -170,7 +170,7 @@ export default function ActivityDriversChart({ driversData, userInfo }: Activity
                   <span className={`text-sm font-medium ${
                     activity.isHelpful ? 'text-green-400' : 'text-red-400'
                   }`}>
-                    {activity.isHelpful ? '+' : ''}{Math.round(activity.overallEffect)}%
+                    {activity.isHelpful ? '+' : ''}{activity.overallEffect.toFixed(3)}
                   </span>
                 </div>
                 <div className="text-xs text-slate-400">
@@ -206,7 +206,8 @@ export default function ActivityDriversChart({ driversData, userInfo }: Activity
             {/* Calendar Grid */}
             <div className="grid grid-cols-7 gap-1">
               {monthlyData[0]?.chartData.map((day: any, index: number) => {
-                const dayNumber = new Date(day.date).getDate();
+                // Parse date string directly to avoid timezone issues
+                const dayNumber = parseInt(day.date.split('-')[2]);
                 
                 // Find activities present on this day
                 const activitiesPresent = monthlyData.filter(activityData => 

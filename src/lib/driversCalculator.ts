@@ -61,6 +61,7 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
   // Calculate DSS for each day (EXACT logic from DSS vs MC chart)
   const dailyDSS = new Map<string, number>();
   const sortedDates = Array.from(entriesByDate.keys()).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  const now = new Date(); // Current time for MC calculation
   
   for (const dateKey of sortedDates) {
     const entries = entriesByDate.get(dateKey)!;
@@ -234,7 +235,11 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
       console.log(`📊 ${activity} MC calculation: present=${presentMCValues.length} days, absent=${absentMCValues.length} days, effect=${mcEffect.toFixed(3)}`);
       console.log(`📊 ${activity} MC values - Present: [${presentMCValues.map(v => v.toFixed(3)).join(', ')}], Absent: [${absentMCValues.slice(0, 5).map(v => v.toFixed(3)).join(', ')}]`);
     } catch (error) {
-      console.error(`Error calculating MC for ${activity}:`, error);
+      console.error(`❌ Error calculating MC for ${activity}:`, error);
+      console.error(`❌ Error details:`, {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
       mcEffect = 0;
     }
 
