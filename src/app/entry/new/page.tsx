@@ -176,11 +176,21 @@ export default function NewEntry() {
 
   // Check if user is currently on period based on recent entries
   const isCurrentlyOnPeriod = () => {
-    if (!moodEntries || moodEntries.length === 0) return false;
+    if (!moodEntries || moodEntries.length === 0) {
+      console.log('🔍 isCurrentlyOnPeriod: No mood entries available');
+      return false;
+    }
     
     // Get the most recent entry
     const mostRecentEntry = moodEntries
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+    
+    console.log('🔍 isCurrentlyOnPeriod: Most recent entry:', {
+      id: mostRecentEntry.id,
+      createdAt: mostRecentEntry.createdAt,
+      onPeriod: mostRecentEntry.onPeriod,
+      periodDay: mostRecentEntry.periodDay
+    });
     
     return mostRecentEntry && mostRecentEntry.onPeriod === true;
   };
@@ -221,6 +231,8 @@ export default function NewEntry() {
         const response = await fetch('/api/mood-entries?userId=dummy-user');
         if (response.ok) {
           const entries = await response.json();
+          console.log('🔍 fetchMoodEntries: Fetched entries:', entries.length);
+          console.log('🔍 fetchMoodEntries: Most recent entry:', entries[0]);
           setMoodEntries(entries);
         }
       } catch (error) {
