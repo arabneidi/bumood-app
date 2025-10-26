@@ -291,35 +291,51 @@ export default function ProfilePage() {
                     const response = await fetch('/api/mood-entries');
                     const data = await response.json();
                     
-                    // Convert to Excel format (CSV for simplicity)
-                    const headers = ['Date', 'Valence', 'Energy', 'Focus', 'Stress', 'Sleep', 'Activities', 'Subcategories', 'Notes'];
-                    const rows = data.map((entry: any) => [
-                      new Date(entry.createdAt).toLocaleDateString(),
-                      entry.valence,
-                      entry.energy,
-                      entry.focus,
-                      entry.stress,
-                      entry.sleep,
-                      Array.isArray(entry.activities) ? entry.activities.join('; ') : entry.activities || '',
-                      Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories.join('; ') : entry.selectedSubcategories || '',
-                      entry.notes || ''
-                    ]);
+                    // Let user choose format
+                    const format = window.confirm('Choose export format:\n\nOK = CSV (Excel compatible)\nCancel = JSON (Full data)');
                     
-                    const csvContent = [
-                      headers.join(','),
-                      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-                    ].join('\n');
-                    
-                    // Create download link
-                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                    const link = document.createElement('a');
-                    const url = URL.createObjectURL(blob);
-                    link.setAttribute('href', url);
-                    link.setAttribute('download', `moodpilot-export-${new Date().toISOString().split('T')[0]}.csv`);
-                    link.style.visibility = 'hidden';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                    if (format) {
+                      // CSV format
+                      const headers = ['Date', 'Valence', 'Energy', 'Focus', 'Stress', 'Sleep', 'Activities', 'Subcategories', 'Notes'];
+                      const rows = data.map((entry: any) => [
+                        new Date(entry.createdAt).toLocaleDateString(),
+                        entry.valence,
+                        entry.energy,
+                        entry.focus,
+                        entry.stress,
+                        entry.sleep,
+                        Array.isArray(entry.activities) ? entry.activities.join('; ') : entry.activities || '',
+                        Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories.join('; ') : entry.selectedSubcategories || '',
+                        entry.notes || ''
+                      ]);
+                      
+                      const csvContent = [
+                        headers.join(','),
+                        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+                      ].join('\n');
+                      
+                      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                      const link = document.createElement('a');
+                      const url = URL.createObjectURL(blob);
+                      link.setAttribute('href', url);
+                      link.setAttribute('download', `moodpilot-export-${new Date().toISOString().split('T')[0]}.csv`);
+                      link.style.visibility = 'hidden';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    } else {
+                      // JSON format
+                      const jsonContent = JSON.stringify(data, null, 2);
+                      const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+                      const link = document.createElement('a');
+                      const url = URL.createObjectURL(blob);
+                      link.setAttribute('href', url);
+                      link.setAttribute('download', `moodpilot-export-${new Date().toISOString().split('T')[0]}.json`);
+                      link.style.visibility = 'hidden';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }
                     
                     setMessage('✅ Data exported successfully!');
                     setTimeout(() => setMessage(''), 3000);
@@ -344,31 +360,57 @@ export default function ProfilePage() {
                   // Create file input
                   const input = document.createElement('input');
                   input.type = 'file';
-                  input.accept = '.csv';
+                  input.accept = '.csv,.json';
                   input.onchange = async (e) => {
                     const file = (e.target as HTMLInputElement).files?.[0];
                     if (!file) return;
                     
                     try {
+                      const fileExtension = file.name.split('.').pop()?.toLowerCase();
                       const text = await file.text();
-                      const lines = text.split('\n');
-                      const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
+                      let entries: any[] = [];
                       
-                      // Parse CSV and create entries
-                      const entries = lines.slice(1).filter(line => line.trim()).map(line => {
-                        const values = line.split(',').map(v => v.replace(/^"|"$/g, ''));
-                        return {
-                          date: values[0],
-                          valence: parseFloat(values[1]),
-                          energy: parseFloat(values[2]),
-                          focus: parseFloat(values[3]),
-                          stress: parseFloat(values[4]),
-                          sleep: parseFloat(values[5]),
-                          activities: values[6] ? values[6].split('; ').map(a => a.trim()) : [],
-                          subcategories: values[7] ? values[7].split('; ').map(s => s.trim()) : [],
-                          notes: values[8] || ''
-                        };
-                      });
+                      if (fileExtension === 'json') {
+                        // Parse JSON
+                        const jsonData = JSON.parse(text);
+                        entries = Array.isArray(jsonData) ? jsonData : [jsonData];
+                        
+                        // Normalize JSON entries to match expected format
+                        entries = entries.map(entry => ({
+                          date: entry.date || entry.createdAt || new Date().toISOString(),
+                          valence: entry.valence || 5,
+                          energy: entry.energy || 5,
+                          focus: entry.focus || 5,
+                          stress: entry.stress || 5,
+                          sleep: entry.sleep || 7,
+                          activities: Array.isArray(entry.activities) 
+                            ? entry.activities 
+                            : (typeof entry.activities === 'string' ? JSON.parse(entry.activities || '[]') : []),
+                          subcategories: Array.isArray(entry.selectedSubcategories) 
+                            ? entry.selectedSubcategories 
+                            : (typeof entry.selectedSubcategories === 'string' ? JSON.parse(entry.selectedSubcategories || '[]') : []),
+                          notes: entry.notes || ''
+                        }));
+                      } else {
+                        // Parse CSV
+                        const lines = text.split('\n');
+                        const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
+                        
+                        entries = lines.slice(1).filter(line => line.trim()).map(line => {
+                          const values = line.split(',').map(v => v.replace(/^"|"$/g, ''));
+                          return {
+                            date: values[0],
+                            valence: parseFloat(values[1]),
+                            energy: parseFloat(values[2]),
+                            focus: parseFloat(values[3]),
+                            stress: parseFloat(values[4]),
+                            sleep: parseFloat(values[5]),
+                            activities: values[6] ? values[6].split('; ').map((a: string) => a.trim()) : [],
+                            subcategories: values[7] ? values[7].split('; ').map((s: string) => s.trim()) : [],
+                            notes: values[8] || ''
+                          };
+                        });
+                      }
                       
                       // Send to API
                       const response = await fetch('/api/mood-entries/import', {
@@ -387,7 +429,7 @@ export default function ProfilePage() {
                       }
                     } catch (error) {
                       console.error('Import error:', error);
-                      setMessage('❌ Failed to import data');
+                      setMessage('❌ Failed to import data. Please check file format.');
                       setTimeout(() => setMessage(''), 3000);
                     }
                   };
