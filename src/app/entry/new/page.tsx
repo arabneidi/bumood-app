@@ -253,6 +253,11 @@ export default function NewEntry() {
   useEffect(() => {
     if (moodEntries && moodEntries.length > 0) {
       const currentlyOnPeriod = isCurrentlyOnPeriod();
+      console.log('🔍 useEffect: Updating formData.onPeriod:', {
+        currentlyOnPeriod,
+        currentFormDataOnPeriod: formData.onPeriod,
+        willUpdate: currentlyOnPeriod !== formData.onPeriod
+      });
       if (currentlyOnPeriod !== formData.onPeriod) {
         setFormData(prev => ({
           ...prev,
@@ -260,7 +265,7 @@ export default function NewEntry() {
         }));
       }
     }
-  }, [moodEntries]);
+  }, [moodEntries, formData.onPeriod]);
 
   // Set AI icon based on connected services
   useEffect(() => {
