@@ -465,7 +465,7 @@ export async function GET() {
     const moodEntries = await db.moodEntry.findMany({
       where: { userId: dummyUserId },
       orderBy: { createdAt: "desc" },
-      take: 30, // Last 30 entries
+      take: 100, // Last 100 entries to include more historical data
     });
 
     const entriesWithActivities = moodEntries.map(entry => ({
