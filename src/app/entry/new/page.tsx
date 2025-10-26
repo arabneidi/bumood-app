@@ -897,6 +897,16 @@ export default function NewEntry() {
                   {/* Day Selection */}
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">Day</label>
+                    
+                    {/* Day of week labels */}
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((dayName) => (
+                        <div key={dayName} className="text-center text-xs font-semibold text-slate-400 py-1">
+                          {dayName}
+                        </div>
+                      ))}
+                    </div>
+                    
                     <div className="grid grid-cols-7 gap-1">
                       {Array.from({ length: new Date(selectedYear, selectedMonth + 1, 0).getDate() }, (_, i) => i + 1).map((day) => {
                         const isToday = selectedYear === new Date().getFullYear() && 
