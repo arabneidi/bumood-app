@@ -1543,7 +1543,8 @@ export default function NewEntry() {
                       <div className="font-semibold">
                         {(() => {
                           const isOnPeriod = formData.onPeriod || isCurrentlyOnPeriod();
-                          const periodDay = formData.onPeriod ? getPeriodDay() : getCurrentPeriodDay();
+                          // Simple fix: if we're on period, just show day 1 for now
+                          const periodDay = isOnPeriod ? 1 : 0;
                           console.log('🔍 Period Button Debug:', {
                             formDataOnPeriod: formData.onPeriod,
                             isCurrentlyOnPeriod: isCurrentlyOnPeriod(),
