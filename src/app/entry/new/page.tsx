@@ -192,20 +192,27 @@ export default function NewEntry() {
       return 0;
     }
     
-    const mostRecentEntry = moodEntries
+    // Find the most recent entry that has onPeriod: true
+    const periodEntries = moodEntries.filter(entry => entry.onPeriod);
+    if (periodEntries.length === 0) {
+      console.log('🔍 getCurrentPeriodDay: No period entries found, returning 0');
+      return 0;
+    }
+    
+    const mostRecentPeriodEntry = periodEntries
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
     
     console.log('🔍 getCurrentPeriodDay Debug:', {
-      mostRecentEntry: mostRecentEntry ? {
-        id: mostRecentEntry.id,
-        createdAt: mostRecentEntry.createdAt,
-        onPeriod: mostRecentEntry.onPeriod,
-        periodDay: mostRecentEntry.periodDay
+      mostRecentPeriodEntry: mostRecentPeriodEntry ? {
+        id: mostRecentPeriodEntry.id,
+        createdAt: mostRecentPeriodEntry.createdAt,
+        onPeriod: mostRecentPeriodEntry.onPeriod,
+        periodDay: mostRecentPeriodEntry.periodDay
       } : null,
-      calculatedPeriodDay: mostRecentEntry?.periodDay || 0
+      calculatedPeriodDay: mostRecentPeriodEntry?.periodDay || 0
     });
     
-    return mostRecentEntry?.periodDay || 0;
+    return mostRecentPeriodEntry?.periodDay || 0;
   };
 
   // Load user preferences and mood entries on component mount
@@ -1543,8 +1550,7 @@ export default function NewEntry() {
                       <div className="font-semibold">
                         {(() => {
                           const isOnPeriod = formData.onPeriod || isCurrentlyOnPeriod();
-                          // Simple fix: if we're on period, just show day 1 for now
-                          const periodDay = isOnPeriod ? 1 : 0;
+                          const periodDay = isOnPeriod ? getCurrentPeriodDay() : 0;
                           console.log('🔍 Period Button Debug:', {
                             formDataOnPeriod: formData.onPeriod,
                             isCurrentlyOnPeriod: isCurrentlyOnPeriod(),
