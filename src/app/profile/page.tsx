@@ -1714,12 +1714,17 @@ export default function ProfilePage() {
               
               // 6. Mood Entries
               rows.push('MOOD ENTRIES');
-              rows.push('Date,Valence,Energy,Focus,Stress,Sleep Hours,Activity,Subcategory,DSS Component,Notes,Mood Composite,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,On Period,Period Day,Time Bucket,Reflection');
+              rows.push('Date,Time,Valence,Energy,Focus,Stress,Sleep Hours,Activity,Subcategory,DSS Component,Notes,Mood Composite,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,On Period,Period Day,Time Bucket,Reflection');
               
               for (const entry of moodEntries) {
-                const date = new Date(entry.createdAt).toLocaleDateString();
+                const entryDate = new Date(entry.createdAt);
+                const date = entryDate.toLocaleDateString();
+                
                 const activities = parseJSON(entry.activities, []);
                 const subcategories = parseJSON(entry.selectedSubcategories, []);
+                
+                // Parse activity entries with exact timestamps
+                const activityEntries = parseJSON(entry.activityEntries, []);
                 
                 // Parse DSS analysis
                 let dssAnalysisData: any = {};
@@ -1739,6 +1744,16 @@ export default function ProfilePage() {
                     const activityName = activities[i];
                     const subcategory = subcategories[i] || '';
                     
+                    // Get exact time for this activity
+                    let activityTime = '';
+                    const activityEntry = activityEntries.find((ae: any) => ae.activity === activityName);
+                    if (activityEntry && activityEntry.timestamp) {
+                      const time = new Date(activityEntry.timestamp);
+                      activityTime = time.toLocaleTimeString();
+                    } else if (activityEntry && activityEntry.timeSlot) {
+                      activityTime = activityEntry.timeSlot;
+                    }
+                    
                     // Get DSS component from analysis or predefined activities
                     let dssComponent = '';
                     if (dssAnalysisData[activityName]) {
@@ -1755,6 +1770,7 @@ export default function ProfilePage() {
                     
                     rows.push([
                       escapeCsv(date),
+                      escapeCsv(activityTime),
                       escapeCsv(entry.valence),
                       escapeCsv(entry.energy),
                       escapeCsv(entry.focus),
@@ -1779,6 +1795,7 @@ export default function ProfilePage() {
                 } else {
                   rows.push([
                     escapeCsv(date),
+                    escapeCsv(''),
                     escapeCsv(entry.valence),
                     escapeCsv(entry.energy),
                     escapeCsv(entry.focus),
@@ -1830,6 +1847,7 @@ export default function ProfilePage() {
                 moodEntries: moodEntries.map((entry: any) => {
                   const activities = parseJSON(entry.activities, []);
                   const subcategories = parseJSON(entry.selectedSubcategories, []);
+                  const activityEntries = parseJSON(entry.activityEntries, []);
                   
                   // Parse DSS analysis
                   let dssAnalysisData: any = {};
@@ -1844,9 +1862,18 @@ export default function ProfilePage() {
                     }
                   }
                   
-                  // Build activities with DSS information
+                  // Build activities with DSS information and exact timestamps
                   const activitiesWithDSS = activities.map((activityName: string, index: number) => {
                     const subcategory = subcategories[index] || '';
+                    
+                    // Get exact time for this activity
+                    let activityTime = null;
+                    const activityEntry = activityEntries.find((ae: any) => ae.activity === activityName);
+                    if (activityEntry && activityEntry.timestamp) {
+                      activityTime = activityEntry.timestamp;
+                    } else if (activityEntry && activityEntry.timeSlot) {
+                      activityTime = activityEntry.timeSlot;
+                    }
                     
                     // Get DSS component from analysis or predefined activities
                     let dssComponent = '';
@@ -1866,7 +1893,9 @@ export default function ProfilePage() {
                       name: activityName,
                       subcategory: subcategory,
                       dssComponent: dssComponent,
-                      dssAnalysis: dssAnalysisData[activityName] || null
+                      dssAnalysis: dssAnalysisData[activityName] || null,
+                      timestamp: activityTime,
+                      timeSlot: activityEntry?.timeSlot || null
                     };
                   });
                   
