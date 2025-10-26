@@ -9,14 +9,18 @@ interface PeriodInsightsProps {
   userInfo: { gender?: string } | null;
 }
 
-// Utility: date only key (UTC)
+// Utility: date only key (UTC) - fixed formatting
 function dateKeyUTC(d: Date): string {
-  return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsightsProps) {
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertText, setAlertText] = useState<string>("");
+
 
   const data = useMemo(() => {
     // Sort newest first
@@ -46,8 +50,14 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
       const prev = i > 0 ? days[i - 1] : undefined;
       const todayOn = byDay[d].onPeriod;
       const prevOn = prev ? byDay[prev].onPeriod : false;
-      if (todayOn && !prevOn) cycleStarts.push(new Date(d));
+      if (todayOn && !prevOn) {
+        // Fix: Create date in UTC to avoid timezone shift
+        const [year, month, day] = d.split('-').map(Number);
+        const cycleStart = new Date(Date.UTC(year, month - 1, day));
+        cycleStarts.push(cycleStart);
+      }
     }
+    
 
     // Cycle lengths
     const cycleLengths: number[] = [];
@@ -59,8 +69,10 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
 
     // Last period start
     const lastStart = cycleStarts[cycleStarts.length - 1];
+    
     const today = new Date();
     const daysSinceLast = lastStart ? Math.round((Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()) - Date.UTC(lastStart.getUTCFullYear(), lastStart.getUTCMonth(), lastStart.getUTCDate())) / (24 * 3600 * 1000)) : null;
+    
     const predictedNextStart = lastStart ? new Date(Date.UTC(lastStart.getUTCFullYear(), lastStart.getUTCMonth(), lastStart.getUTCDate()) + avgCycle * 24 * 3600 * 1000) : null;
 
     // Build small series for chart: last 90 days onPeriod flag
@@ -150,13 +162,13 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-lg bg-gradient-to-br from-slate-700/50 to-slate-600/50 border border-pink-500/30 hover:border-pink-400/50 transition-all duration-300 shadow-lg">
           <div className="text-xs text-pink-300 font-medium uppercase tracking-wide">Last start</div>
-          <div className="text-white font-bold text-lg">{data.lastStart ? new Date(data.lastStart).toLocaleDateString() : '—'}</div>
+          <div className="text-white font-bold text-lg">{data.lastStart ? `${data.lastStart.getUTCFullYear()}/${String(data.lastStart.getUTCMonth() + 1).padStart(2, '0')}/${String(data.lastStart.getUTCDate()).padStart(2, '0')}` : '—'}</div>
           <div className="mt-2 text-xs text-slate-400 font-medium">Days since</div>
           <div className="text-pink-300 font-semibold">{data.daysSinceLast ?? '—'}</div>
         </div>
         <div className="p-4 rounded-lg bg-gradient-to-br from-slate-700/50 to-slate-600/50 border border-rose-500/30 hover:border-rose-400/50 transition-all duration-300 shadow-lg">
           <div className="text-xs text-rose-300 font-medium uppercase tracking-wide">Predicted next start</div>
-          <div className="text-white font-bold text-lg">{data.predictedNextStart ? new Date(data.predictedNextStart).toLocaleDateString() : '—'}</div>
+          <div className="text-white font-bold text-lg">{data.predictedNextStart ? `${data.predictedNextStart.getUTCFullYear()}/${String(data.predictedNextStart.getUTCMonth() + 1).padStart(2, '0')}/${String(data.predictedNextStart.getUTCDate()).padStart(2, '0')}` : '—'}</div>
           <div className="mt-2 text-xs text-slate-400 font-medium">Hydration today</div>
           <div className="text-rose-300 font-semibold">{data.todayWater !== null ? `${data.todayWater} glasses` : '—'}</div>
         </div>
