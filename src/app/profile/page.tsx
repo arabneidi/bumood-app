@@ -321,8 +321,44 @@ export default function ProfilePage() {
                         // Parse JSON
                         const jsonData = JSON.parse(text);
                         
-                        // Check if it's the full export format with moodEntries property
-                        if (jsonData.moodEntries && Array.isArray(jsonData.moodEntries)) {
+                        // Check if it's the full export format
+                        if (jsonData.userProfile || jsonData.goals || jsonData.periodTracking) {
+                          // Full export format - import all data types
+                          const importResults: any = { moodEntries: 0, profile: false, goals: 0, achievements: 0, periodTracking: 0 };
+                          
+                          // Import Profile if exists
+                          if (jsonData.userProfile) {
+                            try {
+                              const userResponse = await fetch('/api/user?userId=dummy-user', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  name: jsonData.userProfile.name,
+                                  gender: jsonData.userProfile.gender,
+                                  age: jsonData.userProfile.age,
+                                  height: jsonData.userProfile.height,
+                                  weight: jsonData.userProfile.weight,
+                                  universityLevel: jsonData.userProfile.universityLevel,
+                                  fieldOfStudy: jsonData.userProfile.fieldOfStudy,
+                                  interests: jsonData.userProfile.interests,
+                                  favoriteAuthors: jsonData.userProfile.favoriteAuthors,
+                                  favoriteWriters: jsonData.userProfile.favoriteWriters,
+                                  favoriteMovies: jsonData.userProfile.favoriteMovies,
+                                  favoritePhilosophers: jsonData.userProfile.favoritePhilosophers,
+                                  customFavorites: jsonData.userProfile.customFavorites
+                                })
+                              });
+                              if (userResponse.ok) importResults.profile = true;
+                            } catch (e) { console.error('Profile import error:', e); }
+                          }
+                          
+                          // Extract and send mood entries
+                          if (jsonData.moodEntries && Array.isArray(jsonData.moodEntries)) {
+                            entries = jsonData.moodEntries;
+                          } else {
+                            entries = [];
+                          }
+                        } else if (jsonData.moodEntries && Array.isArray(jsonData.moodEntries)) {
                           // Use moodEntries array from exported data
                           entries = jsonData.moodEntries;
                         } else if (Array.isArray(jsonData)) {
@@ -385,6 +421,80 @@ export default function ProfilePage() {
                       } else {
                         // Parse CSV
                         const lines = text.split('\n');
+                        const importResults: any = { profile: false, goals: 0, achievements: 0, periodTracking: 0 };
+                        
+                        // Import PROFILE INFORMATION section if exists
+                        if (lines.some(l => l.includes('PROFILE INFORMATION'))) {
+                          const profileStart = lines.findIndex(l => l.includes('PROFILE INFORMATION'));
+                          if (profileStart !== -1) {
+                            const profileData: any = {};
+                            for (let i = profileStart + 2; i < lines.length && lines[i] && !lines[i].startsWith('GOALS'); i++) {
+                              const [key, value] = lines[i].split(',').map(v => v.replace(/^"|"$/g, ''));
+                              if (key && value) {
+                                if (key === 'Name') profileData.name = value;
+                                else if (key === 'Gender') profileData.gender = value;
+                                else if (key === 'Age') profileData.age = parseInt(value);
+                                else if (key === 'Height (cm)') profileData.height = parseFloat(value);
+                                else if (key === 'Weight (kg)') profileData.weight = parseFloat(value);
+                                else if (key === 'University Level') profileData.universityLevel = value;
+                                else if (key === 'Field of Study') profileData.fieldOfStudy = value;
+                              }
+                            }
+                            try {
+                              const userResponse = await fetch('/api/user?userId=dummy-user', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(profileData)
+                              });
+                              if (userResponse.ok) importResults.profile = true;
+                            } catch (e) { console.error('Profile import error:', e); }
+                          }
+                        }
+                        
+                        // Import GOALS section if exists
+                        if (lines.some(l => l.includes('GOALS'))) {
+                          const goalsStart = lines.findIndex(l => l.includes('GOALS'));
+                          const goalsEnd = lines.findIndex((l, i) => i > goalsStart && l.includes('ACHIEVEMENTS')) || lines.length;
+                          if (goalsStart !== -1) {
+                            const goalLines = lines.slice(goalsStart + 2, goalsEnd).filter(l => l.trim() && !l.includes('No goals'));
+                            for (const line of goalLines) {
+                              const values = line.split(',').map(v => v.replace(/^"|"$/g, ''));
+                              if (values.length > 0 && values[0]) {
+                                try {
+                                  const goalResponse = await fetch('/api/goals', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      title: values[0],
+                                      description: values[1],
+                                      category: values[2],
+                                      subcategory: values[3],
+                                      difficulty: values[4],
+                                      targetValue: parseInt(values[5]),
+                                      unit: values[7],
+                                      dssComponent: values[9]
+                                    })
+                                  });
+                                  if (goalResponse.ok) {
+                                    const goal = await goalResponse.json();
+                                    // Update with progression
+                                    await fetch(`/api/goals/${goal.id}`, {
+                                      method: 'PUT',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        currentValue: parseInt(values[6]) || 0,
+                                        streak: parseInt(values[11]) || 0,
+                                        bestStreak: parseInt(values[12]) || 0,
+                                        completed: values[9] === 'Yes'
+                                      })
+                                    });
+                                    importResults.goals++;
+                                  }
+                                } catch (e) { console.error('Goal import error:', e); }
+                              }
+                            }
+                          }
+                        }
                         
                         // Find the MOOD ENTRIES section
                         let moodEntriesStartIndex = -1;
@@ -1658,12 +1768,13 @@ export default function ProfilePage() {
           setShowExportModal(false);
           try {
             // Fetch all data
-            const [moodEntriesRes, userRes, goalsRes, achievementsRes, predefinedActivitiesRes] = await Promise.all([
+            const [moodEntriesRes, userRes, goalsRes, achievementsRes, predefinedActivitiesRes, periodTrackingRes] = await Promise.all([
               fetch('/api/mood-entries'),
               fetch('/api/user?userId=dummy-user'),
               fetch('/api/goals'),
               fetch('/api/achievements'),
-              fetch('/api/predefined-activities')
+              fetch('/api/predefined-activities'),
+              fetch('/api/period-tracking?userId=dummy-user')
             ]);
             
             const moodEntries = await moodEntriesRes.json();
@@ -1672,6 +1783,7 @@ export default function ProfilePage() {
             const achievements = await achievementsRes.json();
             const predefinedActivitiesData = await predefinedActivitiesRes.json();
             const predefinedActivities = predefinedActivitiesData.activities || [];
+            const periodTracking = await periodTrackingRes.json();
             
             // Get AI API key connections and encrypted keys
             const { getDecryptedApiKey, hasApiKey } = await import('@/lib/encryption');
@@ -1815,7 +1927,27 @@ export default function ProfilePage() {
               rows.push('');
               rows.push('');
               
-              // 6. Mood Entries
+              // 6. Period Tracking
+              rows.push('PERIOD TRACKING');
+              if (periodTracking.length > 0) {
+                rows.push('Start Date,End Date,Flow Intensity,Symptoms,Notes');
+                for (const period of periodTracking) {
+                  rows.push([
+                    escapeCsv(period.startDate ? new Date(period.startDate).toLocaleDateString() : ''),
+                    escapeCsv(period.endDate ? new Date(period.endDate).toLocaleDateString() : ''),
+                    escapeCsv(period.flowIntensity),
+                    escapeCsv(period.symptoms),
+                    escapeCsv(period.notes)
+                  ].join(','));
+                }
+              } else {
+                rows.push('No period tracking entries found');
+              }
+              
+              rows.push('');
+              rows.push('');
+              
+              // 7. Mood Entries
               rows.push('MOOD ENTRIES');
               rows.push('Date,Time,Valence,Energy,Focus,Stress,Sleep Hours,Activity,Subcategory,DSS Component,Notes,Mood Composite,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,On Period,Period Day,Time Bucket,Reflection');
               
@@ -1823,17 +1955,12 @@ export default function ProfilePage() {
                 const entryDate = new Date(entry.createdAt);
                 const date = entryDate.toLocaleDateString();
                 
-                const activities = parseJSON(entry.activities, []);
-                const subcategories = parseJSON(entry.selectedSubcategories, []);
-                
-                // Debug logging
-                if (entry.activities) {
-                  console.log('Raw activities:', entry.activities);
-                  console.log('Parsed activities:', activities);
-                }
+                // Activities should already be parsed by the API
+                const activities = Array.isArray(entry.activities) ? entry.activities : parseJSON(entry.activities, []);
+                const subcategories = Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories : parseJSON(entry.selectedSubcategories, []);
                 
                 // Parse activity entries with exact timestamps
-                const activityEntries = parseJSON(entry.activityEntries, []);
+                const activityEntries = Array.isArray(entry.activityEntries) ? entry.activityEntries : parseJSON(entry.activityEntries, []);
                 
                 // Parse DSS analysis
                 let dssAnalysisData: any = {};
@@ -1956,10 +2083,19 @@ export default function ProfilePage() {
                   category: activity.category,
                   dssComponent: activity.dssComponent
                 })),
+                periodTracking: periodTracking.map((period: any) => ({
+                  id: period.id,
+                  startDate: period.startDate,
+                  endDate: period.endDate,
+                  flowIntensity: period.flowIntensity,
+                  symptoms: period.symptoms,
+                  notes: period.notes
+                })),
                 moodEntries: moodEntries.map((entry: any) => {
-                  const activities = parseJSON(entry.activities, []);
-                  const subcategories = parseJSON(entry.selectedSubcategories, []);
-                  const activityEntries = parseJSON(entry.activityEntries, []);
+                  // Activities should already be parsed by the API
+                  const activities = Array.isArray(entry.activities) ? entry.activities : parseJSON(entry.activities, []);
+                  const subcategories = Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories : parseJSON(entry.selectedSubcategories, []);
+                  const activityEntries = Array.isArray(entry.activityEntries) ? entry.activityEntries : parseJSON(entry.activityEntries, []);
                   
                   // Parse DSS analysis
                   let dssAnalysisData: any = {};

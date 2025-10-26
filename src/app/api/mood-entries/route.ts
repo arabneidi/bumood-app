@@ -516,6 +516,8 @@ export async function GET() {
     const entriesWithActivities = moodEntries.map(entry => ({
       ...entry,
       activities: entry.activities ? JSON.parse(entry.activities) : [],
+      selectedSubcategories: entry.selectedSubcategories ? JSON.parse(entry.selectedSubcategories) : [],
+      activityEntries: entry.activityEntries ? JSON.parse(entry.activityEntries) : [],
     }));
 
     return NextResponse.json(entriesWithActivities);
