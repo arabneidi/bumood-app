@@ -54,6 +54,16 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Debug period data
+    console.log('🔍 Period Debug - Recent entries:', recentEntries.length);
+    if (recentEntries.length > 0) {
+      console.log('🔍 Period Debug - Most recent entry:', {
+        onPeriod: recentEntries[0].onPeriod,
+        periodDay: recentEntries[0].periodDay,
+        createdAt: recentEntries[0].createdAt
+      });
+    }
+
     // Create user profile for AI suggestions
     const userProfile: UserMoodProfile = {
       currentMood: recentEntries.length > 0 ? {
@@ -117,6 +127,8 @@ export async function GET(req: NextRequest) {
       age: userProfile.userInfo?.age,
       gender: userProfile.userInfo?.gender,
       personality: userProfile.userInfo?.personality,
+      onPeriod: userProfile.userInfo?.onPeriod,
+      periodDay: userProfile.userInfo?.periodDay,
       interests: userProfile.userPreferences?.interests,
       recentActivities: userProfile.commonActivities,
       activeGoals: userProfile.activeGoals?.length || 0
