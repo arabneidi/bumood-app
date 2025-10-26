@@ -93,6 +93,12 @@ export default function CalendarPage() {
 
   const getMoodColor = (mood: MoodEntry | undefined) => {
     if (!mood) return "bg-slate-800/40 backdrop-blur-xl border border-slate-600/50";
+    
+    // Special color for period days
+    if (mood.onPeriod) {
+      return "bg-gradient-to-br from-pink-500 to-rose-600"; // Pink/rose for period days
+    }
+    
     // Use the same calculation as dashboard: Life Rhythm Score (0-100)
     const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
     // Life Rhythm Score ranges from 0 to 100
@@ -103,8 +109,14 @@ export default function CalendarPage() {
     return "bg-gradient-to-br from-red-500 to-pink-600";  // Below 20%
   };
 
-  const getMoodEmoji = (mood: MoodEntry | undefined) => {
+  const getMoodEmoji = (mood: MoodEntry | undefined, date: Date) => {
     if (!mood) return "";
+    
+    // Check if this is the first day of a period
+    if (mood.onPeriod && mood.periodDay === 1) {
+      return "🩸"; // Blood drop for first day of period
+    }
+    
     // Use the same calculation as dashboard: Life Rhythm Score (0-100)
     const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
     // Life Rhythm Score ranges from 0 to 100
@@ -177,7 +189,7 @@ export default function CalendarPage() {
                 
                 const moodEntry = getMoodForDate(day);
                 const isSelected = selectedDate && day.toDateString() === selectedDate.toDateString();
-                const moodEmoji = getMoodEmoji(moodEntry);
+                const moodEmoji = getMoodEmoji(moodEntry, day);
                 const moodScore = getMoodScore(moodEntry);
                 
                 return (
