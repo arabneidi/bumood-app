@@ -51,7 +51,8 @@ export default function CalendarPage() {
       String(date.getMonth() + 1).padStart(2, '0') + '-' + 
       String(date.getDate()).padStart(2, '0');
     
-    const entry = moodEntries.find(entry => {
+    // Find all entries for this date
+    const entriesForDate = moodEntries.filter(entry => {
       const entryDate = new Date(entry.createdAt);
       const entryDateStr = entryDate.getFullYear() + '-' + 
         String(entryDate.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -59,7 +60,35 @@ export default function CalendarPage() {
       return entryDateStr === dateStr;
     });
     
-    return entry;
+    if (entriesForDate.length === 0) return null;
+    if (entriesForDate.length === 1) return entriesForDate[0];
+    
+    // Calculate daily averages for multiple entries
+    const avgValence = entriesForDate.reduce((sum, entry) => sum + entry.valence, 0) / entriesForDate.length;
+    const avgEnergy = entriesForDate.reduce((sum, entry) => sum + entry.energy, 0) / entriesForDate.length;
+    const avgFocus = entriesForDate.reduce((sum, entry) => sum + entry.focus, 0) / entriesForDate.length;
+    const avgStress = entriesForDate.reduce((sum, entry) => sum + entry.stress, 0) / entriesForDate.length;
+    const avgSleep = entriesForDate.reduce((sum, entry) => sum + (entry.sleep || 0), 0) / entriesForDate.length;
+    
+    // Combine all notes
+    const allNotes = entriesForDate
+      .map(entry => entry.notes)
+      .filter(note => note && note.trim())
+      .join(' | ');
+    
+    // Return a synthetic entry with averaged values
+    return {
+      ...entriesForDate[0], // Use first entry as base structure
+      valence: Math.round(avgValence * 10) / 10, // Round to 1 decimal
+      energy: Math.round(avgEnergy * 10) / 10,
+      focus: Math.round(avgFocus * 10) / 10,
+      stress: Math.round(avgStress * 10) / 10,
+      sleep: Math.round(avgSleep * 10) / 10,
+      notes: allNotes || entriesForDate[0].notes,
+      // Add metadata to indicate this is averaged
+      _isAveraged: true,
+      _entryCount: entriesForDate.length
+    };
   };
 
   const getMoodColor = (mood: MoodEntry | undefined) => {
@@ -161,10 +190,7 @@ export default function CalendarPage() {
                   >
                     <span className="text-sm font-bold text-white mb-1">{day.getDate()}</span>
                     {moodEntry && (
-                      <div className="flex flex-col items-center">
-                        <span className="text-lg mb-1">{moodEmoji}</span>
-                        <span className="text-xs font-bold text-white/90">{moodScore}/100</span>
-                      </div>
+                      <span className="text-2xl">{moodEmoji}</span>
                     )}
                   </button>
                 );
@@ -179,6 +205,13 @@ export default function CalendarPage() {
             
             {selectedEntry ? (
               <div className="space-y-4">
+                {(selectedEntry as any)._isAveraged && (
+                  <div className="bg-blue-500/20 border border-blue-400/50 rounded-2xl p-3 text-center">
+                    <div className="text-sm text-blue-300">
+                      📊 Daily Average ({(selectedEntry as any)._entryCount} entries)
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 bg-purple-500/20 border border-purple-400/50 rounded-2xl">
                     <Star className="w-6 h-6 text-purple-400 mx-auto mb-2" />

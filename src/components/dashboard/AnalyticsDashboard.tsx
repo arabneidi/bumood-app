@@ -20,7 +20,22 @@ interface AnalyticsDashboardProps {
 }
 
 export default function AnalyticsDashboard({ data, dssData, dssLoading }: AnalyticsDashboardProps) {
-  if (data.length === 0) {
+  // Filter data to last 14 days (for comparing last 7 days vs previous 7 days)
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  
+  const recentData = data.filter(entry => {
+    const entryDate = new Date(entry.createdAt);
+    return entryDate >= fourteenDaysAgo;
+  });
+  
+  console.log('📊 Analytics Dashboard - Data filtering:', {
+    totalEntries: data.length,
+    last14DaysEntries: recentData.length,
+    filterDate: fourteenDaysAgo.toISOString()
+  });
+  
+  if (recentData.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -101,7 +116,7 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
 
   // Calculate insights using daily averages (not raw entry averages)
   // First, group entries by date
-  const entriesByDate = data.reduce((acc, entry) => {
+  const entriesByDate = recentData.reduce((acc, entry) => {
     const dateKey = new Date(entry.createdAt).toISOString().split('T')[0];
     if (!acc[dateKey]) {
       acc[dateKey] = [];
@@ -120,19 +135,29 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
     sleep: entries.reduce((sum, e) => sum + (e.sleep || 0), 0) / entries.length,
   }));
 
-  // Calculate weekly averages from daily averages
-  const totalEntries = data.length;
-  const avgValence = dailyAverages.reduce((sum, day) => sum + day.valence, 0) / dailyAverages.length;
-  const avgEnergy = dailyAverages.reduce((sum, day) => sum + day.energy, 0) / dailyAverages.length;
-  const avgFocus = dailyAverages.reduce((sum, day) => sum + day.focus, 0) / dailyAverages.length;
-  const avgStress = dailyAverages.reduce((sum, day) => sum + day.stress, 0) / dailyAverages.length;
-  const avgSleep = dailyAverages.reduce((sum, day) => sum + day.sleep, 0) / dailyAverages.length;
-
-  // Calculate trends by using the daily averages we already calculated
-  // Sort dailyAverages by date (newest first) for trend calculation
+  // Calculate weekly averages from daily averages (only for last 7 days)
+  const totalEntries = recentData.length;
   const sortedDailyAverages = [...dailyAverages].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const last7DaysOnly = sortedDailyAverages.slice(0, 7);
+  
+  // Filter recentData to only last 7 days for Wellness Radar
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const last7DaysData = recentData.filter(entry => {
+    const entryDate = new Date(entry.createdAt);
+    return entryDate >= sevenDaysAgo;
+  });
+  
+  // Count actual days with data (in case there are missing days)
+  const actualDaysWithData = last7DaysOnly.length;
+  
+  const avgValence = actualDaysWithData > 0 ? last7DaysOnly.reduce((sum, day) => sum + day.valence, 0) / actualDaysWithData : 0;
+  const avgEnergy = actualDaysWithData > 0 ? last7DaysOnly.reduce((sum, day) => sum + day.energy, 0) / actualDaysWithData : 0;
+  const avgFocus = actualDaysWithData > 0 ? last7DaysOnly.reduce((sum, day) => sum + day.focus, 0) / actualDaysWithData : 0;
+  const avgStress = actualDaysWithData > 0 ? last7DaysOnly.reduce((sum, day) => sum + day.stress, 0) / actualDaysWithData : 0;
+  const avgSleep = actualDaysWithData > 0 ? last7DaysOnly.reduce((sum, day) => sum + day.sleep, 0) / actualDaysWithData : 0;
 
-  // Get last 7 days and previous 7 days based on calendar dates
+  // Get last 7 days and previous 7 days based on calendar dates for trend comparison
   const last7Days = sortedDailyAverages.slice(0, 7);
   const previous7Days = sortedDailyAverages.slice(7, 14);
   
@@ -145,29 +170,32 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
     previous7AvgValence: previous7Days.reduce((sum, d) => sum + d.valence, 0) / previous7Days.length
   });
   
-  // Valence trend (calculated from daily averages)
-  const last7AvgValence = last7Days.length > 0 ? last7Days.reduce((sum, day) => sum + day.valence, 0) / last7Days.length : 0;
-  const previous7AvgValence = previous7Days.length > 0 ? previous7Days.reduce((sum, day) => sum + day.valence, 0) / previous7Days.length : 0;
+  // Valence trend (calculated from daily averages, using actual days with data)
+  const last7DaysCount = last7Days.length;
+  const previous7DaysCount = previous7Days.length;
+  
+  const last7AvgValence = last7DaysCount > 0 ? last7Days.reduce((sum, day) => sum + day.valence, 0) / last7DaysCount : 0;
+  const previous7AvgValence = previous7DaysCount > 0 ? previous7Days.reduce((sum, day) => sum + day.valence, 0) / previous7DaysCount : 0;
   const valenceTrend = last7AvgValence - previous7AvgValence;
   
   // Energy trend
-  const last7AvgEnergy = last7Days.length > 0 ? last7Days.reduce((sum, day) => sum + day.energy, 0) / last7Days.length : 0;
-  const previous7AvgEnergy = previous7Days.length > 0 ? previous7Days.reduce((sum, day) => sum + day.energy, 0) / previous7Days.length : 0;
+  const last7AvgEnergy = last7DaysCount > 0 ? last7Days.reduce((sum, day) => sum + day.energy, 0) / last7DaysCount : 0;
+  const previous7AvgEnergy = previous7DaysCount > 0 ? previous7Days.reduce((sum, day) => sum + day.energy, 0) / previous7DaysCount : 0;
   const energyTrend = last7AvgEnergy - previous7AvgEnergy;
   
   // Focus trend
-  const last7AvgFocus = last7Days.length > 0 ? last7Days.reduce((sum, day) => sum + day.focus, 0) / last7Days.length : 0;
-  const previous7AvgFocus = previous7Days.length > 0 ? previous7Days.reduce((sum, day) => sum + day.focus, 0) / previous7Days.length : 0;
+  const last7AvgFocus = last7DaysCount > 0 ? last7Days.reduce((sum, day) => sum + day.focus, 0) / last7DaysCount : 0;
+  const previous7AvgFocus = previous7DaysCount > 0 ? previous7Days.reduce((sum, day) => sum + day.focus, 0) / previous7DaysCount : 0;
   const focusTrend = last7AvgFocus - previous7AvgFocus;
   
   // Stress trend (note: for stress, lower is better, so we invert the trend)
-  const last7AvgStress = last7Days.length > 0 ? last7Days.reduce((sum, day) => sum + day.stress, 0) / last7Days.length : 0;
-  const previous7AvgStress = previous7Days.length > 0 ? previous7Days.reduce((sum, day) => sum + day.stress, 0) / previous7Days.length : 0;
+  const last7AvgStress = last7DaysCount > 0 ? last7Days.reduce((sum, day) => sum + day.stress, 0) / last7DaysCount : 0;
+  const previous7AvgStress = previous7DaysCount > 0 ? previous7Days.reduce((sum, day) => sum + day.stress, 0) / previous7DaysCount : 0;
   const stressTrend = previous7AvgStress - last7AvgStress; // Inverted: lower stress is better
 
 
   // Get most common activities
-  const allActivities = data.flatMap(entry => {
+  const allActivities = recentData.flatMap(entry => {
     // Activities are already parsed by the API
     if (Array.isArray(entry.activities)) {
       return entry.activities;
@@ -204,7 +232,7 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
   }
 
   // Calculate mood patterns
-  const moodPatterns = data.reduce((acc, entry) => {
+  const moodPatterns = recentData.reduce((acc, entry) => {
     const hour = new Date(entry.createdAt).getHours();
     const timeOfDay = hour < 6 ? 'Night' : hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
     if (!acc[timeOfDay]) acc[timeOfDay] = [];
@@ -446,7 +474,7 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
               <Target className="w-6 h-6 mr-2 text-blue-500" />
               Wellness Radar
             </motion.h3>
-            <ModernRadarChart data={data} height={250} />
+            <ModernRadarChart data={last7DaysData} height={250} />
           </Card>
         </motion.div>
       </motion.div>

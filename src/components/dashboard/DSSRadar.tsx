@@ -134,21 +134,6 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="w-full h-full"
     >
-      {/* Display actual values */}
-      <div className="mb-4 text-center">
-        <div className="flex justify-center space-x-6 text-xs">
-          <div className="bg-blue-500/20 px-2 py-1 rounded">
-            <span className="text-blue-300">Learning Momentum:</span> <span className="text-white font-bold">{zLM.toFixed(2)}</span>
-          </div>
-          <div className="bg-green-500/20 px-2 py-1 rounded">
-            <span className="text-green-300">Recovery Index:</span> <span className="text-white font-bold">{zRI.toFixed(2)}</span>
-          </div>
-          <div className="bg-purple-500/20 px-2 py-1 rounded">
-            <span className="text-purple-300">Connection:</span> <span className="text-white font-bold">{zCN.toFixed(2)}</span>
-          </div>
-        </div>
-      </div>
-      
       <ResponsiveContainer width="100%" height={400}>
         <RadarChart data={chartData} margin={{ top: 20, right: 80, bottom: 20, left: 20 }}>
           <PolarGrid 
@@ -181,6 +166,92 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
           />
         </RadarChart>
       </ResponsiveContainer>
+
+      {/* DSS Component Boxes - styled like Wellness Radar */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+        className="grid grid-cols-3 gap-2 text-center mt-6"
+      >
+        {/* Learning Momentum */}
+        <motion.div
+          whileHover={{ scale: 1.05, y: -2 }}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.7, type: "spring" }}
+          className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-center space-x-1">
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="w-2 h-2 rounded-full shadow-lg bg-blue-500"
+            ></motion.div>
+            <span className="text-xs font-bold text-white">Learning Momentum</span>
+          </div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.8, type: "spring" }}
+            className="text-sm font-bold text-blue-400"
+          >
+            {zLM.toFixed(1)}
+          </motion.div>
+        </motion.div>
+
+        {/* Recovery Index */}
+        <motion.div
+          whileHover={{ scale: 1.05, y: -2 }}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.8, type: "spring" }}
+          className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-green-500/20 hover:border-green-400/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-center space-x-1">
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.7, repeat: Infinity }}
+              className="w-2 h-2 rounded-full shadow-lg bg-green-500"
+            ></motion.div>
+            <span className="text-xs font-bold text-white">Recovery Index</span>
+          </div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.9, type: "spring" }}
+            className="text-sm font-bold text-green-400"
+          >
+            {zRI.toFixed(1)}
+          </motion.div>
+        </motion.div>
+
+        {/* Connection */}
+        <motion.div
+          whileHover={{ scale: 1.05, y: -2 }}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.9, type: "spring" }}
+          className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-center space-x-1">
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.9, repeat: Infinity }}
+              className="w-2 h-2 rounded-full shadow-lg bg-purple-500"
+            ></motion.div>
+            <span className="text-xs font-bold text-white">Connection</span>
+          </div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 1.0, type: "spring" }}
+            className="text-sm font-bold text-purple-400"
+          >
+            {zCN.toFixed(1)}
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </motion.div>
   );
 }

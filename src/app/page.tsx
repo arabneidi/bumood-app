@@ -368,11 +368,43 @@ export default function Home() {
   const filteredEntries = getFilteredEntries();
   const totalEntries = filteredEntries.length;
   
-  // MOOD METRICS: Use AVERAGE of filtered entries
-  const averageValence = totalEntries > 0 ? (filteredEntries.reduce((sum, entry) => sum + entry.valence, 0) / totalEntries) : 0;
-  const averageEnergy = totalEntries > 0 ? (filteredEntries.reduce((sum, entry) => sum + entry.energy, 0) / totalEntries) : 0;
-  const averageFocus = totalEntries > 0 ? (filteredEntries.reduce((sum, entry) => sum + entry.focus, 0) / totalEntries) : 0;
-  const averageStress = totalEntries > 0 ? (filteredEntries.reduce((sum, entry) => sum + entry.stress, 0) / totalEntries) : 0;
+  // MOOD METRICS: Use daily averages first (for weekly/monthly), then average those
+  // Group entries by date and calculate daily averages
+  const entriesByDate = filteredEntries.reduce((acc, entry) => {
+    const dateKey = new Date(entry.createdAt).toISOString().split('T')[0];
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
+    }
+    acc[dateKey].push(entry);
+    return acc;
+  }, {} as Record<string, typeof filteredEntries>);
+
+  // Calculate daily averages
+  const dailyAverages = Object.entries(entriesByDate).map(([date, entries]) => ({
+    date,
+    valence: entries.reduce((sum, e) => sum + e.valence, 0) / entries.length,
+    energy: entries.reduce((sum, e) => sum + e.energy, 0) / entries.length,
+    focus: entries.reduce((sum, e) => sum + e.focus, 0) / entries.length,
+    stress: entries.reduce((sum, e) => sum + e.stress, 0) / entries.length,
+  }));
+
+  // For weekly/monthly views, average the daily averages (not raw entries)
+  // For daily view, use single day's average or just that day's entries
+  // Use actual number of days with data (not fixed 7 or 30)
+  const actualDaysCount = dailyAverages.length;
+  
+  const averageValence = timeRange === 'daily' 
+    ? (totalEntries > 0 ? filteredEntries.reduce((sum, entry) => sum + entry.valence, 0) / totalEntries : 0)
+    : (actualDaysCount > 0 ? dailyAverages.reduce((sum, day) => sum + day.valence, 0) / actualDaysCount : 0);
+  const averageEnergy = timeRange === 'daily'
+    ? (totalEntries > 0 ? filteredEntries.reduce((sum, entry) => sum + entry.energy, 0) / totalEntries : 0)
+    : (actualDaysCount > 0 ? dailyAverages.reduce((sum, day) => sum + day.energy, 0) / actualDaysCount : 0);
+  const averageFocus = timeRange === 'daily'
+    ? (totalEntries > 0 ? filteredEntries.reduce((sum, entry) => sum + entry.focus, 0) / totalEntries : 0)
+    : (actualDaysCount > 0 ? dailyAverages.reduce((sum, day) => sum + day.focus, 0) / actualDaysCount : 0);
+  const averageStress = timeRange === 'daily'
+    ? (totalEntries > 0 ? filteredEntries.reduce((sum, entry) => sum + entry.stress, 0) / totalEntries : 0)
+    : (actualDaysCount > 0 ? dailyAverages.reduce((sum, day) => sum + day.stress, 0) / actualDaysCount : 0);
   // Use DSS score as primary display score
   const displayScore = dssScore !== null && dssScore !== undefined ? dssScore : 0;
 
@@ -1134,7 +1166,7 @@ export default function Home() {
                         <div className="grid grid-cols-2 gap-3 mb-4">
                           <div className="text-center p-2 bg-green-900/30 rounded-lg border border-green-500/20">
                             <div className="text-2xl font-bold text-green-400">{entry.valence}</div>
-                            <div className="text-xs text-slate-300">😊 Happy</div>
+                            <div className="text-xs text-slate-300">😊 Valence</div>
                           </div>
                           <div className="text-center p-2 bg-orange-900/30 rounded-lg border border-orange-500/20">
                             <div className="text-2xl font-bold text-orange-400">{entry.energy}</div>

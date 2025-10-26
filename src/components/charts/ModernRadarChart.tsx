@@ -52,13 +52,34 @@ export default function ModernRadarChart({ data, height = 300 }: ModernRadarChar
     );
   }
 
-  // Calculate averages
+  // Calculate averages using daily averages first (consistent with stats page)
+  // Group entries by date and calculate daily averages
+  const entriesByDate = data.reduce((acc, entry) => {
+    const dateKey = new Date(entry.createdAt).toISOString().split('T')[0];
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
+    }
+    acc[dateKey].push(entry);
+    return acc;
+  }, {} as Record<string, typeof data>);
+
+  const dailyAverages = Object.entries(entriesByDate).map(([date, entries]) => ({
+    valence: entries.reduce((sum, e) => sum + e.valence, 0) / entries.length,
+    energy: entries.reduce((sum, e) => sum + e.energy, 0) / entries.length,
+    focus: entries.reduce((sum, e) => sum + e.focus, 0) / entries.length,
+    sleep: entries.reduce((sum, e) => sum + (e.sleep || 0), 0) / entries.length,
+    stress: entries.reduce((sum, e) => sum + e.stress, 0) / entries.length,
+  }));
+
+  // Average the daily averages (using actual number of days with data)
+  const actualDaysCount = dailyAverages.length;
+  
   const avgData = {
-    valence: data.reduce((sum, entry) => sum + entry.valence, 0) / data.length,
-    energy: data.reduce((sum, entry) => sum + entry.energy, 0) / data.length,
-    focus: data.reduce((sum, entry) => sum + entry.focus, 0) / data.length,
-    sleep: data.reduce((sum, entry) => sum + (entry.sleep || 0), 0) / data.length, // Average sleep hours
-    stress: data.reduce((sum, entry) => sum + entry.stress, 0) / data.length,
+    valence: actualDaysCount > 0 ? dailyAverages.reduce((sum, day) => sum + day.valence, 0) / actualDaysCount : 0,
+    energy: actualDaysCount > 0 ? dailyAverages.reduce((sum, day) => sum + day.energy, 0) / actualDaysCount : 0,
+    focus: actualDaysCount > 0 ? dailyAverages.reduce((sum, day) => sum + day.focus, 0) / actualDaysCount : 0,
+    sleep: actualDaysCount > 0 ? dailyAverages.reduce((sum, day) => sum + day.sleep, 0) / actualDaysCount : 0,
+    stress: actualDaysCount > 0 ? dailyAverages.reduce((sum, day) => sum + day.stress, 0) / actualDaysCount : 0,
   };
 
   // Normalize values to 0-1 scale for radar chart
