@@ -1585,6 +1585,14 @@ export default function ProfilePage() {
             const predefinedActivitiesData = await predefinedActivitiesRes.json();
             const predefinedActivities = predefinedActivitiesData.activities || [];
             
+            // Get AI API key connections
+            const { getDecryptedApiKey, hasApiKey } = await import('@/lib/encryption');
+            const aiConnections = {
+              openai: hasApiKey('openai'),
+              gemini: hasApiKey('gemini'),
+              textcortex: hasApiKey('textcortex')
+            };
+            
             // Helper function to parse JSON strings safely
             const parseJSON = (str: string | null | undefined, fallback: any = []) => {
               if (!str) return fallback;
@@ -1676,7 +1684,17 @@ export default function ProfilePage() {
               rows.push('');
               rows.push('');
               
-              // 4. Predefined Activities with DSS Info
+              // 4. AI Connections
+              rows.push('AI API CONNECTIONS');
+              rows.push('Service,Connected');
+              rows.push(`OpenAI,${aiConnections.openai ? 'Yes' : 'No'}`);
+              rows.push(`Gemini,${aiConnections.gemini ? 'Yes' : 'No'}`);
+              rows.push(`TextCortex,${aiConnections.textcortex ? 'Yes' : 'No'}`);
+              
+              rows.push('');
+              rows.push('');
+              
+              // 5. Predefined Activities with DSS Info
               rows.push('PREDEFINED ACTIVITIES');
               if (predefinedActivities.length > 0) {
                 rows.push('Activity Name,Category,DSS Component');
@@ -1694,7 +1712,7 @@ export default function ProfilePage() {
               rows.push('');
               rows.push('');
               
-              // 5. Mood Entries
+              // 6. Mood Entries
               rows.push('MOOD ENTRIES');
               rows.push('Date,Valence,Energy,Focus,Stress,Sleep Hours,Activity,Subcategory,DSS Component,Notes,Mood Composite,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,On Period,Period Day,Time Bucket,Reflection');
               
@@ -1801,6 +1819,7 @@ export default function ProfilePage() {
               const exportData = {
                 exportDate: new Date().toISOString(),
                 userProfile: userData,
+                aiConnections: aiConnections,
                 predefinedActivities: predefinedActivities.map((activity: any) => ({
                   id: activity.id,
                   name: activity.name,
