@@ -221,8 +221,6 @@ export default function NewEntry() {
         const response = await fetch('/api/mood-entries?userId=dummy-user');
         if (response.ok) {
           const entries = await response.json();
-          console.log('🔍 fetchMoodEntries: Fetched entries:', entries.length);
-          console.log('🔍 fetchMoodEntries: Most recent entry:', entries[0]);
           setMoodEntries(entries);
         }
       } catch (error) {
@@ -233,6 +231,19 @@ export default function NewEntry() {
     fetchUserPreferences();
     fetchMoodEntries();
   }, []);
+
+  // Update formData.onPeriod when moodEntries are loaded
+  useEffect(() => {
+    if (moodEntries && moodEntries.length > 0) {
+      const currentlyOnPeriod = isCurrentlyOnPeriod();
+      if (currentlyOnPeriod !== formData.onPeriod) {
+        setFormData(prev => ({
+          ...prev,
+          onPeriod: currentlyOnPeriod
+        }));
+      }
+    }
+  }, [moodEntries]);
 
   // Set AI icon based on connected services
   useEffect(() => {
