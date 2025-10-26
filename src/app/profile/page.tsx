@@ -320,43 +320,131 @@ export default function ProfilePage() {
                       if (fileExtension === 'json') {
                         // Parse JSON
                         const jsonData = JSON.parse(text);
-                        entries = Array.isArray(jsonData) ? jsonData : [jsonData];
                         
-                        // Normalize JSON entries to match expected format
-                        entries = entries.map(entry => ({
-                          date: entry.date || entry.createdAt || new Date().toISOString(),
-                          valence: entry.valence || 5,
-                          energy: entry.energy || 5,
-                          focus: entry.focus || 5,
-                          stress: entry.stress || 5,
-                          sleep: entry.sleep || 7,
-                          activities: Array.isArray(entry.activities) 
-                            ? entry.activities 
-                            : (typeof entry.activities === 'string' ? JSON.parse(entry.activities || '[]') : []),
-                          subcategories: Array.isArray(entry.selectedSubcategories) 
-                            ? entry.selectedSubcategories 
-                            : (typeof entry.selectedSubcategories === 'string' ? JSON.parse(entry.selectedSubcategories || '[]') : []),
-                          notes: entry.notes || ''
-                        }));
+                        // Check if it's the full export format with moodEntries property
+                        if (jsonData.moodEntries && Array.isArray(jsonData.moodEntries)) {
+                          // Use moodEntries array from exported data
+                          entries = jsonData.moodEntries;
+                        } else if (Array.isArray(jsonData)) {
+                          // Direct array format
+                          entries = jsonData;
+                        } else {
+                          // Single object
+                          entries = [jsonData];
+                        }
+                        
+                        // Normalize JSON entries to match database format
+                        entries = entries.map(entry => {
+                          // Handle activities - can be array or array of objects with DSS info
+                          let activities: any[] = [];
+                          let selectedSubcategories: any[] = [];
+                          let activityEntries: any[] = [];
+                          
+                          if (Array.isArray(entry.activities)) {
+                            // Check if activities are objects or strings
+                            if (entry.activities.length > 0 && typeof entry.activities[0] === 'object') {
+                              // New format with DSS info
+                              activities = entry.activities.map((a: any) => a.name || a);
+                              selectedSubcategories = entry.activities.map((a: any) => a.subcategory || '');
+                              activityEntries = entry.activities.map((a: any) => ({
+                                activity: a.name || a,
+                                subcategory: a.subcategory || '',
+                                timeSlot: a.timeSlot || '',
+                                timestamp: a.timestamp || ''
+                              }));
+                            } else {
+                              // Simple array of strings
+                              activities = entry.activities;
+                              selectedSubcategories = entry.subcategories || [];
+                            }
+                          }
+                          
+                          return {
+                            date: entry.date || entry.createdAt || new Date().toISOString(),
+                            valence: entry.valence || 5,
+                            energy: entry.energy || 5,
+                            focus: entry.focus || 5,
+                            stress: entry.stress || 5,
+                            sleep: entry.sleep || 7,
+                            activities,
+                            selectedSubcategories,
+                            activityEntries,
+                            notes: entry.notes || '',
+                            moodComposite: entry.moodComposite || null,
+                            waterIntake: entry.waterIntake || null,
+                            mealsEaten: entry.mealsEaten || null,
+                            mealQuality: entry.mealQuality || null,
+                            caffeine: entry.caffeine || null,
+                            alcohol: entry.alcohol || null,
+                            onPeriod: entry.onPeriod || false,
+                            periodDay: entry.periodDay || null,
+                            timeBucket: entry.timeBucket || 'morning',
+                            reflection: entry.reflection || null
+                          };
+                        });
                       } else {
                         // Parse CSV
                         const lines = text.split('\n');
-                        const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
                         
-                        entries = lines.slice(1).filter(line => line.trim()).map(line => {
-                          const values = line.split(',').map(v => v.replace(/^"|"$/g, ''));
-                          return {
-                            date: values[0],
-                            valence: parseFloat(values[1]),
-                            energy: parseFloat(values[2]),
-                            focus: parseFloat(values[3]),
-                            stress: parseFloat(values[4]),
-                            sleep: parseFloat(values[5]),
-                            activities: values[6] ? values[6].split('; ').map((a: string) => a.trim()) : [],
-                            subcategories: values[7] ? values[7].split('; ').map((s: string) => s.trim()) : [],
-                            notes: values[8] || ''
-                          };
-                        });
+                        // Find the MOOD ENTRIES section
+                        let moodEntriesStartIndex = -1;
+                        for (let i = 0; i < lines.length; i++) {
+                          if (lines[i].includes('MOOD ENTRIES')) {
+                            moodEntriesStartIndex = i + 2; // Skip header and column row
+                            break;
+                          }
+                        }
+                        
+                        if (moodEntriesStartIndex === -1) {
+                          throw new Error('Could not find MOOD ENTRIES section in CSV');
+                        }
+                        
+                        // Parse mood entries from CSV
+                        entries = lines.slice(moodEntriesStartIndex)
+                          .filter(line => line.trim() && !line.startsWith('GOALS') && !line.startsWith('ACHIEVEMENTS'))
+                          .map(line => {
+                            const values = line.split(',').map(v => v.replace(/^"|"$/g, ''));
+                            
+                            // CSV columns: Date,Time,Valence,Energy,Focus,Stress,Sleep Hours,Activity,Subcategory,DSS Component,Notes,Mood Composite,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,On Period,Period Day,Time Bucket,Reflection
+                            const date = values[0];
+                            const time = values[1];
+                            const activity = values[7];
+                            const subcategory = values[8];
+                            
+                            // Build activity entry with timestamp
+                            let activityEntries: any[] = [];
+                            if (activity) {
+                              activityEntries.push({
+                                activity,
+                                subcategory: subcategory || '',
+                                timeSlot: time || '',
+                                timestamp: time ? `${date} ${time}` : date
+                              });
+                            }
+                            
+                            return {
+                              date: date,
+                              valence: parseFloat(values[2]) || 5,
+                              energy: parseFloat(values[3]) || 5,
+                              focus: parseFloat(values[4]) || 5,
+                              stress: parseFloat(values[5]) || 5,
+                              sleep: parseFloat(values[6]) || 7,
+                              activities: activity ? [activity] : [],
+                              selectedSubcategories: subcategory ? [subcategory] : [],
+                              activityEntries,
+                              notes: values[10] || '',
+                              moodComposite: values[11] ? parseFloat(values[11]) : null,
+                              waterIntake: values[12] ? parseInt(values[12]) : null,
+                              mealsEaten: values[13] ? parseInt(values[13]) : null,
+                              mealQuality: values[14] || null,
+                              caffeine: values[15] ? parseInt(values[15]) : null,
+                              alcohol: values[16] ? parseInt(values[16]) : null,
+                              onPeriod: values[17] === 'Yes',
+                              periodDay: values[18] ? parseInt(values[18]) : null,
+                              timeBucket: values[19] || 'morning',
+                              reflection: values[20] || ''
+                            };
+                          });
                       }
                       
                       // Send to API
