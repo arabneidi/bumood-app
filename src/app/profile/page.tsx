@@ -1569,28 +1569,77 @@ export default function ProfilePage() {
         onSelect={async (format: 'csv' | 'json') => {
           setShowExportModal(false);
           try {
-            // Fetch all mood entries
-            const response = await fetch('/api/mood-entries');
-            const data = await response.json();
+            // Fetch all data
+            const [moodEntriesRes, userRes, goalsRes, achievementsRes] = await Promise.all([
+              fetch('/api/mood-entries'),
+              fetch('/api/user?userId=dummy-user'),
+              fetch('/api/goals'),
+              fetch('/api/achievements')
+            ]);
+            
+            const moodEntries = await moodEntriesRes.json();
+            const userData = await userRes.json();
+            const goals = await goalsRes.json();
+            const achievements = await achievementsRes.json();
+            
+            // Helper function to parse JSON strings safely
+            const parseJSON = (str: string | null | undefined, fallback: any = []) => {
+              if (!str) return fallback;
+              try {
+                const parsed = JSON.parse(str);
+                return Array.isArray(parsed) ? parsed : fallback;
+              } catch {
+                return fallback;
+              }
+            };
             
             if (format === 'csv') {
-              // CSV format
-              const headers = ['Date', 'Valence', 'Energy', 'Focus', 'Stress', 'Sleep', 'Activities', 'Subcategories', 'Notes'];
-              const rows = data.map((entry: any) => [
-                new Date(entry.createdAt).toLocaleDateString(),
-                entry.valence,
-                entry.energy,
-                entry.focus,
-                entry.stress,
-                entry.sleep,
-                Array.isArray(entry.activities) ? entry.activities.join('; ') : entry.activities || '',
-                Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories.join('; ') : entry.selectedSubcategories || '',
-                entry.notes || ''
-              ]);
+              // CSV format - Split each activity into separate rows
+              const rows: string[][] = [];
               
+              for (const entry of moodEntries) {
+                const date = new Date(entry.createdAt).toLocaleDateString();
+                const activities = parseJSON(entry.activities, []);
+                const subcategories = parseJSON(entry.selectedSubcategories, []);
+                
+                if (activities.length > 0) {
+                  // Create a row for each activity
+                  for (let i = 0; i < activities.length; i++) {
+                    const activity = activities[i] || '';
+                    const subcategory = subcategories[i] || '';
+                    
+                    rows.push([
+                      date,
+                      entry.valence,
+                      entry.energy,
+                      entry.focus,
+                      entry.stress,
+                      entry.sleep,
+                      activity,
+                      subcategory,
+                      entry.notes || ''
+                    ]);
+                  }
+                } else {
+                  // No activities, create single row
+                  rows.push([
+                    date,
+                    entry.valence,
+                    entry.energy,
+                    entry.focus,
+                    entry.stress,
+                    entry.sleep,
+                    '',
+                    '',
+                    entry.notes || ''
+                  ]);
+                }
+              }
+              
+              const headers = ['Date', 'Valence', 'Energy', 'Focus', 'Stress', 'Sleep', 'Activity', 'Subcategory', 'Notes'];
               const csvContent = [
                 headers.join(','),
-                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+                ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
               ].join('\n');
               
               const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1603,8 +1652,61 @@ export default function ProfilePage() {
               link.click();
               document.body.removeChild(link);
             } else {
-              // JSON format
-              const jsonContent = JSON.stringify(data, null, 2);
+              // JSON format - Complete data export
+              const exportData = {
+                exportDate: new Date().toISOString(),
+                userProfile: userData,
+                moodEntries: moodEntries.map((entry: any) => ({
+                  id: entry.id,
+                  date: entry.createdAt,
+                  valence: entry.valence,
+                  energy: entry.energy,
+                  focus: entry.focus,
+                  stress: entry.stress,
+                  sleep: entry.sleep,
+                  activities: parseJSON(entry.activities, []),
+                  subcategories: parseJSON(entry.selectedSubcategories, []),
+                  notes: entry.notes,
+                  moodComposite: entry.moodComposite,
+                  waterIntake: entry.waterIntake,
+                  mealsEaten: entry.mealsEaten,
+                  mealQuality: entry.mealQuality,
+                  caffeine: entry.caffeine,
+                  alcohol: entry.alcohol,
+                  onPeriod: entry.onPeriod,
+                  periodDay: entry.periodDay,
+                  timeBucket: entry.timeBucket,
+                  reflection: entry.reflection
+                })),
+                goals: goals.map((goal: any) => ({
+                  id: goal.id,
+                  title: goal.title,
+                  description: goal.description,
+                  category: goal.category,
+                  subcategory: goal.subcategory,
+                  difficulty: goal.difficulty,
+                  targetValue: goal.targetValue,
+                  currentValue: goal.currentValue,
+                  unit: goal.unit,
+                  status: goal.status,
+                  dssComponent: goal.dssComponent,
+                  startDate: goal.startDate,
+                  targetDate: goal.targetDate,
+                  createdAt: goal.createdAt
+                })),
+                achievements: achievements.map((achievement: any) => ({
+                  id: achievement.id,
+                  title: achievement.title,
+                  description: achievement.description,
+                  icon: achievement.icon,
+                  stars: achievement.stars,
+                  type: achievement.type,
+                  category: achievement.category,
+                  unlockedAt: achievement.unlockedAt
+                }))
+              };
+              
+              const jsonContent = JSON.stringify(exportData, null, 2);
               const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
               const link = document.createElement('a');
               const url = URL.createObjectURL(blob);
