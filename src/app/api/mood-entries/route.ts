@@ -458,6 +458,47 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, onPeriod, periodDay } = body;
+    
+    console.log('📝 Updating mood entry period status:', { id, onPeriod, periodDay });
+    
+    if (!id) {
+      return NextResponse.json(
+        { error: "Entry ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const dummyUserId = "dummy-user";
+    
+    // Update the mood entry
+    const updatedEntry = await db.moodEntry.update({
+      where: { 
+        id: id,
+        userId: dummyUserId 
+      },
+      data: {
+        onPeriod: onPeriod || false,
+        periodDay: periodDay ? parseInt(periodDay) : null,
+        updatedAt: new Date()
+      }
+    });
+    
+    console.log('✅ Mood entry period status updated:', updatedEntry.id);
+    
+    return NextResponse.json(updatedEntry);
+  } catch (error) {
+    console.error("Error updating mood entry:", error);
+    return NextResponse.json(
+      { error: "Failed to update mood entry", details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  }
+}
+
 export async function GET() {
   try {
     const dummyUserId = "dummy-user";

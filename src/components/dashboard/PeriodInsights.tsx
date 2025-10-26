@@ -20,6 +20,9 @@ function dateKeyUTC(d: Date): string {
 export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsightsProps) {
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertText, setAlertText] = useState<string>("");
+  const [showPeriodEndModal, setShowPeriodEndModal] = useState<boolean>(false);
+  const [currentPeriodDay, setCurrentPeriodDay] = useState<number>(0);
+  const [isCurrentlyOnPeriod, setIsCurrentlyOnPeriod] = useState<boolean>(false);
 
 
   const data = useMemo(() => {
@@ -89,14 +92,38 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
     stressAvg = n ? +(stressAvg / n).toFixed(1) : null;
     valenceAvg = n ? +(valenceAvg / n).toFixed(1) : null;
 
+    // Detect current period status
+    const mostRecentEntry = entries[0];
+    const currentlyOnPeriod = mostRecentEntry && mostRecentEntry.onPeriod === true;
+    const currentDay = currentlyOnPeriod ? (mostRecentEntry.periodDay || 0) : 0;
+
     // Simple heuristic alerts
     const todayKey = dateKeyUTC(new Date());
     const todayWater = byDay[todayKey]?.water ?? null;
     const todayAlcohol = byDay[todayKey]?.alcohol ?? 0;
     const preWindow = predictedNextStart ? Math.abs(Math.round((Date.UTC(predictedNextStart.getUTCFullYear(), predictedNextStart.getUTCMonth(), predictedNextStart.getUTCDate()) - Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())) / (24 * 3600 * 1000))) : null;
 
-    return { series, avgCycle, lastStart, predictedNextStart, daysSinceLast, todayWater, todayAlcohol, stressAvg, valenceAvg };
+    return { 
+      series, 
+      avgCycle, 
+      lastStart, 
+      predictedNextStart, 
+      daysSinceLast, 
+      todayWater, 
+      todayAlcohol, 
+      stressAvg, 
+      valenceAvg,
+      currentlyOnPeriod,
+      currentDay,
+      mostRecentEntry
+    };
   }, [moodEntries]);
+
+  // Update current period state
+  useEffect(() => {
+    setIsCurrentlyOnPeriod(data.currentlyOnPeriod);
+    setCurrentPeriodDay(data.currentDay);
+  }, [data.currentlyOnPeriod, data.currentDay]);
 
   // One-per-day alert logic (localStorage gate)
   useEffect(() => {
@@ -106,12 +133,34 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
 
     // Decide alert message
     const msgs: string[] = [];
-    if (data.predictedNextStart) {
-      const daysUntil = Math.round((Date.UTC(data.predictedNextStart.getUTCFullYear(), data.predictedNextStart.getUTCMonth(), data.predictedNextStart.getUTCDate()) - Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate())) / (24 * 3600 * 1000));
-      if (daysUntil <= 3 && daysUntil >= 0) msgs.push(`Pre-period in ${daysUntil} day${daysUntil === 1 ? '' : 's'} — prep gentle care.`);
+    
+    // Current period alerts
+    if (data.currentlyOnPeriod) {
+      if (data.currentDay >= 7) {
+        msgs.push(`Day ${data.currentDay} - Consider tracking flow intensity.`);
+      }
+      if (data.todayWater < 6) {
+        msgs.push(`Hydration is crucial during your period - aim for 8+ glasses.`);
+      }
+      if (data.todayAlcohol > 0) {
+        msgs.push(`Alcohol can worsen cramps - consider herbal tea instead.`);
+      }
+    } else {
+      // Pre-period alerts
+      if (data.predictedNextStart) {
+        const daysUntil = Math.round((Date.UTC(data.predictedNextStart.getUTCFullYear(), data.predictedNextStart.getUTCMonth(), data.predictedNextStart.getUTCDate()) - Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate())) / (24 * 3600 * 1000));
+        if (daysUntil <= 3 && daysUntil >= 0) {
+          msgs.push(`Pre-period in ${daysUntil} day${daysUntil === 1 ? '' : 's'} — prep gentle care.`);
+        }
+        if (daysUntil === 0) {
+          msgs.push(`Your period is predicted to start today!`);
+        }
+      }
+      
+      // General health alerts
+      if (data.todayAlcohol > 0) msgs.push(`Alcohol today: ${data.todayAlcohol}. Hydrate to reduce cramps risk.`);
+      if ((data.todayWater ?? 0) < 4) msgs.push(`Hydration is low today — drink water to support wellbeing.`);
     }
-    if (data.todayAlcohol > 0) msgs.push(`Alcohol today: ${data.todayAlcohol}. Hydrate to reduce cramps risk.`);
-    if ((data.todayWater ?? 0) < 4) msgs.push(`Hydration is low today — drink water to support wellbeing.`);
 
     if (msgs.length) {
       setAlertText(msgs.join(' '));
@@ -140,6 +189,27 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
           Avg cycle: <span className="font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">{data.avgCycle ? `${data.avgCycle} days` : '—'}</span>
         </div>
       </div>
+
+      {/* Current Period Status */}
+      {isCurrentlyOnPeriod && (
+        <div className="mb-4 p-4 rounded-lg bg-gradient-to-r from-pink-900/40 to-rose-900/40 border border-pink-500/30 text-pink-200 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl">🩸</span>
+              <div>
+                <div className="font-semibold text-lg">Currently on Period</div>
+                <div className="text-sm text-pink-300">Day {currentPeriodDay}</div>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPeriodEndModal(true)}
+              className="px-4 py-2 bg-red-500/20 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/30 transition-colors text-sm font-medium"
+            >
+              End Period
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Mini on/off chart for last 90 days */}
       <div className="w-full overflow-hidden rounded-xl border border-pink-500/30 bg-gradient-to-r from-slate-700/50 to-slate-600/50 mb-4 shadow-lg">
@@ -189,6 +259,78 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
           >
             Dismiss
           </button>
+        </div>
+      )}
+
+      {/* Period End Confirmation Modal */}
+      {showPeriodEndModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-pink-400/30 p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">
+                End Period Cycle
+              </h3>
+              <button
+                onClick={() => setShowPeriodEndModal(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-slate-300 mb-4">
+                Are you sure you want to end your current period cycle? This will mark Day {currentPeriodDay} as your last day.
+              </p>
+              <div className="p-3 bg-pink-900/20 border border-pink-500/30 rounded-lg">
+                <p className="text-pink-200 text-sm">
+                  💡 <strong>Tip:</strong> You can always start a new cycle later if needed.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowPeriodEndModal(false)}
+                className="flex-1 px-4 py-2 bg-slate-700/50 text-slate-300 border border-slate-600/50 rounded-lg hover:bg-slate-600/50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    // End the current period by updating the most recent mood entry
+                    const response = await fetch('/api/mood-entries', {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        id: data.mostRecentEntry?.id,
+                        onPeriod: false,
+                        periodDay: null
+                      }),
+                    });
+                    
+                    if (response.ok) {
+                      setShowPeriodEndModal(false);
+                      // Refresh the page to update data
+                      window.location.reload();
+                    } else {
+                      console.error('Failed to end period');
+                    }
+                  } catch (error) {
+                    console.error('Error ending period:', error);
+                  }
+                }}
+                className="flex-1 px-4 py-2 bg-red-500/20 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/30 transition-colors"
+              >
+                End Period
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </Card>
