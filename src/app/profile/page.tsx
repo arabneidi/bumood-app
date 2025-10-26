@@ -1594,33 +1594,89 @@ export default function ProfilePage() {
             };
             
             if (format === 'csv') {
-              // CSV format - Export multiple CSV files (one per data type)
+              // CSV format - Single file with all data
               const dateStr = new Date().toISOString().split('T')[0];
+              const rows: string[] = [];
               
-              // Helper to download CSV
-              const downloadCSV = (filename: string, headers: string[], rows: any[][]) => {
-                const csvContent = [
-                  headers.join(','),
-                  ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-                ].join('\n');
-                
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', filename);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                
-                // Small delay between downloads
-                return new Promise(resolve => setTimeout(resolve, 100));
-              };
+              // Function to escape CSV values
+              const escapeCsv = (val: any) => `"${String(val || '').replace(/"/g, '""')}"`;
               
-              // 1. Export Mood Entries
-              const moodRows: string[][] = [];
+              // 1. Profile Information
+              rows.push('PROFILE INFORMATION');
+              rows.push('Field,Value');
+              if (userData) {
+                rows.push(`Name,${escapeCsv(userData.name)}`);
+                rows.push(`Gender,${escapeCsv(userData.gender)}`);
+                rows.push(`Age,${escapeCsv(userData.age)}`);
+                rows.push(`Height (cm),${escapeCsv(userData.height)}`);
+                rows.push(`Weight (kg),${escapeCsv(userData.weight)}`);
+                rows.push(`University Level,${escapeCsv(userData.universityLevel)}`);
+                rows.push(`Field of Study,${escapeCsv(userData.fieldOfStudy)}`);
+                rows.push(`Interests,${escapeCsv(parseJSON(userData.interests, []).join('; '))}`);
+                rows.push(`Favorite Authors,${escapeCsv(userData.favoriteAuthors)}`);
+                rows.push(`Favorite Writers,${escapeCsv(userData.favoriteWriters)}`);
+                rows.push(`Favorite Movies,${escapeCsv(userData.favoriteMovies)}`);
+                rows.push(`Favorite Philosophers,${escapeCsv(userData.favoritePhilosophers)}`);
+                rows.push(`Custom Favorites,${escapeCsv(JSON.stringify(parseJSON(userData.customFavorites, [])))}`);
+              }
+              
+              rows.push('');
+              rows.push('');
+              
+              // 2. Goals
+              rows.push('GOALS');
+              if (goals.length > 0) {
+                rows.push('Title,Description,Category,Subcategory,Difficulty,Target Value,Current Value,Unit,Status,DSS Component,Start Date,Target Date,Created Date');
+                for (const goal of goals) {
+                  rows.push([
+                    escapeCsv(goal.title),
+                    escapeCsv(goal.description),
+                    escapeCsv(goal.category),
+                    escapeCsv(goal.subcategory),
+                    escapeCsv(goal.difficulty),
+                    escapeCsv(goal.targetValue),
+                    escapeCsv(goal.currentValue),
+                    escapeCsv(goal.unit),
+                    escapeCsv(goal.status),
+                    escapeCsv(goal.dssComponent),
+                    escapeCsv(goal.startDate ? new Date(goal.startDate).toLocaleDateString() : ''),
+                    escapeCsv(goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : ''),
+                    escapeCsv(goal.createdAt ? new Date(goal.createdAt).toLocaleDateString() : '')
+                  ].join(','));
+                }
+              } else {
+                rows.push('No goals found');
+              }
+              
+              rows.push('');
+              rows.push('');
+              
+              // 3. Achievements
+              rows.push('ACHIEVEMENTS');
+              if (achievements.length > 0) {
+                rows.push('Title,Description,Icon,Stars,Type,Category,Unlocked Date');
+                for (const achievement of achievements) {
+                  rows.push([
+                    escapeCsv(achievement.title),
+                    escapeCsv(achievement.description),
+                    escapeCsv(achievement.icon),
+                    escapeCsv(achievement.stars),
+                    escapeCsv(achievement.type),
+                    escapeCsv(achievement.category),
+                    escapeCsv(achievement.unlockedAt ? new Date(achievement.unlockedAt).toLocaleDateString() : '')
+                  ].join(','));
+                }
+              } else {
+                rows.push('No achievements found');
+              }
+              
+              rows.push('');
+              rows.push('');
+              
+              // 4. Mood Entries
+              rows.push('MOOD ENTRIES');
+              rows.push('Date,Valence,Energy,Focus,Stress,Sleep Hours,Activity,Subcategory,Notes,Mood Composite,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,On Period,Period Day,Time Bucket,Reflection');
+              
               for (const entry of moodEntries) {
                 const date = new Date(entry.createdAt).toLocaleDateString();
                 const activities = parseJSON(entry.activities, []);
@@ -1628,126 +1684,65 @@ export default function ProfilePage() {
                 
                 if (activities.length > 0) {
                   for (let i = 0; i < activities.length; i++) {
-                    moodRows.push([
-                      date,
-                      entry.valence,
-                      entry.energy,
-                      entry.focus,
-                      entry.stress,
-                      entry.sleep || '',
-                      activities[i] || '',
-                      subcategories[i] || '',
-                      entry.notes || '',
-                      entry.moodComposite || '',
-                      entry.waterIntake || '',
-                      entry.mealsEaten || '',
-                      entry.mealQuality || '',
-                      entry.caffeine || '',
-                      entry.alcohol || '',
-                      entry.onPeriod ? 'Yes' : 'No',
-                      entry.periodDay || '',
-                      entry.timeBucket || '',
-                      entry.reflection || ''
-                    ]);
+                    rows.push([
+                      escapeCsv(date),
+                      escapeCsv(entry.valence),
+                      escapeCsv(entry.energy),
+                      escapeCsv(entry.focus),
+                      escapeCsv(entry.stress),
+                      escapeCsv(entry.sleep),
+                      escapeCsv(activities[i]),
+                      escapeCsv(subcategories[i]),
+                      escapeCsv(entry.notes),
+                      escapeCsv(entry.moodComposite),
+                      escapeCsv(entry.waterIntake),
+                      escapeCsv(entry.mealsEaten),
+                      escapeCsv(entry.mealQuality),
+                      escapeCsv(entry.caffeine),
+                      escapeCsv(entry.alcohol),
+                      escapeCsv(entry.onPeriod ? 'Yes' : 'No'),
+                      escapeCsv(entry.periodDay),
+                      escapeCsv(entry.timeBucket),
+                      escapeCsv(entry.reflection)
+                    ].join(','));
                   }
                 } else {
-                  moodRows.push([
-                    date,
-                    entry.valence,
-                    entry.energy,
-                    entry.focus,
-                    entry.stress,
-                    entry.sleep || '',
-                    '',
-                    '',
-                    entry.notes || '',
-                    entry.moodComposite || '',
-                    entry.waterIntake || '',
-                    entry.mealsEaten || '',
-                    entry.mealQuality || '',
-                    entry.caffeine || '',
-                    entry.alcohol || '',
-                    entry.onPeriod ? 'Yes' : 'No',
-                    entry.periodDay || '',
-                    entry.timeBucket || '',
-                    entry.reflection || ''
-                  ]);
+                  rows.push([
+                    escapeCsv(date),
+                    escapeCsv(entry.valence),
+                    escapeCsv(entry.energy),
+                    escapeCsv(entry.focus),
+                    escapeCsv(entry.stress),
+                    escapeCsv(entry.sleep),
+                    escapeCsv(''),
+                    escapeCsv(''),
+                    escapeCsv(entry.notes),
+                    escapeCsv(entry.moodComposite),
+                    escapeCsv(entry.waterIntake),
+                    escapeCsv(entry.mealsEaten),
+                    escapeCsv(entry.mealQuality),
+                    escapeCsv(entry.caffeine),
+                    escapeCsv(entry.alcohol),
+                    escapeCsv(entry.onPeriod ? 'Yes' : 'No'),
+                    escapeCsv(entry.periodDay),
+                    escapeCsv(entry.timeBucket),
+                    escapeCsv(entry.reflection)
+                  ].join(','));
                 }
               }
               
-              const moodHeaders = [
-                'Date', 'Valence', 'Energy', 'Focus', 'Stress', 'Sleep Hours',
-                'Activity', 'Subcategory', 'Notes', 'Mood Composite',
-                'Water Intake', 'Meals Eaten', 'Meal Quality', 'Caffeine', 'Alcohol',
-                'On Period', 'Period Day', 'Time Bucket', 'Reflection'
-              ];
-              await downloadCSV(`moodpilot-mood-entries-${dateStr}.csv`, moodHeaders, moodRows);
-              
-              // 2. Export Goals
-              if (goals.length > 0) {
-                const goalRows = goals.map((goal: any) => [
-                  goal.title || '',
-                  goal.description || '',
-                  goal.category || '',
-                  goal.subcategory || '',
-                  goal.difficulty || '',
-                  goal.targetValue || '',
-                  goal.currentValue || '',
-                  goal.unit || '',
-                  goal.status || '',
-                  goal.dssComponent || '',
-                  goal.startDate ? new Date(goal.startDate).toLocaleDateString() : '',
-                  goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : '',
-                  goal.createdAt ? new Date(goal.createdAt).toLocaleDateString() : ''
-                ]);
-                
-                const goalHeaders = [
-                  'Title', 'Description', 'Category', 'Subcategory', 'Difficulty',
-                  'Target Value', 'Current Value', 'Unit', 'Status',
-                  'DSS Component', 'Start Date', 'Target Date', 'Created Date'
-                ];
-                await downloadCSV(`moodpilot-goals-${dateStr}.csv`, goalHeaders, goalRows);
-              }
-              
-              // 3. Export Achievements
-              if (achievements.length > 0) {
-                const achievementRows = achievements.map((achievement: any) => [
-                  achievement.title || '',
-                  achievement.description || '',
-                  achievement.icon || '',
-                  achievement.stars || '',
-                  achievement.type || '',
-                  achievement.category || '',
-                  achievement.unlockedAt ? new Date(achievement.unlockedAt).toLocaleDateString() : ''
-                ]);
-                
-                const achievementHeaders = [
-                  'Title', 'Description', 'Icon', 'Stars', 'Type', 'Category', 'Unlocked Date'
-                ];
-                await downloadCSV(`moodpilot-achievements-${dateStr}.csv`, achievementHeaders, achievementRows);
-              }
-              
-              // 4. Export User Profile
-              if (userData) {
-                const profileData = [
-                  ['Field', 'Value'],
-                  ['Name', userData.name || ''],
-                  ['Gender', userData.gender || ''],
-                  ['Age', userData.age || ''],
-                  ['Height (cm)', userData.height || ''],
-                  ['Weight (kg)', userData.weight || ''],
-                  ['University Level', userData.universityLevel || ''],
-                  ['Field of Study', userData.fieldOfStudy || ''],
-                  ['Interests', parseJSON(userData.interests, []).join('; ')],
-                  ['Favorite Authors', userData.favoriteAuthors || ''],
-                  ['Favorite Writers', userData.favoriteWriters || ''],
-                  ['Favorite Movies', userData.favoriteMovies || ''],
-                  ['Favorite Philosophers', userData.favoritePhilosophers || ''],
-                  ['Custom Favorites', JSON.stringify(parseJSON(userData.customFavorites, []))]
-                ];
-                
-                await downloadCSV(`moodpilot-profile-${dateStr}.csv`, profileData[0], profileData.slice(1));
-              }
+              // Download single CSV file
+              const csvContent = rows.join('\n');
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+              const link = document.createElement('a');
+              const url = URL.createObjectURL(blob);
+              link.setAttribute('href', url);
+              link.setAttribute('download', `moodpilot-export-${dateStr}.csv`);
+              link.style.visibility = 'hidden';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
             } else {
               // JSON format - Complete data export
               const exportData = {
