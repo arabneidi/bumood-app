@@ -9,6 +9,7 @@ import PeriodInsights from '@/components/dashboard/PeriodInsights';
 import DSSRadar from '@/components/dashboard/DSSRadar';
 import DriversCard from '@/components/dashboard/DriversCard';
 import PowerHoursHeatmap from '@/components/charts/PowerHoursHeatmap';
+import WordCloud from '@/components/dashboard/WordCloud';
 
 interface MoodEntry {
   id: string;
@@ -358,6 +359,20 @@ export default function StatsPage() {
               timeRange={networkTimeRange}
             />
           </div>
+        </motion.div>
+
+        {/* Word Cloud Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="mb-12"
+        >
+          <WordCloud
+            moodEntries={moodEntries}
+            userPreferences={userPreferences}
+            timeRange={networkTimeRange}
+          />
         </motion.div>
       </div>
     </div>

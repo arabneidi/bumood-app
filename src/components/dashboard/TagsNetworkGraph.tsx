@@ -43,7 +43,6 @@ interface LearnedConnection {
 export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRange }: TagsNetworkGraphProps) {
   const [graphData, setGraphData] = useState<{ nodes: TagNode[], links: TagConnection[] }>({ nodes: [], links: [] });
   const [learnedConnections, setLearnedConnections] = useState<LearnedConnection[]>([]);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showLegend, setShowLegend] = useState<boolean>(false);
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [showSubcategories, setShowSubcategories] = useState<boolean>(true);
@@ -54,22 +53,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
     generateNetworkData();
   }, [moodEntries, userPreferences, timeRange]);
 
-  // Fullscreen lifecycle
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsFullscreen(false);
-    };
-    if (isFullscreen) {
-      document.addEventListener('keydown', onKey);
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
-    };
-  }, [isFullscreen]);
+
 
   const fetchLearnedConnections = async () => {
     try {
@@ -274,20 +258,11 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
 
   return (
     <>
-      {/* Fullscreen backdrop */}
-      {isFullscreen && (
-        <div 
-          className="fixed inset-0 z-[9998] bg-black/30"
-          onClick={() => setIsFullscreen(false)}
-          aria-hidden="true"
-        />
-      )}
-      
       <div 
-        className={`${isFullscreen ? 'fixed top-0 left-0 w-full h-full z-[9999]' : 'w-full h-[800px]'} bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 ${isFullscreen ? 'rounded-none' : 'rounded-2xl'} shadow-2xl flex flex-col relative overflow-hidden`}
+        className="w-full h-[800px] bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-2xl shadow-2xl flex flex-col relative overflow-hidden"
       >
         {/* Header */}
-        <div className={`relative z-10 flex items-center justify-between p-6 ${isFullscreen ? 'border-b border-white/10 flex-shrink-0' : ''}`}>
+        <div className="relative z-10 flex items-center justify-between p-6">
           <h3 className="text-xl font-bold text-white flex items-center">
             <span className="mr-3 text-2xl">🕸️</span>
             Your Personal Network
@@ -295,17 +270,10 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
           <div className="flex items-center space-x-2">
             <button
               className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all font-medium"
-              onClick={() => setIsFullscreen(v => !v)}
-            >
-              {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-            </button>
-            <button
-              className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all font-medium"
               onClick={() => setShowSubcategories(v => !v)}
             >
               {showSubcategories ? 'Hide Subcategories' : 'Show Subcategories'}
             </button>
-            {isFullscreen && <span className="hidden sm:inline text-sm text-indigo-200 ml-2">Drag nodes • Zoom with mouse wheel</span>}
           </div>
         </div>
         
@@ -358,7 +326,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
         </div>
 
         {/* Stats and Legend */}
-        <div className={`absolute bottom-2 left-2 right-2 ${showLegend ? 'bg-white/95 backdrop-blur-sm p-3' : 'p-0'} rounded-lg ${showLegend ? '' : 'pointer-events-none'} ${isFullscreen ? 'flex-shrink-0' : ''}`}>
+        <div className={`absolute bottom-2 left-2 right-2 ${showLegend ? 'bg-white/95 backdrop-blur-sm p-3' : 'p-0'} rounded-lg ${showLegend ? '' : 'pointer-events-none'}`}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-4 text-xs">
               <div className="flex items-center space-x-1">
