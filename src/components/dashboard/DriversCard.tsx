@@ -184,7 +184,7 @@ export default function DriversCard({ data, loading, userInfo }: DriversCardProp
               )}
               
               <div 
-                className="prose prose-sm max-w-none text-slate-300 prose-headings:text-purple-400 prose-strong:text-white prose-ul:text-slate-300 prose-li:text-slate-300"
+                className="prose prose-sm max-w-none text-slate-300 prose-headings:text-purple-400 prose-strong:text-white prose-ul:text-slate-300 prose-li:text-slate-300 text-justify"
                 dangerouslySetInnerHTML={{ __html: aiInsights }}
               />
             </motion.div>
