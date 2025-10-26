@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, Calendar, Target } from 'lucide-react';
+import { BarChart3, Calendar, Target, Brain, Sparkles } from 'lucide-react';
 
 interface ActivityData {
   tag: string;
@@ -21,9 +21,24 @@ interface ActivityDriversChartProps {
     harmful: ActivityData[];
   };
   userInfo?: any;
+  aiInsights?: string;
+  showAiInsights?: boolean;
+  aiLoading?: boolean;
+  isCached?: boolean;
+  cacheTimestamp?: string;
+  onGetAiInsights?: () => void;
 }
 
-export default function ActivityDriversChart({ driversData, userInfo }: ActivityDriversChartProps) {
+export default function ActivityDriversChart({ 
+  driversData, 
+  userInfo, 
+  aiInsights, 
+  showAiInsights, 
+  aiLoading, 
+  isCached, 
+  cacheTimestamp, 
+  onGetAiInsights 
+}: ActivityDriversChartProps) {
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -307,6 +322,68 @@ export default function ActivityDriversChart({ driversData, userInfo }: Activity
             </div>
           </div>
         )}
+
+        {/* AI Insights Section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="mt-8 pt-6 border-t border-slate-600/30"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Brain className="w-5 h-5 text-purple-500 mr-2" />
+              <h4 className="text-lg font-semibold text-purple-400">AI Psychological Analysis</h4>
+            </div>
+            {onGetAiInsights && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onGetAiInsights}
+                disabled={aiLoading}
+                className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 rounded-lg text-purple-300 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {aiLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-300 mr-2"></div>
+                    Analyzing...
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    {isCached ? 'Refresh AI Analysis' : 'Get AI Analysis'}
+                  </div>
+                )}
+              </motion.button>
+            )}
+          </div>
+
+          {showAiInsights && aiInsights && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="p-4 bg-purple-900/20 rounded-lg border border-purple-500/20"
+            >
+              {/* Cache Status Indicator */}
+              {isCached && (
+                <div className="flex items-center mb-3 text-xs text-purple-300">
+                  <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                  <span>Cached analysis • Last updated: {cacheTimestamp ? new Date(cacheTimestamp).toLocaleString() : 'Unknown'}</span>
+                </div>
+              )}
+              
+              <div 
+                className="prose prose-sm max-w-none text-slate-300 prose-headings:text-purple-400 prose-strong:text-white prose-ul:text-slate-300 prose-li:text-slate-300 text-justify"
+                dangerouslySetInnerHTML={{ __html: aiInsights }}
+              />
+            </motion.div>
+          )}
+
+          <p className="text-xs text-slate-400 text-center mt-4">
+            Analysis based on last 4 weeks • Updated {new Date().toLocaleDateString()}
+          </p>
+        </motion.div>
       </div>
     </motion.div>
   );
