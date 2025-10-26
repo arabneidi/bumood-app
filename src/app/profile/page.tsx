@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Save, Sparkles, Heart, Star, Zap, Palette, Music, BookOpen, Gamepad2, Plus, Minus, Settings, Bot } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import AISettings from '@/components/settings/AISettings';
+import { hasApiKey } from '@/lib/encryption';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -70,22 +71,22 @@ export default function ProfilePage() {
   // Load AI configuration
   const loadAIConfig = async () => {
     try {
-      // Check localStorage for stored API keys
-      const openaiKey = localStorage.getItem('openai_api_key');
-      const geminiKey = localStorage.getItem('gemini_api_key');
-      const textcortexKey = localStorage.getItem('textcortex_api_key');
+      // Check for encrypted API keys
+      const openaiKey = hasApiKey('openai');
+      const geminiKey = hasApiKey('gemini');
+      const textcortexKey = hasApiKey('textcortex');
       
       const config = {
         openai: { 
-          isConnected: !!openaiKey, 
+          isConnected: openaiKey, 
           lastUsed: openaiKey ? new Date().toISOString() : null 
         },
         gemini: { 
-          isConnected: !!geminiKey, 
+          isConnected: geminiKey, 
           lastUsed: geminiKey ? new Date().toISOString() : null 
         },
         textcortex: { 
-          isConnected: !!textcortexKey, 
+          isConnected: textcortexKey, 
           lastUsed: textcortexKey ? new Date().toISOString() : null 
         }
       };

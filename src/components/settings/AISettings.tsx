@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import { getDecryptedApiKey, setEncryptedApiKey, hasApiKey, removeApiKey } from '@/lib/encryption';
 // import { AISetupManager, UserAIConfig, getAvailableServices, hasAIServices } from '@/lib/aiAuth';
 
 interface AISettingsProps {
@@ -31,22 +32,22 @@ export default function AISettings({ onClose }: AISettingsProps) {
 
   const loadAIConfig = async () => {
     try {
-      // Check localStorage for stored API keys
-      const openaiKey = localStorage.getItem('openai_api_key');
-      const geminiKey = localStorage.getItem('gemini_api_key');
-      const textcortexKey = localStorage.getItem('textcortex_api_key');
+      // Check for encrypted API keys
+      const openaiKey = hasApiKey('openai');
+      const geminiKey = hasApiKey('gemini');
+      const textcortexKey = hasApiKey('textcortex');
       
       const config = {
         openai: { 
-          isConnected: !!openaiKey, 
+          isConnected: openaiKey, 
           lastUsed: openaiKey ? new Date().toISOString() : null 
         },
         gemini: { 
-          isConnected: !!geminiKey, 
+          isConnected: geminiKey, 
           lastUsed: geminiKey ? new Date().toISOString() : null 
         },
         textcortex: { 
-          isConnected: !!textcortexKey, 
+          isConnected: textcortexKey, 
           lastUsed: textcortexKey ? new Date().toISOString() : null 
         }
       };
@@ -81,8 +82,8 @@ export default function AISettings({ onClose }: AISettingsProps) {
       
       if (result.success) {
         setMessage({ type: 'success', text: result.message });
-        // Store the API key in localStorage for demo purposes
-        localStorage.setItem(`${provider}_api_key`, apiKey);
+        // Store the encrypted API key
+        setEncryptedApiKey(provider, apiKey);
         setApiKeyInputs(prev => ({ ...prev, [provider]: '' }));
         setShowKeyInput(null);
         await loadAIConfig();
@@ -111,8 +112,8 @@ export default function AISettings({ onClose }: AISettingsProps) {
       
       if (result.success) {
         setMessage({ type: 'success', text: result.message });
-        // Remove the API key from localStorage
-        localStorage.removeItem(`${provider}_api_key`);
+        // Remove the encrypted API key
+        removeApiKey(provider);
         await loadAIConfig();
       } else {
         setMessage({ type: 'error', text: result.error || 'Failed to disconnect service' });
