@@ -842,7 +842,7 @@ export default function NewEntry() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Date Picker */}
-                <div className="space-y-3">
+                <div className="space-y-3 relative">
                   <label className="block text-sm font-medium text-slate-300">Date</label>
                   <div className="relative">
                     <input
@@ -870,6 +870,10 @@ export default function NewEntry() {
                       </svg>
                     </div>
                   </div>
+                  {/* Glowing border effect for period */}
+                  {((formData.onPeriod && isFirstPeriodEntry) || isCurrentlyOnPeriod()) && (
+                    <div className="absolute inset-0 rounded-xl border-2 border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)] animate-pulse"></div>
+                  )}
                 </div>
                 
               </div>
