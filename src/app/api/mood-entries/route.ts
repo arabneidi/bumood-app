@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
         energy: parseInt(energy),
         focus: parseInt(focus),
         stress: parseInt(stress),
-        sleep: sleep ? parseFloat(sleep) : null,
+        sleep: sleep !== null && sleep !== undefined ? parseFloat(sleep) : null,
         notes: notes || null,
         activities: JSON.stringify(activities),
         selectedTimeSlots: selectedTimeSlots ? JSON.stringify(selectedTimeSlots) : null,
@@ -271,7 +271,7 @@ export async function POST(request: NextRequest) {
     // ============================================================================
     
     let deepworkMinutes = 0;
-    let recoveryIndex = sleep ? parseFloat(sleep) : 0; // Sleep hours contribute to RI
+    let recoveryIndex = sleep !== null && sleep !== undefined ? parseFloat(sleep) : 0; // Sleep hours contribute to RI
     let connectionScore = 0;
     
     // Calculate actual deep work minutes from selected time slots
@@ -302,7 +302,7 @@ export async function POST(request: NextRequest) {
     const learningMomentum = deepworkMinutes + (10 * tasksCompleted);
     
     // Add recovery action if sleep is good (8+ hours)
-    if (sleep && parseFloat(sleep) >= 8) {
+    if (sleep !== null && sleep !== undefined && parseFloat(sleep) >= 8) {
       recoveryIndex += 1; // Bonus for good sleep
     }
 
@@ -328,8 +328,8 @@ export async function POST(request: NextRequest) {
         // DSS calculations - using actual deep work minutes and tasks
         deepworkMinutes: deepworkMinutes,
         tasksCompleted: tasksCompleted,
-        sleepHours: sleep ? parseFloat(sleep) : 0,
-        recoveryAction: sleep && parseFloat(sleep) >= 8,
+        sleepHours: sleep !== null && sleep !== undefined ? parseFloat(sleep) : 0,
+        recoveryAction: sleep !== null && sleep !== undefined && parseFloat(sleep) >= 8,
         positiveSocialTouchpoints: connectionScore,
         // Update DSS scores
         dssScore: 0.5 * learningMomentum + 0.3 * recoveryIndex + 0.2 * connectionScore,
@@ -353,8 +353,8 @@ export async function POST(request: NextRequest) {
         // DSS calculations - using actual deep work minutes and tasks
         deepworkMinutes: deepworkMinutes,
         tasksCompleted: tasksCompleted,
-        sleepHours: sleep ? parseFloat(sleep) : 0,
-        recoveryAction: sleep && parseFloat(sleep) >= 8,
+        sleepHours: sleep !== null && sleep !== undefined ? parseFloat(sleep) : 0,
+        recoveryAction: sleep !== null && sleep !== undefined && parseFloat(sleep) >= 8,
         positiveSocialTouchpoints: connectionScore,
         dssScore: 0.5 * learningMomentum + 0.3 * recoveryIndex + 0.2 * connectionScore,
         learningMomentum: learningMomentum,
