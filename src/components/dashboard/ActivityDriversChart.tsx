@@ -345,6 +345,18 @@ export default function ActivityDriversChart({
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                animate={{ 
+                  boxShadow: [
+                    "0 0 20px rgba(147, 51, 234, 0.4)",
+                    "0 0 30px rgba(147, 51, 234, 0.6)",
+                    "0 0 40px rgba(147, 51, 234, 0.8)",
+                    "0 0 30px rgba(147, 51, 234, 0.6)",
+                    "0 0 20px rgba(147, 51, 234, 0.4)"
+                  ]
+                }}
+                transition={{ 
+                  boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                }}
                 onClick={onGetAiInsights}
                 disabled={aiLoading}
                 className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 rounded-lg text-purple-300 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
