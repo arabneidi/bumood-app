@@ -96,7 +96,45 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
     // Detect current period status
     const mostRecentEntry = entries[0];
     const currentlyOnPeriod = mostRecentEntry && mostRecentEntry.onPeriod === true;
-    const currentDay = currentlyOnPeriod ? (mostRecentEntry.periodDay || 1) : 0;
+    
+    // Calculate current period day the same way as entry page
+    let currentDay = 0;
+    if (currentlyOnPeriod) {
+      // Sort all entries by date to detect cycle boundaries
+      const allEntries = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      
+      // Find the most recent cycle start by looking for the transition from onPeriod=0 to onPeriod=1
+      let mostRecentCycleStart = allEntries.find(entry => entry.onPeriod);
+      
+      // Look backwards through entries to find the most recent period start
+      for (let i = allEntries.length - 1; i > 0; i--) {
+        const current = allEntries[i];
+        const previous = allEntries[i - 1];
+        
+        // If previous entry is NOT on period and current entry IS on period,
+        // then current is the start of a new cycle
+        if (!previous.onPeriod && current.onPeriod) {
+          mostRecentCycleStart = current;
+          break;
+        }
+      }
+      
+      if (mostRecentCycleStart) {
+        // Calculate days between most recent cycle start and today
+        const periodStartDate = new Date(mostRecentCycleStart.createdAt);
+        const today = new Date();
+        
+        // Get dates only (no time) for accurate day calculation
+        const periodStart = new Date(periodStartDate.getFullYear(), periodStartDate.getMonth(), periodStartDate.getDate());
+        const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        
+        const diffTime = todayDateOnly.getTime() - periodStart.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        currentDay = Math.max(1, diffDays + 1); // Minimum day 1, add 1 since we're counting from day 1
+      } else {
+        currentDay = 1;
+      }
+    }
 
     // Simple heuristic alerts
     const todayKey = dateKeyUTC(new Date());
