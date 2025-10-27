@@ -180,14 +180,14 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
   if (!userInfo || userInfo.gender !== 'female') return null;
 
   return (
-    <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-pink-500/20">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent flex items-center">
-          <Droplets className="w-6 h-6 mr-2 text-pink-500" />
+    <Card className="p-8 bg-gradient-to-br from-slate-800/60 via-slate-800/50 to-slate-900/60 backdrop-blur-xl border border-pink-500/30 shadow-2xl shadow-pink-500/10">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-3xl font-extrabold bg-gradient-to-r from-pink-400 via-rose-400 to-fuchsia-500 bg-clip-text text-transparent flex items-center">
+          <Droplets className="w-7 h-7 mr-3 text-pink-400 drop-shadow-lg" />
           Period Insights
         </h3>
-        <div className="text-sm text-slate-300">
-          Avg cycle: <span className="font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">{data.avgCycle ? `${data.avgCycle} days` : '—'}</span>
+        <div className="text-sm text-slate-200 font-medium bg-slate-800/60 px-4 py-2 rounded-full border border-pink-500/30">
+          Avg cycle: <span className="font-bold bg-gradient-to-r from-pink-300 to-rose-300 bg-clip-text text-transparent">{data.avgCycle ? `${data.avgCycle} days` : '—'}</span>
         </div>
       </div>
 
@@ -198,25 +198,38 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
           <svg width="320" height="320" className="transform -rotate-90">
             <defs>
               <linearGradient id="periodGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#dc2626" />
+                <stop offset="0%" stopColor="#ef4444" />
+                <stop offset="50%" stopColor="#dc2626" />
                 <stop offset="100%" stopColor="#991b1b" />
               </linearGradient>
               <linearGradient id="follicularGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#fbcfe8" />
+                <stop offset="0%" stopColor="#f3e8ff" />
+                <stop offset="50%" stopColor="#fbcfe8" />
                 <stop offset="100%" stopColor="#f9a8d4" />
               </linearGradient>
               <linearGradient id="ovularGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#06b6d4" />
-                <stop offset="100%" stopColor="#0891b2" />
+                <stop offset="0%" stopColor="#67e8f9" />
+                <stop offset="50%" stopColor="#22d3ee" />
+                <stop offset="100%" stopColor="#06b6d4" />
               </linearGradient>
               <linearGradient id="lutealGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#fb923c" />
+                <stop offset="0%" stopColor="#fcd34d" />
+                <stop offset="50%" stopColor="#fb923c" />
                 <stop offset="100%" stopColor="#f97316" />
               </linearGradient>
               
-              {/* Glow filter */}
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+              {/* Enhanced glow filter */}
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              
+              {/* Subtle glow for all phases */}
+              <filter id="subtleGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
                 <feMerge>
                   <feMergeNode in="coloredBlur"/>
                   <feMergeNode in="SourceGraphic"/>
@@ -231,8 +244,8 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
               r="140"
               fill="none"
               stroke="#334155"
-              strokeWidth="8"
-              className="opacity-30"
+              strokeWidth="10"
+              className="opacity-20"
             />
             
             {/* Dynamic phase calculations based on avgCycle */}
@@ -254,48 +267,51 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
               
               return (
                 <>
-                  {/* Period phase (Menstrual) - Pink/Red */}
+                  {/* Period phase (Menstrual) - Red */}
                   <circle
                     cx="160"
                     cy="160"
                     r="140"
                     fill="none"
                     stroke="url(#periodGradient)"
-                    strokeWidth={isCurrentlyOnPeriod ? "12" : "8"}
+                    strokeWidth={isCurrentlyOnPeriod ? "14" : "10"}
                     strokeDasharray={`${menstrualDash} ${circumference}`}
                     strokeDashoffset="0"
-                    className={isCurrentlyOnPeriod ? "drop-shadow-2xl" : "drop-shadow-lg"}
-                    filter={isCurrentlyOnPeriod ? "url(#glow)" : ""}
+                    className={isCurrentlyOnPeriod ? "drop-shadow-2xl" : ""}
+                    filter={isCurrentlyOnPeriod ? "url(#glow)" : "url(#subtleGlow)"}
+                    strokeLinecap="round"
                   >
                     {isCurrentlyOnPeriod && (
-                      <animate attributeName="stroke-width" values="12;14;12" dur="2s" repeatCount="indefinite" />
+                      <animate attributeName="stroke-width" values="14;16;14" dur="2s" repeatCount="indefinite" />
                     )}
                   </circle>
                   
-                  {/* Follicular phase - Light Pink */}
+                  {/* Follicular phase - Pink */}
                   <circle
                     cx="160"
                     cy="160"
                     r="140"
                     fill="none"
                     stroke="url(#follicularGradient)"
-                    strokeWidth="8"
+                    strokeWidth="10"
                     strokeDasharray={`${follicularDash} ${circumference}`}
                     strokeDashoffset={`-${menstrualDash}`}
-                    className="drop-shadow-lg"
+                    filter="url(#subtleGlow)"
+                    strokeLinecap="round"
                   />
                   
-                  {/* Ovulation phase - Teal */}
+                  {/* Ovulation phase - Cyan */}
                   <circle
                     cx="160"
                     cy="160"
                     r="140"
                     fill="none"
                     stroke="url(#ovularGradient)"
-                    strokeWidth="8"
+                    strokeWidth="10"
                     strokeDasharray={`${ovulationDash} ${circumference}`}
                     strokeDashoffset={`-${menstrualDash + follicularDash}`}
-                    className="drop-shadow-lg"
+                    filter="url(#subtleGlow)"
+                    strokeLinecap="round"
                   />
                 </>
               );
@@ -320,10 +336,11 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
                   r="140"
                   fill="none"
                   stroke="url(#lutealGradient)"
-                  strokeWidth="8"
+                  strokeWidth="10"
                   strokeDasharray={`${lutealDash} ${circumference}`}
                   strokeDashoffset={`-${menstrualDash + follicularDash + ovulationDash}`}
-                  className="drop-shadow-lg"
+                  filter="url(#subtleGlow)"
+                  strokeLinecap="round"
                 />
               );
             })()}
@@ -353,16 +370,26 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
               
               return (
                 <g transform={`rotate(${rotationAngle}, 160, 160)`}>
+                  {/* Outer glow */}
                   <circle
                     cx="20"
                     cy="160"
-                    r="10"
+                    r="16"
                     fill="white"
-                    className="drop-shadow-2xl"
+                    className="opacity-20"
                     filter="url(#glow)"
                   >
-                    <animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="1;0.6;1" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="r" values="16;20;16" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                  {/* Main dot */}
+                  <circle
+                    cx="20"
+                    cy="160"
+                    r="12"
+                    fill="white"
+                    className="drop-shadow-2xl"
+                  >
+                    <animate attributeName="r" values="12;14;12" dur="2s" repeatCount="indefinite" />
                   </circle>
                 </g>
               );
@@ -372,73 +399,77 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
             <polygon
               points="270,160 285,155 285,165"
               fill="white"
-              className="opacity-70"
+              className="opacity-60 drop-shadow-lg"
             >
               <animateTransform
                 attributeName="transform"
                 type="rotate"
                 from="0 160 160"
                 to="360 160 160"
-                dur="10s"
+                dur="15s"
                 repeatCount="indefinite"
               />
             </polygon>
           </svg>
           
-          {/* Center Content */}
+          {/* Center Content with glassmorphism */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {isCurrentlyOnPeriod ? (
-              <>
-                <div className="text-4xl mb-2">🩸</div>
-                <div className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">
+              <div className="bg-white/5 backdrop-blur-md rounded-full p-8 border border-white/20 shadow-2xl">
+                <div className="text-5xl mb-3 animate-pulse">🩸</div>
+                <div className="text-3xl font-black bg-gradient-to-r from-pink-300 via-rose-300 to-red-300 bg-clip-text text-transparent mb-1 tracking-tight">
                   Period Day {currentPeriodDay}
                 </div>
-                <div className="text-lg text-pink-300 font-semibold mt-1">of ~5 days</div>
-                <button
+                <div className="text-sm text-pink-200/80 font-semibold mb-4 tracking-wide uppercase">of ~5 days</div>
+                <motion.button
                   onClick={() => setShowPeriodEndModal(true)}
-                  className="mt-2 px-3 py-1 text-xs bg-red-500/20 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/30 transition-colors"
+                  className="px-4 py-2 text-xs font-bold bg-gradient-to-r from-red-500/30 to-rose-500/30 text-white border border-red-400/50 rounded-full hover:from-red-500/40 hover:to-rose-500/40 transition-all duration-300 shadow-lg shadow-red-500/20"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   End Period
-                </button>
-              </>
+                </motion.button>
+              </div>
             ) : (
-              <>
-                <div className="text-3xl mb-2">📅</div>
-                <div className="text-xl font-bold text-white">
+              <div className="bg-white/5 backdrop-blur-md rounded-full p-8 border border-white/20 shadow-2xl">
+                <div className="text-4xl mb-3">📅</div>
+                <div className="text-2xl font-black">
                   {data.predictedNextStart ? (
                     <>
-                      <div className="text-rose-400">Period in {data.predictedNextStart && data.predictedNextStart.getTime() > new Date().getTime() ? Math.round((data.predictedNextStart.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0} days</div>
-                      <div className="text-sm text-slate-400 mt-1">
+                      <div className="bg-gradient-to-r from-rose-300 to-fuchsia-300 bg-clip-text text-transparent mb-1">
+                        Period in {data.predictedNextStart && data.predictedNextStart.getTime() > new Date().getTime() ? Math.round((data.predictedNextStart.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0} days
+                      </div>
+                      <div className="text-sm text-slate-300/70 font-semibold mt-1">
                         {String(data.predictedNextStart.getUTCMonth() + 1).padStart(2, '0')}/{String(data.predictedNextStart.getUTCDate()).padStart(2, '0')}
                       </div>
                     </>
                   ) : (
-                    <div className="text-slate-400">Tracking cycle</div>
+                    <div className="text-slate-300">Tracking cycle</div>
                   )}
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
       </div>
 
       {/* Phase Legend */}
-      <div className="mt-4 flex items-center justify-center space-x-6 text-xs">
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-red-600 to-red-800" />
-          <span className="text-slate-400">Menstrual</span>
+      <div className="mt-6 flex items-center justify-center space-x-8 text-sm">
+        <div className="flex items-center space-x-2 bg-slate-800/60 px-4 py-2.5 rounded-full border border-red-500/30 backdrop-blur-sm transition-all hover:scale-105 hover:border-red-500/50">
+          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-red-500 via-red-600 to-red-700 shadow-lg shadow-red-500/30" />
+          <span className="text-slate-200 font-semibold">Menstrual</span>
         </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-pink-200 to-pink-300" />
-          <span className="text-slate-400">Follicular</span>
+        <div className="flex items-center space-x-2 bg-slate-800/60 px-4 py-2.5 rounded-full border border-pink-500/30 backdrop-blur-sm transition-all hover:scale-105 hover:border-pink-500/50">
+          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-pink-200 via-pink-300 to-fuchsia-300 shadow-lg shadow-pink-500/20" />
+          <span className="text-slate-200 font-semibold">Follicular</span>
         </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-teal-400 to-cyan-500" />
-          <span className="text-slate-400">Ovular</span>
+        <div className="flex items-center space-x-2 bg-slate-800/60 px-4 py-2.5 rounded-full border border-cyan-500/30 backdrop-blur-sm transition-all hover:scale-105 hover:border-cyan-500/50">
+          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-400 via-teal-400 to-cyan-500 shadow-lg shadow-cyan-500/30" />
+          <span className="text-slate-200 font-semibold">Ovular</span>
         </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-orange-400 to-orange-500" />
-          <span className="text-slate-400">Luteal</span>
+        <div className="flex items-center space-x-2 bg-slate-800/60 px-4 py-2.5 rounded-full border border-orange-500/30 backdrop-blur-sm transition-all hover:scale-105 hover:border-orange-500/50">
+          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500 shadow-lg shadow-orange-500/20" />
+          <span className="text-slate-200 font-semibold">Luteal</span>
         </div>
       </div>
 
