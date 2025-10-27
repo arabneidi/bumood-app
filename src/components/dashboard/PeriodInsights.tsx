@@ -222,7 +222,7 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent flex items-center">
           <Droplets className="w-6 h-6 mr-2 text-pink-500" />
-          Period Insights
+          Cycle
         </h3>
         <div className="text-sm text-slate-300">
           Avg cycle: <span className="font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">{data.avgCycle ? `${data.avgCycle} days` : '—'}</span>
@@ -233,9 +233,15 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
       <div className="mb-6 flex flex-col items-center">
         <motion.div 
           className="relative w-80 h-80"
-          initial={{ y: 0 }}
-          animate={{ y: [-8, 8, -8] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          initial={{ y: 0, scale: 1 }}
+          animate={{ 
+            y: [-8, 8, -8],
+            scale: [1, 1.02, 1]
+          }}
+          transition={{ 
+            y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+            scale: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+          }}
         >
           {/* SVG Circular Ring */}
           <svg width="320" height="320" className="transform -rotate-90 drop-shadow-2xl">
@@ -538,6 +544,18 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setShowPeriodEndModal(true)}
+                  animate={{
+                    boxShadow: [
+                      "0 0 20px rgba(244, 63, 94, 0.5)",
+                      "0 0 30px rgba(244, 63, 94, 0.8)",
+                      "0 0 20px rgba(244, 63, 94, 0.5)"
+                    ]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
                   className="px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-rose-500 to-pink-600 rounded-full hover:from-rose-400 hover:to-pink-500 transition-all shadow-lg shadow-rose-500/30 hover:shadow-rose-500/40 border border-rose-400/30"
                 >
                   End Period
