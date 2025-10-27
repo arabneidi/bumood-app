@@ -193,178 +193,243 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
 
       {/* Circular Cycle Visualization */}
       <div className="mb-6 flex flex-col items-center">
-        <div className="relative w-80 h-80">
+        <motion.div 
+          className="relative w-80 h-80"
+          initial={{ y: 0 }}
+          animate={{ y: [-8, 8, -8] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        >
           {/* SVG Circular Ring */}
-          <svg width="320" height="320" className="transform -rotate-90">
+          <svg width="320" height="320" className="transform -rotate-90 drop-shadow-2xl">
             <defs>
-              {/* Radial gradients for depth */}
-              <radialGradient id="periodGradient" cx="50%" cy="50%">
-                <stop offset="0%" stopColor="#f87171" />
-                <stop offset="70%" stopColor="#dc2626" />
-                <stop offset="100%" stopColor="#7f1d1d" />
+              {/* Futuristic linear gradients with neon glow */}
+              <linearGradient id="periodGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#ff0000" />
+                <stop offset="100%" stopColor="#990000" />
+              </linearGradient>
+              
+              <linearGradient id="follicularGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#fce7f3" />
+                <stop offset="100%" stopColor="#fbcfe8" />
+              </linearGradient>
+              
+              <linearGradient id="ovularGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#2dd4bf" />
+                <stop offset="100%" stopColor="#06b6d4" />
+              </linearGradient>
+              
+              <linearGradient id="lutealGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#fb923c" />
+                <stop offset="100%" stopColor="#f97316" />
+              </linearGradient>
+              
+              {/* Pink background gradient */}
+              <radialGradient id="purpleGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#ec4899" stopOpacity="0.5" />
+                <stop offset="50%" stopColor="#db2777" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#be185d" stopOpacity="0.7" />
               </radialGradient>
               
-              <radialGradient id="follicularGradient" cx="50%" cy="50%">
-                <stop offset="0%" stopColor="#fdf2f8" />
-                <stop offset="50%" stopColor="#f9a8d4" />
-                <stop offset="100%" stopColor="#ec4899" />
-              </radialGradient>
-              
-              <radialGradient id="ovularGradient" cx="50%" cy="50%">
-                <stop offset="0%" stopColor="#5eead4" />
-                <stop offset="50%" stopColor="#06b6d4" />
-                <stop offset="100%" stopColor="#075985" />
-              </radialGradient>
-              
-              <radialGradient id="lutealGradient" cx="50%" cy="50%">
-                <stop offset="0%" stopColor="#fdba74" />
-                <stop offset="50%" stopColor="#f97316" />
-                <stop offset="100%" stopColor="#9a3412" />
-              </radialGradient>
-              
-              {/* Premium glow for active phase */}
-              <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
-                <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+              {/* Neon glow effect */}
+              <filter id="neonGlow" x="-200%" y="-200%" width="500%" height="500%">
+                <feGaussianBlur stdDeviation="10" result="coloredBlur"/>
                 <feMerge>
                   <feMergeNode in="coloredBlur"/>
                   <feMergeNode in="SourceGraphic"/>
                 </feMerge>
               </filter>
               
-              {/* Soft glow for all phases */}
-              <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+              {/* Subtle glow */}
+              <filter id="softGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
                 <feMerge>
                   <feMergeNode in="coloredBlur"/>
                   <feMergeNode in="SourceGraphic"/>
                 </feMerge>
               </filter>
               
-              {/* Shadow filter for depth */}
-              <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#000000" floodOpacity="0.3"/>
+              {/* High-quality shadow filter */}
+              <filter id="dropShadow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+                <feOffset dx="2" dy="2" result="offsetblur"/>
+                <feComponentTransfer>
+                  <feFuncA type="linear" slope="0.3"/>
+                </feComponentTransfer>
+                <feMerge>
+                  <feMergeNode/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
               </filter>
             </defs>
             
-            {/* Background circle with inner glow */}
+            {/* Background track circle with subtle texture */}
             <circle
               cx="160"
               cy="160"
               r="140"
               fill="none"
-              stroke="#1e293b"
-              strokeWidth="12"
-              className="opacity-30"
-            />
-            <circle
-              cx="160"
-              cy="160"
-              r="140"
-              fill="none"
-              stroke="#334155"
-              strokeWidth="8"
+              stroke="#0f172a"
+              strokeWidth="3"
               className="opacity-40"
             />
             
+            {/* Subtle inner shadow circle */}
+            <circle
+              cx="160"
+              cy="160"
+              r="136"
+              fill="none"
+              stroke="url(#periodGradient)"
+              strokeWidth="1"
+              className="opacity-5"
+            />
+            
+            {/* Phase markers - Tick marks at phase transitions */}
+            {(() => {
+              const cycleLength = data.avgCycle || 28;
+              const markers = [];
+              const numMarkers = 8;
+              
+              for (let i = 0; i <= numMarkers; i++) {
+                const angle = (i / numMarkers) * 360;
+                const x1 = 160 + 135 * Math.cos((angle - 90) * Math.PI / 180);
+                const y1 = 160 + 135 * Math.sin((angle - 90) * Math.PI / 180);
+                const x2 = 160 + 140 * Math.cos((angle - 90) * Math.PI / 180);
+                const y2 = 160 + 140 * Math.sin((angle - 90) * Math.PI / 180);
+                
+                markers.push(
+                  <line
+                    key={i}
+                    x1={x1}
+                    y1={y1}
+                    x2={x2}
+                    y2={y2}
+                    stroke="#64748b"
+                    strokeWidth="2"
+                    className="opacity-30"
+                  />
+                );
+              }
+              return markers;
+            })()}
+            
             {/* Dynamic phase calculations based on avgCycle */}
             {(() => {
-              const cycleLength = data.avgCycle || 28; // Default to 28 if no data
-              const circumference = 2 * Math.PI * 140; // r=140
+              const cycleLength = data.avgCycle || 28;
+              const r = 140;
+              const innerR = 100; // Inner radius for hollow circle
               
               // Phase durations (in days)
               const menstrualDays = 5;
-              const follicularDays = cycleLength > 20 ? Math.floor((cycleLength - 14) / 2) : 8; // Dynamic follicular phase
+              const follicularDays = cycleLength > 20 ? Math.floor((cycleLength - 14) / 2) : 8;
               const ovulationDays = 2;
               const lutealDays = cycleLength - menstrualDays - follicularDays - ovulationDays;
               
-              // Stroke dash calculations
-              const menstrualDash = (menstrualDays / cycleLength) * circumference;
-              const follicularDash = (follicularDays / cycleLength) * circumference;
-              const ovulationDash = (ovulationDays / cycleLength) * circumference;
-              const lutealDash = (lutealDays / cycleLength) * circumference;
+              // Start angles for each phase (in degrees)
+              const menstrualStartAngle = -90; // Start at 12 o'clock
+              const menstrualEndAngle = -90 + (menstrualDays / cycleLength) * 360;
+              const follicularStartAngle = menstrualEndAngle;
+              const follicularEndAngle = follicularStartAngle + (follicularDays / cycleLength) * 360;
+              const ovulationStartAngle = follicularEndAngle;
+              const ovulationEndAngle = ovulationStartAngle + (ovulationDays / cycleLength) * 360;
+              const lutealStartAngle = ovulationEndAngle;
+              const lutealEndAngle = lutealStartAngle + (lutealDays / cycleLength) * 360;
+              
+              // Helper function to draw a filled arc segment
+              const drawArc = (startAngle: number, endAngle: number, outerR: number, innerR: number) => {
+                const startAngleRad = (startAngle * Math.PI) / 180;
+                const endAngleRad = (endAngle * Math.PI) / 180;
+                
+                const x1 = 160 + outerR * Math.cos(startAngleRad);
+                const y1 = 160 + outerR * Math.sin(startAngleRad);
+                const x2 = 160 + outerR * Math.cos(endAngleRad);
+                const y2 = 160 + outerR * Math.sin(endAngleRad);
+                
+                const x3 = 160 + innerR * Math.cos(endAngleRad);
+                const y3 = 160 + innerR * Math.sin(endAngleRad);
+                const x4 = 160 + innerR * Math.cos(startAngleRad);
+                const y4 = 160 + innerR * Math.sin(startAngleRad);
+                
+                const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+                
+                return `M ${x1} ${y1} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerR} ${innerR} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+              };
               
               return (
                 <>
-                  {/* Period phase (Menstrual) - Red with premium styling */}
-                  <circle
-                    cx="160"
-                    cy="160"
-                    r="140"
-                    fill="none"
-                    stroke="url(#periodGradient)"
-                    strokeWidth={isCurrentlyOnPeriod ? "16" : "12"}
-                    strokeDasharray={`${menstrualDash} ${circumference}`}
-                    strokeDashoffset="0"
-                    filter={isCurrentlyOnPeriod ? "url(#glow)" : "url(#softGlow)"}
-                    strokeLinecap="round"
-                    opacity={isCurrentlyOnPeriod ? "1" : "0.7"}
+                  {/* Menstrual phase - Filled segment */}
+                  <path
+                    d={drawArc(menstrualStartAngle, menstrualEndAngle, r, innerR)}
+                    fill="url(#periodGradient)"
+                    filter="url(#neonGlow)"
+                    opacity={isCurrentlyOnPeriod ? 1 : 0.9}
+                    className="transition-all duration-300"
                   >
                     {isCurrentlyOnPeriod && (
                       <>
-                        <animate attributeName="stroke-width" values="16;18;16" dur="2s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="1;0.9;1" dur="2s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.9;1;0.9" dur="2s" repeatCount="indefinite" />
                       </>
                     )}
-                  </circle>
+                  </path>
                   
-                  {/* Follicular phase - Pink with depth */}
-                  <circle
-                    cx="160"
-                    cy="160"
-                    r="140"
-                    fill="none"
-                    stroke="url(#follicularGradient)"
-                    strokeWidth="12"
-                    strokeDasharray={`${follicularDash} ${circumference}`}
-                    strokeDashoffset={`-${menstrualDash}`}
-                    filter="url(#softGlow)"
-                    strokeLinecap="round"
-                    opacity="0.8"
+                  {/* Follicular phase - Filled segment */}
+                  <path
+                    d={drawArc(follicularStartAngle, follicularEndAngle, r, innerR)}
+                    fill="url(#follicularGradient)"
+                    filter="url(#neonGlow)"
+                    opacity="0.9"
                   />
                   
-                  {/* Ovulation phase - Cyan with depth */}
-                  <circle
-                    cx="160"
-                    cy="160"
-                    r="140"
-                    fill="none"
-                    stroke="url(#ovularGradient)"
-                    strokeWidth="12"
-                    strokeDasharray={`${ovulationDash} ${circumference}`}
-                    strokeDashoffset={`-${menstrualDash + follicularDash}`}
-                    filter="url(#softGlow)"
-                    strokeLinecap="round"
-                    opacity="0.8"
+                  {/* Ovulation phase - Filled segment */}
+                  <path
+                    d={drawArc(ovulationStartAngle, ovulationEndAngle, r, innerR)}
+                    fill="url(#ovularGradient)"
+                    filter="url(#neonGlow)"
+                    opacity="0.9"
                   />
                 </>
               );
             })()}
             
-            {/* Luteal phase - Orange (calculated dynamically) */}
+            {/* Luteal phase - Filled segment */}
             {(() => {
               const cycleLength = data.avgCycle || 28;
-              const circumference = 2 * Math.PI * 140;
+              const r = 140;
+              const innerR = 100;
+              
               const menstrualDays = 5;
               const follicularDays = cycleLength > 20 ? Math.floor((cycleLength - 14) / 2) : 8;
               const ovulationDays = 2;
-              const menstrualDash = (menstrualDays / cycleLength) * circumference;
-              const follicularDash = (follicularDays / cycleLength) * circumference;
-              const ovulationDash = (ovulationDays / cycleLength) * circumference;
-              const lutealDash = circumference - menstrualDash - follicularDash - ovulationDash;
+              const lutealDays = cycleLength - menstrualDays - follicularDays - ovulationDays;
+              
+              const lutealStartAngle = -90 + ((menstrualDays + follicularDays + ovulationDays) / cycleLength) * 360;
+              const lutealEndAngle = -90 + 360;
+              
+              const drawArc = (startAngle: number, endAngle: number, outerR: number, innerR: number) => {
+                const startAngleRad = (startAngle * Math.PI) / 180;
+                const endAngleRad = (endAngle * Math.PI) / 180;
+                
+                const x1 = 160 + outerR * Math.cos(startAngleRad);
+                const y1 = 160 + outerR * Math.sin(startAngleRad);
+                const x2 = 160 + outerR * Math.cos(endAngleRad);
+                const y2 = 160 + outerR * Math.sin(endAngleRad);
+                
+                const x3 = 160 + innerR * Math.cos(endAngleRad);
+                const y3 = 160 + innerR * Math.sin(endAngleRad);
+                const x4 = 160 + innerR * Math.cos(startAngleRad);
+                const y4 = 160 + innerR * Math.sin(startAngleRad);
+                
+                const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+                
+                return `M ${x1} ${y1} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerR} ${innerR} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+              };
               
               return (
-                <circle
-                  cx="160"
-                  cy="160"
-                  r="140"
-                  fill="none"
-                  stroke="url(#lutealGradient)"
-                  strokeWidth="12"
-                  strokeDasharray={`${lutealDash} ${circumference}`}
-                  strokeDashoffset={`-${menstrualDash + follicularDash + ovulationDash}`}
-                  filter="url(#softGlow)"
-                  strokeLinecap="round"
-                  opacity="0.8"
+                <path
+                  d={drawArc(lutealStartAngle, lutealEndAngle, r, innerR)}
+                  fill="url(#lutealGradient)"
+                  filter="url(#neonGlow)"
+                  opacity="0.9"
                 />
               );
             })()}
@@ -373,178 +438,148 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
             {isCurrentlyOnPeriod && currentPeriodDay > 0 && (() => {
               const cycleLength = data.avgCycle || 28;
               const menstrualDays = 5;
-              const circumference = 2 * Math.PI * 140;
-              
-              // Calculate segment dash length
-              const menstrualDash = (menstrualDays / cycleLength) * circumference;
+              const r = 140;
+              const innerR = 100;
               
               // Percent through menstrual phase (0 to 1)
               const percentThroughMenstrual = (currentPeriodDay - 1) / (menstrualDays - 1);
               
-              // Distance along the arc for the dot (0 to menstrualDash)
-              const dotDistance = percentThroughMenstrual * menstrualDash;
+              // Calculate angle within menstrual phase
+              const menstrualStartAngle = -90;
+              const menstrualEndAngle = -90 + (menstrualDays / cycleLength) * 360;
+              const menstrualAngleRange = menstrualEndAngle - menstrualStartAngle;
               
-              // Convert distance to degrees (SVG is already rotated -90°)
-              const angleFromTop = (dotDistance / circumference) * 360;
+              // Angle based on progress (in degrees)
+              const angleFromTop = menstrualStartAngle + (percentThroughMenstrual * menstrualAngleRange);
               
-              // Start at 180° (12 o'clock) and add the angle based on progress through the menstrual phase
-              const rotationAngle = 180 + angleFromTop;
-              
-              console.log('🔴 Period day:', currentPeriodDay, 'Distance:', dotDistance.toFixed(1), 'Angle from top:', angleFromTop.toFixed(1), 'Rotation:', rotationAngle.toFixed(1));
+              // Convert to radians and calculate position at center of curves (between inner and outer)
+              const angleRad = (angleFromTop * Math.PI) / 180;
+              const centerRadius = 120; // Center of the curve segments
+              const cx = 160 + centerRadius * Math.cos(angleRad);
+              const cy = 160 + centerRadius * Math.sin(angleRad);
               
               return (
-                <g transform={`rotate(${rotationAngle}, 160, 160)`}>
-                  {/* Outer glow halo */}
-                  <circle
-                    cx="20"
-                    cy="160"
-                    r="18"
-                    fill="white"
-                    className="opacity-15"
-                    filter="url(#glow)"
-                  >
-                    <animate attributeName="r" values="18;22;18" dur="2s" repeatCount="indefinite" />
-                  </circle>
-                  {/* Mid glow */}
-                  <circle
-                    cx="20"
-                    cy="160"
-                    r="14"
-                    fill="white"
-                    className="opacity-40"
-                    filter="url(#softGlow)"
-                  >
-                    <animate attributeName="r" values="14;16;14" dur="2s" repeatCount="indefinite" />
-                  </circle>
-                  {/* Main dot with gradient */}
-                  <circle
-                    cx="20"
-                    cy="160"
-                    r="10"
-                    fill="white"
-                    className="drop-shadow-2xl"
-                    filter="url(#shadow)"
-                  >
-                    <animate attributeName="r" values="10;12;10" dur="2s" repeatCount="indefinite" />
-                  </circle>
-                  {/* Inner highlight */}
-                  <circle
-                    cx="20"
-                    cy="160"
-                    r="4"
-                    fill="#fef2f2"
-                    className="opacity-80"
-                  />
-                </g>
+                <foreignObject x={cx - 24} y={cy - 24} width="48" height="48">
+                  <div className="flex items-center justify-center w-full h-full">
+                    <motion.span
+                      className="text-4xl"
+                      initial={{ scale: 1, rotate: 90 }}
+                      animate={{ 
+                        scale: [1, 1.2, 1],
+                        rotate: [90, 90, 90]
+                      }}
+                      transition={{ 
+                        scale: { duration: 1, repeat: Infinity },
+                        rotate: { duration: 0 }
+                      }}
+                    >
+                      🦋
+                    </motion.span>
+                  </div>
+                </foreignObject>
               );
             })()}
-            
-            {/* Direction arrow with premium styling */}
-            <g className="opacity-70">
-              {/* Arrow shadow */}
-              <polygon
-                points="272,162 287,157 287,167"
-                fill="black"
-                className="opacity-20"
-              >
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  from="0 160 160"
-                  to="360 160 160"
-                  dur="15s"
-                  repeatCount="indefinite"
-                />
-              </polygon>
-              {/* Main arrow */}
-              <polygon
-                points="270,160 285,155 285,165"
-                fill="white"
-                className="drop-shadow-lg"
-                filter="url(#softGlow)"
-              >
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  from="0 160 160"
-                  to="360 160 160"
-                  dur="15s"
-                  repeatCount="indefinite"
-                />
-              </polygon>
-              {/* Arrow highlight */}
-              <polygon
-                points="272,160 283,156 283,164"
-                fill="#fef2f2"
-                className="opacity-50"
-              >
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  from="0 160 160"
-                  to="360 160 160"
-                  dur="15s"
-                  repeatCount="indefinite"
-                />
-              </polygon>
-            </g>
           </svg>
           
-          {/* Center Content */}
+          {/* Center Content - Professional Design */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {isCurrentlyOnPeriod ? (
-              <>
-                <div className="text-4xl mb-2">🩸</div>
-                <div className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">
-                  Period Day {currentPeriodDay}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex flex-col items-center"
+              >
+                <div className="text-6xl font-black bg-gradient-to-br from-rose-400 via-pink-400 to-fuchsia-400 bg-clip-text text-transparent mb-2 tracking-tighter drop-shadow-2xl">
+                  {currentPeriodDay}
                 </div>
-                <div className="text-lg text-pink-300 font-semibold mt-1">of ~5 days</div>
-                <button
+                <div className="text-xs text-slate-400 font-light uppercase tracking-[0.15em] mb-3">
+                  Day <span className="font-semibold text-slate-300">•</span> of ~<span className="font-bold text-slate-200">5 days</span>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setShowPeriodEndModal(true)}
-                  className="mt-2 px-3 py-1 text-xs bg-red-500/20 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/30 transition-colors"
+                  className="px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-rose-500 to-pink-600 rounded-full hover:from-rose-400 hover:to-pink-500 transition-all shadow-lg shadow-rose-500/30 hover:shadow-rose-500/40 border border-rose-400/30"
                 >
                   End Period
-                </button>
-              </>
+                </motion.button>
+              </motion.div>
             ) : (
-              <>
-                <div className="text-3xl mb-2">📅</div>
-                <div className="text-xl font-bold text-white">
-                  {data.predictedNextStart ? (
-                    <>
-                      <div className="text-rose-400">Period in {data.predictedNextStart && data.predictedNextStart.getTime() > new Date().getTime() ? Math.round((data.predictedNextStart.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0} days</div>
-                      <div className="text-sm text-slate-400 mt-1">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex flex-col items-center"
+              >
+                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Next Period
+                </h3>
+                {data.predictedNextStart ? (
+                  <>
+                    <div className="text-4xl font-black bg-gradient-to-r from-rose-400 via-pink-400 to-rose-500 bg-clip-text text-transparent mb-1 tracking-tight">
+                      {data.predictedNextStart && data.predictedNextStart.getTime() > new Date().getTime() ? Math.round((data.predictedNextStart.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0}
+                    </div>
+                    <div className="text-sm text-slate-400 font-medium mt-1">
+                      days • <span className="text-slate-300 font-semibold">
                         {String(data.predictedNextStart.getUTCMonth() + 1).padStart(2, '0')}/{String(data.predictedNextStart.getUTCDate()).padStart(2, '0')}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-slate-400">Tracking cycle</div>
-                  )}
-                </div>
-              </>
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-xl text-slate-400 font-medium">Tracking cycle</div>
+                )}
+              </motion.div>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Phase Legend */}
-      <div className="mt-4 flex items-center justify-center space-x-6 text-xs">
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-red-600 to-red-800" />
-          <span className="text-slate-400">Menstrual</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-pink-200 to-pink-300" />
-          <span className="text-slate-400">Follicular</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-teal-400 to-cyan-500" />
-          <span className="text-slate-400">Ovular</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-orange-400 to-orange-500" />
-          <span className="text-slate-400">Luteal</span>
-        </div>
+      <div className="grid grid-cols-4 gap-2 text-center mt-6">
+        {/* Menstrual */}
+        <motion.div
+          whileHover={{ scale: 1.05, y: -2 }}
+          className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-red-500/20 hover:border-red-400/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-center space-x-1">
+            <div className="w-2 h-2 rounded-full shadow-lg bg-red-500" />
+            <span className="text-xs font-bold text-white">Menstrual</span>
+          </div>
+        </motion.div>
+
+        {/* Follicular */}
+        <motion.div
+          whileHover={{ scale: 1.05, y: -2 }}
+          className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-pink-400/20 hover:border-pink-400/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-center space-x-1">
+            <div className="w-2 h-2 rounded-full shadow-lg bg-pink-400" />
+            <span className="text-xs font-bold text-white">Follicular</span>
+          </div>
+        </motion.div>
+
+        {/* Ovulation */}
+        <motion.div
+          whileHover={{ scale: 1.05, y: -2 }}
+          className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-cyan-500/20 hover:border-cyan-400/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-center space-x-1">
+            <div className="w-2 h-2 rounded-full shadow-lg bg-cyan-500" />
+            <span className="text-xs font-bold text-white">Ovular</span>
+          </div>
+        </motion.div>
+
+        {/* Luteal */}
+        <motion.div
+          whileHover={{ scale: 1.05, y: -2 }}
+          className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-orange-500/20 hover:border-orange-400/40 transition-all duration-300"
+        >
+          <div className="flex items-center justify-center space-x-1">
+            <div className="w-2 h-2 rounded-full shadow-lg bg-orange-500" />
+            <span className="text-xs font-bold text-white">Luteal</span>
+          </div>
+        </motion.div>
       </div>
 
       {showAlert && (

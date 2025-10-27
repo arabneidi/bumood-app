@@ -48,15 +48,11 @@ export async function calculateMoodComposite(
   stress: number,
   date: Date = new Date()
 ): Promise<MoodCompositeResult> {
-  console.log(`🔵 Calculating DASHBOARD MC for date: ${date.toISOString()}`);
   const timeBucket = getTimeBucket(date);
-  console.log(`🔵 Time bucket: ${timeBucket} (morning/midday/evening/night)`);
   
   // Get last 14 days of data for the same time bucket ONLY
   const fourteenDaysAgo = new Date(date);
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-
-  console.log(`🔵 Historical range: ${fourteenDaysAgo.toISOString()} to ${date.toISOString()}`);
 
   // For Dashboard MC, we need to find entries that:
   // 1. Were created in the current time bucket, OR
@@ -84,13 +80,7 @@ export async function calculateMoodComposite(
         const slots = JSON.parse(entry.selectedTimeSlots);
         // Check if any slot matches the current time bucket (e.g., "evening-18" for evening bucket)
         const bucketPrefix = timeBucket + '-';
-        const hasActivitiesInBucket = Array.isArray(slots) && slots.some((slot: string) => slot.startsWith(bucketPrefix));
-        
-        if (hasActivitiesInBucket) {
-          console.log(`🔵 Entry match: Created in ${entry.timeBucket}, has activities in ${timeBucket} bucket:`, slots.filter((s: string) => s.startsWith(bucketPrefix)));
-        }
-        
-        return hasActivitiesInBucket;
+        return Array.isArray(slots) && slots.some((slot: string) => slot.startsWith(bucketPrefix));
       } catch (e) {
         // If parsing fails, skip this entry
         return false;
@@ -99,8 +89,6 @@ export async function calculateMoodComposite(
     
     return false;
   });
-
-  console.log(`🔵 Found ${historicalData.length} historical entries for time bucket '${timeBucket}'`);
   
   // Group by date and average multiple entries on same day
   const dailyAverages = new Map<string, { valence: number, energy: number, focus: number, stress: number, count: number }>();
@@ -127,15 +115,6 @@ export async function calculateMoodComposite(
     focus: dayData.focus / dayData.count,
     stress: dayData.stress / dayData.count
   }));
-  
-  console.log(`🔵 Averaged to ${averagedData.length} unique days (from ${historicalData.length} entries)`);
-  
-  // Print historical data for debugging
-  if (averagedData.length > 0) {
-    console.log(`🔵 Historical data for ${timeBucket}:`, averagedData);
-  } else {
-    console.log(`🔵 No historical data found for time bucket '${timeBucket}'`);
-  }
 
   // Extract historical values
   const valenceHistory = averagedData.map(entry => entry.valence);
@@ -151,8 +130,6 @@ export async function calculateMoodComposite(
 
   // Calculate Mood Composite
   const moodComposite = 0.4 * zV + 0.3 * zE + 0.2 * zF - 0.2 * zS;
-
-  console.log(`🔵 Dashboard MC calculated: ${moodComposite.toFixed(3)}, z-scores: V=${zV.toFixed(3)}, E=${zE.toFixed(3)}, F=${zF.toFixed(3)}, S=${zS.toFixed(3)}`);
 
   return {
     moodComposite,
@@ -185,8 +162,6 @@ export async function calculateMoodCompositeForPowerHours(
   window: 'weekly' | 'monthly' | 'yearly' = 'weekly',
   currentDate: Date = new Date()
 ): Promise<MoodCompositeResult> {
-  console.log(`🧮 Calculating MC for Power Hours: hour=${targetHour}, window=${window}`);
-  
   // Determine historical data range based on window
   let startDate: Date;
   let endDate: Date = new Date(currentDate);
@@ -203,8 +178,6 @@ export async function calculateMoodCompositeForPowerHours(
       startDate = new Date(currentDate.getFullYear(), 0, 1);
       break;
   }
-  
-  console.log(`📅 Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
   
   // Get ALL entries in the window (not just same time bucket)
   const allEntries = await prisma.moodEntry.findMany({
@@ -228,8 +201,6 @@ export async function calculateMoodCompositeForPowerHours(
       createdAt: 'desc'
     }
   });
-  
-  console.log(`📊 Found ${allEntries.length} total entries in window`);
   
   // Filter entries that have the exact target hour
   const entriesForHour = allEntries.filter(entry => {
@@ -273,8 +244,6 @@ export async function calculateMoodCompositeForPowerHours(
     return false;
   });
   
-  console.log(`🎯 Found ${entriesForHour.length} entries for hour ${targetHour}`);
-  
   // Group by date and average multiple entries on same day
   const dailyAverages = new Map<string, { valence: number, energy: number, focus: number, stress: number, count: number }>();
   
@@ -301,8 +270,6 @@ export async function calculateMoodCompositeForPowerHours(
     stress: dayData.stress / dayData.count
   }));
   
-  console.log(`📈 Historical data points: ${historicalData.length}`);
-  
   // Extract historical values
   const valenceHistory = historicalData.map(entry => entry.valence);
   const energyHistory = historicalData.map(entry => entry.energy);
@@ -317,8 +284,6 @@ export async function calculateMoodCompositeForPowerHours(
   
   // Calculate Mood Composite
   const moodComposite = 0.4 * zV + 0.3 * zE + 0.2 * zF - 0.2 * zS;
-  
-  console.log(`✅ MC calculated: ${moodComposite}, z-scores: V=${zV.toFixed(3)}, E=${zE.toFixed(3)}, F=${zF.toFixed(3)}, S=${zS.toFixed(3)}`);
   
   return {
     moodComposite,

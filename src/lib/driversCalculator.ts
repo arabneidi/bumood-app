@@ -36,8 +36,6 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
     new Date(entry.createdAt) >= fourWeeksAgo
   );
 
-  console.log(`📊 Calculating drivers from ${recentEntries.length} entries in last 28 days`);
-
   if (recentEntries.length < 5) {
     return {
       helpful: [],
@@ -75,14 +73,10 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
       const dssResult = await calculateDSS(entries[0].userId, dssDate);
       
       dailyDSS.set(dateKey, dssResult.dssScore);
-      console.log(`📊 Day ${dateKey}: DSS=${dssResult.dssScore.toFixed(3)}`);
     } catch (error) {
-      console.error(`Error calculating DSS for ${dateKey}:`, error);
       // Skip this day if DSS calculation fails
     }
   }
-
-  console.log(`📊 Calculated DSS for ${dailyDSS.size} days`);
 
   // STEP 2: Extract activities and map to days
   const activityCounts = new Map<string, number>();
@@ -96,7 +90,6 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
     try {
       activities = JSON.parse(entry.activities || '[]');
     } catch (error) {
-      console.log('⚠️ Could not parse activities for entry:', entry.id);
       activities = [];
     }
     
@@ -109,14 +102,10 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
     });
   });
 
-  console.log(`📊 Found ${activityCounts.size} unique activities`);
-
   // Filter activities with at least 3 occurrences
   const qualifyingActivities = Array.from(activityCounts.entries())
     .filter(([_, count]) => count >= 3)
     .map(([activity, _]) => activity);
-
-  console.log(`📊 ${qualifyingActivities.length} activities with ≥3 occurrences:`, qualifyingActivities);
 
   const drivers: DriverResult[] = [];
 
@@ -126,8 +115,6 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
     const presentDays = Array.from(presentDates);
     const allDaysWithDSS = Array.from(dailyDSS.keys());
     const absentDays = allDaysWithDSS.filter(date => !presentDates.has(date));
-
-    console.log(`📊 Processing ${activity}: ${presentDays.length} present days, ${absentDays.length} absent days`);
 
     // Ensure we have enough data points for comparison
     if (presentDays.length < 2 || absentDays.length < 2) continue;
@@ -149,20 +136,6 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
 
     // Calculate effect size (difference of means)
     const dssEffect = presentDSSMean - absentDSSMean;
-
-    // Debug for exercise
-    if (activity === 'exercise') {
-      console.log(`🔍 EXERCISE CALCULATION DEBUG:`, {
-        activity,
-        presentDays: presentDays.length,
-        absentDays: absentDays.length,
-        presentDSSValues,
-        absentDSSValues: absentDSSValues.slice(0, 10), // First 10 for brevity
-        presentDSSMean,
-        absentDSSMean,
-        dssEffect
-      });
-    }
 
     // Calculate MC effect for this activity using EXACT logic from DSS vs MC chart
     let mcEffect = 0;
@@ -228,18 +201,10 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
       // Calculate MC effect (difference of means)
       if (presentMCValues.length > 0 && absentMCValues.length > 0) {
         const presentMCMean = presentMCValues.reduce((sum, val) => sum + val, 0) / presentMCValues.length;
-        const absentMCMean = absentMCValues.reduce((sum, val) => sum + val, 0) / absentMCValues.length;
+        const         absentMCMean = absentMCValues.reduce((sum, val) => sum + val, 0) / absentMCValues.length;
         mcEffect = presentMCMean - absentMCMean;
       }
-      
-      console.log(`📊 ${activity} MC calculation: present=${presentMCValues.length} days, absent=${absentMCValues.length} days, effect=${mcEffect.toFixed(3)}`);
-      console.log(`📊 ${activity} MC values - Present: [${presentMCValues.map(v => v.toFixed(3)).join(', ')}], Absent: [${absentMCValues.slice(0, 5).map(v => v.toFixed(3)).join(', ')}]`);
     } catch (error) {
-      console.error(`❌ Error calculating MC for ${activity}:`, error);
-      console.error(`❌ Error details:`, {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'No stack trace'
-      });
       mcEffect = 0;
     }
 
@@ -265,8 +230,6 @@ export async function calculateDrivers(moodEntries: MoodEntry[]): Promise<Driver
   const harmful = sortedDrivers
     .filter(driver => !driver.isHelpful)
     .slice(0, 5);
-
-  console.log(`📊 Final results: ${helpful.length} helpful, ${harmful.length} harmful activities`);
 
   return {
     helpful,
