@@ -222,7 +222,7 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent flex items-center">
           <Droplets className="w-6 h-6 mr-2 text-pink-500" />
-          Cycle
+          Menstrual Cycle
         </h3>
         <div className="text-sm text-slate-300">
           Avg cycle: <span className="font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">{data.avgCycle ? `${data.avgCycle} days` : '—'}</span>
