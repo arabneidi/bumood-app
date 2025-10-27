@@ -315,12 +315,16 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
                 </span>
               </motion.div>
             </div>
-            <button
-              className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all font-medium"
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-3 py-1.5 rounded-md bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-400/20 text-white transition-all font-medium text-xs"
               onClick={() => setShowSubcategories(v => !v)}
             >
-              {showSubcategories ? 'Hide Subcategories' : 'Show Subcategories'}
-            </button>
+              <span className="font-semibold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
+                {showSubcategories ? 'Hide Subcategories' : 'Show Subcategories'}
+              </span>
+            </motion.button>
           </div>
         </div>
         
