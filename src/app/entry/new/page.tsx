@@ -771,39 +771,53 @@ export default function NewEntry() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    console.log('🚀 Starting entry submission...');
+    console.log('📊 Form Data:', formData);
+    console.log('📝 Reflection:', reflection);
+    console.log('🌊 On Period:', formData.onPeriod);
+    console.log('📅 Period Day:', formData.onPeriod ? getPeriodDay() : null);
 
     try {
+      const payload = {
+        valence: formData.valence,
+        energy: formData.energy,
+        focus: formData.focus,
+        stress: formData.stress,
+        sleep: formData.sleep,
+        notes: reflection, // Save reflection as notes
+        activities: formData.activities,
+        selectedTimeSlots: formData.activityEntries?.map((entry: any) => entry.timeSlot) || [],
+        selectedSubcategories: formData.selectedSubcategories,
+        activityEntries: formData.activityEntries,
+        dssAnalysis: formData.dssAnalysis ? JSON.stringify(formData.dssAnalysis) : null,
+        onPeriod: formData.onPeriod,
+        periodDay: formData.onPeriod ? getPeriodDay() : null,
+        waterIntake: formData.waterIntake,
+        mealsEaten: formData.mealsEaten,
+        mealQuality: formData.mealQuality,
+        caffeine: formData.caffeine,
+        alcohol: formData.alcohol,
+        // Custom date for past entries
+        customDate: formData.entryDate,
+      };
+      
+      console.log('📤 Sending payload to API:', payload);
+      
       const response = await fetch("/api/mood-entries", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          valence: formData.valence,
-          energy: formData.energy,
-          focus: formData.focus,
-          stress: formData.stress,
-          sleep: formData.sleep,
-          notes: reflection, // Save reflection as notes
-          activities: formData.activities,
-          selectedTimeSlots: formData.activityEntries?.map((entry: any) => entry.timeSlot) || [],
-          selectedSubcategories: formData.selectedSubcategories,
-          activityEntries: formData.activityEntries,
-          dssAnalysis: formData.dssAnalysis ? JSON.stringify(formData.dssAnalysis) : null,
-          onPeriod: formData.onPeriod,
-          periodDay: formData.onPeriod ? getPeriodDay() : null,
-          waterIntake: formData.waterIntake,
-          mealsEaten: formData.mealsEaten,
-          mealQuality: formData.mealQuality,
-          caffeine: formData.caffeine,
-          alcohol: formData.alcohol,
-          // Custom date for past entries
-          customDate: formData.entryDate,
-        }),
+        body: JSON.stringify(payload),
       });
 
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response ok:', response.ok);
+
       if (response.ok) {
-        console.log("Entry saved successfully!");
+        const result = await response.json();
+        console.log('✅ Entry saved successfully!', result);
         
         // Signal dashboard to regenerate AI suggestions and Pro Tips
         localStorage.setItem('mood-entry-created', Date.now().toString());
@@ -815,13 +829,15 @@ export default function NewEntry() {
         router.push("/");
       } else {
         const errorData = await response.json();
+        console.error('❌ Failed to save mood entry:', errorData);
         alert(`Failed to save mood entry: ${errorData.error || response.statusText}`);
       }
     } catch (error) {
-      console.error("Error saving mood entry:", error);
+      console.error("❌ Error saving mood entry:", error);
       alert(`Failed to save mood entry: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
+      console.log('🏁 Entry submission finished');
     }
   };
 
