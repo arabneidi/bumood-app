@@ -39,6 +39,7 @@ export default function Home() {
   const [isFetchingData, setIsFetchingData] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
+  const [streakData, setStreakData] = useState({ currentStreak: 0, bestStreak: 0, waterIntakeToday: 0 });
   
   // Check for mood entry creation signal
   const moodEntryCreated = typeof window !== 'undefined' ? localStorage.getItem('mood-entry-created') : null;
@@ -66,13 +67,14 @@ export default function Home() {
       try {
         console.log('🔄 Dashboard fetching data...');
         // Fetch all data in parallel
-        const [moodEntriesRes, achievementsRes, goalsRes, userRes, dssRes, mcRes] = await Promise.all([
+        const [moodEntriesRes, achievementsRes, goalsRes, userRes, dssRes, mcRes, streakRes] = await Promise.all([
           fetch("/api/mood-entries"),
           fetch("/api/achievements"),
           fetch("/api/goals"),
           fetch("/api/user?userId=dummy-user"),
           fetch("/api/dss?userId=dummy-user"),
-          fetch("/api/mood-composite?userId=dummy-user&calculateCurrent=true")
+          fetch("/api/mood-composite?userId=dummy-user&calculateCurrent=true"),
+          fetch("/api/streak?userId=dummy-user")
         ]);
 
         // Process mood entries
@@ -213,6 +215,18 @@ export default function Home() {
             setCurrentTimeBucket(data.data.currentTimeBucket);
           }
           setMcLoading(false);
+        }
+
+        // Process streak data
+        if (streakRes.ok) {
+          const data = await streakRes.json();
+          if (data.success && data.data) {
+            setStreakData({
+              currentStreak: data.data.currentStreak,
+              bestStreak: data.data.bestStreak,
+              waterIntakeToday: data.data.waterIntakeToday
+            });
+          }
         }
 
         // Check if goals changed from other pages
@@ -489,6 +503,67 @@ export default function Home() {
       {/* Hero Section - Pro Tips - Always show */}
       {true && (
         <div className="relative overflow-hidden py-12">
+        {/* Streak Indicators */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-6"
+        >
+          <div className="flex gap-6 justify-start items-center">
+            {/* Water Intake Today */}
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              className="flex items-center gap-2"
+            >
+              <motion.div 
+                className="text-3xl"
+                animate={{ 
+                  opacity: [0.7, 1, 0.7],
+                  scale: [1, 1.3, 1]
+                }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                💧
+              </motion.div>
+              <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">{streakData.waterIntakeToday}</div>
+            </motion.div>
+
+            {/* Current Streak */}
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+              className="flex items-center gap-2"
+            >
+              <motion.div 
+                className="text-3xl"
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  filter: ['brightness(1)', 'brightness(1.3)', 'brightness(1)']
+                }}
+                transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+              >
+                🔥
+              </motion.div>
+              <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{streakData.currentStreak}</div>
+            </motion.div>
+
+            {/* Best Streak */}
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+              className="flex items-center gap-2"
+            >
+              <div className="text-3xl">⭐</div>
+              <div className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">{streakData.bestStreak}</div>
+            </motion.div>
+          </div>
+        </motion.div>
+
         {/* Pro Tips Content Box */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
