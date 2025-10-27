@@ -318,10 +318,22 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-3 py-1.5 rounded-md bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-400/20 text-white transition-all font-medium text-xs"
+              animate={{ 
+                boxShadow: [
+                  "0 0 10px rgba(249, 115, 22, 0.4)",
+                  "0 0 20px rgba(249, 115, 22, 0.6)",
+                  "0 0 30px rgba(249, 115, 22, 0.8)",
+                  "0 0 20px rgba(249, 115, 22, 0.6)",
+                  "0 0 10px rgba(249, 115, 22, 0.4)"
+                ]
+              }}
+              transition={{ 
+                boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+              }}
+              className="px-4 py-2 rounded-lg bg-gradient-to-br from-orange-500/15 to-amber-500/15 border-2 border-orange-400/40 text-white transition-all font-medium text-sm shadow-lg"
               onClick={() => setShowSubcategories(v => !v)}
             >
-              <span className="font-semibold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
+              <span className="font-bold bg-gradient-to-r from-orange-300 to-amber-300 bg-clip-text text-transparent">
                 {showSubcategories ? 'Hide Subcategories' : 'Show Subcategories'}
               </span>
             </motion.button>
