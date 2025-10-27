@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
     // Calculate streaks
     let currentStreak = 0;
     let bestStreak = 0;
-    let tempStreak = 0;
     
     if (moodEntries.length > 0) {
       const today = new Date();

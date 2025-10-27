@@ -58,6 +58,9 @@ model User {
   favoritePhilosophers       String?
   customFavorites            String?
   recentActivities           String?
+  currentStreak              Int       @default(0)
+  bestStreak                 Int       @default(0)
+  lastEntryDate              DateTime?
   aiActions                  AISuggestionAction[]
   accounts                   Account[]
   achievements               Achievement[]
