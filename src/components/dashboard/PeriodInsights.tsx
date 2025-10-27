@@ -180,14 +180,14 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
   if (!userInfo || userInfo.gender !== 'female') return null;
 
   return (
-    <Card className="p-8 bg-gradient-to-br from-slate-800/60 via-slate-800/50 to-slate-900/60 backdrop-blur-xl border border-pink-500/30 shadow-2xl shadow-pink-500/10">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-3xl font-extrabold bg-gradient-to-r from-pink-400 via-rose-400 to-fuchsia-500 bg-clip-text text-transparent flex items-center">
-          <Droplets className="w-7 h-7 mr-3 text-pink-400 drop-shadow-lg" />
+    <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-pink-500/20">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent flex items-center">
+          <Droplets className="w-6 h-6 mr-2 text-pink-500" />
           Period Insights
         </h3>
-        <div className="text-sm text-slate-200 font-medium bg-slate-800/60 px-4 py-2 rounded-full border border-pink-500/30">
-          Avg cycle: <span className="font-bold bg-gradient-to-r from-pink-300 to-rose-300 bg-clip-text text-transparent">{data.avgCycle ? `${data.avgCycle} days` : '—'}</span>
+        <div className="text-sm text-slate-300">
+          Avg cycle: <span className="font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">{data.avgCycle ? `${data.avgCycle} days` : '—'}</span>
         </div>
       </div>
 
@@ -412,64 +412,60 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
             </polygon>
           </svg>
           
-          {/* Center Content with glassmorphism */}
+          {/* Center Content */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {isCurrentlyOnPeriod ? (
-              <div className="bg-white/5 backdrop-blur-md rounded-full p-8 border border-white/20 shadow-2xl">
-                <div className="text-5xl mb-3 animate-pulse">🩸</div>
-                <div className="text-3xl font-black bg-gradient-to-r from-pink-300 via-rose-300 to-red-300 bg-clip-text text-transparent mb-1 tracking-tight">
+              <>
+                <div className="text-4xl mb-2">🩸</div>
+                <div className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">
                   Period Day {currentPeriodDay}
                 </div>
-                <div className="text-sm text-pink-200/80 font-semibold mb-4 tracking-wide uppercase">of ~5 days</div>
-                <motion.button
+                <div className="text-lg text-pink-300 font-semibold mt-1">of ~5 days</div>
+                <button
                   onClick={() => setShowPeriodEndModal(true)}
-                  className="px-4 py-2 text-xs font-bold bg-gradient-to-r from-red-500/30 to-rose-500/30 text-white border border-red-400/50 rounded-full hover:from-red-500/40 hover:to-rose-500/40 transition-all duration-300 shadow-lg shadow-red-500/20"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="mt-2 px-3 py-1 text-xs bg-red-500/20 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/30 transition-colors"
                 >
                   End Period
-                </motion.button>
-              </div>
+                </button>
+              </>
             ) : (
-              <div className="bg-white/5 backdrop-blur-md rounded-full p-8 border border-white/20 shadow-2xl">
-                <div className="text-4xl mb-3">📅</div>
-                <div className="text-2xl font-black">
+              <>
+                <div className="text-3xl mb-2">📅</div>
+                <div className="text-xl font-bold text-white">
                   {data.predictedNextStart ? (
                     <>
-                      <div className="bg-gradient-to-r from-rose-300 to-fuchsia-300 bg-clip-text text-transparent mb-1">
-                        Period in {data.predictedNextStart && data.predictedNextStart.getTime() > new Date().getTime() ? Math.round((data.predictedNextStart.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0} days
-                      </div>
-                      <div className="text-sm text-slate-300/70 font-semibold mt-1">
+                      <div className="text-rose-400">Period in {data.predictedNextStart && data.predictedNextStart.getTime() > new Date().getTime() ? Math.round((data.predictedNextStart.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0} days</div>
+                      <div className="text-sm text-slate-400 mt-1">
                         {String(data.predictedNextStart.getUTCMonth() + 1).padStart(2, '0')}/{String(data.predictedNextStart.getUTCDate()).padStart(2, '0')}
                       </div>
                     </>
                   ) : (
-                    <div className="text-slate-300">Tracking cycle</div>
+                    <div className="text-slate-400">Tracking cycle</div>
                   )}
                 </div>
-              </div>
+              </>
             )}
           </div>
         </div>
       </div>
 
       {/* Phase Legend */}
-      <div className="mt-6 flex items-center justify-center space-x-8 text-sm">
-        <div className="flex items-center space-x-2 bg-slate-800/60 px-4 py-2.5 rounded-full border border-red-500/30 backdrop-blur-sm transition-all hover:scale-105 hover:border-red-500/50">
-          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-red-500 via-red-600 to-red-700 shadow-lg shadow-red-500/30" />
-          <span className="text-slate-200 font-semibold">Menstrual</span>
+      <div className="mt-4 flex items-center justify-center space-x-6 text-xs">
+        <div className="flex items-center space-x-1">
+          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-red-600 to-red-800" />
+          <span className="text-slate-400">Menstrual</span>
         </div>
-        <div className="flex items-center space-x-2 bg-slate-800/60 px-4 py-2.5 rounded-full border border-pink-500/30 backdrop-blur-sm transition-all hover:scale-105 hover:border-pink-500/50">
-          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-pink-200 via-pink-300 to-fuchsia-300 shadow-lg shadow-pink-500/20" />
-          <span className="text-slate-200 font-semibold">Follicular</span>
+        <div className="flex items-center space-x-1">
+          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-pink-200 to-pink-300" />
+          <span className="text-slate-400">Follicular</span>
         </div>
-        <div className="flex items-center space-x-2 bg-slate-800/60 px-4 py-2.5 rounded-full border border-cyan-500/30 backdrop-blur-sm transition-all hover:scale-105 hover:border-cyan-500/50">
-          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-400 via-teal-400 to-cyan-500 shadow-lg shadow-cyan-500/30" />
-          <span className="text-slate-200 font-semibold">Ovular</span>
+        <div className="flex items-center space-x-1">
+          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-teal-400 to-cyan-500" />
+          <span className="text-slate-400">Ovular</span>
         </div>
-        <div className="flex items-center space-x-2 bg-slate-800/60 px-4 py-2.5 rounded-full border border-orange-500/30 backdrop-blur-sm transition-all hover:scale-105 hover:border-orange-500/50">
-          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500 shadow-lg shadow-orange-500/20" />
-          <span className="text-slate-200 font-semibold">Luteal</span>
+        <div className="flex items-center space-x-1">
+          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-orange-400 to-orange-500" />
+          <span className="text-slate-400">Luteal</span>
         </div>
       </div>
 
