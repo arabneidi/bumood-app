@@ -25,7 +25,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { type, title, description, icon, stars } = body;
+    const { type, title, description, icon, stars, unlockedAt } = body;
 
     // For now, we'll use a dummy user ID since we don't have auth set up
     const dummyUserId = "dummy-user";
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         description,
         icon,
         stars: stars || 1,
-        unlockedAt: new Date(),
+        unlockedAt: unlockedAt ? new Date(unlockedAt) : new Date(),
       },
     });
 

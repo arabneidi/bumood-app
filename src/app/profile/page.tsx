@@ -423,31 +423,114 @@ export default function ProfilePage() {
                         const lines = text.split('\n');
                         const importResults: any = { profile: false, goals: 0, achievements: 0, periodTracking: 0 };
                         
+                        // Proper CSV parser that handles quoted fields
+                        const parseCSVLine = (line: string): string[] => {
+                          const values: string[] = [];
+                          let current = '';
+                          let insideQuotes = false;
+                          
+                          for (let i = 0; i < line.length; i++) {
+                            const char = line[i];
+                            
+                            if (char === '"') {
+                              // Check if it's an escaped quote
+                              if (insideQuotes && line[i + 1] === '"') {
+                                current += '"';
+                                i++; // Skip next quote
+                              } else {
+                                insideQuotes = !insideQuotes;
+                              }
+                            } else if (char === ',' && !insideQuotes) {
+                              values.push(current);
+                              current = '';
+                            } else {
+                              current += char;
+                            }
+                          }
+                          values.push(current); // Add last value
+                          return values.map(v => v.replace(/^"|"$/g, '')); // Remove outer quotes
+                        };
+                        
                         // Import PROFILE INFORMATION section if exists
                         if (lines.some(l => l.includes('PROFILE INFORMATION'))) {
                           const profileStart = lines.findIndex(l => l.includes('PROFILE INFORMATION'));
-                          if (profileStart !== -1) {
+                          if (profileStart !== -1 && profileStart + 2 < lines.length) {
                             const profileData: any = {};
-                            for (let i = profileStart + 2; i < lines.length && lines[i] && !lines[i].startsWith('GOALS'); i++) {
-                              const [key, value] = lines[i].split(',').map(v => v.replace(/^"|"$/g, ''));
-                              if (key && value) {
-                                if (key === 'Name') profileData.name = value;
-                                else if (key === 'Gender') profileData.gender = value;
-                                else if (key === 'Age') profileData.age = parseInt(value);
-                                else if (key === 'Height (cm)') profileData.height = parseFloat(value);
-                                else if (key === 'Weight (kg)') profileData.weight = parseFloat(value);
-                                else if (key === 'University Level') profileData.universityLevel = value;
-                                else if (key === 'Field of Study') profileData.fieldOfStudy = value;
-                              }
+                            // CSV format: single row with all fields
+                            // Header row is at profileStart + 1, data row is at profileStart + 2
+                            const headerRow = lines[profileStart + 1].split(',').map(v => v.replace(/^"|"$/g, ''));
+                            const dataRow = parseCSVLine(lines[profileStart + 2]);
+                            
+                            // Map CSV columns to profile fields
+                            const nameIndex = headerRow.indexOf('Name');
+                            const genderIndex = headerRow.indexOf('Gender');
+                            const ageIndex = headerRow.indexOf('Age');
+                            const heightIndex = headerRow.indexOf('Height');
+                            const weightIndex = headerRow.indexOf('Weight');
+                            const timezoneIndex = headerRow.indexOf('Timezone');
+                            const personalityIndex = headerRow.indexOf('Personality');
+                            const universityIndex = headerRow.indexOf('University Level');
+                            const fieldIndex = headerRow.indexOf('Field of Study');
+                            const interestsIndex = headerRow.indexOf('Interests');
+                            const quoteStyleIndex = headerRow.indexOf('Quote Style');
+                            const recentActivitiesIndex = headerRow.indexOf('Recent Activities');
+                            const favoriteAuthorsIndex = headerRow.indexOf('Favorite Authors');
+                            const favoriteWritersIndex = headerRow.indexOf('Favorite Writers');
+                            const favoriteSportsFiguresIndex = headerRow.indexOf('Favorite Sports Figures');
+                            const favoriteMusiciansIndex = headerRow.indexOf('Favorite Musicians');
+                            const favoriteArtistsIndex = headerRow.indexOf('Favorite Artists');
+                            const favoriteMoviesIndex = headerRow.indexOf('Favorite Movies');
+                            const favoritePhilosophersIndex = headerRow.indexOf('Favorite Philosophers');
+                            const customFavoritesIndex = headerRow.indexOf('Custom Favorites');
+                            
+                            if (nameIndex !== -1 && dataRow[nameIndex]) profileData.name = dataRow[nameIndex];
+                            if (genderIndex !== -1 && dataRow[genderIndex]) profileData.gender = dataRow[genderIndex];
+                            if (ageIndex !== -1 && dataRow[ageIndex]) profileData.age = parseInt(dataRow[ageIndex]);
+                            if (heightIndex !== -1 && dataRow[heightIndex]) profileData.height = parseFloat(dataRow[heightIndex]);
+                            if (weightIndex !== -1 && dataRow[weightIndex]) profileData.weight = parseFloat(dataRow[weightIndex]);
+                            if (timezoneIndex !== -1 && dataRow[timezoneIndex]) profileData.timezone = dataRow[timezoneIndex];
+                            if (personalityIndex !== -1 && dataRow[personalityIndex]) profileData.personality = dataRow[personalityIndex];
+                            if (universityIndex !== -1 && dataRow[universityIndex]) profileData.universityLevel = dataRow[universityIndex];
+                            if (fieldIndex !== -1 && dataRow[fieldIndex]) profileData.fieldOfStudy = dataRow[fieldIndex];
+                            if (quoteStyleIndex !== -1 && dataRow[quoteStyleIndex]) profileData.quoteStyle = dataRow[quoteStyleIndex];
+                            if (recentActivitiesIndex !== -1 && dataRow[recentActivitiesIndex]) profileData.recentActivities = dataRow[recentActivitiesIndex];
+                            
+                            // Parse array fields (interests and favorites) - store as JSON strings
+                            if (interestsIndex !== -1 && dataRow[interestsIndex]) {
+                              // Keep as JSON string for TEXT field
+                              profileData.interests = dataRow[interestsIndex];
                             }
-                            try {
-                              const userResponse = await fetch('/api/user?userId=dummy-user', {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(profileData)
-                              });
-                              if (userResponse.ok) importResults.profile = true;
-                            } catch (e) { console.error('Profile import error:', e); }
+                            if (favoriteAuthorsIndex !== -1 && dataRow[favoriteAuthorsIndex]) profileData.favoriteAuthors = dataRow[favoriteAuthorsIndex];
+                            if (favoriteWritersIndex !== -1 && dataRow[favoriteWritersIndex]) profileData.favoriteWriters = dataRow[favoriteWritersIndex];
+                            if (favoriteSportsFiguresIndex !== -1 && dataRow[favoriteSportsFiguresIndex]) profileData.favoriteSportsFigures = dataRow[favoriteSportsFiguresIndex];
+                            if (favoriteMusiciansIndex !== -1 && dataRow[favoriteMusiciansIndex]) profileData.favoriteMusicians = dataRow[favoriteMusiciansIndex];
+                            if (favoriteArtistsIndex !== -1 && dataRow[favoriteArtistsIndex]) profileData.favoriteArtists = dataRow[favoriteArtistsIndex];
+                            if (favoriteMoviesIndex !== -1 && dataRow[favoriteMoviesIndex]) profileData.favoriteMovies = dataRow[favoriteMoviesIndex];
+                            if (favoritePhilosophersIndex !== -1 && dataRow[favoritePhilosophersIndex]) profileData.favoritePhilosophers = dataRow[favoritePhilosophersIndex];
+                            if (customFavoritesIndex !== -1 && dataRow[customFavoritesIndex]) {
+                              // Keep as JSON string for TEXT field
+                              profileData.customFavorites = dataRow[customFavoritesIndex];
+                            }
+                            
+                            console.log('Profile data parsed:', profileData);
+                            if (Object.keys(profileData).length > 0) {
+                              try {
+                                const userResponse = await fetch('/api/user/test-import', {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify(profileData)
+                                });
+                                console.log('Profile import response status:', userResponse.status);
+                                if (userResponse.ok) {
+                                  importResults.profile = true;
+                                  console.log('✅ Profile imported successfully');
+                                } else {
+                                  console.error('Profile import failed:', await userResponse.text());
+                                }
+                              } catch (e) { console.error('Profile import error:', e); }
+                            } else {
+                              console.warn('⚠️ No profile data to import');
+                            }
                           }
                         }
                         
@@ -458,40 +541,121 @@ export default function ProfilePage() {
                           if (goalsStart !== -1) {
                             const goalLines = lines.slice(goalsStart + 2, goalsEnd).filter(l => l.trim() && !l.includes('No goals'));
                             for (const line of goalLines) {
-                              const values = line.split(',').map(v => v.replace(/^"|"$/g, ''));
-                              if (values.length > 0 && values[0]) {
+                              const values = parseCSVLine(line);
+                              if (values.length > 2 && values[2]) { // Title is at index 2
                                 try {
                                   const goalResponse = await fetch('/api/goals', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
-                                      title: values[0],
-                                      description: values[1],
-                                      category: values[2],
-                                      subcategory: values[3],
-                                      difficulty: values[4],
-                                      targetValue: parseInt(values[5]),
-                                      unit: values[7],
-                                      dssComponent: values[9]
+                                      title: values[2],
+                                      description: values[3] || '',
+                                      category: values[7] || '',
+                                      subcategory: values[8] || '',
+                                      difficulty: values[9] || 'medium',
+                                      targetValue: parseInt(values[4]) || 0,
+                                      currentValue: parseInt(values[5]) || 0,
+                                      unit: values[6] || '',
+                                      dssComponent: values[14] || '',
+                                      streak: parseInt(values[10]) || 0,
+                                      bestStreak: parseInt(values[11]) || 0,
+                                      completed: values[12] === '1'
                                     })
                                   });
                                   if (goalResponse.ok) {
-                                    const goal = await goalResponse.json();
-                                    // Update with progression
-                                    await fetch(`/api/goals/${goal.id}`, {
-                                      method: 'PUT',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({
-                                        currentValue: parseInt(values[6]) || 0,
-                                        streak: parseInt(values[11]) || 0,
-                                        bestStreak: parseInt(values[12]) || 0,
-                                        completed: values[9] === 'Yes'
-                                      })
-                                    });
                                     importResults.goals++;
                                   }
                                 } catch (e) { console.error('Goal import error:', e); }
                               }
+                            }
+                          }
+                        }
+                        
+                        // Import ACHIEVEMENTS section if exists
+                        if (lines.some(l => l.includes('ACHIEVEMENTS'))) {
+                          const achievementsStart = lines.findIndex(l => l.includes('ACHIEVEMENTS'));
+                          const achievementsEnd = lines.findIndex((l, i) => i > achievementsStart && l.includes('PERIOD TRACKING')) || lines.findIndex((l, i) => i > achievementsStart && l.includes('AI API CONNECTIONS')) || lines.length;
+                          
+                          if (achievementsStart !== -1) {
+                            const achievementsArray = [];
+                            for (let i = achievementsStart + 2; i < achievementsEnd && i < lines.length; i++) {
+                              const line = lines[i];
+                              if (line && !line.startsWith('PERIOD TRACKING') && !line.startsWith('MOOD ENTRIES') && !line.startsWith('AI API') && !line.startsWith('CONGRATULATIONS') && !line.startsWith('DAILY TRACKING')) {
+                                try {
+                                  const values = parseCSVLine(line);
+                                  if (values.length >= 9) {
+                                    // CSV columns: ID,User ID,Type,Title,Description,Icon,Stars,Unlocked Date,Created Date
+                                    achievementsArray.push({
+                                      id: values[0], // Use ID from CSV
+                                      userId: values[1] || 'dummy-user',
+                                      type: values[2] || '',
+                                      title: values[3] || '',
+                                      description: values[4] || '',
+                                      icon: values[5] || '',
+                                      stars: parseInt(values[6]) || 1,
+                                      unlockedAt: values[7] ? new Date(parseInt(values[7]) * 1000).toISOString() : null,
+                                      createdAt: values[8] ? new Date(parseInt(values[8]) * 1000).toISOString() : null
+                                    });
+                                  }
+                                } catch (e) { console.error('Achievement parse error:', e); }
+                              }
+                            }
+                            
+                            // Send all achievements to test import API
+                            if (achievementsArray.length > 0) {
+                              try {
+                                const response = await fetch('/api/achievements/test-import', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify(achievementsArray)
+                                });
+                                if (response.ok) importResults.achievements = achievementsArray.length;
+                              } catch (e) { console.error('Achievement import error:', e); }
+                            }
+                          }
+                        }
+                        
+                        // Import CONGRATULATIONS section if exists
+                        if (lines.some(l => l.includes('CONGRATULATIONS'))) {
+                          const congratulationsStart = lines.findIndex(l => l.includes('CONGRATULATIONS'));
+                          const congratulationsEnd = lines.findIndex((l, i) => i > congratulationsStart && l.includes('DAILY TRACKING')) || lines.findIndex((l, i) => i > congratulationsStart && l.includes('MOOD ENTRIES')) || lines.length;
+                          
+                          if (congratulationsStart !== -1) {
+                            const congratulationsArray = [];
+                            for (let i = congratulationsStart + 2; i < congratulationsEnd && i < lines.length; i++) {
+                              const line = lines[i];
+                              if (line && !line.startsWith('DAILY TRACKING') && !line.startsWith('MOOD ENTRIES')) {
+                                try {
+                                  const values = parseCSVLine(line);
+                                  if (values.length >= 9) {
+                                    // CSV columns: ID,User ID,Type,Title,Message,Action Message,Icon,Stars,Is Read,Created Date
+                                    congratulationsArray.push({
+                                      id: values[0], // Use ID from CSV
+                                      userId: values[1] || 'dummy-user',
+                                      type: values[2] || '',
+                                      title: values[3] || '',
+                                      message: values[4] || '',
+                                      actionMessage: values[5] || '',
+                                      icon: values[6] || '',
+                                      stars: parseInt(values[7]) || 1,
+                                      isRead: values[8] === '1',
+                                      createdAt: values[9] || ''
+                                    });
+                                  }
+                                } catch (e) { console.error('Congratulation parse error:', e); }
+                              }
+                            }
+                            
+                            // Send all congratulations to test import API
+                            if (congratulationsArray.length > 0) {
+                              try {
+                                const response = await fetch('/api/congratulations/test-import', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify(congratulationsArray)
+                                });
+                                if (response.ok) importResults.congratulations = congratulationsArray.length;
+                              } catch (e) { console.error('Congratulation import error:', e); }
                             }
                           }
                         }
@@ -509,68 +673,150 @@ export default function ProfilePage() {
                           throw new Error('Could not find MOOD ENTRIES section in CSV');
                         }
                         
-                        // Parse mood entries from CSV
-                        entries = lines.slice(moodEntriesStartIndex)
-                          .filter(line => line.trim() && !line.startsWith('GOALS') && !line.startsWith('ACHIEVEMENTS'))
-                          .map(line => {
-                            const values = line.split(',').map(v => v.replace(/^"|"$/g, ''));
-                            
-                            // CSV columns: Date,Time,Valence,Energy,Focus,Stress,Sleep Hours,Activity,Subcategory,DSS Component,Notes,Mood Composite,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,On Period,Period Day,Time Bucket,Reflection
-                            const date = values[0];
-                            const time = values[1];
-                            const activity = values[7];
-                            const subcategory = values[8];
-                            
-                            // Build activity entry with timestamp
-                            let activityEntries: any[] = [];
-                            if (activity) {
-                              activityEntries.push({
-                                activity,
-                                subcategory: subcategory || '',
-                                timeSlot: time || '',
-                                timestamp: time ? `${date} ${time}` : date
-                              });
-                            }
-                            
-                            return {
-                              date: date,
-                              valence: parseFloat(values[2]) || 5,
-                              energy: parseFloat(values[3]) || 5,
-                              focus: parseFloat(values[4]) || 5,
-                              stress: parseFloat(values[5]) || 5,
-                              sleep: parseFloat(values[6]) || 7,
-                              activities: activity ? [activity] : [],
-                              selectedSubcategories: subcategory ? [subcategory] : [],
-                              activityEntries,
-                              notes: values[10] || '',
-                              moodComposite: values[11] ? parseFloat(values[11]) : null,
-                              waterIntake: values[12] ? parseInt(values[12]) : null,
-                              mealsEaten: values[13] ? parseInt(values[13]) : null,
-                              mealQuality: values[14] || null,
-                              caffeine: values[15] ? parseInt(values[15]) : null,
-                              alcohol: values[16] ? parseInt(values[16]) : null,
-                              onPeriod: values[17] === 'Yes',
-                              periodDay: values[18] ? parseInt(values[18]) : null,
-                              timeBucket: values[19] || 'morning',
-                              reflection: values[20] || ''
-                            };
-                          });
+                        // Parse mood entries from CSV (LATEST FORMAT ONLY)
+                        const rawLines = lines.slice(moodEntriesStartIndex)
+                          .filter(line => line.trim() && !line.startsWith('GOALS') && !line.startsWith('ACHIEVEMENTS'));
+                        
+                        console.log(`Found ${rawLines.length} mood entry lines in CSV`);
+                        
+                        // Group entries by date
+                        const entriesByDate: Record<string, any> = {};
+                        
+                        for (const line of rawLines) {
+                          const values = parseCSVLine(line);
+                          
+                          // Debug: log first line to check column count
+                          if (rawLines.indexOf(line) === 0) {
+                            console.log('First CSV row column count:', values.length);
+                            console.log('First CSV row sample:', values.slice(0, 15));
+                          }
+                          
+                          // FORMAT: ID,User ID,Valence,Energy,Focus,Stress,Sleep,Notes,Activities,Selected Time Slots,Selected Subcategories,Activity Entries,DSS Analysis,Reflection,Voice Note,AI Suggestion,Time Bucket,On Period,Period Day,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,Mood Composite,Created Date,Updated Date
+                          const entryId = values[0];
+                          const entryUserId = values[1];
+                          let activities: any[] = [];
+                          let selectedTimeSlots: any[] = [];
+                          let selectedSubcategories: any[] = [];
+                          let activityEntries: any[] = [];
+                          
+                          // Parse activities (column 8)
+                          try {
+                            activities = JSON.parse(values[8] || '[]');
+                          } catch (e) {
+                            console.warn('Failed to parse activities:', values[8]);
+                            activities = [];
+                          }
+                          
+                          // Parse selectedTimeSlots (column 9)
+                          try {
+                            selectedTimeSlots = JSON.parse(values[9] || '[]');
+                          } catch (e) {
+                            console.warn('Failed to parse selectedTimeSlots:', values[9]);
+                            selectedTimeSlots = [];
+                          }
+                          
+                          // Parse selectedSubcategories (column 10)
+                          try {
+                            selectedSubcategories = JSON.parse(values[10] || '[]');
+                          } catch (e) {
+                            console.warn('Failed to parse selectedSubcategories:', values[10]);
+                            selectedSubcategories = [];
+                          }
+                          
+                          // Parse activityEntries (column 11)
+                          try {
+                            activityEntries = JSON.parse(values[11] || '[]');
+                          } catch (e) {
+                            console.warn('Failed to parse activityEntries:', values[11]);
+                            activityEntries = [];
+                          }
+                          
+                          // Parse dssAnalysis (column 12)
+                          const dssAnalysis = values[12] || null;
+                          
+                          // Get date from Created Date column (column 25 = index 25 in 27-column CSV)
+                          const createdDate = values[25] || new Date().toISOString();
+                          const date = new Date(parseInt(createdDate) * 1000).toISOString().split('T')[0];
+                          
+                          if (!date) {
+                            console.log('Skipping entry - no valid date:', entryId);
+                            continue;
+                          }
+                          
+                          console.log(`Parsed entry ${entryId} with date ${date}`);
+                          
+                          // Use entry ID as key to avoid grouping - each CSV row = 1 entry
+                          const entryKey = entryId || `${date}-${entriesByDate.length}`;
+                          entriesByDate[entryKey] = {
+                            id: entryId, // Preserve the original ID from CSV
+                            date: date,
+                            valence: parseFloat(values[2]) || 5,
+                            energy: parseFloat(values[3]) || 5,
+                            focus: parseFloat(values[4]) || 5,
+                            stress: parseFloat(values[5]) || 5,
+                            sleep: parseFloat(values[6]) || 7,
+                            activities: activities || [],
+                            selectedTimeSlots: selectedTimeSlots || [],
+                            selectedSubcategories: selectedSubcategories || [],
+                            activityEntries: activityEntries || [],
+                            dssAnalysis: dssAnalysis || null,
+                            notes: values[7] || '',
+                            moodComposite: values[24] ? parseFloat(values[24]) : null,
+                            waterIntake: values[19] ? parseInt(values[19]) : null,
+                            mealsEaten: values[20] ? parseInt(values[20]) : null,
+                            mealQuality: values[21] || null,
+                            caffeine: values[22] ? parseInt(values[22]) : null,
+                            alcohol: values[23] ? parseInt(values[23]) : null,
+                            onPeriod: values[17] === '1',
+                            periodDay: values[18] ? parseInt(values[18]) : null,
+                            timeBucket: values[16] || 'morning',
+                            reflection: values[13] || ''
+                          };
+                        }
+                        
+                        entries = Object.values(entriesByDate);
+                        console.log(`Grouped ${rawLines.length} CSV rows into ${entries.length} unique dates`);
+                        
+                        if (entries.length === 0 && rawLines.length > 0) {
+                          console.error('⚠️ CSV parsing issue: Found', rawLines.length, 'raw lines but 0 entries after parsing.');
+                          console.log('Sample raw line:', rawLines[0]);
+                          if (rawLines[0]) {
+                            const sampleValues = parseCSVLine(rawLines[0]);
+                            console.log('Sample parsed values count:', sampleValues.length);
+                            console.log('Sample parsed values:', sampleValues.slice(0, 10));
+                          }
+                        }
                       }
                       
-                      // Send to API
-                      const response = await fetch('/api/mood-entries/import', {
+                      console.log('Parsed entries:', entries);
+                      console.log(`Number of entries to import: ${entries.length}`);
+                      if (entries.length > 0) {
+                        console.log('Sample entry:', entries[0]);
+                      }
+                      
+                      // Send to TEST API (uses test.db database)
+                      const response = await fetch('/api/mood-entries/import-test', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ entries })
                       });
                       
+                      const result = await response.json();
+                      console.log('Import API response:', response.status, result);
+                      
+                      // Log first error if any
+                      if (result.errors && result.errors.length > 0) {
+                        console.error('First import error:', result.errors[0]);
+                      }
+                      
                       if (response.ok) {
-                        setMessage('✅ Data imported successfully!');
+                        setMessage(`✅ Data imported successfully to TEST database! (${result.count} entries)`);
                         setTimeout(() => setMessage(''), 3000);
                         loadProfile(); // Refresh data
                       } else {
-                        setMessage('❌ Failed to import data');
-                        setTimeout(() => setMessage(''), 3000);
+                        setMessage(`❌ Failed to import data: ${result.error || result.message || 'Unknown error'}`);
+                        console.error('Import failed:', result);
+                        setTimeout(() => setMessage(''), 5000);
                       }
                     } catch (error) {
                       console.error('Import error:', error);
@@ -1768,13 +2014,15 @@ export default function ProfilePage() {
           setShowExportModal(false);
           try {
             // Fetch all data
-            const [moodEntriesRes, userRes, goalsRes, achievementsRes, predefinedActivitiesRes, periodTrackingRes] = await Promise.all([
+            const [moodEntriesRes, userRes, goalsRes, achievementsRes, predefinedActivitiesRes, periodTrackingRes, congratulationsRes, dailyTrackingRes] = await Promise.all([
               fetch('/api/mood-entries'),
               fetch('/api/user?userId=dummy-user'),
               fetch('/api/goals'),
               fetch('/api/achievements'),
               fetch('/api/predefined-activities'),
-              fetch('/api/period-tracking?userId=dummy-user')
+              fetch('/api/period-tracking?userId=dummy-user'),
+              fetch('/api/congratulations?userId=dummy-user'),
+              fetch('/api/daily-tracking?userId=dummy-user')
             ]);
             
             const moodEntries = await moodEntriesRes.json();
@@ -1784,6 +2032,8 @@ export default function ProfilePage() {
             const predefinedActivitiesData = await predefinedActivitiesRes.json();
             const predefinedActivities = predefinedActivitiesData.activities || [];
             const periodTracking = await periodTrackingRes.json();
+            const congratulations = await congratulationsRes.json();
+            const dailyTracking = await dailyTrackingRes.json();
             
             // Get AI API key connections and encrypted keys
             const { getDecryptedApiKey, hasApiKey } = await import('@/lib/encryption');
@@ -1811,31 +2061,50 @@ export default function ProfilePage() {
               }
             };
             
+            // Helper function to convert date to Unix timestamp
+            const toUnixTimestamp = (date: any) => {
+              if (!date) return '';
+              return Math.floor(new Date(date).getTime() / 1000).toString();
+            };
+            
             if (format === 'csv') {
               // CSV format - Single file with all data
               const dateStr = new Date().toISOString().split('T')[0];
               const rows: string[] = [];
               
               // Function to escape CSV values
-              const escapeCsv = (val: any) => `"${String(val || '').replace(/"/g, '""')}"`;
+              const escapeCsv = (val: any) => `"${String(val !== null && val !== undefined ? val : '').replace(/"/g, '""')}"`;
               
-              // 1. Profile Information
+              // 1. Profile Information (User table)
               rows.push('PROFILE INFORMATION');
-              rows.push('Field,Value');
+              rows.push('ID,Name,Email,Email Verified,Image,Gender,Age,Height,Weight,Timezone,Personality,University Level,Field of Study,Interests,Quote Style,Favorite Authors,Favorite Writers,Favorite Sports Figures,Favorite Musicians,Favorite Artists,Favorite Movies,Favorite Philosophers,Custom Favorites,Recent Activities');
               if (userData) {
-                rows.push(`Name,${escapeCsv(userData.name)}`);
-                rows.push(`Gender,${escapeCsv(userData.gender)}`);
-                rows.push(`Age,${escapeCsv(userData.age)}`);
-                rows.push(`Height (cm),${escapeCsv(userData.height)}`);
-                rows.push(`Weight (kg),${escapeCsv(userData.weight)}`);
-                rows.push(`University Level,${escapeCsv(userData.universityLevel)}`);
-                rows.push(`Field of Study,${escapeCsv(userData.fieldOfStudy)}`);
-                rows.push(`Interests,${escapeCsv(parseJSON(userData.interests, []).join('; '))}`);
-                rows.push(`Favorite Authors,${escapeCsv(userData.favoriteAuthors)}`);
-                rows.push(`Favorite Writers,${escapeCsv(userData.favoriteWriters)}`);
-                rows.push(`Favorite Movies,${escapeCsv(userData.favoriteMovies)}`);
-                rows.push(`Favorite Philosophers,${escapeCsv(userData.favoritePhilosophers)}`);
-                rows.push(`Custom Favorites,${escapeCsv(JSON.stringify(parseJSON(userData.customFavorites, [])))}`);
+                rows.push([
+                  escapeCsv(userData.id),
+                  escapeCsv(userData.name),
+                  escapeCsv(userData.email),
+                  escapeCsv(userData.emailVerified ? new Date(userData.emailVerified).toISOString() : ''),
+                  escapeCsv(userData.image),
+                  escapeCsv(userData.gender),
+                  escapeCsv(userData.age),
+                  escapeCsv(userData.height),
+                  escapeCsv(userData.weight),
+                  escapeCsv(userData.timezone),
+                  escapeCsv(userData.personality ? JSON.stringify(parseJSON(userData.personality, [])) : ''),
+                  escapeCsv(userData.universityLevel),
+                  escapeCsv(userData.fieldOfStudy),
+                  escapeCsv(userData.interests ? JSON.stringify(parseJSON(userData.interests, [])) : ''),
+                  escapeCsv(userData.quoteStyle),
+                  escapeCsv(userData.favoriteAuthors),
+                  escapeCsv(userData.favoriteWriters),
+                  escapeCsv(userData.favoriteSportsFigures),
+                  escapeCsv(userData.favoriteMusicians),
+                  escapeCsv(userData.favoriteArtists),
+                  escapeCsv(userData.favoriteMovies),
+                  escapeCsv(userData.favoritePhilosophers),
+                  escapeCsv(userData.customFavorites ? JSON.stringify(parseJSON(userData.customFavorites, [])) : ''),
+                  escapeCsv(userData.recentActivities)
+                ].join(','));
               }
               
               rows.push('');
@@ -1844,30 +2113,26 @@ export default function ProfilePage() {
               // 2. Goals
               rows.push('GOALS');
               if (goals.length > 0) {
-                rows.push('Title,Description,Category,Subcategory,Difficulty,Target Value,Current Value,Unit,Status,Completed,Progress %,Streak,Best Streak,DSS Component,Start Date,Target Date,Completed Date,Created Date');
+                rows.push('ID,User ID,Title,Description,Target Value,Current Value,Unit,Category,Subcategory,Difficulty,Streak,Best Streak,Completed,Completed At,DSS Component,Created Date,Updated Date');
                 for (const goal of goals) {
-                  const progress = goal.currentValue && goal.targetValue 
-                    ? Math.round((goal.currentValue / goal.targetValue) * 100) 
-                    : 0;
                   rows.push([
+                    escapeCsv(goal.id),
+                    escapeCsv(goal.userId),
                     escapeCsv(goal.title),
                     escapeCsv(goal.description),
+                    escapeCsv(goal.targetValue ?? ''),
+                    escapeCsv(goal.currentValue ?? 0),
+                    escapeCsv(goal.unit),
                     escapeCsv(goal.category),
                     escapeCsv(goal.subcategory),
                     escapeCsv(goal.difficulty),
-                    escapeCsv(goal.targetValue),
-                    escapeCsv(goal.currentValue),
-                    escapeCsv(goal.unit),
-                    escapeCsv(goal.status || (goal.completed ? 'completed' : 'in_progress')),
-                    escapeCsv(goal.completed ? 'Yes' : 'No'),
-                    escapeCsv(progress),
-                    escapeCsv(goal.streak || 0),
-                    escapeCsv(goal.bestStreak || 0),
+                    escapeCsv(goal.streak ?? 0),
+                    escapeCsv(goal.bestStreak ?? 0),
+                    escapeCsv(goal.completed ? '1' : '0'),
+                    escapeCsv(toUnixTimestamp(goal.completedAt)),
                     escapeCsv(goal.dssComponent),
-                    escapeCsv(goal.startDate ? new Date(goal.startDate).toLocaleDateString() : ''),
-                    escapeCsv(goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : ''),
-                    escapeCsv(goal.completedAt ? new Date(goal.completedAt).toLocaleDateString() : ''),
-                    escapeCsv(goal.createdAt ? new Date(goal.createdAt).toLocaleDateString() : '')
+                    escapeCsv(toUnixTimestamp(goal.createdAt)),
+                    escapeCsv(toUnixTimestamp(goal.updatedAt))
                   ].join(','));
                 }
               } else {
@@ -1879,17 +2144,19 @@ export default function ProfilePage() {
               
               // 3. Achievements
               rows.push('ACHIEVEMENTS');
-              if (achievements.length > 0) {
-                rows.push('Title,Description,Icon,Stars,Type,Category,Unlocked Date');
+              if (achievements && achievements.length > 0) {
+                rows.push('ID,User ID,Type,Title,Description,Icon,Stars,Unlocked Date,Created Date');
                 for (const achievement of achievements) {
                   rows.push([
+                    escapeCsv(achievement.id),
+                    escapeCsv(achievement.userId),
+                    escapeCsv(achievement.type),
                     escapeCsv(achievement.title),
                     escapeCsv(achievement.description),
                     escapeCsv(achievement.icon),
                     escapeCsv(achievement.stars),
-                    escapeCsv(achievement.type),
-                    escapeCsv(achievement.category),
-                    escapeCsv(achievement.unlockedAt ? new Date(achievement.unlockedAt).toLocaleDateString() : '')
+                    escapeCsv(toUnixTimestamp(achievement.unlockedAt)),
+                    escapeCsv(toUnixTimestamp(achievement.createdAt))
                   ].join(','));
                 }
               } else {
@@ -1909,35 +2176,21 @@ export default function ProfilePage() {
               rows.push('');
               rows.push('');
               
-              // 5. Predefined Activities with DSS Info
-              rows.push('PREDEFINED ACTIVITIES');
-              if (predefinedActivities.length > 0) {
-                rows.push('Activity Name,Category,DSS Component');
-                for (const activity of predefinedActivities) {
-                  rows.push([
-                    escapeCsv(activity.name),
-                    escapeCsv(activity.category),
-                    escapeCsv(activity.dssComponent)
-                  ].join(','));
-                }
-              } else {
-                rows.push('No predefined activities found');
-              }
-              
-              rows.push('');
-              rows.push('');
-              
-              // 6. Period Tracking
+              // 5. Period Tracking
               rows.push('PERIOD TRACKING');
               if (periodTracking.length > 0) {
-                rows.push('Start Date,End Date,Flow Intensity,Symptoms,Notes');
+                rows.push('ID,User ID,Start Date,End Date,Flow Intensity,Symptoms,Notes,Created Date,Updated Date');
                 for (const period of periodTracking) {
                   rows.push([
-                    escapeCsv(period.startDate ? new Date(period.startDate).toLocaleDateString() : ''),
-                    escapeCsv(period.endDate ? new Date(period.endDate).toLocaleDateString() : ''),
+                    escapeCsv(period.id),
+                    escapeCsv(period.userId),
+                    escapeCsv(toUnixTimestamp(period.startDate)),
+                    escapeCsv(toUnixTimestamp(period.endDate)),
                     escapeCsv(period.flowIntensity),
                     escapeCsv(period.symptoms),
-                    escapeCsv(period.notes)
+                    escapeCsv(period.notes),
+                    escapeCsv(toUnixTimestamp(period.createdAt)),
+                    escapeCsv(toUnixTimestamp(period.updatedAt))
                   ].join(','));
                 }
               } else {
@@ -1947,112 +2200,123 @@ export default function ProfilePage() {
               rows.push('');
               rows.push('');
               
-              // 7. Mood Entries
-              rows.push('MOOD ENTRIES');
-              rows.push('Date,Time,Valence,Energy,Focus,Stress,Sleep Hours,Activity,Subcategory,DSS Component,Notes,Mood Composite,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,On Period,Period Day,Time Bucket,Reflection');
-              
-              for (const entry of moodEntries) {
-                const entryDate = new Date(entry.createdAt);
-                const date = entryDate.toLocaleDateString();
-                
-                // Activities should already be parsed by the API
-                const activities = Array.isArray(entry.activities) ? entry.activities : parseJSON(entry.activities, []);
-                const subcategories = Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories : parseJSON(entry.selectedSubcategories, []);
-                
-                // Parse activity entries with exact timestamps
-                const activityEntries = Array.isArray(entry.activityEntries) ? entry.activityEntries : parseJSON(entry.activityEntries, []);
-                
-                // Parse DSS analysis
-                let dssAnalysisData: any = {};
-                if (entry.dssAnalysis) {
-                  try {
-                    const parsedDSS = typeof entry.dssAnalysis === 'string' 
-                      ? JSON.parse(entry.dssAnalysis) 
-                      : entry.dssAnalysis;
-                    dssAnalysisData = parsedDSS || {};
-                  } catch (e) {
-                    console.error('Error parsing DSS analysis:', e);
-                  }
-                }
-                
-                if (activities.length > 0) {
-                  for (let i = 0; i < activities.length; i++) {
-                    const activityName = activities[i];
-                    const subcategory = subcategories[i] || '';
-                    
-                    // Get exact time for this activity
-                    let activityTime = '';
-                    const activityEntry = activityEntries.find((ae: any) => ae.activity === activityName);
-                    if (activityEntry && activityEntry.timestamp) {
-                      const time = new Date(activityEntry.timestamp);
-                      activityTime = time.toLocaleTimeString();
-                    } else if (activityEntry && activityEntry.timeSlot) {
-                      activityTime = activityEntry.timeSlot;
-                    }
-                    
-                    // Get DSS component from analysis or predefined activities
-                    let dssComponent = '';
-                    if (dssAnalysisData[activityName]) {
-                      dssComponent = dssAnalysisData[activityName].component || '';
-                    } else {
-                      // Find from predefined activities
-                      const predefinedActivity = predefinedActivities.find(
-                        (a: any) => a.name === activityName
-                      );
-                      if (predefinedActivity) {
-                        dssComponent = predefinedActivity.dssComponent;
-                      }
-                    }
-                    
-                    rows.push([
-                      escapeCsv(date),
-                      escapeCsv(activityTime),
-                      escapeCsv(entry.valence),
-                      escapeCsv(entry.energy),
-                      escapeCsv(entry.focus),
-                      escapeCsv(entry.stress),
-                      escapeCsv(entry.sleep),
-                      escapeCsv(activityName),
-                      escapeCsv(subcategory),
-                      escapeCsv(dssComponent),
-                      escapeCsv(entry.notes),
-                      escapeCsv(entry.moodComposite),
-                      escapeCsv(entry.waterIntake),
-                      escapeCsv(entry.mealsEaten),
-                      escapeCsv(entry.mealQuality),
-                      escapeCsv(entry.caffeine),
-                      escapeCsv(entry.alcohol),
-                      escapeCsv(entry.onPeriod ? 'Yes' : 'No'),
-                      escapeCsv(entry.periodDay),
-                      escapeCsv(entry.timeBucket),
-                      escapeCsv(entry.reflection)
-                    ].join(','));
-                  }
-                } else {
+              // 6. Congratulations
+              rows.push('CONGRATULATIONS');
+              if (congratulations && congratulations.length > 0) {
+                rows.push('ID,User ID,Type,Title,Message,Action Message,Icon,Stars,Is Read,Created Date');
+                for (const congratulation of congratulations) {
                   rows.push([
-                    escapeCsv(date),
-                    escapeCsv(''),
-                    escapeCsv(entry.valence),
-                    escapeCsv(entry.energy),
-                    escapeCsv(entry.focus),
-                    escapeCsv(entry.stress),
-                    escapeCsv(entry.sleep),
-                    escapeCsv(''),
-                    escapeCsv(''),
-                    escapeCsv(''),
-                    escapeCsv(entry.notes),
-                    escapeCsv(entry.moodComposite),
-                    escapeCsv(entry.waterIntake),
-                    escapeCsv(entry.mealsEaten),
-                    escapeCsv(entry.mealQuality),
-                    escapeCsv(entry.caffeine),
-                    escapeCsv(entry.alcohol),
-                    escapeCsv(entry.onPeriod ? 'Yes' : 'No'),
-                    escapeCsv(entry.periodDay),
-                    escapeCsv(entry.timeBucket),
-                    escapeCsv(entry.reflection)
+                    escapeCsv(congratulation.id),
+                    escapeCsv(congratulation.userId),
+                    escapeCsv(congratulation.type),
+                    escapeCsv(congratulation.title),
+                    escapeCsv(congratulation.message),
+                    escapeCsv(congratulation.actionMessage),
+                    escapeCsv(congratulation.icon),
+                    escapeCsv(congratulation.stars),
+                    escapeCsv(congratulation.isRead ? '1' : '0'),
+                    escapeCsv(toUnixTimestamp(congratulation.createdAt))
                   ].join(','));
                 }
+              } else {
+                rows.push('No congratulations found');
+              }
+              
+              rows.push('');
+              rows.push('');
+              
+              // 7. Daily Tracking
+              rows.push('DAILY TRACKING');
+              if (dailyTracking) {
+                rows.push('ID,User ID,Date,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,Exercise,Exercise Type,Exercise Duration,Steps,Social Interaction,Screen Time,Outdoor Time,Meditation,Meditation Duration,Journaling,Reading Time,Medication Taken,Supplements,Symptoms,Deep Work Minutes,Tasks Completed,Sleep Hours,Recovery Action,Positive Social Touchpoints,DSS Score,Learning Momentum,Recovery Index,Connection Score,Notes,Created Date,Updated Date');
+                rows.push([
+                  escapeCsv(dailyTracking.id),
+                  escapeCsv(dailyTracking.userId),
+                  escapeCsv(toUnixTimestamp(dailyTracking.date)),
+                  escapeCsv(dailyTracking.waterIntake),
+                  escapeCsv(dailyTracking.mealsEaten),
+                  escapeCsv(dailyTracking.mealQuality),
+                  escapeCsv(dailyTracking.caffeine),
+                  escapeCsv(dailyTracking.alcohol),
+                  escapeCsv(dailyTracking.exercise ? 'Yes' : 'No'),
+                  escapeCsv(dailyTracking.exerciseType),
+                  escapeCsv(dailyTracking.exerciseDuration),
+                  escapeCsv(dailyTracking.steps),
+                  escapeCsv(dailyTracking.socialInteraction ? 'Yes' : 'No'),
+                  escapeCsv(dailyTracking.screenTime),
+                  escapeCsv(dailyTracking.outdoorTime),
+                  escapeCsv(dailyTracking.meditation ? 'Yes' : 'No'),
+                  escapeCsv(dailyTracking.meditationDuration),
+                  escapeCsv(dailyTracking.journaling ? 'Yes' : 'No'),
+                  escapeCsv(dailyTracking.readingTime),
+                  escapeCsv(dailyTracking.medicationTaken ? 'Yes' : 'No'),
+                  escapeCsv(dailyTracking.supplements),
+                  escapeCsv(dailyTracking.symptoms),
+                  escapeCsv(dailyTracking.deepworkMinutes),
+                  escapeCsv(dailyTracking.tasksCompleted),
+                  escapeCsv(dailyTracking.sleepHours),
+                  escapeCsv(dailyTracking.recoveryAction ? 'Yes' : 'No'),
+                  escapeCsv(dailyTracking.positiveSocialTouchpoints),
+                  escapeCsv(dailyTracking.dssScore),
+                  escapeCsv(dailyTracking.learningMomentum),
+                  escapeCsv(dailyTracking.recoveryIndex),
+                  escapeCsv(dailyTracking.connectionScore),
+                  escapeCsv(dailyTracking.notes),
+                  escapeCsv(toUnixTimestamp(dailyTracking.createdAt)),
+                  escapeCsv(toUnixTimestamp(dailyTracking.updatedAt))
+                ].join(','));
+              } else {
+                rows.push('No daily tracking found');
+              }
+              
+              rows.push('');
+              rows.push('');
+              
+              // 8. Mood Entries
+              rows.push('MOOD ENTRIES');
+              rows.push('ID,User ID,Valence,Energy,Focus,Stress,Sleep,Notes,Activities,Selected Time Slots,Selected Subcategories,Activity Entries,DSS Analysis,Reflection,Voice Note,AI Suggestion,Time Bucket,On Period,Period Day,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,Mood Composite,Created Date,Updated Date');
+              
+              // Ensure we export all mood entries, not just 25
+              for (const entry of moodEntries) {
+                // Parse activityEntries if it's a JSON string
+                let activityEntriesParsed = entry.activityEntries;
+                if (typeof entry.activityEntries === 'string') {
+                  try {
+                    activityEntriesParsed = JSON.parse(entry.activityEntries);
+                  } catch (e) {
+                    activityEntriesParsed = entry.activityEntries;
+                  }
+                }
+                
+                rows.push([
+                  escapeCsv(entry.id),
+                  escapeCsv(entry.userId),
+                  escapeCsv(entry.valence),
+                  escapeCsv(entry.energy),
+                  escapeCsv(entry.focus),
+                  escapeCsv(entry.stress),
+                  escapeCsv(entry.sleep ?? ''),
+                  escapeCsv(entry.notes),
+                  escapeCsv(JSON.stringify(Array.isArray(entry.activities) ? entry.activities : parseJSON(entry.activities, []))),
+                  escapeCsv(entry.selectedTimeSlots),
+                  escapeCsv(JSON.stringify(Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories : parseJSON(entry.selectedSubcategories, []))),
+                  escapeCsv(JSON.stringify(activityEntriesParsed)),
+                  escapeCsv(entry.dssAnalysis),
+                  escapeCsv(entry.reflection),
+                  escapeCsv(entry.voiceNote),
+                  escapeCsv(entry.aiSuggestion),
+                  escapeCsv(entry.timeBucket),
+                  escapeCsv(entry.onPeriod ? '1' : '0'),
+                  escapeCsv(entry.periodDay),
+                  escapeCsv(entry.waterIntake),
+                  escapeCsv(entry.mealsEaten),
+                  escapeCsv(entry.mealQuality),
+                  escapeCsv(entry.caffeine),
+                  escapeCsv(entry.alcohol),
+                  escapeCsv(entry.moodComposite ?? 0),
+                  escapeCsv(toUnixTimestamp(entry.createdAt)),
+                  escapeCsv(toUnixTimestamp(entry.updatedAt))
+                ].join(','));
               }
               
               // Download single CSV file
@@ -2076,133 +2340,124 @@ export default function ProfilePage() {
                   ...aiConnections,
                   encryptedApiKeys: aiApiKeys
                 },
-                predefinedActivities: predefinedActivities.map((activity: any) => ({
-                  id: activity.id,
-                  name: activity.name,
-                  icon: activity.icon,
-                  category: activity.category,
-                  dssComponent: activity.dssComponent
-                })),
                 periodTracking: periodTracking.map((period: any) => ({
                   id: period.id,
+                  userId: period.userId,
                   startDate: period.startDate,
                   endDate: period.endDate,
                   flowIntensity: period.flowIntensity,
                   symptoms: period.symptoms,
-                  notes: period.notes
+                  notes: period.notes,
+                  createdAt: period.createdAt,
+                  updatedAt: period.updatedAt
                 })),
-                moodEntries: moodEntries.map((entry: any) => {
-                  // Activities should already be parsed by the API
-                  const activities = Array.isArray(entry.activities) ? entry.activities : parseJSON(entry.activities, []);
-                  const subcategories = Array.isArray(entry.selectedSubcategories) ? entry.selectedSubcategories : parseJSON(entry.selectedSubcategories, []);
-                  const activityEntries = Array.isArray(entry.activityEntries) ? entry.activityEntries : parseJSON(entry.activityEntries, []);
-                  
-                  // Parse DSS analysis
-                  let dssAnalysisData: any = {};
-                  if (entry.dssAnalysis) {
-                    try {
-                      const parsedDSS = typeof entry.dssAnalysis === 'string' 
-                        ? JSON.parse(entry.dssAnalysis) 
-                        : entry.dssAnalysis;
-                      dssAnalysisData = parsedDSS || {};
-                    } catch (e) {
-                      console.error('Error parsing DSS analysis:', e);
-                    }
-                  }
-                  
-                  // Build activities with DSS information and exact timestamps
-                  const activitiesWithDSS = activities.map((activityName: string, index: number) => {
-                    const subcategory = subcategories[index] || '';
-                    
-                    // Get exact time for this activity
-                    let activityTime = null;
-                    const activityEntry = activityEntries.find((ae: any) => ae.activity === activityName);
-                    if (activityEntry && activityEntry.timestamp) {
-                      activityTime = activityEntry.timestamp;
-                    } else if (activityEntry && activityEntry.timeSlot) {
-                      activityTime = activityEntry.timeSlot;
-                    }
-                    
-                    // Get DSS component from analysis or predefined activities
-                    let dssComponent = '';
-                    if (dssAnalysisData[activityName]) {
-                      dssComponent = dssAnalysisData[activityName].component || '';
-                    } else {
-                      // Find from predefined activities
-                      const predefinedActivity = predefinedActivities.find(
-                        (a: any) => a.name === activityName
-                      );
-                      if (predefinedActivity) {
-                        dssComponent = predefinedActivity.dssComponent;
-                      }
-                    }
-                    
-                    return {
-                      name: activityName,
-                      subcategory: subcategory,
-                      dssComponent: dssComponent,
-                      dssAnalysis: dssAnalysisData[activityName] || null,
-                      timestamp: activityTime,
-                      timeSlot: activityEntry?.timeSlot || null
-                    };
-                  });
-                  
-                  return {
-                    id: entry.id,
-                    date: entry.createdAt,
-                    valence: entry.valence,
-                    energy: entry.energy,
-                    focus: entry.focus,
-                    stress: entry.stress,
-                    sleep: entry.sleep,
-                    activities: activitiesWithDSS,
-                    notes: entry.notes,
-                    moodComposite: entry.moodComposite,
-                    waterIntake: entry.waterIntake,
-                    mealsEaten: entry.mealsEaten,
-                    mealQuality: entry.mealQuality,
-                    caffeine: entry.caffeine,
-                    alcohol: entry.alcohol,
-                    onPeriod: entry.onPeriod,
-                    periodDay: entry.periodDay,
-                    timeBucket: entry.timeBucket,
-                    reflection: entry.reflection
-                  };
-                }),
+                moodEntries: moodEntries.map((entry: any) => ({
+                  id: entry.id,
+                  userId: entry.userId,
+                  valence: entry.valence,
+                  energy: entry.energy,
+                  focus: entry.focus,
+                  stress: entry.stress,
+                  sleep: entry.sleep,
+                  notes: entry.notes,
+                  activities: entry.activities,
+                  selectedTimeSlots: entry.selectedTimeSlots,
+                  selectedSubcategories: entry.selectedSubcategories,
+                  activityEntries: entry.activityEntries,
+                  dssAnalysis: entry.dssAnalysis,
+                  reflection: entry.reflection,
+                  voiceNote: entry.voiceNote,
+                  aiSuggestion: entry.aiSuggestion,
+                  timeBucket: entry.timeBucket,
+                  onPeriod: entry.onPeriod,
+                  periodDay: entry.periodDay,
+                  waterIntake: entry.waterIntake,
+                  mealsEaten: entry.mealsEaten,
+                  mealQuality: entry.mealQuality,
+                  caffeine: entry.caffeine,
+                  alcohol: entry.alcohol,
+                  moodComposite: entry.moodComposite,
+                  createdAt: entry.createdAt,
+                  updatedAt: entry.updatedAt
+                })),
                 goals: goals.map((goal: any) => ({
                   id: goal.id,
+                  userId: goal.userId,
                   title: goal.title,
                   description: goal.description,
-                  category: goal.category,
-                  subcategory: goal.subcategory,
-                  difficulty: goal.difficulty,
                   targetValue: goal.targetValue,
                   currentValue: goal.currentValue || 0,
                   unit: goal.unit,
-                  status: goal.status || (goal.completed ? 'completed' : 'in_progress'),
-                  completed: goal.completed || false,
-                  completedAt: goal.completedAt,
+                  category: goal.category,
+                  subcategory: goal.subcategory,
+                  difficulty: goal.difficulty,
                   streak: goal.streak || 0,
                   bestStreak: goal.bestStreak || 0,
+                  completed: goal.completed || false,
+                  completedAt: goal.completedAt,
                   dssComponent: goal.dssComponent,
-                  startDate: goal.startDate || goal.createdAt,
-                  targetDate: goal.targetDate,
                   createdAt: goal.createdAt,
-                  updatedAt: goal.updatedAt,
-                  progress: goal.currentValue && goal.targetValue 
-                    ? Math.round((goal.currentValue / goal.targetValue) * 100) 
-                    : 0
+                  updatedAt: goal.updatedAt
                 })),
                 achievements: achievements.map((achievement: any) => ({
                   id: achievement.id,
+                  userId: achievement.userId,
+                  type: achievement.type,
                   title: achievement.title,
                   description: achievement.description,
                   icon: achievement.icon,
                   stars: achievement.stars,
-                  type: achievement.type,
-                  category: achievement.category,
-                  unlockedAt: achievement.unlockedAt
-                }))
+                  unlockedAt: achievement.unlockedAt,
+                  createdAt: achievement.createdAt
+                })),
+                congratulations: congratulations.map((congratulation: any) => ({
+                  id: congratulation.id,
+                  userId: congratulation.userId,
+                  type: congratulation.type,
+                  title: congratulation.title,
+                  message: congratulation.message,
+                  actionMessage: congratulation.actionMessage,
+                  icon: congratulation.icon,
+                  stars: congratulation.stars,
+                  isRead: congratulation.isRead,
+                  createdAt: congratulation.createdAt
+                })),
+                dailyTracking: dailyTracking ? {
+                  id: dailyTracking.id,
+                  userId: dailyTracking.userId,
+                  date: dailyTracking.date,
+                  waterIntake: dailyTracking.waterIntake,
+                  mealsEaten: dailyTracking.mealsEaten,
+                  mealQuality: dailyTracking.mealQuality,
+                  caffeine: dailyTracking.caffeine,
+                  alcohol: dailyTracking.alcohol,
+                  exercise: dailyTracking.exercise,
+                  exerciseType: dailyTracking.exerciseType,
+                  exerciseDuration: dailyTracking.exerciseDuration,
+                  steps: dailyTracking.steps,
+                  socialInteraction: dailyTracking.socialInteraction,
+                  screenTime: dailyTracking.screenTime,
+                  outdoorTime: dailyTracking.outdoorTime,
+                  meditation: dailyTracking.meditation,
+                  meditationDuration: dailyTracking.meditationDuration,
+                  journaling: dailyTracking.journaling,
+                  readingTime: dailyTracking.readingTime,
+                  medicationTaken: dailyTracking.medicationTaken,
+                  supplements: dailyTracking.supplements,
+                  symptoms: dailyTracking.symptoms,
+                  deepworkMinutes: dailyTracking.deepworkMinutes,
+                  tasksCompleted: dailyTracking.tasksCompleted,
+                  sleepHours: dailyTracking.sleepHours,
+                  recoveryAction: dailyTracking.recoveryAction,
+                  positiveSocialTouchpoints: dailyTracking.positiveSocialTouchpoints,
+                  dssScore: dailyTracking.dssScore,
+                  learningMomentum: dailyTracking.learningMomentum,
+                  recoveryIndex: dailyTracking.recoveryIndex,
+                  connectionScore: dailyTracking.connectionScore,
+                  notes: dailyTracking.notes,
+                  createdAt: dailyTracking.createdAt,
+                  updatedAt: dailyTracking.updatedAt
+                } : null
               };
               
               const jsonContent = JSON.stringify(exportData, null, 2);
