@@ -312,12 +312,18 @@ export default function ActivityDriversChart({
             </div>
             
             {/* Activity Color Legend */}
-            <div className="flex flex-wrap justify-center gap-3 text-xs">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-center">
               {topActivities.map((activity, index) => (
-                <div key={activity.tag} className="flex items-center">
-                  <div className={`w-3 h-3 rounded-full mr-2 ${getActivityColor(activity.tag)}`}></div>
-                  <span className="text-slate-300 capitalize">{activity.tag}</span>
-                </div>
+                <motion.div
+                  key={activity.tag}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-slate-600/20 hover:border-slate-500/40 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-center space-x-1">
+                    <div className={`w-2 h-2 rounded-full shadow-lg ${getActivityColor(activity.tag)}`}></div>
+                    <span className="text-xs font-bold text-white capitalize">{activity.tag}</span>
+                  </div>
+                </motion.div>
               ))}
             </div>
           </div>
