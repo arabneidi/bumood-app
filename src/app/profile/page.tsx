@@ -2124,7 +2124,7 @@ export default function ProfilePage() {
                   <div className="p-4 bg-slate-800/30 rounded-xl">
                     <div className="text-2xl mb-2">🎯</div>
                     <h4 className="font-bold text-white mb-2">Pro Tips</h4>
-                    <p className="text-sm text-slate-400">Receive AI-generated personalized tips and insights</p>
+                    <p className="text-sm text-slate-400">Receive AI-generated personalized tips based on your power hours and plans</p>
                   </div>
                   
                   <div className="p-4 bg-slate-800/30 rounded-xl">
