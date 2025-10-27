@@ -286,7 +286,35 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
             <span className="mr-3 text-2xl">🕸️</span>
             Your Personal Network
           </h3>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 text-xs">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center space-x-1 px-2 py-1 rounded-md bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20"
+              >
+                <span className="font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Nodes:</span>
+                <span className="font-bold text-blue-300">{graphData.nodes.length}</span>
+              </motion.div>
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center space-x-1 px-2 py-1 rounded-md bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-400/20"
+              >
+                <span className="font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Connections:</span>
+                <span className="font-bold text-purple-300">{graphData.links.length}</span>
+              </motion.div>
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center space-x-1 px-2 py-1 rounded-md bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-400/20"
+              >
+                <span className="font-semibold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">Period:</span>
+                <span className="font-bold text-green-300">
+                  {timeRange === 'daily' ? 'Today' :
+                   timeRange === 'weekly' ? 'Last 7 days' :
+                   timeRange === 'monthly' ? 'Last 30 days' :
+                   'Last 365 days'}
+                </span>
+              </motion.div>
+            </div>
             <button
               className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all font-medium"
               onClick={() => setShowSubcategories(v => !v)}
@@ -344,39 +372,8 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
           />
         </div>
 
-        {/* Stats and Legend */}
+        {/* Legend */}
         <div className={`absolute bottom-2 left-2 right-2 ${showLegend ? 'bg-white/95 backdrop-blur-sm p-3' : 'p-0'} rounded-lg ${showLegend ? '' : 'pointer-events-none'}`}>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-4 text-xs">
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center space-x-1 px-2 py-1 rounded-md bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20"
-              >
-                <span className="font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Nodes:</span>
-                <span className="font-bold text-blue-300">{graphData.nodes.length}</span>
-              </motion.div>
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center space-x-1 px-2 py-1 rounded-md bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-400/20"
-              >
-                <span className="font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Connections:</span>
-                <span className="font-bold text-purple-300">{graphData.links.length}</span>
-              </motion.div>
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center space-x-1 px-2 py-1 rounded-md bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-400/20"
-              >
-                <span className="font-semibold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">Period:</span>
-                <span className="font-bold text-green-300">
-                  {timeRange === 'daily' ? 'Today' :
-                   timeRange === 'weekly' ? 'Last 7 days' :
-                   timeRange === 'monthly' ? 'Last 30 days' :
-                   'Last 365 days'}
-                </span>
-              </motion.div>
-            </div>
-          </div>
-          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
             <motion.div
               whileHover={{ scale: 1.05, y: -2 }}
