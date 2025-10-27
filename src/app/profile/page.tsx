@@ -1212,49 +1212,6 @@ export default function ProfilePage() {
                   </div>
                 </motion.div>
 
-                {/* Weight */}
-                <motion.div
-                  whileHover={{ scale: 1.05, rotate: 1 }}
-                  className="group"
-                >
-                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
-                    <span className="text-2xl mr-2">⚖️</span>
-                    Weight (kg)
-                  </label>
-                  <div className="flex items-center space-x-3">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleDecrement('weight')}
-                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-orange-500/10"
-                    >
-                      <Minus className="w-5 h-5" />
-                    </motion.button>
-                    <input
-                      type="text"
-                      value={profile.weight}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9.]/g, ''); // Only allow numbers and decimal
-                        setProfile({...profile, weight: value});
-                      }}
-                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-orange-500/10 text-center"
-                      placeholder="Your weight"
-                      style={{
-                        WebkitAppearance: 'none',
-                        MozAppearance: 'textfield'
-                      }}
-                    />
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleIncrement('weight')}
-                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-orange-500/10"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </motion.button>
-                  </div>
-                </motion.div>
-
                 {/* Personality Types */}
                 <motion.div
                   whileHover={{ scale: 1.05, rotate: 1 }}
@@ -1580,6 +1537,49 @@ export default function ProfilePage() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </motion.div>
+
+                {/* Weight */}
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: 1 }}
+                  className="group"
+                >
+                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
+                    <span className="text-2xl mr-2">⚖️</span>
+                    Weight (kg)
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleDecrement('weight')}
+                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-orange-500/10"
+                    >
+                      <Minus className="w-5 h-5" />
+                    </motion.button>
+                    <input
+                      type="text"
+                      value={profile.weight}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9.]/g, ''); // Only allow numbers and decimal
+                        setProfile({...profile, weight: value});
+                      }}
+                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-orange-500/10 text-center"
+                      placeholder="Your weight"
+                      style={{
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'textfield'
+                      }}
+                    />
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleIncrement('weight')}
+                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-orange-500/10"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </motion.button>
+                  </div>
                 </motion.div>
 
                 {/* University Level */}
