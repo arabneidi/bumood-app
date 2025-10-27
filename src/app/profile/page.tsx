@@ -68,6 +68,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   // Custom categories removed from schema
 
   // Load AI configuration
@@ -820,36 +821,7 @@ export default function ProfilePage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={async () => {
-                  if (!confirm('⚠️ Are you sure you want to clear ALL data? This cannot be undone!')) return;
-                  
-                  try {
-                    setMessage('🗑️ Clearing all data...');
-                    
-                    // Clear all tables
-                    const response = await fetch('/api/clean-slate', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ 
-                        userId: 'dummy-user',
-                        clearProfile: true 
-                      })
-                    });
-                    
-                    if (response.ok) {
-                      setMessage('✅ All data cleared successfully!');
-                      setTimeout(() => setMessage(''), 3000);
-                      loadProfile(); // Refresh data
-                    } else {
-                      setMessage('❌ Failed to clear data');
-                      setTimeout(() => setMessage(''), 3000);
-                    }
-                  } catch (error) {
-                    console.error('Clear data error:', error);
-                    setMessage('❌ Failed to clear data');
-                    setTimeout(() => setMessage(''), 3000);
-                  }
-                }}
+                onClick={() => setShowClearConfirm(true)}
                 className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center gap-3"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -879,6 +851,121 @@ export default function ProfilePage() {
                 {message}
               </div>
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Clear Data Confirmation Modal */}
+        <AnimatePresence>
+          {showClearConfirm && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowClearConfirm(false)}
+                className="fixed inset-0 bg-black/60 backdrop-blur-md z-40"
+              />
+              
+              {/* Modal */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 50 }}
+                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
+              >
+                <div className="relative bg-slate-800 rounded-3xl shadow-2xl border border-red-500/30 overflow-hidden">
+                  {/* Animated background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-pink-500/10 to-red-500/10 opacity-50"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 to-transparent"></div>
+                  
+                  {/* Glowing border */}
+                  <div className="absolute inset-0 rounded-3xl border-2 border-red-400/50 shadow-[0_0_30px_rgba(239,68,68,0.5)]"></div>
+                  
+                  <div className="relative p-8">
+                    {/* Icon */}
+                    <div className="flex justify-center mb-6">
+                      <motion.div
+                        animate={{ 
+                          scale: [1, 1.1, 1],
+                          rotate: [0, -5, 5, -5, 0]
+                        }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="w-20 h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center shadow-2xl"
+                      >
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      </motion.div>
+                    </div>
+                    
+                    {/* Title */}
+                    <h3 className="text-3xl font-black text-center mb-4 bg-gradient-to-r from-red-400 to-pink-500 bg-clip-text text-transparent">
+                      Clear All Data?
+                    </h3>
+                    
+                    {/* Message */}
+                    <p className="text-slate-300 text-center mb-8 text-lg leading-relaxed">
+                      This will permanently delete all your data including:
+                      <br />
+                      <span className="text-red-400 font-bold">Mood entries, Goals, Achievements, Profile info, and everything else.</span>
+                      <br />
+                      <span className="text-yellow-400 font-semibold">This cannot be undone!</span>
+                    </p>
+                    
+                    {/* Buttons */}
+                    <div className="flex gap-4">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setShowClearConfirm(false)}
+                        className="flex-1 px-6 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold shadow-lg transition-all duration-300"
+                      >
+                        Cancel
+                      </motion.button>
+                      
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={async () => {
+                          setShowClearConfirm(false);
+                          
+                          try {
+                            setMessage('🗑️ Clearing all data...');
+                            
+                            // Clear all tables
+                            const response = await fetch('/api/clean-slate', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ 
+                                userId: 'dummy-user',
+                                clearProfile: true 
+                              })
+                            });
+                            
+                            if (response.ok) {
+                              setMessage('✅ All data cleared successfully!');
+                              setTimeout(() => setMessage(''), 3000);
+                              loadProfile(); // Refresh data
+                            } else {
+                              setMessage('❌ Failed to clear data');
+                              setTimeout(() => setMessage(''), 3000);
+                            }
+                          } catch (error) {
+                            console.error('Clear data error:', error);
+                            setMessage('❌ Failed to clear data');
+                            setTimeout(() => setMessage(''), 3000);
+                          }
+                        }}
+                        className="flex-1 px-6 py-4 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold shadow-lg transition-all duration-300"
+                      >
+                        Yes, Clear All
+                      </motion.button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
 
