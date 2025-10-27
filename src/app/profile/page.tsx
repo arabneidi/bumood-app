@@ -794,7 +794,7 @@ export default function ProfilePage() {
                       }
                       
                       if (response.ok) {
-                        setMessage(`✅ Data imported successfully to TEST database! (${result.count} entries)`);
+                        setMessage(`✅ Data imported successfully! (${result.count} entries)`);
                         setTimeout(() => setMessage(''), 3000);
                         loadProfile(); // Refresh data
                       } else {
@@ -872,9 +872,10 @@ export default function ProfilePage() {
                 initial={{ opacity: 0, scale: 0.8, y: 50 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.8, y: 50 }}
-                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
+                className="fixed inset-0 flex items-center justify-center z-50 p-4"
               >
-                <div className="relative bg-slate-800 rounded-3xl shadow-2xl border border-red-500/30 overflow-hidden">
+                <div className="w-full max-w-md">
+                  <div className="relative bg-slate-800 rounded-3xl shadow-2xl border border-red-500/30 overflow-hidden">
                   {/* Animated background */}
                   <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-pink-500/10 to-red-500/10 opacity-50"></div>
                   <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 to-transparent"></div>
@@ -963,6 +964,7 @@ export default function ProfilePage() {
                       </motion.button>
                     </div>
                   </div>
+                </div>
                 </div>
               </motion.div>
             </>
