@@ -1222,22 +1222,6 @@ export default function ProfilePage() {
                     Personality Types
                   </label>
                   
-                  {/* Selected Types Display */}
-                  {profile.personality.length > 0 && (
-                    <div className="mb-3 flex flex-wrap gap-2">
-                      {profile.personality.map((type) => (
-                        <motion.span
-                          key={type}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="px-3 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-sm font-medium rounded-full"
-                        >
-                          {type}
-                        </motion.span>
-                      ))}
-                    </div>
-                  )}
-                  
                   {/* Dropdown Button */}
                   <motion.button
                     type="button"
