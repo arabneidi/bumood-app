@@ -368,7 +368,12 @@ export default function ActivityDriversChart({
                   </div>
                 ) : (
                   <div className="flex items-center">
-                    <Sparkles className="w-4 h-4 mr-2" />
+                    <motion.div
+                      animate={{ rotate: [0, 360] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                    </motion.div>
                     {isCached ? 'Refresh AI Analysis' : 'Get AI Analysis'}
                   </div>
                 )}
