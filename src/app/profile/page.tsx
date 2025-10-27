@@ -1099,36 +1099,9 @@ export default function ProfilePage() {
                   />
                 </motion.div>
 
-                {/* Gender */}
-                <motion.div
-                  whileHover={{ scale: 1.05, rotate: -1 }}
-                  className="group"
-                >
-                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
-                    <Zap className="w-5 h-5 mr-2 text-purple-400" />
-                    Gender
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={profile.gender}
-                      onChange={(e) => setProfile({...profile, gender: e.target.value})}
-                      className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-purple-500/10 appearance-none pr-12"
-                    >
-                      <option value="">Choose your identity</option>
-                      <option value="female">Female</option>
-                      <option value="male">Male</option>
-                      <option value="non-binary">Non-binary</option>
-                      <option value="prefer-not-to-say">Prefer not to say</option>
-                    </select>
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <span className="text-violet-400 text-lg">▼</span>
-                    </div>
-                  </div>
-                </motion.div>
-
                 {/* Age */}
                 <motion.div
-                  whileHover={{ scale: 1.05, rotate: 1 }}
+                  whileHover={{ scale: 1.05, rotate: -1 }}
                   className="group"
                 >
                   <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
@@ -1169,89 +1142,30 @@ export default function ProfilePage() {
                   </div>
                 </motion.div>
 
-                {/* Height */}
+                {/* Gender */}
                 <motion.div
                   whileHover={{ scale: 1.05, rotate: -1 }}
                   className="group"
                 >
                   <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
-                    <span className="text-2xl mr-2">📏</span>
-                    Height (cm)
+                    <Zap className="w-5 h-5 mr-2 text-purple-400" />
+                    Gender
                   </label>
-                  <div className="flex items-center space-x-3">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleDecrement('height')}
-                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-green-500/10"
+                  <div className="relative">
+                    <select
+                      value={profile.gender}
+                      onChange={(e) => setProfile({...profile, gender: e.target.value})}
+                      className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-purple-500/10 appearance-none pr-12"
                     >
-                      <Minus className="w-5 h-5" />
-                    </motion.button>
-                    <input
-                      type="text"
-                      value={profile.height}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9.]/g, ''); // Only allow numbers and decimal
-                        setProfile({...profile, height: value});
-                      }}
-                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-green-500/20 focus:border-green-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-green-500/10 text-center"
-                      placeholder="Your height"
-                      style={{
-                        WebkitAppearance: 'none',
-                        MozAppearance: 'textfield'
-                      }}
-                    />
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleIncrement('height')}
-                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-green-500/10"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </motion.button>
-                  </div>
-                </motion.div>
-
-                {/* Weight */}
-                <motion.div
-                  whileHover={{ scale: 1.05, rotate: 1 }}
-                  className="group"
-                >
-                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
-                    <span className="text-2xl mr-2">⚖️</span>
-                    Weight (kg)
-                  </label>
-                  <div className="flex items-center space-x-3">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleDecrement('weight')}
-                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-orange-500/10"
-                    >
-                      <Minus className="w-5 h-5" />
-                    </motion.button>
-                    <input
-                      type="text"
-                      value={profile.weight}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9.]/g, ''); // Only allow numbers and decimal
-                        setProfile({...profile, weight: value});
-                      }}
-                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-orange-500/10 text-center"
-                      placeholder="Your weight"
-                      style={{
-                        WebkitAppearance: 'none',
-                        MozAppearance: 'textfield'
-                      }}
-                    />
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleIncrement('weight')}
-                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-orange-500/10"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </motion.button>
+                      <option value="">Choose your identity</option>
+                      <option value="female">Female</option>
+                      <option value="male">Male</option>
+                      <option value="non-binary">Non-binary</option>
+                      <option value="prefer-not-to-say">Prefer not to say</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <span className="text-violet-400 text-lg">▼</span>
+                    </div>
                   </div>
                 </motion.div>
 
@@ -1402,15 +1316,15 @@ export default function ProfilePage() {
                                   indicatorBg: 'bg-gradient-to-r from-pink-400 to-rose-400'
                                 },
                                 'INFP': { 
-                                  selectedBg: 'bg-gradient-to-r from-cyan-500/30 via-sky-500/30 to-cyan-600/30',
-                                  selectedBorder: 'border-cyan-400/50',
-                                  selectedShadow: 'shadow-cyan-500/20',
-                                  hoverBg: 'hover:bg-cyan-500/10',
-                                  hoverText: 'hover:text-cyan-200',
-                                  hoverBorder: 'hover:border-cyan-400/50',
-                                  hoverShadow: 'hover:shadow-cyan-500/10',
-                                  glowColor: 'rgba(6, 182, 212, 0.6)',
-                                  indicatorBg: 'bg-gradient-to-r from-cyan-400 to-sky-400'
+                                  selectedBg: 'bg-gradient-to-r from-purple-500/30 via-fuchsia-500/30 to-purple-600/30',
+                                  selectedBorder: 'border-purple-400/50',
+                                  selectedShadow: 'shadow-purple-500/20',
+                                  hoverBg: 'hover:bg-purple-500/10',
+                                  hoverText: 'hover:text-purple-200',
+                                  hoverBorder: 'hover:border-purple-400/50',
+                                  hoverShadow: 'hover:shadow-purple-500/10',
+                                  glowColor: 'rgba(168, 85, 247, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-purple-400 to-fuchsia-400'
                                 },
                                 'ENFJ': { 
                                   selectedBg: 'bg-gradient-to-r from-yellow-500/30 via-amber-500/30 to-yellow-600/30',
@@ -1435,15 +1349,15 @@ export default function ProfilePage() {
                                   indicatorBg: 'bg-gradient-to-r from-indigo-400 to-blue-400'
                                 },
                                 'ISTJ': { 
-                                  selectedBg: 'bg-gradient-to-r from-red-500/30 via-rose-500/30 to-red-600/30',
-                                  selectedBorder: 'border-red-400/50',
-                                  selectedShadow: 'shadow-red-500/20',
-                                  hoverBg: 'hover:bg-red-500/10',
-                                  hoverText: 'hover:text-red-200',
-                                  hoverBorder: 'hover:border-red-400/50',
-                                  hoverShadow: 'hover:shadow-red-500/10',
-                                  glowColor: 'rgba(239, 68, 68, 0.6)',
-                                  indicatorBg: 'bg-gradient-to-r from-red-400 to-rose-400'
+                                  selectedBg: 'bg-gradient-to-r from-slate-500/30 via-gray-500/30 to-slate-600/30',
+                                  selectedBorder: 'border-slate-400/50',
+                                  selectedShadow: 'shadow-slate-500/20',
+                                  hoverBg: 'hover:bg-slate-500/10',
+                                  hoverText: 'hover:text-slate-200',
+                                  hoverBorder: 'hover:border-slate-400/50',
+                                  hoverShadow: 'hover:shadow-slate-500/10',
+                                  glowColor: 'rgba(100, 116, 139, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-slate-400 to-gray-400'
                                 },
                                 'ISFJ': { 
                                   selectedBg: 'bg-gradient-to-r from-teal-500/30 via-cyan-500/30 to-teal-600/30',
@@ -1457,15 +1371,15 @@ export default function ProfilePage() {
                                   indicatorBg: 'bg-gradient-to-r from-teal-400 to-cyan-400'
                                 },
                                 'ESTJ': { 
-                                  selectedBg: 'bg-gradient-to-r from-amber-500/30 via-yellow-500/30 to-amber-600/30',
-                                  selectedBorder: 'border-amber-400/50',
-                                  selectedShadow: 'shadow-amber-500/20',
-                                  hoverBg: 'hover:bg-amber-500/10',
-                                  hoverText: 'hover:text-amber-200',
-                                  hoverBorder: 'hover:border-amber-400/50',
-                                  hoverShadow: 'hover:shadow-amber-500/10',
-                                  glowColor: 'rgba(245, 158, 11, 0.6)',
-                                  indicatorBg: 'bg-gradient-to-r from-amber-400 to-yellow-400'
+                                  selectedBg: 'bg-gradient-to-r from-red-500/30 via-rose-500/30 to-red-600/30',
+                                  selectedBorder: 'border-red-400/50',
+                                  selectedShadow: 'shadow-red-500/20',
+                                  hoverBg: 'hover:bg-red-500/10',
+                                  hoverText: 'hover:text-red-200',
+                                  hoverBorder: 'hover:border-red-400/50',
+                                  hoverShadow: 'hover:shadow-red-500/10',
+                                  glowColor: 'rgba(239, 68, 68, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-red-400 to-rose-400'
                                 },
                                 'ESFJ': { 
                                   selectedBg: 'bg-gradient-to-r from-emerald-500/30 via-green-500/30 to-emerald-600/30',
@@ -1479,15 +1393,15 @@ export default function ProfilePage() {
                                   indicatorBg: 'bg-gradient-to-r from-emerald-400 to-green-400'
                                 },
                                 'ISTP': { 
-                                  selectedBg: 'bg-gradient-to-r from-violet-500/30 via-purple-500/30 to-violet-600/30',
-                                  selectedBorder: 'border-violet-400/50',
-                                  selectedShadow: 'shadow-violet-500/20',
-                                  hoverBg: 'hover:bg-violet-500/10',
-                                  hoverText: 'hover:text-violet-200',
-                                  hoverBorder: 'hover:border-violet-400/50',
-                                  hoverShadow: 'hover:shadow-violet-500/10',
-                                  glowColor: 'rgba(139, 92, 246, 0.6)',
-                                  indicatorBg: 'bg-gradient-to-r from-violet-400 to-purple-400'
+                                  selectedBg: 'bg-gradient-to-r from-amber-500/30 via-yellow-500/30 to-amber-600/30',
+                                  selectedBorder: 'border-amber-400/50',
+                                  selectedShadow: 'shadow-amber-500/20',
+                                  hoverBg: 'hover:bg-amber-500/10',
+                                  hoverText: 'hover:text-amber-200',
+                                  hoverBorder: 'hover:border-amber-400/50',
+                                  hoverShadow: 'hover:shadow-amber-500/10',
+                                  glowColor: 'rgba(245, 158, 11, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-amber-400 to-yellow-400'
                                 },
                                 'ISFP': { 
                                   selectedBg: 'bg-gradient-to-r from-rose-500/30 via-pink-500/30 to-rose-600/30',
@@ -1501,58 +1415,41 @@ export default function ProfilePage() {
                                   indicatorBg: 'bg-gradient-to-r from-rose-400 to-pink-400'
                                 },
                                 'ESTP': { 
-                                  selectedBg: 'bg-gradient-to-r from-sky-500/30 via-blue-500/30 to-sky-600/30',
-                                  selectedBorder: 'border-sky-400/50',
-                                  selectedShadow: 'shadow-sky-500/20',
-                                  hoverBg: 'hover:bg-sky-500/10',
-                                  hoverText: 'hover:text-sky-200',
-                                  hoverBorder: 'hover:border-sky-400/50',
-                                  hoverShadow: 'hover:shadow-sky-500/10',
-                                  glowColor: 'rgba(14, 165, 233, 0.6)',
-                                  indicatorBg: 'bg-gradient-to-r from-sky-400 to-blue-400'
+                                  selectedBg: 'bg-gradient-to-r from-orange-500/30 via-red-500/30 to-orange-600/30',
+                                  selectedBorder: 'border-orange-400/50',
+                                  selectedShadow: 'shadow-orange-500/20',
+                                  hoverBg: 'hover:bg-orange-500/10',
+                                  hoverText: 'hover:text-orange-200',
+                                  hoverBorder: 'hover:border-orange-400/50',
+                                  hoverShadow: 'hover:shadow-orange-500/10',
+                                  glowColor: 'rgba(251, 146, 60, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-orange-400 to-red-400'
                                 },
                                 'ESFP': { 
-                                  selectedBg: 'bg-gradient-to-r from-lime-500/30 via-green-500/30 to-lime-600/30',
-                                  selectedBorder: 'border-lime-400/50',
-                                  selectedShadow: 'shadow-lime-500/20',
-                                  hoverBg: 'hover:bg-lime-500/10',
-                                  hoverText: 'hover:text-lime-200',
-                                  hoverBorder: 'hover:border-lime-400/50',
-                                  hoverShadow: 'hover:shadow-lime-500/10',
-                                  glowColor: 'rgba(132, 204, 22, 0.6)',
-                                  indicatorBg: 'bg-gradient-to-r from-lime-400 to-green-400'
+                                  selectedBg: 'bg-gradient-to-r from-fuchsia-500/30 via-purple-500/30 to-fuchsia-600/30',
+                                  selectedBorder: 'border-fuchsia-400/50',
+                                  selectedShadow: 'shadow-fuchsia-500/20',
+                                  hoverBg: 'hover:bg-fuchsia-500/10',
+                                  hoverText: 'hover:text-fuchsia-200',
+                                  hoverBorder: 'hover:border-fuchsia-400/50',
+                                  hoverShadow: 'hover:shadow-fuchsia-500/10',
+                                  glowColor: 'rgba(217, 70, 239, 0.6)',
+                                  indicatorBg: 'bg-gradient-to-r from-fuchsia-400 to-purple-400'
                                 }
                               };
-                              return colorMap[typeValue] || { 
-                                selectedBg: 'bg-gradient-to-r from-gray-500/30 via-slate-500/30 to-gray-600/30',
-                                selectedBorder: 'border-gray-400/50',
-                                selectedShadow: 'shadow-gray-500/20',
-                                hoverBg: 'hover:bg-gray-500/10',
-                                hoverText: 'hover:text-gray-200',
-                                hoverBorder: 'hover:border-gray-400/50',
-                                hoverShadow: 'hover:shadow-gray-500/10',
-                                glowColor: 'rgba(107, 114, 128, 0.6)',
-                                indicatorBg: 'bg-gradient-to-r from-gray-400 to-slate-400'
-                              };
+                              
+                              return colorMap[typeValue] || colorMap['INTJ'];
                             };
 
                             const colors = getPersonalityColor(type.value);
                             const isSelected = profile.personality.includes(type.value);
-
+                            
                             return (
                               <motion.button
                                 key={type.value}
                                 type="button"
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: index * 0.03 }}
-                                whileHover={{ 
-                                  scale: 1.08,
-                                  boxShadow: `0 0 20px ${colors.glowColor}, 0 0 40px ${colors.glowColor.replace('0.6', '0.3')}`
-                                }}
-                                whileTap={{ scale: 0.95 }}
                                 onClick={() => {
-                                  if (profile.personality.includes(type.value)) {
+                                  if (isSelected) {
                                     setProfile({
                                       ...profile,
                                       personality: profile.personality.filter(p => p !== type.value)
@@ -1564,32 +1461,32 @@ export default function ProfilePage() {
                                     });
                                   }
                                 }}
-                                className={`relative px-3 py-2 rounded-lg text-xs font-bold transition-all duration-300 backdrop-blur-sm border ${
-                                  isSelected
-                                    ? `${colors.selectedBg} text-white ${colors.selectedBorder} shadow-lg ${colors.selectedShadow}`
-                                    : `${colors.hoverBg} ${colors.hoverText} ${colors.hoverBorder} hover:shadow-lg ${colors.hoverShadow}`
-                                }`}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className={`
+                                  relative overflow-hidden rounded-xl border-2 p-3 text-sm font-medium transition-all duration-300
+                                  ${isSelected 
+                                    ? `${colors.selectedBg} ${colors.selectedBorder} ${colors.selectedShadow}` 
+                                    : 'bg-slate-700/30 border-slate-500/20 hover:border-slate-400/30'
+                                  }
+                                  ${colors.hoverBg} ${colors.hoverText} ${colors.hoverBorder} ${colors.hoverShadow}
+                                  group
+                                `}
+                                style={{
+                                  boxShadow: isSelected ? `0 0 20px ${colors.glowColor}, 0 4px 6px rgba(0, 0, 0, 0.1)` : ''
+                                }}
                               >
-                                {/* Glass glow effect */}
-                                <motion.div
-                                  className="absolute inset-0 rounded-lg bg-gradient-to-r from-violet-400/10 via-purple-400/10 to-pink-400/10 opacity-0 group-hover:opacity-100"
-                                  whileHover={{ opacity: 1 }}
-                                  transition={{ duration: 0.3 }}
-                                />
+                                {/* Indicator dot */}
+                                <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${isSelected ? colors.indicatorBg : 'bg-slate-500/50 group-hover:bg-slate-400/50'} transition-all duration-300`} />
                                 
-                                {/* Content */}
-                                <span className="relative z-10">
-                                  {type.label}
-                                </span>
-                                
-                                {/* Glow indicator for selected */}
-                                {isSelected && (
-                                  <motion.div
-                                    initial={{ scale: 0, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    className={`absolute -top-1 -right-1 w-2 h-2 ${colors.indicatorBg} rounded-full shadow-lg`}
-                                  />
-                                )}
+                                <div className="text-left">
+                                  <div className={`font-bold ${isSelected ? 'text-white' : 'text-slate-300'} group-hover:text-white`}>
+                                    {type.value}
+                                  </div>
+                                  <div className={`text-xs mt-1 ${isSelected ? 'text-slate-200' : 'text-slate-400'} group-hover:text-slate-200`}>
+                                    {type.label.split(' - ')[1]}
+                                  </div>
+                                </div>
                               </motion.button>
                             );
                           })}
@@ -1597,6 +1494,92 @@ export default function ProfilePage() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </motion.div>
+
+                {/* Height */}
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: -1 }}
+                  className="group"
+                >
+                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
+                    <span className="text-2xl mr-2">📏</span>
+                    Height (cm)
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleDecrement('height')}
+                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-green-500/10"
+                    >
+                      <Minus className="w-5 h-5" />
+                    </motion.button>
+                    <input
+                      type="text"
+                      value={profile.height}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9.]/g, ''); // Only allow numbers and decimal
+                        setProfile({...profile, height: value});
+                      }}
+                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-green-500/20 focus:border-green-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-green-500/10 text-center"
+                      placeholder="Your height"
+                      style={{
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'textfield'
+                      }}
+                    />
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleIncrement('height')}
+                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-green-500/10"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </motion.button>
+                  </div>
+                </motion.div>
+
+                {/* Weight */}
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: 1 }}
+                  className="group"
+                >
+                  <label className="block text-lg font-bold text-slate-200 mb-3 flex items-center">
+                    <span className="text-2xl mr-2">⚖️</span>
+                    Weight (kg)
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleDecrement('weight')}
+                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-orange-500/10"
+                    >
+                      <Minus className="w-5 h-5" />
+                    </motion.button>
+                    <input
+                      type="text"
+                      value={profile.weight}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9.]/g, ''); // Only allow numbers and decimal
+                        setProfile({...profile, weight: value});
+                      }}
+                      className="flex-1 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-orange-500/10 text-center"
+                      placeholder="Your weight"
+                      style={{
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'textfield'
+                      }}
+                    />
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleIncrement('weight')}
+                      className="p-3 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-full text-white hover:bg-slate-700/60 transition-all duration-300 shadow-lg hover:shadow-orange-500/10"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </motion.button>
+                  </div>
                 </motion.div>
 
                 {/* University Level */}
