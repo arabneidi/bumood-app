@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import Card from "@/components/ui/Card";
 import { Droplets } from "lucide-react";
 
@@ -244,22 +245,44 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
         </div>
         <div className="p-4 rounded-lg bg-gradient-to-br from-slate-700/50 to-slate-600/50 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 shadow-lg">
           <div className="text-xs text-purple-300 font-medium uppercase tracking-wide">Stress/Valence (30d avg)</div>
-          <div className="text-white font-bold text-lg">{data.stressAvg !== null && data.valenceAvg !== null ? `${data.stressAvg}/10 stress, ${data.valenceAvg}/10 happiness` : '—'}</div>
+          <div className="text-white font-bold text-lg">{data.stressAvg !== null && data.valenceAvg !== null ? `${data.stressAvg}/10 stress, ${data.valenceAvg}/10 valence` : '—'}</div>
           <div className="mt-2 text-xs text-slate-400 font-medium">Note</div>
           <div className="text-purple-300 text-sm">Higher stress may shorten/shift cycles; we factor this when alerting.</div>
         </div>
       </div>
 
       {showAlert && (
-        <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-pink-900/40 to-rose-900/40 border border-pink-500/30 text-pink-200 flex items-start justify-between shadow-lg">
-          <div className="mr-3 font-medium">{alertText}</div>
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 p-4 rounded-lg bg-gradient-to-r from-pink-900/60 to-rose-900/60 border-2 border-pink-400 text-pink-200 flex items-start justify-between shadow-2xl relative overflow-hidden"
+          style={{
+            boxShadow: '0 0 20px rgba(244, 63, 94, 0.5), 0 0 40px rgba(244, 63, 94, 0.3)',
+            animation: 'pulse-glow 2s ease-in-out infinite'
+          }}
+        >
+          {/* Pulsing background glow */}
+          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-rose-500/20 animate-pulse" />
+          
+          <style jsx>{`
+            @keyframes pulse-glow {
+              0%, 100% {
+                box-shadow: 0 0 20px rgba(244, 63, 94, 0.5), 0 0 40px rgba(244, 63, 94, 0.3), 0 0 60px rgba(244, 63, 94, 0.1);
+              }
+              50% {
+                box-shadow: 0 0 30px rgba(244, 63, 94, 0.7), 0 0 60px rgba(244, 63, 94, 0.5), 0 0 90px rgba(244, 63, 94, 0.3);
+              }
+            }
+          `}</style>
+          
+          <div className="mr-3 font-medium relative z-10 text-base">{alertText}</div>
           <button 
             onClick={() => setShowAlert(false)} 
-            className="text-sm font-semibold text-pink-300 hover:text-pink-100 underline transition-colors duration-200"
+            className="text-sm font-semibold text-pink-300 hover:text-pink-100 underline transition-colors duration-200 relative z-10"
           >
             Dismiss
           </button>
-        </div>
+        </motion.div>
       )}
 
       {/* Period End Confirmation Modal */}

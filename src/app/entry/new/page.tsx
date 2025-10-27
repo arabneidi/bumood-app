@@ -1480,11 +1480,32 @@ export default function NewEntry() {
                           (entry: any) => entry.activity === activity && entry.timeSlot === hourKey
                         );
                         
+                        // Check if this time slot is in the future (more than 2 hours from now)
+                        const currentDate = formData.entryDate || new Date().toISOString().split('T')[0];
+                        const currentTime = new Date();
+                        const currentHour = currentTime.getHours();
+                        const currentMinute = currentTime.getMinutes();
+                        
+                        // Check if the entry date is today
+                        const today = new Date().toISOString().split('T')[0];
+                        const isToday = currentDate === today;
+                        
+                        // Calculate if the time slot is more than 2 hours in the future
+                        const isFutureSlot = isToday && (() => {
+                          const slotHour24 = hour === 0 ? 24 : hour; // Convert 0 (midnight) to 24 for easier comparison
+                          const currentHour24 = currentHour === 0 ? 24 : currentHour;
+                          const hoursDifference = slotHour24 - currentHour24;
+                          return hoursDifference > 2 || (hoursDifference === 2 && currentMinute > 0);
+                        })();
+                        
                         return (
                           <motion.button
                             key={hourKey}
                             type="button"
+                            disabled={isFutureSlot}
                             onClick={() => {
+                              if (isFutureSlot) return; // Prevent click if future slot
+                              
                               // Update activity entries for this specific activity
                               if (!isSelected) {
                                 // Add activity entry with exact time for THIS activity only
@@ -1508,13 +1529,16 @@ export default function NewEntry() {
                                 handleChange("activityEntries", updatedActivityEntries);
                               }
                             }}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                            whileHover={isFutureSlot ? {} : { scale: 1.05 }}
+                            whileTap={isFutureSlot ? {} : { scale: 0.95 }}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                               isSelected
                                 ? `bg-white/20 text-white shadow-lg border-2 ${slot.borderColor}`
+                                : isFutureSlot
+                                ? 'bg-slate-700/30 text-slate-500 border border-slate-600/30 cursor-not-allowed opacity-50'
                                 : `bg-white/10 ${slot.textColor} hover:bg-white/15 border border-transparent hover:border-white/20`
                             }`}
+                            title={isFutureSlot ? 'Cannot select time slots more than 2 hours in the future' : ''}
                           >
                             {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
                           </motion.button>
