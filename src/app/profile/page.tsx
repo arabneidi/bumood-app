@@ -2123,8 +2123,8 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
                   <div className="p-4 bg-slate-800/30 rounded-xl">
                     <div className="text-2xl mb-2">🎯</div>
-                    <h4 className="font-bold text-white mb-2">Personalized Quotes</h4>
-                    <p className="text-sm text-slate-400">Get quotes from your favorite writers, philosophers, and thinkers</p>
+                    <h4 className="font-bold text-white mb-2">Pro Tips</h4>
+                    <p className="text-sm text-slate-400">Receive AI-generated personalized tips and insights</p>
                   </div>
                   
                   <div className="p-4 bg-slate-800/30 rounded-xl">
