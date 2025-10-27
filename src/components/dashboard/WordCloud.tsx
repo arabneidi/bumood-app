@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { motion } from 'framer-motion';
 import * as cloud from 'd3-cloud';
 
 const Wordcloud = dynamic(() => import('@visx/wordcloud').then(mod => mod.Wordcloud), { ssr: false });
@@ -132,12 +133,33 @@ export default function WordCloud({ moodEntries, userPreferences, timeRange }: W
   };
 
   return (
-    <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-2xl shadow-2xl p-8">
-      <div className="mb-6">
+    <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-2xl shadow-2xl p-8 relative">
+      <div className="mb-6 flex items-center justify-between">
         <h3 className="text-2xl font-bold text-white flex items-center">
           <span className="mr-3 text-3xl">☁️</span>
           Word Cloud
         </h3>
+        <div className="flex items-center space-x-3 text-xs">
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center space-x-1 px-2 py-1 rounded-md bg-gradient-to-br from-violet-500/10 to-purple-500/10 border border-violet-400/20"
+          >
+            <span className="font-semibold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">Total Tags:</span>
+            <span className="font-bold text-violet-300">{words.length}</span>
+          </motion.div>
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center space-x-1 px-2 py-1 rounded-md bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-400/20"
+          >
+            <span className="font-semibold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">Period:</span>
+            <span className="font-bold text-green-300">
+              {timeRange === 'daily' ? 'Today' :
+               timeRange === 'weekly' ? 'Last 7 days' :
+               timeRange === 'monthly' ? 'Last 30 days' :
+               'Last 365 days'}
+            </span>
+          </motion.div>
+        </div>
       </div>
 
       <div className="bg-white/5 rounded-xl p-0" style={{ height: '400px', width: '100%', overflow: 'hidden' }}>
@@ -177,22 +199,6 @@ export default function WordCloud({ moodEntries, userPreferences, timeRange }: W
              }
             </Wordcloud>
         </svg>
-      </div>
-
-      {/* Stats */}
-      <div className="mt-4 pt-4 border-t border-white/10">
-        <div className="flex items-center space-x-6 text-sm text-indigo-200">
-          <div>
-            <span className="font-semibold">Total Tags:</span> {words.length}
-          </div>
-          <div>
-            <span className="font-semibold">Period:</span>{' '}
-            {timeRange === 'daily' ? 'Today' :
-             timeRange === 'weekly' ? 'Last 7 days' :
-             timeRange === 'monthly' ? 'Last 30 days' :
-             'Last 365 days'}
-          </div>
-        </div>
       </div>
     </div>
   );
