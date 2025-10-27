@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import dynamic from 'next/dynamic';
+import { motion } from 'framer-motion';
 
 // Dynamically import react-force-graph-2d to avoid SSR issues
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
@@ -367,23 +368,43 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-3 text-xs">
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-green-400 shadow-lg"></div>
-              <span className="font-semibold text-gray-800">Helpful Activities</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-red-400 shadow-lg"></div>
-              <span className="font-semibold text-gray-800">Harmful Activities</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-cyan-400 shadow-lg"></div>
-              <span className="font-semibold text-gray-800">Other Activities</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-teal-400 shadow-lg"></div>
-              <span className="font-semibold text-gray-800">Subcategories</span>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
+            <motion.div
+              whileHover={{ scale: 1.05, y: -2 }}
+              className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-green-500/20 hover:border-green-400/40 transition-all duration-300"
+            >
+              <div className="flex items-center justify-center space-x-1">
+                <div className="w-2 h-2 rounded-full shadow-lg bg-green-400"></div>
+                <span className="text-xs font-bold text-white">Helpful Activities</span>
+              </div>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -2 }}
+              className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-red-500/20 hover:border-red-400/40 transition-all duration-300"
+            >
+              <div className="flex items-center justify-center space-x-1">
+                <div className="w-2 h-2 rounded-full shadow-lg bg-red-400"></div>
+                <span className="text-xs font-bold text-white">Harmful Activities</span>
+              </div>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -2 }}
+              className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-cyan-500/20 hover:border-cyan-400/40 transition-all duration-300"
+            >
+              <div className="flex items-center justify-center space-x-1">
+                <div className="w-2 h-2 rounded-full shadow-lg bg-cyan-400"></div>
+                <span className="text-xs font-bold text-white">Other Activities</span>
+              </div>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -2 }}
+              className="space-y-1 p-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-teal-500/20 hover:border-teal-400/40 transition-all duration-300"
+            >
+              <div className="flex items-center justify-center space-x-1">
+                <div className="w-2 h-2 rounded-full shadow-lg bg-teal-400"></div>
+                <span className="text-xs font-bold text-white">Subcategories</span>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
