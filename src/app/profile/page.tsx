@@ -269,23 +269,6 @@ export default function ProfilePage() {
           transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
           className="text-center mb-12"
         >
-          <motion.h1 
-            className="text-6xl font-black mb-4"
-            animate={{ 
-              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-            }}
-            transition={{ duration: 3, repeat: Infinity }}
-            style={{
-              background: 'linear-gradient(45deg, #3b82f6, #6366f1, #8b5cf6, #a855f7, #3b82f6)',
-              backgroundSize: '400% 400%',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            Your Amazing Profile
-          </motion.h1>
-          
           <div className="flex flex-col items-center gap-6">
             <div className="flex items-center gap-4">
               <motion.button
