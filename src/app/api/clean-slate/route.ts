@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await request.json();
+    const { userId, clearProfile } = await request.json();
     
     if (!userId) {
       return NextResponse.json(
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🧹 Starting clean slate for user:', userId);
+    console.log('🧹 Starting clean slate for user:', userId, clearProfile ? '(including profile)' : '(preserving profile)');
 
     // Delete all mood entries
     const moodEntriesDeleted = await db.moodEntry.deleteMany({
@@ -85,19 +85,53 @@ export async function POST(request: NextRequest) {
       console.log('⚠️  Learn connections model not found, skipping');
     }
 
-    // Reset user activity-related data while preserving profile info
-    await db.user.update({
-      where: { id: userId },
-      data: {
-        recentActivities: JSON.stringify([]),
-        // Keep all profile fields: name, email, gender, age, height, weight, 
-        // timezone, personality, universityLevel, fieldOfStudy, interests, 
-        // quoteStyle, favoriteAuthors, favoriteWriters, favoriteSportsFigures, 
-        // favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers, 
-        // customFavorites - these are preserved
-      }
-    });
-    console.log('✅ Reset user activity data while preserving profile');
+    // Reset user data
+    if (clearProfile) {
+      // Clear all profile data except ID
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          name: null,
+          email: null,
+          emailVerified: null,
+          image: null,
+          gender: null,
+          age: null,
+          height: null,
+          weight: null,
+          timezone: null,
+          personality: null,
+          universityLevel: null,
+          fieldOfStudy: null,
+          interests: null,
+          quoteStyle: null,
+          favoriteAuthors: null,
+          favoriteWriters: null,
+          favoriteSportsFigures: null,
+          favoriteMusicians: null,
+          favoriteArtists: null,
+          favoriteMovies: null,
+          favoritePhilosophers: null,
+          customFavorites: null,
+          recentActivities: null,
+        }
+      });
+      console.log('✅ Cleared all user profile data');
+    } else {
+      // Reset user activity-related data while preserving profile info
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          recentActivities: JSON.stringify([]),
+          // Keep all profile fields: name, email, gender, age, height, weight, 
+          // timezone, personality, universityLevel, fieldOfStudy, interests, 
+          // quoteStyle, favoriteAuthors, favoriteWriters, favoriteSportsFigures, 
+          // favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers, 
+          // customFavorites - these are preserved
+        }
+      });
+      console.log('✅ Reset user activity data while preserving profile');
+    }
 
     // Verify cleanup
     const remainingMoodEntries = await db.moodEntry.count({
