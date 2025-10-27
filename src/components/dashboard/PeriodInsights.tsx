@@ -77,21 +77,21 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
     const today = new Date();
     const daysSinceLast = lastStart ? Math.round((Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()) - Date.UTC(lastStart.getUTCFullYear(), lastStart.getUTCMonth(), lastStart.getUTCDate())) / (24 * 3600 * 1000)) : null;
     
-    const predictedNextStart = lastStart ? new Date(Date.UTC(lastStart.getUTCFullYear(), lastStart.getUTCMonth(), lastStart.getUTCDate()) + avgCycle * 24 * 3600 * 1000) : null;
+    const predictedNextStart = lastStart && avgCycle ? new Date(Date.UTC(lastStart.getUTCFullYear(), lastStart.getUTCMonth(), lastStart.getUTCDate()) + avgCycle * 24 * 3600 * 1000) : null;
 
     // Build small series for chart: last 90 days onPeriod flag
     const series = days.slice(-90).map((k) => ({ date: k, on: byDay[k].onPeriod }));
 
     // Correlate monthly stress/valence with cycle variability
-    let stressAvg = 0; let valenceAvg = 0; let n = 0;
+    let stressAvg: number | null = 0; let valenceAvg: number | null = 0; let n = 0;
     for (const k of days.slice(-30)) {
       const day = byDay[k];
       const s = day.stress.length ? day.stress.reduce((a, b) => a + b, 0) / day.stress.length : 5;
       const v = day.valence.length ? day.valence.reduce((a, b) => a + b, 0) / day.valence.length : 5;
       stressAvg += s; valenceAvg += v; n++;
     }
-    stressAvg = n ? +(stressAvg / n).toFixed(1) : null;
-    valenceAvg = n ? +(valenceAvg / n).toFixed(1) : null;
+    stressAvg = n ? Number((stressAvg / n).toFixed(1)) : null;
+    valenceAvg = n ? Number((valenceAvg / n).toFixed(1)) : null;
 
     // Detect current period status
     const mostRecentEntry = entries[0];
@@ -191,63 +191,254 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
         </div>
       </div>
 
-      {/* Current Period Status */}
-      {isCurrentlyOnPeriod && (
-        <div className="mb-4 p-4 rounded-lg bg-gradient-to-r from-pink-900/40 to-rose-900/40 border border-pink-500/30 text-pink-200 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <span className="text-2xl">🩸</span>
-              <div>
-                <div className="font-semibold text-lg">Currently on Period</div>
-                <div className="text-sm text-pink-300">Day {currentPeriodDay}</div>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowPeriodEndModal(true)}
-              className="px-4 py-2 bg-red-500/20 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/30 transition-colors text-sm font-medium"
-            >
-              End Period
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Mini on/off chart for last 90 days */}
-      <div className="w-full overflow-hidden rounded-xl border border-pink-500/30 bg-gradient-to-r from-slate-700/50 to-slate-600/50 mb-4 shadow-lg">
-        <div className="flex w-full">
-          {data.series.map((d, idx) => (
-            <div 
-              key={idx} 
-              className={"h-8 transition-all duration-300 hover:scale-110 " + (d.on ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-pink-500/50 shadow-lg" : "bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-500 hover:to-slate-400")} 
-              style={{ width: `${100 / Math.max(data.series.length, 1)}%` }} 
+      {/* Circular Cycle Visualization */}
+      <div className="mb-6 flex flex-col items-center">
+        <div className="relative w-80 h-80">
+          {/* SVG Circular Ring */}
+          <svg width="320" height="320" className="transform -rotate-90">
+            <defs>
+              <linearGradient id="periodGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#dc2626" />
+                <stop offset="100%" stopColor="#991b1b" />
+              </linearGradient>
+              <linearGradient id="follicularGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#fbcfe8" />
+                <stop offset="100%" stopColor="#f9a8d4" />
+              </linearGradient>
+              <linearGradient id="ovularGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#06b6d4" />
+                <stop offset="100%" stopColor="#0891b2" />
+              </linearGradient>
+              <linearGradient id="lutealGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#fb923c" />
+                <stop offset="100%" stopColor="#f97316" />
+              </linearGradient>
+              
+              {/* Glow filter */}
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            
+            {/* Background circle */}
+            <circle
+              cx="160"
+              cy="160"
+              r="140"
+              fill="none"
+              stroke="#334155"
+              strokeWidth="8"
+              className="opacity-30"
             />
-          ))}
-        </div>
-        <div className="px-3 py-2 text-xs text-slate-300 flex justify-between bg-slate-800/50">
-          <span className="font-medium">90 days ago</span>
-          <span className="font-medium">Today</span>
+            
+            {/* Dynamic phase calculations based on avgCycle */}
+            {(() => {
+              const cycleLength = data.avgCycle || 28; // Default to 28 if no data
+              const circumference = 2 * Math.PI * 140; // r=140
+              
+              // Phase durations (in days)
+              const menstrualDays = 5;
+              const follicularDays = cycleLength > 20 ? Math.floor((cycleLength - 14) / 2) : 8; // Dynamic follicular phase
+              const ovulationDays = 2;
+              const lutealDays = cycleLength - menstrualDays - follicularDays - ovulationDays;
+              
+              // Stroke dash calculations
+              const menstrualDash = (menstrualDays / cycleLength) * circumference;
+              const follicularDash = (follicularDays / cycleLength) * circumference;
+              const ovulationDash = (ovulationDays / cycleLength) * circumference;
+              const lutealDash = (lutealDays / cycleLength) * circumference;
+              
+              return (
+                <>
+                  {/* Period phase (Menstrual) - Pink/Red */}
+                  <circle
+                    cx="160"
+                    cy="160"
+                    r="140"
+                    fill="none"
+                    stroke="url(#periodGradient)"
+                    strokeWidth={isCurrentlyOnPeriod ? "12" : "8"}
+                    strokeDasharray={`${menstrualDash} ${circumference}`}
+                    strokeDashoffset="0"
+                    className={isCurrentlyOnPeriod ? "drop-shadow-2xl" : "drop-shadow-lg"}
+                    filter={isCurrentlyOnPeriod ? "url(#glow)" : ""}
+                  >
+                    {isCurrentlyOnPeriod && (
+                      <animate attributeName="stroke-width" values="12;14;12" dur="2s" repeatCount="indefinite" />
+                    )}
+                  </circle>
+                  
+                  {/* Follicular phase - Light Pink */}
+                  <circle
+                    cx="160"
+                    cy="160"
+                    r="140"
+                    fill="none"
+                    stroke="url(#follicularGradient)"
+                    strokeWidth="8"
+                    strokeDasharray={`${follicularDash} ${circumference}`}
+                    strokeDashoffset={`-${menstrualDash}`}
+                    className="drop-shadow-lg"
+                  />
+                  
+                  {/* Ovulation phase - Teal */}
+                  <circle
+                    cx="160"
+                    cy="160"
+                    r="140"
+                    fill="none"
+                    stroke="url(#ovularGradient)"
+                    strokeWidth="8"
+                    strokeDasharray={`${ovulationDash} ${circumference}`}
+                    strokeDashoffset={`-${menstrualDash + follicularDash}`}
+                    className="drop-shadow-lg"
+                  />
+                </>
+              );
+            })()}
+            
+            {/* Luteal phase - Orange (calculated dynamically) */}
+            {(() => {
+              const cycleLength = data.avgCycle || 28;
+              const circumference = 2 * Math.PI * 140;
+              const menstrualDays = 5;
+              const follicularDays = cycleLength > 20 ? Math.floor((cycleLength - 14) / 2) : 8;
+              const ovulationDays = 2;
+              const menstrualDash = (menstrualDays / cycleLength) * circumference;
+              const follicularDash = (follicularDays / cycleLength) * circumference;
+              const ovulationDash = (ovulationDays / cycleLength) * circumference;
+              const lutealDash = circumference - menstrualDash - follicularDash - ovulationDash;
+              
+              return (
+                <circle
+                  cx="160"
+                  cy="160"
+                  r="140"
+                  fill="none"
+                  stroke="url(#lutealGradient)"
+                  strokeWidth="8"
+                  strokeDasharray={`${lutealDash} ${circumference}`}
+                  strokeDashoffset={`-${menstrualDash + follicularDash + ovulationDash}`}
+                  className="drop-shadow-lg"
+                />
+              );
+            })()}
+            
+            {/* Current position indicator - pulsing white dot */}
+            {isCurrentlyOnPeriod && currentPeriodDay > 0 && (() => {
+              const cycleLength = data.avgCycle || 28;
+              const menstrualDays = 5;
+              const circumference = 2 * Math.PI * 140;
+              
+              // Calculate segment dash length
+              const menstrualDash = (menstrualDays / cycleLength) * circumference;
+              
+              // Percent through menstrual phase (0 to 1)
+              const percentThroughMenstrual = (currentPeriodDay - 1) / (menstrualDays - 1);
+              
+              // Distance along the arc for the dot (0 to menstrualDash)
+              const dotDistance = percentThroughMenstrual * menstrualDash;
+              
+              // Convert distance to degrees (SVG is already rotated -90°)
+              const angleFromTop = (dotDistance / circumference) * 360;
+              
+              // Start at 180° (12 o'clock) and add the angle based on progress through the menstrual phase
+              const rotationAngle = 180 + angleFromTop;
+              
+              console.log('🔴 Period day:', currentPeriodDay, 'Distance:', dotDistance.toFixed(1), 'Angle from top:', angleFromTop.toFixed(1), 'Rotation:', rotationAngle.toFixed(1));
+              
+              return (
+                <g transform={`rotate(${rotationAngle}, 160, 160)`}>
+                  <circle
+                    cx="20"
+                    cy="160"
+                    r="10"
+                    fill="white"
+                    className="drop-shadow-2xl"
+                    filter="url(#glow)"
+                  >
+                    <animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="1;0.6;1" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+              );
+            })()}
+            
+            {/* Direction arrow - shows flow through phases */}
+            <polygon
+              points="270,160 285,155 285,165"
+              fill="white"
+              className="opacity-70"
+            >
+              <animateTransform
+                attributeName="transform"
+                type="rotate"
+                from="0 160 160"
+                to="360 160 160"
+                dur="10s"
+                repeatCount="indefinite"
+              />
+            </polygon>
+          </svg>
+          
+          {/* Center Content */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            {isCurrentlyOnPeriod ? (
+              <>
+                <div className="text-4xl mb-2">🩸</div>
+                <div className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">
+                  Period Day {currentPeriodDay}
+                </div>
+                <div className="text-lg text-pink-300 font-semibold mt-1">of ~5 days</div>
+                <button
+                  onClick={() => setShowPeriodEndModal(true)}
+                  className="mt-2 px-3 py-1 text-xs bg-red-500/20 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/30 transition-colors"
+                >
+                  End Period
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="text-3xl mb-2">📅</div>
+                <div className="text-xl font-bold text-white">
+                  {data.predictedNextStart ? (
+                    <>
+                      <div className="text-rose-400">Period in {data.predictedNextStart && data.predictedNextStart.getTime() > new Date().getTime() ? Math.round((data.predictedNextStart.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0} days</div>
+                      <div className="text-sm text-slate-400 mt-1">
+                        {String(data.predictedNextStart.getUTCMonth() + 1).padStart(2, '0')}/{String(data.predictedNextStart.getUTCDate()).padStart(2, '0')}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-slate-400">Tracking cycle</div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Predictions & correlations */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-lg bg-gradient-to-br from-slate-700/50 to-slate-600/50 border border-pink-500/30 hover:border-pink-400/50 transition-all duration-300 shadow-lg">
-          <div className="text-xs text-pink-300 font-medium uppercase tracking-wide">Last start</div>
-          <div className="text-white font-bold text-lg">{data.lastStart ? `${data.lastStart.getUTCFullYear()}/${String(data.lastStart.getUTCMonth() + 1).padStart(2, '0')}/${String(data.lastStart.getUTCDate()).padStart(2, '0')}` : '—'}</div>
-          <div className="mt-2 text-xs text-slate-400 font-medium">Days since</div>
-          <div className="text-pink-300 font-semibold">{data.daysSinceLast ?? '—'}</div>
+      {/* Phase Legend */}
+      <div className="mt-4 flex items-center justify-center space-x-6 text-xs">
+        <div className="flex items-center space-x-1">
+          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-red-600 to-red-800" />
+          <span className="text-slate-400">Menstrual</span>
         </div>
-        <div className="p-4 rounded-lg bg-gradient-to-br from-slate-700/50 to-slate-600/50 border border-rose-500/30 hover:border-rose-400/50 transition-all duration-300 shadow-lg">
-          <div className="text-xs text-rose-300 font-medium uppercase tracking-wide">Predicted next start</div>
-          <div className="text-white font-bold text-lg">{data.predictedNextStart ? `${data.predictedNextStart.getUTCFullYear()}/${String(data.predictedNextStart.getUTCMonth() + 1).padStart(2, '0')}/${String(data.predictedNextStart.getUTCDate()).padStart(2, '0')}` : '—'}</div>
-          <div className="mt-2 text-xs text-slate-400 font-medium">Hydration today</div>
-          <div className="text-rose-300 font-semibold">{data.todayWater !== null ? `${data.todayWater} glasses` : '—'}</div>
+        <div className="flex items-center space-x-1">
+          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-pink-200 to-pink-300" />
+          <span className="text-slate-400">Follicular</span>
         </div>
-        <div className="p-4 rounded-lg bg-gradient-to-br from-slate-700/50 to-slate-600/50 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 shadow-lg">
-          <div className="text-xs text-purple-300 font-medium uppercase tracking-wide">Stress/Valence (30d avg)</div>
-          <div className="text-white font-bold text-lg">{data.stressAvg !== null && data.valenceAvg !== null ? `${data.stressAvg}/10 stress, ${data.valenceAvg}/10 valence` : '—'}</div>
-          <div className="mt-2 text-xs text-slate-400 font-medium">Note</div>
-          <div className="text-purple-300 text-sm">Higher stress may shorten/shift cycles; we factor this when alerting.</div>
+        <div className="flex items-center space-x-1">
+          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-teal-400 to-cyan-500" />
+          <span className="text-slate-400">Ovular</span>
+        </div>
+        <div className="flex items-center space-x-1">
+          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-orange-400 to-orange-500" />
+          <span className="text-slate-400">Luteal</span>
         </div>
       </div>
 

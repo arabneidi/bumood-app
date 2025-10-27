@@ -37,9 +37,11 @@ export async function POST(request: NextRequest) {
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
       try {
-        // Get entry date and set time bucket
-        const entryDate = entry.date ? new Date(entry.date) : new Date();
-        const timeBucket = entry.timeBucket || getTimeBucket(entryDate);
+        // Use createdAt if provided (from import), otherwise use entry.date or current time
+        // createdAt should be a Date object with the correct millisecond timestamp
+        const entryCreatedAt = entry.createdAt ? new Date(entry.createdAt) : (entry.date ? new Date(entry.date) : new Date());
+        const entryUpdatedAt = entry.updatedAt ? new Date(entry.updatedAt) : entryCreatedAt;
+        const timeBucket = entry.timeBucket || getTimeBucket(entryCreatedAt);
         
         const moodEntry = await db.moodEntry.create({
           data: {
@@ -66,8 +68,8 @@ export async function POST(request: NextRequest) {
             alcohol: entry.alcohol || null,
             timeBucket,
             moodComposite: entry.moodComposite || null,
-            createdAt: entryDate,
-            updatedAt: entryDate
+            createdAt: entryCreatedAt, // Use the provided createdAt with correct timestamp
+            updatedAt: entryUpdatedAt
           }
         });
         createdEntries.push(moodEntry);

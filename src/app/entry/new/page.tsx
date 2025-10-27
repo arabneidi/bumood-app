@@ -201,7 +201,7 @@ export default function NewEntry() {
     return mostRecentEntry && mostRecentEntry.onPeriod === true;
   };
 
-  // Get current period day from database if user is on period
+  // Get current period day calculated from the oldest period entry
   const getCurrentPeriodDay = () => {
     // If user is currently on period (either from formData or existing entries)
     const isOnPeriod = formData.onPeriod || isCurrentlyOnPeriod();
@@ -211,13 +211,7 @@ export default function NewEntry() {
       return 0;
     }
     
-    // If user just toggled period on in this session, it's Day 1
-    if (formData.onPeriod && isFirstPeriodEntry) {
-      console.log('🔍 getCurrentPeriodDay: First period entry in this session, returning 1');
-      return 1;
-    }
-    
-    // Find the most recent entry that has onPeriod: true
+    // Find ALL period entries and sort by date
     const periodEntries = moodEntries.filter(entry => entry.onPeriod);
     if (periodEntries.length === 0) {
       // If no period entries exist but user is on period, it's Day 1
@@ -225,25 +219,61 @@ export default function NewEntry() {
       return 1;
     }
     
-    const mostRecentPeriodEntry = periodEntries
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+    // Sort all mood entries by date to detect cycle boundaries
+    const allEntries = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    
+    // Find the most recent cycle start by looking for the transition from onPeriod=0 to onPeriod=1
+    let mostRecentCycleStart = allEntries.find(entry => entry.onPeriod);
+    
+    // Look backwards through entries to find the most recent period start
+    // (transition from onPeriod=0 to onPeriod=1)
+    for (let i = allEntries.length - 1; i > 0; i--) {
+      const current = allEntries[i];
+      const previous = allEntries[i - 1];
+      
+      console.log('🔍 Checking transition:', {
+        i,
+        previous: { date: previous.createdAt, onPeriod: previous.onPeriod },
+        current: { date: current.createdAt, onPeriod: current.onPeriod },
+        isTransition: !previous.onPeriod && current.onPeriod
+      });
+      
+      // If previous entry is NOT on period and current entry IS on period,
+      // then current is the start of a new cycle
+      if (!previous.onPeriod && current.onPeriod) {
+        console.log('✅ Found cycle transition!', current.createdAt);
+        mostRecentCycleStart = current;
+        break;
+      }
+    }
+    
+    // Calculate days between most recent cycle start and today
+    const periodStartDate = new Date(mostRecentCycleStart.createdAt);
+    const today = new Date();
+    
+    // Get dates only (no time) for accurate day calculation
+    const periodStart = new Date(periodStartDate.getFullYear(), periodStartDate.getMonth(), periodStartDate.getDate());
+    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const diffTime = todayDateOnly.getTime() - periodStart.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const periodDay = Math.max(1, diffDays + 1); // Minimum day 1, add 1 since we're counting from day 1
     
     console.log('🔍 getCurrentPeriodDay Debug:', {
-      formDataOnPeriod: formData.onPeriod,
-      isCurrentlyOnPeriod: isCurrentlyOnPeriod(),
-      isOnPeriod,
-      isFirstPeriodEntry,
-      mostRecentPeriodEntry: mostRecentPeriodEntry ? {
-        id: mostRecentPeriodEntry.id,
-        createdAt: mostRecentPeriodEntry.createdAt,
-        onPeriod: mostRecentPeriodEntry.onPeriod,
-        periodDay: mostRecentPeriodEntry.periodDay
-      } : null,
-      calculatedPeriodDay: mostRecentPeriodEntry?.periodDay || 1
+      mostRecentCycleStart: {
+        id: mostRecentCycleStart.id,
+        createdAt: mostRecentCycleStart.createdAt,
+        onPeriod: mostRecentCycleStart.onPeriod
+      },
+      periodStartDate,
+      today,
+      periodStart: periodStart.toISOString(),
+      todayDateOnly: todayDateOnly.toISOString(),
+      diffDays,
+      calculatedPeriodDay: periodDay
     });
     
-    // Return the period day from the most recent entry, or 1 if none exists
-    return mostRecentPeriodEntry?.periodDay || 1;
+    return periodDay;
   };
 
   // Load user preferences and mood entries on component mount

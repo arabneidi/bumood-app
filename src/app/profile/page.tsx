@@ -528,6 +528,11 @@ export default function ProfilePage() {
                               const values = parseCSVLine(line);
                               if (values.length > 2 && values[2]) { // Title is at index 2
                                 try {
+                                  // Parse timestamps from CSV (Unix seconds -> ISO string)
+                                  const completedAt = values[13] ? new Date(parseInt(values[13]) * 1000).toISOString() : null;
+                                  const createdAt = values[15] ? new Date(parseInt(values[15]) * 1000).toISOString() : null;
+                                  const updatedAt = values[16] ? new Date(parseInt(values[16]) * 1000).toISOString() : null;
+                                  
                                   const goalResponse = await fetch('/api/goals', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
@@ -543,7 +548,10 @@ export default function ProfilePage() {
                                       dssComponent: values[14] || '',
                                       streak: parseInt(values[10]) || 0,
                                       bestStreak: parseInt(values[11]) || 0,
-                                      completed: values[12] === '1'
+                                      completed: values[12] === '1',
+                                      completedAt: completedAt,
+                                      createdAt: createdAt,
+                                      updatedAt: updatedAt
                                     })
                                   });
                                   if (goalResponse.ok) {
@@ -613,6 +621,9 @@ export default function ProfilePage() {
                                   const values = parseCSVLine(line);
                                   if (values.length >= 9) {
                                     // CSV columns: ID,User ID,Type,Title,Message,Action Message,Icon,Stars,Is Read,Created Date
+                                    // Parse timestamp from CSV (Unix seconds -> ISO string)
+                                    const createdAt = values[9] ? new Date(parseInt(values[9]) * 1000).toISOString() : null;
+                                    
                                     congratulationsArray.push({
                                       id: values[0], // Use ID from CSV
                                       userId: values[1] || 'dummy-user',
@@ -623,7 +634,7 @@ export default function ProfilePage() {
                                       icon: values[6] || '',
                                       stars: parseInt(values[7]) || 1,
                                       isRead: values[8] === '1',
-                                      createdAt: values[9] || ''
+                                      createdAt: createdAt
                                     });
                                   }
                                 } catch (e) { console.error('Congratulation parse error:', e); }
@@ -640,6 +651,56 @@ export default function ProfilePage() {
                                 });
                                 if (response.ok) importResults.congratulations = congratulationsArray.length;
                               } catch (e) { console.error('Congratulation import error:', e); }
+                            }
+                          }
+                        }
+                        
+                        // Import PERIOD TRACKING section if exists
+                        if (lines.some(l => l.includes('PERIOD TRACKING'))) {
+                          const periodTrackingStart = lines.findIndex(l => l.includes('PERIOD TRACKING'));
+                          const periodTrackingEnd = lines.findIndex((l, i) => i > periodTrackingStart && l.includes('CONGRATULATIONS')) || lines.findIndex((l, i) => i > periodTrackingStart && l.includes('DAILY TRACKING')) || lines.findIndex((l, i) => i > periodTrackingStart && l.includes('MOOD ENTRIES')) || lines.length;
+                          
+                          if (periodTrackingStart !== -1) {
+                            const periodTrackingArray = [];
+                            for (let i = periodTrackingStart + 2; i < periodTrackingEnd && i < lines.length; i++) {
+                              const line = lines[i];
+                              if (line && !line.startsWith('CONGRATULATIONS') && !line.startsWith('DAILY TRACKING') && !line.startsWith('MOOD ENTRIES') && !line.includes('No period tracking')) {
+                                try {
+                                  const values = parseCSVLine(line);
+                                  if (values.length >= 8) {
+                                    // CSV columns: ID,User ID,Start Date,End Date,Flow Intensity,Symptoms,Notes,Created Date,Updated Date
+                                    // Parse timestamps from CSV (Unix seconds -> ISO string)
+                                    const startDate = values[2] ? new Date(parseInt(values[2]) * 1000).toISOString() : null;
+                                    const endDate = values[3] ? new Date(parseInt(values[3]) * 1000).toISOString() : null;
+                                    const createdAt = values[7] ? new Date(parseInt(values[7]) * 1000).toISOString() : null;
+                                    const updatedAt = values[8] ? new Date(parseInt(values[8]) * 1000).toISOString() : null;
+                                    
+                                    periodTrackingArray.push({
+                                      id: values[0], // Use ID from CSV
+                                      userId: values[1] || 'dummy-user',
+                                      startDate: startDate,
+                                      endDate: endDate,
+                                      flowIntensity: values[4] || '',
+                                      symptoms: values[5] || '',
+                                      notes: values[6] || '',
+                                      createdAt: createdAt,
+                                      updatedAt: updatedAt
+                                    });
+                                  }
+                                } catch (e) { console.error('Period tracking parse error:', e); }
+                              }
+                            }
+                            
+                            // Send all period tracking entries to import API
+                            if (periodTrackingArray.length > 0) {
+                              try {
+                                const response = await fetch('/api/period-tracking', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ entries: periodTrackingArray })
+                                });
+                                if (response.ok) importResults.periodTracking = periodTrackingArray.length;
+                              } catch (e) { console.error('Period tracking import error:', e); }
                             }
                           }
                         }
@@ -718,22 +779,29 @@ export default function ProfilePage() {
                           // Parse dssAnalysis (column 12)
                           const dssAnalysis = values[12] || null;
                           
-                          // Get date from Created Date column (column 25 = index 25 in 27-column CSV)
-                          const createdDate = values[25] || new Date().toISOString();
-                          const date = new Date(parseInt(createdDate) * 1000).toISOString().split('T')[0];
-                          
-                          if (!date) {
-                            console.log('Skipping entry - no valid date:', entryId);
+                          // Get Unix timestamp from Created Date column (column 25 = index 25 in 27-column CSV)
+                          // This is in seconds, convert to milliseconds for JavaScript Date
+                          const createdUnixTimestamp = values[25];
+                          if (!createdUnixTimestamp) {
+                            console.log('Skipping entry - no valid timestamp:', entryId);
                             continue;
                           }
                           
-                          console.log(`Parsed entry ${entryId} with date ${date}`);
+                          // Convert Unix timestamp (seconds) to milliseconds for Date constructor
+                          const createdAtMillis = parseInt(createdUnixTimestamp) * 1000;
+                          const createdAtDate = new Date(createdAtMillis);
+                          
+                          // Get date string for grouping (YYYY-MM-DD)
+                          const date = createdAtDate.toISOString().split('T')[0];
+                          
+                          console.log(`Parsed entry ${entryId} with date ${date}, createdAt: ${createdAtMillis}`);
                           
                           // Use entry ID as key to avoid grouping - each CSV row = 1 entry
                           const entryKey = entryId || `${date}-${entriesByDate.length}`;
                           entriesByDate[entryKey] = {
                             id: entryId, // Preserve the original ID from CSV
                             date: date,
+                            createdAt: createdAtDate, // Pass the actual Date object for createdAt
                             valence: parseFloat(values[2]) || 5,
                             energy: parseFloat(values[3]) || 5,
                             focus: parseFloat(values[4]) || 5,
@@ -2177,6 +2245,11 @@ export default function ProfilePage() {
             // Helper function to convert date to Unix timestamp
             const toUnixTimestamp = (date: any) => {
               if (!date) return '';
+              // If date is already a number (milliseconds), divide by 1000 directly
+              // Otherwise, convert to Date first
+              if (typeof date === 'number') {
+                return Math.floor(date / 1000).toString();
+              }
               return Math.floor(new Date(date).getTime() / 1000).toString();
             };
             
