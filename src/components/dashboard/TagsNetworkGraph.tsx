@@ -284,7 +284,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
         <div className="relative z-10 flex items-center justify-between p-6">
           <h3 className="text-xl font-bold text-white flex items-center">
             <span className="mr-3 text-2xl">🕸️</span>
-            Your Personal Network
+            Personal Network
           </h3>
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-3 text-xs">
