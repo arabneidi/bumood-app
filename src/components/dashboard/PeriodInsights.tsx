@@ -197,55 +197,73 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
           {/* SVG Circular Ring */}
           <svg width="320" height="320" className="transform -rotate-90">
             <defs>
-              <linearGradient id="periodGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#ef4444" />
-                <stop offset="50%" stopColor="#dc2626" />
-                <stop offset="100%" stopColor="#991b1b" />
-              </linearGradient>
-              <linearGradient id="follicularGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#f3e8ff" />
-                <stop offset="50%" stopColor="#fbcfe8" />
-                <stop offset="100%" stopColor="#f9a8d4" />
-              </linearGradient>
-              <linearGradient id="ovularGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#67e8f9" />
-                <stop offset="50%" stopColor="#22d3ee" />
-                <stop offset="100%" stopColor="#06b6d4" />
-              </linearGradient>
-              <linearGradient id="lutealGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#fcd34d" />
-                <stop offset="50%" stopColor="#fb923c" />
-                <stop offset="100%" stopColor="#f97316" />
-              </linearGradient>
+              {/* Radial gradients for depth */}
+              <radialGradient id="periodGradient" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#f87171" />
+                <stop offset="70%" stopColor="#dc2626" />
+                <stop offset="100%" stopColor="#7f1d1d" />
+              </radialGradient>
               
-              {/* Enhanced glow filter */}
-              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+              <radialGradient id="follicularGradient" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#fdf2f8" />
+                <stop offset="50%" stopColor="#f9a8d4" />
+                <stop offset="100%" stopColor="#ec4899" />
+              </radialGradient>
+              
+              <radialGradient id="ovularGradient" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#5eead4" />
+                <stop offset="50%" stopColor="#06b6d4" />
+                <stop offset="100%" stopColor="#075985" />
+              </radialGradient>
+              
+              <radialGradient id="lutealGradient" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#fdba74" />
+                <stop offset="50%" stopColor="#f97316" />
+                <stop offset="100%" stopColor="#9a3412" />
+              </radialGradient>
+              
+              {/* Premium glow for active phase */}
+              <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
                 <feMerge>
                   <feMergeNode in="coloredBlur"/>
                   <feMergeNode in="SourceGraphic"/>
                 </feMerge>
               </filter>
               
-              {/* Subtle glow for all phases */}
-              <filter id="subtleGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              {/* Soft glow for all phases */}
+              <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
                 <feMerge>
                   <feMergeNode in="coloredBlur"/>
                   <feMergeNode in="SourceGraphic"/>
                 </feMerge>
+              </filter>
+              
+              {/* Shadow filter for depth */}
+              <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#000000" floodOpacity="0.3"/>
               </filter>
             </defs>
             
-            {/* Background circle */}
+            {/* Background circle with inner glow */}
+            <circle
+              cx="160"
+              cy="160"
+              r="140"
+              fill="none"
+              stroke="#1e293b"
+              strokeWidth="12"
+              className="opacity-30"
+            />
             <circle
               cx="160"
               cy="160"
               r="140"
               fill="none"
               stroke="#334155"
-              strokeWidth="10"
-              className="opacity-20"
+              strokeWidth="8"
+              className="opacity-40"
             />
             
             {/* Dynamic phase calculations based on avgCycle */}
@@ -267,51 +285,56 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
               
               return (
                 <>
-                  {/* Period phase (Menstrual) - Red */}
+                  {/* Period phase (Menstrual) - Red with premium styling */}
                   <circle
                     cx="160"
                     cy="160"
                     r="140"
                     fill="none"
                     stroke="url(#periodGradient)"
-                    strokeWidth={isCurrentlyOnPeriod ? "14" : "10"}
+                    strokeWidth={isCurrentlyOnPeriod ? "16" : "12"}
                     strokeDasharray={`${menstrualDash} ${circumference}`}
                     strokeDashoffset="0"
-                    className={isCurrentlyOnPeriod ? "drop-shadow-2xl" : ""}
-                    filter={isCurrentlyOnPeriod ? "url(#glow)" : "url(#subtleGlow)"}
+                    filter={isCurrentlyOnPeriod ? "url(#glow)" : "url(#softGlow)"}
                     strokeLinecap="round"
+                    opacity={isCurrentlyOnPeriod ? "1" : "0.7"}
                   >
                     {isCurrentlyOnPeriod && (
-                      <animate attributeName="stroke-width" values="14;16;14" dur="2s" repeatCount="indefinite" />
+                      <>
+                        <animate attributeName="stroke-width" values="16;18;16" dur="2s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="1;0.9;1" dur="2s" repeatCount="indefinite" />
+                      </>
                     )}
                   </circle>
                   
-                  {/* Follicular phase - Pink */}
+                  {/* Follicular phase - Pink with depth */}
                   <circle
                     cx="160"
                     cy="160"
                     r="140"
                     fill="none"
                     stroke="url(#follicularGradient)"
-                    strokeWidth="10"
+                    strokeWidth="12"
                     strokeDasharray={`${follicularDash} ${circumference}`}
                     strokeDashoffset={`-${menstrualDash}`}
-                    filter="url(#subtleGlow)"
+                    filter="url(#softGlow)"
                     strokeLinecap="round"
+                    opacity="0.8"
                   />
                   
-                  {/* Ovulation phase - Cyan */}
+                  {/* Ovulation phase - Cyan with depth */}
                   <circle
                     cx="160"
                     cy="160"
                     r="140"
                     fill="none"
                     stroke="url(#ovularGradient)"
-                    strokeWidth="10"
+                    strokeWidth="12"
                     strokeDasharray={`${ovulationDash} ${circumference}`}
                     strokeDashoffset={`-${menstrualDash + follicularDash}`}
-                    filter="url(#subtleGlow)"
+                    filter="url(#softGlow)"
                     strokeLinecap="round"
+                    opacity="0.8"
                   />
                 </>
               );
@@ -336,11 +359,12 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
                   r="140"
                   fill="none"
                   stroke="url(#lutealGradient)"
-                  strokeWidth="10"
+                  strokeWidth="12"
                   strokeDasharray={`${lutealDash} ${circumference}`}
                   strokeDashoffset={`-${menstrualDash + follicularDash + ovulationDash}`}
-                  filter="url(#subtleGlow)"
+                  filter="url(#softGlow)"
                   strokeLinecap="round"
+                  opacity="0.8"
                 />
               );
             })()}
@@ -370,46 +394,100 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
               
               return (
                 <g transform={`rotate(${rotationAngle}, 160, 160)`}>
-                  {/* Outer glow */}
+                  {/* Outer glow halo */}
                   <circle
                     cx="20"
                     cy="160"
-                    r="16"
+                    r="18"
                     fill="white"
-                    className="opacity-20"
+                    className="opacity-15"
                     filter="url(#glow)"
                   >
-                    <animate attributeName="r" values="16;20;16" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="r" values="18;22;18" dur="2s" repeatCount="indefinite" />
                   </circle>
-                  {/* Main dot */}
+                  {/* Mid glow */}
                   <circle
                     cx="20"
                     cy="160"
-                    r="12"
+                    r="14"
+                    fill="white"
+                    className="opacity-40"
+                    filter="url(#softGlow)"
+                  >
+                    <animate attributeName="r" values="14;16;14" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                  {/* Main dot with gradient */}
+                  <circle
+                    cx="20"
+                    cy="160"
+                    r="10"
                     fill="white"
                     className="drop-shadow-2xl"
+                    filter="url(#shadow)"
                   >
-                    <animate attributeName="r" values="12;14;12" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="r" values="10;12;10" dur="2s" repeatCount="indefinite" />
                   </circle>
+                  {/* Inner highlight */}
+                  <circle
+                    cx="20"
+                    cy="160"
+                    r="4"
+                    fill="#fef2f2"
+                    className="opacity-80"
+                  />
                 </g>
               );
             })()}
             
-            {/* Direction arrow - shows flow through phases */}
-            <polygon
-              points="270,160 285,155 285,165"
-              fill="white"
-              className="opacity-60 drop-shadow-lg"
-            >
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                from="0 160 160"
-                to="360 160 160"
-                dur="15s"
-                repeatCount="indefinite"
-              />
-            </polygon>
+            {/* Direction arrow with premium styling */}
+            <g className="opacity-70">
+              {/* Arrow shadow */}
+              <polygon
+                points="272,162 287,157 287,167"
+                fill="black"
+                className="opacity-20"
+              >
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 160 160"
+                  to="360 160 160"
+                  dur="15s"
+                  repeatCount="indefinite"
+                />
+              </polygon>
+              {/* Main arrow */}
+              <polygon
+                points="270,160 285,155 285,165"
+                fill="white"
+                className="drop-shadow-lg"
+                filter="url(#softGlow)"
+              >
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 160 160"
+                  to="360 160 160"
+                  dur="15s"
+                  repeatCount="indefinite"
+                />
+              </polygon>
+              {/* Arrow highlight */}
+              <polygon
+                points="272,160 283,156 283,164"
+                fill="#fef2f2"
+                className="opacity-50"
+              >
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 160 160"
+                  to="360 160 160"
+                  dur="15s"
+                  repeatCount="indefinite"
+                />
+              </polygon>
+            </g>
           </svg>
           
           {/* Center Content */}
