@@ -369,8 +369,8 @@ export default function ActivityDriversChart({
                 ) : (
                   <div className="flex items-center">
                     <motion.div
-                      animate={{ rotate: [0, 360] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                     >
                       <Sparkles className="w-4 h-4 mr-2" />
                     </motion.div>
