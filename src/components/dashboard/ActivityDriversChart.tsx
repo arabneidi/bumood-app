@@ -151,16 +151,16 @@ export default function ActivityDriversChart({
           transition={{ delay: 0.2 }}
           className="flex items-center mb-6"
         >
-          <BarChart3 className="w-6 h-6 text-blue-500 mr-3" />
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-            Activity Impact Analysis
+          <Target className="w-6 h-6 text-orange-500 mr-3" />
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+            Activity Drivers
           </h3>
         </motion.div>
 
         {/* Simple Activity List */}
         <div className="mb-6">
           <h4 className="text-lg font-semibold text-slate-300 mb-4 flex items-center">
-            <Target className="w-5 h-5 mr-2 text-blue-400" />
+            <BarChart3 className="w-5 h-5 mr-2 text-blue-400" />
             Top 5 Activities by Impact
           </h4>
           

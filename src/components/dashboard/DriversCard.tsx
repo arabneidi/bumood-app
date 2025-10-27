@@ -124,19 +124,6 @@ export default function DriversCard({ data, loading, userInfo }: DriversCardProp
       transition={{ duration: 0.6 }}
       className="mb-8"
     >
-      <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-orange-500/20">
-        <motion.h3 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-6 flex items-center"
-        >
-          <Target className="w-6 h-6 mr-2 text-orange-500" />
-          Activity Drivers
-        </motion.h3>
-
-      </Card>
-
       {/* Activity Drivers Chart */}
       <ActivityDriversChart 
         driversData={data} 
