@@ -1467,4 +1467,4 @@ export default function Home() {
       </div>
     </div>
   );
-}
+}// Force Vercel deployment - October 27th version with all features
