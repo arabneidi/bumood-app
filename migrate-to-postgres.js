@@ -28,8 +28,15 @@ async function migrateData() {
     console.log('📊 Migrating Mood Entries...');
     const moodEntries = await getSqliteData('SELECT * FROM MoodEntry');
     for (const entry of moodEntries) {
+      // Convert SQLite integer booleans to PostgreSQL booleans
+      const processedEntry = {
+        ...entry,
+        onPeriod: Boolean(entry.onPeriod),
+        createdAt: new Date(entry.createdAt),
+        updatedAt: new Date(entry.updatedAt)
+      };
       await postgresDb.moodEntry.create({
-        data: entry
+        data: processedEntry
       });
     }
     console.log(`✅ Migrated ${moodEntries.length} mood entries`);
@@ -38,8 +45,16 @@ async function migrateData() {
     console.log('📊 Migrating Goals...');
     const goals = await getSqliteData('SELECT * FROM Goal');
     for (const goal of goals) {
+      // Convert SQLite integer booleans to PostgreSQL booleans
+      const processedGoal = {
+        ...goal,
+        completed: Boolean(goal.completed),
+        createdAt: new Date(goal.createdAt),
+        updatedAt: new Date(goal.updatedAt),
+        completedAt: goal.completedAt ? new Date(goal.completedAt) : null
+      };
       await postgresDb.goal.create({
-        data: goal
+        data: processedGoal
       });
     }
     console.log(`✅ Migrated ${goals.length} goals`);
@@ -48,8 +63,14 @@ async function migrateData() {
     console.log('📊 Migrating Achievements...');
     const achievements = await getSqliteData('SELECT * FROM Achievement');
     for (const achievement of achievements) {
+      // Convert SQLite timestamps to PostgreSQL dates
+      const processedAchievement = {
+        ...achievement,
+        unlockedAt: achievement.unlockedAt ? new Date(achievement.unlockedAt) : null,
+        createdAt: new Date(achievement.createdAt)
+      };
       await postgresDb.achievement.create({
-        data: achievement
+        data: processedAchievement
       });
     }
     console.log(`✅ Migrated ${achievements.length} achievements`);
@@ -58,8 +79,21 @@ async function migrateData() {
     console.log('📊 Migrating Daily Tracking...');
     const dailyTracking = await getSqliteData('SELECT * FROM DailyTracking');
     for (const tracking of dailyTracking) {
+      // Convert SQLite integer booleans to PostgreSQL booleans
+      const processedTracking = {
+        ...tracking,
+        exercise: Boolean(tracking.exercise),
+        socialInteraction: Boolean(tracking.socialInteraction),
+        meditation: Boolean(tracking.meditation),
+        journaling: Boolean(tracking.journaling),
+        medicationTaken: Boolean(tracking.medicationTaken),
+        recoveryAction: Boolean(tracking.recoveryAction),
+        date: new Date(tracking.date),
+        createdAt: new Date(tracking.createdAt),
+        updatedAt: new Date(tracking.updatedAt)
+      };
       await postgresDb.dailyTracking.create({
-        data: tracking
+        data: processedTracking
       });
     }
     console.log(`✅ Migrated ${dailyTracking.length} daily tracking entries`);
@@ -68,8 +102,15 @@ async function migrateData() {
     console.log('📊 Migrating Predefined Activities...');
     const predefinedActivities = await getSqliteData('SELECT * FROM PredefinedActivity');
     for (const activity of predefinedActivities) {
+      // Convert SQLite integer booleans to PostgreSQL booleans
+      const processedActivity = {
+        ...activity,
+        isActive: Boolean(activity.isActive),
+        createdAt: new Date(activity.createdAt),
+        updatedAt: new Date(activity.updatedAt)
+      };
       await postgresDb.predefinedActivity.create({
-        data: activity
+        data: processedActivity
       });
     }
     console.log(`✅ Migrated ${predefinedActivities.length} predefined activities`);
@@ -78,8 +119,15 @@ async function migrateData() {
     console.log('📊 Migrating Predefined Goals...');
     const predefinedGoals = await getSqliteData('SELECT * FROM PredefinedGoal');
     for (const goal of predefinedGoals) {
+      // Convert SQLite integer booleans to PostgreSQL booleans
+      const processedGoal = {
+        ...goal,
+        isActive: Boolean(goal.isActive),
+        createdAt: new Date(goal.createdAt),
+        updatedAt: new Date(goal.updatedAt)
+      };
       await postgresDb.predefinedGoal.create({
-        data: goal
+        data: processedGoal
       });
     }
     console.log(`✅ Migrated ${predefinedGoals.length} predefined goals`);
