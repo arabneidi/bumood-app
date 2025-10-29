@@ -76,6 +76,13 @@ export default function CalendarPage() {
     const avgFocus = entriesForDate.reduce((sum, entry) => sum + entry.focus, 0) / entriesForDate.length;
     const avgStress = entriesForDate.reduce((sum, entry) => sum + entry.stress, 0) / entriesForDate.length;
     const avgSleep = entriesForDate.reduce((sum, entry) => sum + (entry.sleep || 0), 0) / entriesForDate.length;
+
+    // Period aggregation: mark day as onPeriod if ANY entry is on period
+    const dayOnPeriod = entriesForDate.some(e => !!e.onPeriod);
+    // If any entry has periodDay=1, prioritize showing the blood icon for the start day
+    const dayPeriodDay = dayOnPeriod
+      ? (entriesForDate.find(e => e.periodDay === 1)?.periodDay ?? entriesForDate.find(e => e.onPeriod)?.periodDay ?? 1)
+      : null;
     
     // Combine all notes
     const allNotes = entriesForDate
@@ -94,7 +101,10 @@ export default function CalendarPage() {
       notes: allNotes || entriesForDate[0].notes,
       // Add metadata to indicate this is averaged
       _isAveraged: true,
-      _entryCount: entriesForDate.length
+      _entryCount: entriesForDate.length,
+      // Ensure calendar reflects period status for the day
+      onPeriod: dayOnPeriod,
+      periodDay: dayOnPeriod ? dayPeriodDay : null
     };
   };
 
