@@ -13,15 +13,22 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetch("/api/mood-entries")
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
-        setMoodEntries(data);
+        console.log('Calendar: Received mood entries:', data);
+        setMoodEntries(Array.isArray(data) ? data : []);
         setLoading(false);
         // Automatically select today's date when data is loaded
         setSelectedDate(new Date());
       })
       .catch(err => {
-        console.error(err);
+        console.error('Calendar: Error fetching mood entries:', err);
+        setMoodEntries([]);
         setLoading(false);
         // Still select today's date even if there's an error
         setSelectedDate(new Date());
