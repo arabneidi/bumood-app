@@ -191,7 +191,7 @@ export default function NewEntry() {
     return Math.max(1, diffDays); // Minimum day 1
   };
 
-  // Check if user is currently on period (day-level or inferred ongoing window)
+  // Check if user is currently on period (day-level or inferred ongoing until explicitly ended)
   const isCurrentlyOnPeriod = () => {
     if (!moodEntries || moodEntries.length === 0) return false;
 
@@ -200,7 +200,7 @@ export default function NewEntry() {
     const anyTodayOn = moodEntries.some(e => new Date(e.createdAt).toISOString().split('T')[0] === todayLocal && e.onPeriod);
     if (anyTodayOn) return true;
 
-    // Infer active window since last start unless explicitly ended
+    // Consider ON from last start until an explicit end entry occurs
     const entriesDesc = [...moodEntries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     const entriesAsc = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     let lastStart: any = entriesAsc.find(e => e.onPeriod) || null;
@@ -211,7 +211,6 @@ export default function NewEntry() {
     }
     if (!lastStart) return false;
 
-    const menstrualDays = 5;
     const lastStartDate = new Date(lastStart.createdAt);
     const startOnly = new Date(lastStartDate.getFullYear(), lastStartDate.getMonth(), lastStartDate.getDate());
     const now = new Date();
@@ -220,7 +219,7 @@ export default function NewEntry() {
 
     const latestAfterStart = entriesDesc.find(e => new Date(e.createdAt).getTime() >= lastStartDate.getTime());
     const explicitlyEnded = latestAfterStart ? latestAfterStart.onPeriod === false : false;
-    return !explicitlyEnded && daysSinceStart >= 0 && daysSinceStart < menstrualDays;
+    return !explicitlyEnded && daysSinceStart >= 0;
   };
 
   // Get current period day from inferred last cycle start

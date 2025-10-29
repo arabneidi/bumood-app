@@ -95,7 +95,7 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
 
     // Detect current period status (day-level and inferred if within menstrual window)
     const mostRecentEntry = entries[0];
-    const menstrualDays = 5; // visible window for active period
+    const menstrualDays = 5; // used for chart phasing only
     let currentlyOnPeriod = false;
     let currentDay = 0;
 
@@ -107,18 +107,10 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
       if (anyTodayOn) {
         currentlyOnPeriod = true;
       } else {
-        // Otherwise, infer active if within menstrualDays since lastStart AND not explicitly ended
-        const nowUTC = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
-        const lastStartUTC = Date.UTC(lastStart.getUTCFullYear(), lastStart.getUTCMonth(), lastStart.getUTCDate());
-        const daysSinceStart = Math.floor((nowUTC - lastStartUTC) / (24 * 3600 * 1000));
-
-        // Find the newest entry on/after lastStart
+        // Otherwise, consider ON until explicitly ended (no time window)
         const latestAfterStart = entries.find(e => new Date(e.createdAt).getTime() >= lastStart.getTime());
         const explicitlyEnded = latestAfterStart ? latestAfterStart.onPeriod === false : false;
-
-        if (!explicitlyEnded && daysSinceStart >= 0 && daysSinceStart < menstrualDays) {
-          currentlyOnPeriod = true;
-        }
+        currentlyOnPeriod = !explicitlyEnded;
       }
 
       // Compute current day relative to lastStart if active
