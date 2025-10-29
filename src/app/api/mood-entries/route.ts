@@ -505,12 +505,13 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const dummyUserId = "dummy-user";
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId') || 'dummy-user';
     
     const moodEntries = await db.moodEntry.findMany({
-      where: { userId: dummyUserId },
+      where: { userId: userId },
       orderBy: { createdAt: "desc" },
       take: 100, // Last 100 entries to include more historical data
     });
