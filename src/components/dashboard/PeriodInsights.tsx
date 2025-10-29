@@ -93,46 +93,43 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
     stressAvg = n ? Number((stressAvg / n).toFixed(1)) : null;
     valenceAvg = n ? Number((valenceAvg / n).toFixed(1)) : null;
 
-    // Detect current period status
+    // Detect current period status (day-level and inferred if within menstrual window)
     const mostRecentEntry = entries[0];
-    const currentlyOnPeriod = mostRecentEntry && mostRecentEntry.onPeriod === true;
-    
-    // Calculate current period day the same way as entry page
+    const menstrualDays = 5; // visible window for active period
+    let currentlyOnPeriod = false;
     let currentDay = 0;
-    if (currentlyOnPeriod) {
-      // Sort all entries by date to detect cycle boundaries
-      const allEntries = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-      
-      // Find the most recent cycle start by looking for the transition from onPeriod=0 to onPeriod=1
-      let mostRecentCycleStart = allEntries.find(entry => entry.onPeriod);
-      
-      // Look backwards through entries to find the most recent period start
-      for (let i = allEntries.length - 1; i > 0; i--) {
-        const current = allEntries[i];
-        const previous = allEntries[i - 1];
-        
-        // If previous entry is NOT on period and current entry IS on period,
-        // then current is the start of a new cycle
-        if (!previous.onPeriod && current.onPeriod) {
-          mostRecentCycleStart = current;
-          break;
+
+    // Determine lastStart from cycleStarts
+    const lastStart = cycleStarts[cycleStarts.length - 1];
+    if (lastStart) {
+      // If any entry today has onPeriod=true, it's active
+      const todayKey = dateKeyUTC(new Date());
+      const anyTodayOn = byDay[todayKey]?.onPeriod === true;
+      if (anyTodayOn) {
+        currentlyOnPeriod = true;
+      } else {
+        // Otherwise, infer active if within menstrualDays since lastStart AND not explicitly ended
+        const nowUTC = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
+        const lastStartUTC = Date.UTC(lastStart.getUTCFullYear(), lastStart.getUTCMonth(), lastStart.getUTCDate());
+        const daysSinceStart = Math.floor((nowUTC - lastStartUTC) / (24 * 3600 * 1000));
+
+        // Find the newest entry on/after lastStart
+        const latestAfterStart = entries.find(e => new Date(e.createdAt).getTime() >= lastStart.getTime());
+        const explicitlyEnded = latestAfterStart ? latestAfterStart.onPeriod === false : false;
+
+        if (!explicitlyEnded && daysSinceStart >= 0 && daysSinceStart < menstrualDays) {
+          currentlyOnPeriod = true;
         }
       }
-      
-      if (mostRecentCycleStart) {
-        // Calculate days between most recent cycle start and today
-        const periodStartDate = new Date(mostRecentCycleStart.createdAt);
+
+      // Compute current day relative to lastStart if active
+      if (currentlyOnPeriod) {
         const today = new Date();
-        
-        // Get dates only (no time) for accurate day calculation
-        const periodStart = new Date(periodStartDate.getFullYear(), periodStartDate.getMonth(), periodStartDate.getDate());
+        const periodStart = new Date(lastStart.getUTCFullYear(), lastStart.getUTCMonth(), lastStart.getUTCDate());
         const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        
         const diffTime = todayDateOnly.getTime() - periodStart.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        currentDay = Math.max(1, diffDays + 1); // Minimum day 1, add 1 since we're counting from day 1
-      } else {
-        currentDay = 1;
+        currentDay = Math.max(1, diffDays + 1);
       }
     }
 

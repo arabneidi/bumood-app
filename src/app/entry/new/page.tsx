@@ -190,90 +190,68 @@ export default function NewEntry() {
     return Math.max(1, diffDays); // Minimum day 1
   };
 
-  // Check if user is currently on period based on recent entries
+  // Check if user is currently on period (day-level or inferred ongoing window)
   const isCurrentlyOnPeriod = () => {
     if (!moodEntries || moodEntries.length === 0) return false;
-    
-    // Get the most recent entry
-    const mostRecentEntry = moodEntries
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-    
-    return mostRecentEntry && mostRecentEntry.onPeriod === true;
+
+    // If any entry today is on period, consider active
+    const todayLocal = new Date().toISOString().split('T')[0];
+    const anyTodayOn = moodEntries.some(e => new Date(e.createdAt).toISOString().split('T')[0] === todayLocal && e.onPeriod);
+    if (anyTodayOn) return true;
+
+    // Infer active window since last start unless explicitly ended
+    const entriesDesc = [...moodEntries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const entriesAsc = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    let lastStart: any = entriesAsc.find(e => e.onPeriod) || null;
+    for (let i = 1; i < entriesAsc.length; i++) {
+      const prev = entriesAsc[i - 1];
+      const cur = entriesAsc[i];
+      if (!prev.onPeriod && cur.onPeriod) lastStart = cur;
+    }
+    if (!lastStart) return false;
+
+    const menstrualDays = 5;
+    const lastStartDate = new Date(lastStart.createdAt);
+    const startOnly = new Date(lastStartDate.getFullYear(), lastStartDate.getMonth(), lastStartDate.getDate());
+    const now = new Date();
+    const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const daysSinceStart = Math.floor((nowOnly.getTime() - startOnly.getTime()) / (1000 * 60 * 60 * 24));
+
+    const latestAfterStart = entriesDesc.find(e => new Date(e.createdAt).getTime() >= lastStartDate.getTime());
+    const explicitlyEnded = latestAfterStart ? latestAfterStart.onPeriod === false : false;
+    return !explicitlyEnded && daysSinceStart >= 0 && daysSinceStart < menstrualDays;
   };
 
-  // Get current period day calculated from the oldest period entry
+  // Get current period day from inferred last cycle start
   const getCurrentPeriodDay = () => {
-    // If user is currently on period (either from formData or existing entries)
     const isOnPeriod = formData.onPeriod || isCurrentlyOnPeriod();
-    
-    if (!isOnPeriod) {
-      console.log('🔍 getCurrentPeriodDay: Not currently on period, returning 0');
-      return 0;
+    if (!isOnPeriod) return 0;
+
+    // If the form captured a start date this session, respect it
+    if (periodStartDate) {
+      const start = new Date(periodStartDate);
+      const today = new Date();
+      const startOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const diffDays = Math.floor((todayOnly.getTime() - startOnly.getTime()) / (1000 * 60 * 60 * 24));
+      return Math.max(1, diffDays + 1);
     }
-    
-    // Find ALL period entries and sort by date
-    const periodEntries = moodEntries.filter(entry => entry.onPeriod);
-    if (periodEntries.length === 0) {
-      // If no period entries exist but user is on period, it's Day 1
-      console.log('🔍 getCurrentPeriodDay: No period entries found but user is on period, returning 1');
-      return 1;
+
+    // Derive last start from entries (transition false→true or latest true)
+    const asc = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    let lastStart: any = asc.find(e => e.onPeriod) || null;
+    for (let i = 1; i < asc.length; i++) {
+      const prev = asc[i - 1];
+      const cur = asc[i];
+      if (!prev.onPeriod && cur.onPeriod) lastStart = cur;
     }
-    
-    // Sort all mood entries by date to detect cycle boundaries
-    const allEntries = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    
-    // Find the most recent cycle start by looking for the transition from onPeriod=0 to onPeriod=1
-    let mostRecentCycleStart = allEntries.find(entry => entry.onPeriod);
-    
-    // Look backwards through entries to find the most recent period start
-    // (transition from onPeriod=0 to onPeriod=1)
-    for (let i = allEntries.length - 1; i > 0; i--) {
-      const current = allEntries[i];
-      const previous = allEntries[i - 1];
-      
-      console.log('🔍 Checking transition:', {
-        i,
-        previous: { date: previous.createdAt, onPeriod: previous.onPeriod },
-        current: { date: current.createdAt, onPeriod: current.onPeriod },
-        isTransition: !previous.onPeriod && current.onPeriod
-      });
-      
-      // If previous entry is NOT on period and current entry IS on period,
-      // then current is the start of a new cycle
-      if (!previous.onPeriod && current.onPeriod) {
-        console.log('✅ Found cycle transition!', current.createdAt);
-        mostRecentCycleStart = current;
-        break;
-      }
-    }
-    
-    // Calculate days between most recent cycle start and today
-    const periodStartDate = new Date(mostRecentCycleStart.createdAt);
+    if (!lastStart) return 1;
+    const start = new Date(lastStart.createdAt);
     const today = new Date();
-    
-    // Get dates only (no time) for accurate day calculation
-    const periodStart = new Date(periodStartDate.getFullYear(), periodStartDate.getMonth(), periodStartDate.getDate());
-    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    
-    const diffTime = todayDateOnly.getTime() - periodStart.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const periodDay = Math.max(1, diffDays + 1); // Minimum day 1, add 1 since we're counting from day 1
-    
-    console.log('🔍 getCurrentPeriodDay Debug:', {
-      mostRecentCycleStart: {
-        id: mostRecentCycleStart.id,
-        createdAt: mostRecentCycleStart.createdAt,
-        onPeriod: mostRecentCycleStart.onPeriod
-      },
-      periodStartDate,
-      today,
-      periodStart: periodStart.toISOString(),
-      todayDateOnly: todayDateOnly.toISOString(),
-      diffDays,
-      calculatedPeriodDay: periodDay
-    });
-    
-    return periodDay;
+    const startOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const diffDays = Math.floor((todayOnly.getTime() - startOnly.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(1, diffDays + 1);
   };
 
   // Load user preferences and mood entries on component mount
