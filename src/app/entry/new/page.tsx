@@ -1606,9 +1606,9 @@ export default function NewEntry() {
                 <div className="mt-4">
                   <button
                     type="button"
-                    aria-pressed={formData.onPeriod || isCurrentlyOnPeriod()}
+                    aria-pressed={formData.onPeriod}
                     onClick={() => {
-                      if (isCurrentlyOnPeriod()) {
+                      if (formData.onPeriod) {
                         // User is currently on period - show confirmation to end
                         if (confirm('Are you sure you want to end your current period cycle?')) {
                           handleChange('onPeriod', false);
@@ -1619,7 +1619,7 @@ export default function NewEntry() {
                       }
                     }}
                     className={`w-full md:w-64 h-16 inline-flex items-center space-x-3 px-5 py-3 rounded-full transition-all border-2 shadow-sm backdrop-blur-xl
-                      ${(formData.onPeriod || isCurrentlyOnPeriod())
+                      ${(formData.onPeriod)
                         ? 'bg-red-500/20 text-red-200 border-red-400/50 hover:bg-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
                         : 'bg-slate-800/50 text-red-400 border-red-400/50 hover:bg-slate-700/50'}
                     `}
@@ -1628,24 +1628,17 @@ export default function NewEntry() {
                     <div className="text-left">
                       <div className="font-semibold">
                         {(() => {
-                          const isOnPeriod = formData.onPeriod || isCurrentlyOnPeriod();
+                          const isOnPeriod = formData.onPeriod;
                           const periodDay = isOnPeriod ? getCurrentPeriodDay() : 0;
-                          console.log('🔍 Period Button Debug:', {
-                            formDataOnPeriod: formData.onPeriod,
-                            isCurrentlyOnPeriod: isCurrentlyOnPeriod(),
-                            isOnPeriod,
-                            periodDay,
-                            moodEntriesLength: moodEntries.length
-                          });
                           return isOnPeriod ? `Period Day ${periodDay}` : 'Start period cycle';
                         })()}
                       </div>
-                      {(formData.onPeriod || isCurrentlyOnPeriod()) && (
+                      {(formData.onPeriod) && (
                         <div className="text-xs text-red-300">
                           Click to end period
                         </div>
                       )}
-                      {!formData.onPeriod && !isCurrentlyOnPeriod() && (
+                      {!formData.onPeriod && (
                         <div className="text-xs text-red-300">
                           Click to begin Day 1
                         </div>
