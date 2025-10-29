@@ -42,8 +42,9 @@ export default function ActivityDriversChart({
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Check if driversData exists
-  if (!driversData || !driversData.helpful || !driversData.harmful) {
+  // Check if driversData exists and has data
+  if (!driversData || !driversData.helpful || !driversData.harmful || 
+      (driversData.helpful.length === 0 && driversData.harmful.length === 0)) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
