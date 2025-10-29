@@ -1016,6 +1016,12 @@ export default function ProfilePage() {
                               setMessage('✅ All data cleared successfully!');
                               setTimeout(() => setMessage(''), 3000);
                               loadProfile(); // Refresh data
+                              
+                              // Force refresh of all dashboard data by reloading the page
+                              setTimeout(() => {
+                                // Navigate to stats page to see the cleared data
+                                router.push('/stats');
+                              }, 1000);
                             } else {
                               setMessage('❌ Failed to clear data');
                               setTimeout(() => setMessage(''), 3000);
