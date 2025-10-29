@@ -1471,3 +1471,4 @@ export default function Home() {
 // Trigger deployment after adding environment variables
 // Force redeploy with PostgreSQL schema
 // PostgreSQL migration completed - Tue Oct 28 23:10:43 EDT 2025
+// Force Vercel to use latest commit Wed Oct 29 00:16:44 EDT 2025
