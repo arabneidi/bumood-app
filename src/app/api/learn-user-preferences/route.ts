@@ -4,8 +4,6 @@ export const revalidate = 0;
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
-
 export async function POST(request: NextRequest) {
   try {
     const { userId, activities, subcategories, moodData } = await request.json();

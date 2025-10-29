@@ -5,8 +5,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import OpenAI from 'openai';
 
-export const dynamic = 'force-dynamic';
-
 // GET - Get user's AI configuration
 export async function GET(request: NextRequest) {
   try {

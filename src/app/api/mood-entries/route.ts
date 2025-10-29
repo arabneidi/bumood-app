@@ -6,8 +6,6 @@ import { db } from "@/lib/db";
 import { calculateMoodComposite, getTimeBucket } from "@/lib/moodCompositeCalculator";
 import { calculateAchievements } from "@/lib/achievementCalculator";
 
-export const dynamic = 'force-dynamic';
-
 // Helper functions for achievement rollback validation
 async function checkConsecutiveDays(moodEntries: any[], requiredDays: number): Promise<boolean> {
   if (moodEntries.length < requiredDays) return false;
