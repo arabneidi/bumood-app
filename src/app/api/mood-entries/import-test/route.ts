@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import path from 'path';
+import { db } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,19 +16,6 @@ export async function POST(request: NextRequest) {
 
     const userId = 'dummy-user';
     
-    // Create a PrismaClient with absolute path to dev.db (test database)
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db');
-    const db = new PrismaClient({
-      datasources: {
-        db: {
-          url: `file:${dbPath}`
-        }
-      }
-    });
-    
-    // Verify testDb connection by checking database URL
-    console.log('Test database URL (dev.db):', `file:${dbPath}`);
-    
     // Create mood entries in the test database with all fields
     const createdEntries = [];
     const errors = [];
@@ -43,35 +29,42 @@ export async function POST(request: NextRequest) {
         const entryUpdatedAt = entry.updatedAt ? new Date(entry.updatedAt) : entryCreatedAt;
         const timeBucket = entry.timeBucket || getTimeBucket(entryCreatedAt);
         
-        const moodEntry = await db.moodEntry.create({
-          data: {
-            id: entry.id, // Use the ID from CSV
-            userId,
-            valence: entry.valence || 5,
-            energy: entry.energy || 5,
-            focus: entry.focus || 5,
-            stress: entry.stress || 5,
-            sleep: entry.sleep || 7,
-            notes: entry.notes || null,
-            activities: JSON.stringify(entry.activities || []),
-            selectedTimeSlots: entry.selectedTimeSlots ? JSON.stringify(entry.selectedTimeSlots) : null,
-            selectedSubcategories: JSON.stringify(entry.selectedSubcategories || []),
-            activityEntries: entry.activityEntries ? JSON.stringify(entry.activityEntries) : null,
-            dssAnalysis: entry.dssAnalysis || null,
-            reflection: entry.reflection || null,
-            onPeriod: entry.onPeriod || false,
-            periodDay: entry.periodDay || null,
-            waterIntake: entry.waterIntake || null,
-            mealsEaten: entry.mealsEaten || null,
-            mealQuality: entry.mealQuality || null,
-            caffeine: entry.caffeine || null,
-            alcohol: entry.alcohol || null,
-            timeBucket,
-            moodComposite: entry.moodComposite || null,
-            createdAt: entryCreatedAt, // Use the provided createdAt with correct timestamp
-            updatedAt: entryUpdatedAt
-          }
-        });
+        const data = {
+          userId,
+          valence: entry.valence || 5,
+          energy: entry.energy || 5,
+          focus: entry.focus || 5,
+          stress: entry.stress || 5,
+          sleep: entry.sleep || 7,
+          notes: entry.notes || null,
+          activities: JSON.stringify(entry.activities || []),
+          selectedTimeSlots: entry.selectedTimeSlots ? JSON.stringify(entry.selectedTimeSlots) : null,
+          selectedSubcategories: JSON.stringify(entry.selectedSubcategories || []),
+          activityEntries: entry.activityEntries ? JSON.stringify(entry.activityEntries) : null,
+          dssAnalysis: entry.dssAnalysis || null,
+          reflection: entry.reflection || null,
+          onPeriod: entry.onPeriod || false,
+          periodDay: entry.periodDay || null,
+          waterIntake: entry.waterIntake || null,
+          mealsEaten: entry.mealsEaten || null,
+          mealQuality: entry.mealQuality || null,
+          caffeine: entry.caffeine || null,
+          alcohol: entry.alcohol || null,
+          timeBucket,
+          moodComposite: entry.moodComposite || null,
+          createdAt: entryCreatedAt,
+          updatedAt: entryUpdatedAt,
+        };
+
+        const moodEntry = entry.id
+          ? await db.moodEntry.upsert({
+              where: { id: entry.id },
+              update: data,
+              create: { id: entry.id, ...data },
+            })
+          : await db.moodEntry.create({
+              data,
+            });
         createdEntries.push(moodEntry);
       } catch (error: any) {
         console.error(`Error creating entry ${i}:`, error?.message || error);
@@ -81,8 +74,7 @@ export async function POST(request: NextRequest) {
     
     console.log(`Imported ${createdEntries.length}/${entries.length} entries. Errors: ${errors.length}`);
     
-    // Close the Prisma client
-    await db.$disconnect();
+    // Using shared Prisma client from lib/db (no explicit disconnect)
     
     return NextResponse.json({
       success: true,
