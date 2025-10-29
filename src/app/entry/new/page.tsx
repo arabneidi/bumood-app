@@ -80,6 +80,7 @@ export default function NewEntry() {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const recognitionRef = React.useRef<any>(null);
+  const initializedFromHistoryRef = React.useRef<boolean>(false);
   
   // AI Preference Learning state
   const [preferenceOptions, setPreferenceOptions] = useState<any[]>([]);
@@ -298,25 +299,14 @@ export default function NewEntry() {
     fetchMoodEntries();
   }, []);
 
-  // Update formData.onPeriod when moodEntries are loaded
+  // Initialize formData.onPeriod from history ONCE; do not override user toggles thereafter
   useEffect(() => {
+    if (initializedFromHistoryRef.current) return;
     if (moodEntries && moodEntries.length > 0) {
-      const currentlyOnPeriod = isCurrentlyOnPeriod();
-      console.log('🔄 Updating formData.onPeriod:', { 
-        currentlyOnPeriod, 
-        currentFormDataOnPeriod: formData.onPeriod,
-        moodEntriesLength: moodEntries.length 
-      });
-      
-      if (currentlyOnPeriod !== formData.onPeriod) {
-        setFormData(prev => ({
-          ...prev,
-          onPeriod: currentlyOnPeriod
-        }));
-        console.log('✅ Updated formData.onPeriod to:', currentlyOnPeriod);
-      } else {
-        console.log('⏭️ No update needed - formData.onPeriod already matches');
-      }
+      const inferred = isCurrentlyOnPeriod();
+      setFormData(prev => ({ ...prev, onPeriod: inferred }));
+      initializedFromHistoryRef.current = true;
+      console.log('✅ Initialized onPeriod from history:', inferred);
     }
   }, [moodEntries]);
 
@@ -1624,7 +1614,7 @@ export default function NewEntry() {
                         : 'bg-slate-800/50 text-red-400 border-red-400/50 hover:bg-slate-700/50'}
                     `}
                   >
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-lg shadow ${(formData.onPeriod || isCurrentlyOnPeriod()) ? 'bg-red-500/30 text-red-200' : 'bg-red-900/30 text-red-400'}`}>🩸</span>
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-lg shadow ${formData.onPeriod ? 'bg-red-500/30 text-red-200' : 'bg-red-900/30 text-red-400'}`}>🩸</span>
                     <div className="text-left">
                       <div className="font-semibold">
                         {(() => {
