@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import path from 'path';
+import { db } from '@/lib/db';
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function POST(request: NextRequest) {
   try {
     const achievements = await request.json();
-    
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db');
-    const db = new PrismaClient({
-      datasources: {
-        db: {
-          url: `file:${dbPath}`
-        }
-      }
-    });
     
     const imported = [];
     const errors = [];
@@ -39,8 +32,6 @@ export async function POST(request: NextRequest) {
         errors.push({ index: i, error: error.message });
       }
     }
-    
-    await db.$disconnect();
     
     return NextResponse.json({
       success: true,
