@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { calculateDSS } from '@/lib/dssCalculator';
 import { calculateMoodComposite } from '@/lib/moodCompositeCalculator';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
