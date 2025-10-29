@@ -99,8 +99,7 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
     let currentlyOnPeriod = false;
     let currentDay = 0;
 
-    // Determine lastStart from cycleStarts
-    const lastStart = cycleStarts[cycleStarts.length - 1];
+    // Determine lastStart from cycleStarts (already computed above)
     if (lastStart) {
       // If any entry today has onPeriod=true, it's active
       const todayKey = dateKeyUTC(new Date());
