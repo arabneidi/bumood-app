@@ -100,6 +100,7 @@ export default function NewEntry() {
   const [userGender, setUserGender] = useState<string | null>(null);
   const [periodStartDate, setPeriodStartDate] = useState<string | null>(null);
   const [isFirstPeriodEntry, setIsFirstPeriodEntry] = useState<boolean>(false);
+  const [showEndPeriodModal, setShowEndPeriodModal] = useState<boolean>(false);
   const [moodEntries, setMoodEntries] = useState<any[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -146,14 +147,19 @@ export default function NewEntry() {
     
     // Handle period tracking logic
     if (name === 'onPeriod' && value === true) {
-      // Set period start date to today (Day 1)
-      const today = new Date().toISOString().split('T')[0];
+      // Set period start date to today (Day 1) - use local date, not UTC
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const today = `${year}-${month}-${day}`;
       setPeriodStartDate(today);
       
-      // Check if this is the first period entry today
+      // Check if this is the first period entry today (compare local dates)
       const hasPeriodEntryToday = moodEntries.some(entry => {
-        const entryDate = new Date(entry.createdAt).toISOString().split('T')[0];
-        return entryDate === today && entry.onPeriod;
+        const entryDate = new Date(entry.createdAt);
+        const entryDateLocal = `${entryDate.getFullYear()}-${String(entryDate.getMonth() + 1).padStart(2, '0')}-${String(entryDate.getDate()).padStart(2, '0')}`;
+        return entryDateLocal === today && entry.onPeriod;
       });
       
       // Mark as first period entry if no other period entries exist today
@@ -227,31 +233,67 @@ export default function NewEntry() {
     const isOnPeriod = formData.onPeriod || isCurrentlyOnPeriod();
     if (!isOnPeriod) return 0;
 
-    // If the form captured a start date this session, respect it
+    // If the form captured a start date this session (user just clicked to start period), respect it
+    // This handles NEW cycle starts - always Day 1 when periodStartDate is set in the current session
     if (periodStartDate) {
-      const start = new Date(periodStartDate);
+      // Parse periodStartDate (format: "YYYY-MM-DD") as local date
+      const [year, month, day] = periodStartDate.split('-').map(Number);
+      const startOnly = new Date(year, month - 1, day); // month is 0-indexed
       const today = new Date();
-      const startOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate());
       const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const diffDays = Math.floor((todayOnly.getTime() - startOnly.getTime()) / (1000 * 60 * 60 * 24));
+      // If this is today (new cycle start), always return 1
+      if (diffDays === 0) return 1;
       return Math.max(1, diffDays + 1);
     }
 
-    // Derive last start from entries (transition false→true or latest true)
+    // For continuing periods from database: derive last start from entries
+    // Only use this if there's an ACTIVE period in the database (not a new cycle)
     const asc = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    let lastStart: any = asc.find(e => e.onPeriod) || null;
+    
+    // Check if the most recent entry explicitly ended the period
+    const desc = [...moodEntries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const mostRecent = desc[0];
+    
+    // If most recent entry has onPeriod=false, this is a NEW cycle start, return 1
+    if (mostRecent && mostRecent.onPeriod === false) {
+      return 1;
+    }
+    
+    // Find the last cycle start (transition false→true)
+    let lastStart: any = null;
     for (let i = 1; i < asc.length; i++) {
       const prev = asc[i - 1];
       const cur = asc[i];
-      if (!prev.onPeriod && cur.onPeriod) lastStart = cur;
+      if (!prev.onPeriod && cur.onPeriod) {
+        lastStart = cur;
+      }
     }
+    
+    // If no previous cycle start found, this is Day 1
     if (!lastStart) return 1;
-    const start = new Date(lastStart.createdAt);
+    
+    // Verify this is actually an active period (not a closed cycle)
+    // Extract date key from createdAt the same way PeriodInsights does
+    // This ensures consistency between the button and chart calculations
+    const lastStartDate = new Date(lastStart.createdAt);
+    // Extract UTC date components (matching dateKeyUTC logic from PeriodInsights)
+    const lastStartYear = lastStartDate.getUTCFullYear();
+    const lastStartMonth = lastStartDate.getUTCMonth();
+    const lastStartDay = lastStartDate.getUTCDate();
+    // Parse as local date (same as PeriodInsights does with date keys)
+    const lastStartOnly = new Date(lastStartYear, lastStartMonth, lastStartDay);
     const today = new Date();
-    const startOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate());
     const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const diffDays = Math.floor((todayOnly.getTime() - startOnly.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(1, diffDays + 1);
+    const daysSinceStart = Math.floor((todayOnly.getTime() - lastStartOnly.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // If the last start was from a previous cycle that should have ended (more than 7 days ago), 
+    // and there's no explicit continuation, this is a new cycle
+    if (daysSinceStart > 7 && (!mostRecent || mostRecent.onPeriod === false)) {
+      return 1;
+    }
+    
+    return Math.max(1, daysSinceStart + 1);
   };
 
   // Load user preferences and mood entries on component mount
@@ -1598,21 +1640,18 @@ export default function NewEntry() {
                     aria-pressed={formData.onPeriod}
                     onClick={() => {
                       if (formData.onPeriod) {
-                        // User is currently on period - show confirmation to end
-                        if (confirm('Are you sure you want to end your current period cycle?')) {
-                          handleChange('onPeriod', false);
-                        }
+                        setShowEndPeriodModal(true);
                       } else {
-                        // User is not on period - start new cycle
                         handleChange('onPeriod', true);
                       }
                     }}
-                    className={`w-full md:w-64 h-16 inline-flex items-center space-x-3 px-5 py-3 rounded-full transition-all border-2 shadow-sm backdrop-blur-xl
-                      ${(formData.onPeriod)
-                        ? 'bg-red-500/20 text-red-200 border-red-400/50 hover:bg-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
-                        : 'bg-slate-800/50 text-red-400 border-red-400/50 hover:bg-slate-700/50'}
+                    className={`relative overflow-hidden w-full md:w-64 h-16 inline-flex items-center space-x-3 px-5 py-3 rounded-full transition-all backdrop-blur-xl
+                      ${formData.onPeriod
+                        ? 'bg-red-500/20 text-red-200 border-0 ring-4 ring-red-500/70 shadow-[0_0_50px_rgba(239,68,68,0.9),0_0_100px_rgba(239,68,68,0.6)] animate-pulse'
+                        : 'bg-slate-800/50 text-red-400 border-2 border-red-400/50 hover:bg-slate-700/50 shadow-sm'}
                     `}
                   >
+                    {/* Glow handled via ring + shadow on the button to match edges exactly */}
                     <span className={`w-8 h-8 rounded-full flex items-center justify-center text-lg shadow ${formData.onPeriod ? 'bg-red-500/30 text-red-200' : 'bg-red-900/30 text-red-400'}`}>🩸</span>
                     <div className="text-left">
                       <div className="font-semibold">
@@ -1637,6 +1676,65 @@ export default function NewEntry() {
                 </div>
               </div>
             </motion.div>
+          )}
+
+          {/* End Period Confirmation Modal (Entry Page) */}
+          {showEndPeriodModal && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-pink-400/30 p-6 w-full max-w-md">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">End Period Cycle</h3>
+                  <button
+                    onClick={() => setShowEndPeriodModal(false)}
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="mb-6">
+                  <p className="text-slate-300 mb-4">Are you sure you want to end your current period cycle?</p>
+                  <div className="p-3 bg-pink-900/20 border border-pink-500/30 rounded-lg">
+                    <p className="text-pink-200 text-sm">You can start a new cycle anytime from the Period Tracking button.</p>
+                  </div>
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowEndPeriodModal(false)}
+                    className="flex-1 px-4 py-2 bg-slate-700/50 text-slate-300 border border-slate-600/50 rounded-lg hover:bg-slate-600/50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        // Optimistically update local state
+                        handleChange('onPeriod', false);
+                        setShowEndPeriodModal(false);
+
+                        // Persist explicit end to backend by updating most recent entry
+                        const mostRecent = [...moodEntries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+                        if (mostRecent && mostRecent.id) {
+                          await fetch('/api/mood-entries', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: mostRecent.id, onPeriod: false, periodDay: null })
+                          });
+                          // Reflect change in local moodEntries state
+                          setMoodEntries(prev => prev.map(e => e.id === mostRecent.id ? { ...e, onPeriod: false, periodDay: null, updatedAt: new Date().toISOString() } : e));
+                        }
+                      } catch (err) {
+                        console.error('Failed to end period:', err);
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 bg-red-500/20 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/30 transition-colors"
+                  >
+                    End Period
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Meals & Drinks Tracking */}

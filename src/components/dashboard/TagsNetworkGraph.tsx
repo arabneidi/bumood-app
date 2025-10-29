@@ -51,11 +51,32 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
   const [showLegend, setShowLegend] = useState<boolean>(false);
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [showSubcategories, setShowSubcategories] = useState<boolean>(false);
+  const [grabbedNodeId, setGrabbedNodeId] = useState<string | null>(null);
+  const [connectedNodeIds, setConnectedNodeIds] = useState<string[]>([]);
   const graphRef = React.useRef<any>(null);
+  const isDraggingRef = React.useRef<string | null>(null); // Track which node is currently being dragged
+  const stateRef = React.useRef<{ grabbedNodeId: string | null; connectedNodeIds: string[] }>({
+    grabbedNodeId: null,
+    connectedNodeIds: []
+  });
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    console.log('🟡 [StateRef Update] Updating stateRef:', {
+      grabbedNodeId,
+      connectedNodeIds,
+      connectedCount: connectedNodeIds.length
+    });
+    stateRef.current = { grabbedNodeId, connectedNodeIds };
+  }, [grabbedNodeId, connectedNodeIds]);
 
   useEffect(() => {
+    const start = performance.now();
     fetchLearnedConnections();
     generateNetworkData();
+    const time = performance.now() - start;
+    console.log(`⏱️ [TagsNetworkGraph] generateNetworkData: ${time.toFixed(2)}ms`);
+    console.log('🟡 [TagsNetworkGraph] Component initialized, drag handlers should be active');
   }, [moodEntries, userPreferences, timeRange]);
 
 
@@ -73,6 +94,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
   };
 
   const generateNetworkData = () => {
+    const genStart = performance.now();
     const nodes: TagNode[] = [];
     const links: TagConnection[] = [];
     
@@ -175,15 +197,34 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
       }
     });
 
-    // Add links for co-occurring activities (at least 1 time)
+    // Add links for co-occurring activities - only top 2 most common per node
+    // First, determine top 2 for each node
+    const top2Connections: { [key: string]: Set<string> } = {};
+    Object.entries(coOccurrenceMap).forEach(([activity, coActivities]) => {
+      const sorted = Object.entries(coActivities)
+        .sort(([, countA], [, countB]) => countB - countA)
+        .slice(0, 2); // Only keep top 2
+      top2Connections[activity] = new Set(sorted.map(([act]) => act));
+    });
+
+    // Add links only if in top 2 for at least one node (to keep network less crowded)
+    const addedLinks = new Set<string>();
     Object.entries(coOccurrenceMap).forEach(([activity1, coActivities]) => {
       Object.entries(coActivities).forEach(([activity2, count]) => {
-        if (count >= 1 && activity1 < activity2) {
-          links.push({
-            source: activity1,
-            target: activity2,
-            strength: Math.min(count / 3, 1)
-          });
+        if (count >= 1) {
+          const linkKey = activity1 < activity2 ? `${activity1}-${activity2}` : `${activity2}-${activity1}`;
+          
+          // Only add if in top 2 for at least one of the nodes and not already added
+          const isInTop2 = (top2Connections[activity1]?.has(activity2) || top2Connections[activity2]?.has(activity1));
+          
+          if (isInTop2 && !addedLinks.has(linkKey)) {
+            addedLinks.add(linkKey);
+            links.push({
+              source: activity1,
+              target: activity2,
+              strength: Math.min(count / 3, 1)
+            });
+          }
         }
       });
     });
@@ -209,10 +250,17 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
       }
     });
 
+    const genTime = performance.now() - genStart;
+    console.log(`⏱️ [TagsNetworkGraph] Data processing: ${genTime.toFixed(2)}ms (${nodes.length} nodes, ${links.length} links)`);
     setGraphData({ nodes, links });
   };
 
   const getNodeColor = (node: any) => {
+    // If a node is grabbed and this node is connected to it, return yellow
+    if (grabbedNodeId && connectedNodeIds.includes(node.id)) {
+      return '#FFD700'; // Yellow for connected nodes
+    }
+    
     // Check if this node is an activity and has drivers data
     if (node.category === 'activity' && driversData) {
       const helpfulActivities = driversData.helpful?.map(d => d.tag) || [];
@@ -245,6 +293,80 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
     // Zoom to node on click
     console.log('Node clicked:', node);
   }, []);
+
+  const handleNodeDrag = useCallback((node: any) => {
+    const nodeId = typeof node === 'string' ? node : node.id;
+    
+    // Check if this is a new drag (node not currently being dragged)
+    if (isDraggingRef.current !== nodeId) {
+      console.log('🟡 ===== NODE DRAG START (detected via onNodeDrag) =====');
+      console.log('🟡 Raw node object:', node);
+      console.log('🟡 Extracted nodeId:', nodeId);
+      console.log('🟡 Current graphData.nodes count:', graphData.nodes.length);
+      console.log('🟡 Current graphData.links count:', graphData.links.length);
+      console.log('🟡 showSubcategories:', showSubcategories);
+      
+      isDraggingRef.current = nodeId;
+      setGrabbedNodeId(nodeId);
+      console.log('🟡 Set grabbedNodeId to:', nodeId);
+      
+      // Find all connected nodes from filteredGraphData.links (respects subcategory visibility)
+      const filteredNodes = graphData.nodes.filter(n => showSubcategories || n.category !== 'subcategory');
+      const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
+      console.log('🟡 Filtered nodes count:', filteredNodes.length);
+      console.log('🟡 Filtered node IDs:', Array.from(filteredNodeIds));
+      
+      const connected: string[] = [];
+      console.log('🟡 Checking links for connections...');
+      graphData.links.forEach((link, index) => {
+        const sourceId = typeof link.source === 'string' ? link.source : (link.source as any).id;
+        const targetId = typeof link.target === 'string' ? link.target : (link.target as any).id;
+        
+        // Only consider links between visible nodes
+        if (filteredNodeIds.has(sourceId) && filteredNodeIds.has(targetId)) {
+          if (sourceId === nodeId && !connected.includes(targetId)) {
+            console.log(`🟡 Found connection at link[${index}]: source=${sourceId} matches, adding target=${targetId}`);
+            connected.push(targetId);
+          } else if (targetId === nodeId && !connected.includes(sourceId)) {
+            console.log(`🟡 Found connection at link[${index}]: target=${targetId} matches, adding source=${sourceId}`);
+            connected.push(sourceId);
+          }
+        }
+      });
+      
+      console.log('🟡 Final connected nodes array:', connected);
+      console.log('🟡 Setting connectedNodeIds to:', connected);
+      setConnectedNodeIds(connected);
+      console.log('🟡 ===== NODE DRAG START COMPLETE =====');
+    }
+  }, [graphData.links, graphData.nodes, showSubcategories]);
+
+  const handleNodeDragEnd = useCallback(() => {
+    console.log('🟡 ===== NODE DRAG END =====');
+    console.log('🟡 Clearing grabbedNodeId (was:', grabbedNodeId, ')');
+    console.log('🟡 Clearing connectedNodeIds (was:', connectedNodeIds, ')');
+    isDraggingRef.current = null;
+    setGrabbedNodeId(null);
+    setConnectedNodeIds([]);
+    console.log('🟡 ===== NODE DRAG END COMPLETE =====');
+  }, [grabbedNodeId, connectedNodeIds]);
+
+  const getNodeColorCallback = useCallback((node: any) => {
+    return getNodeColor(node);
+  }, [grabbedNodeId, connectedNodeIds, driversData]);
+
+  // Force graph to refresh when grabbed node changes
+  useEffect(() => {
+    if (graphRef.current) {
+      // Trigger a refresh by calling pauseAnimation and resumeAnimation
+      graphRef.current.pauseAnimation();
+      setTimeout(() => {
+        if (graphRef.current) {
+          graphRef.current.resumeAnimation();
+        }
+      }, 10);
+    }
+  }, [grabbedNodeId, connectedNodeIds]);
 
   // Filter graph data based on subcategory visibility
   const filteredGraphData = useMemo(() => {
@@ -347,37 +469,113 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
             graphData={filteredGraphData}
             width={undefined}
             height={undefined}
-            nodeCanvasObjectMode={() => 'after'}
+            nodeCanvasObjectMode={() => 'replace'}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
               const label = node.label || node.id;
-              const nodeColor = getNodeColor(node);
               const fontSize = 14 / globalScale;
               
-              // Measure text
+              // Calculate node radius
+              const nodeRadius = (node.__size || node.val || 8) / globalScale;
+              
+              // Determine if this node is connected to the grabbed node (use ref to get latest state)
+              const currentGrabbed = stateRef.current.grabbedNodeId;
+              const currentConnected = stateRef.current.connectedNodeIds;
+              const isConnected = currentGrabbed && currentConnected.includes(node.id);
+              
+              // Debug logging (only log once per node when grabbed to avoid spam)
+              if (currentGrabbed && Math.random() < 0.01) { // Log 1% of the time to reduce spam
+                console.log('🟡 [Canvas] Rendering node:', node.id, {
+                  currentGrabbed,
+                  currentConnected,
+                  isConnected,
+                  nodeId: node.id
+                });
+              }
+              
+              // Get base color
+              let baseColor: string;
+              if (isConnected) {
+                baseColor = '#FFD700'; // Yellow for connected
+              } else if (node.category === 'activity' && driversData) {
+                const helpfulActivities = driversData.helpful?.map(d => d.tag) || [];
+                const harmfulActivities = driversData.harmful?.map(d => d.tag) || [];
+                
+                if (helpfulActivities.includes(node.id)) {
+                  baseColor = '#00FF88'; // Green for helpful
+                } else if (harmfulActivities.includes(node.id)) {
+                  baseColor = '#FF6B6B'; // Red for harmful
+                } else {
+                  baseColor = '#00D4FF'; // Default activity color
+                }
+              } else {
+                const colors: { [key: string]: string } = {
+                  'subcategory': '#00E6FF',
+                  'favoriteWriters': '#00FF88',
+                  'favoriteMusicians': '#FF6B9D',
+                  'favoriteSportsFigures': '#FFB800',
+                  'favoriteArtists': '#B800FF',
+                  'favoritePhilosophers': '#0066FF',
+                  'interests': '#FF0080',
+                  'outcome': '#FFD700'
+                };
+                baseColor = colors[node.category] || '#FF6B6B';
+              }
+              
+              // Draw node circle
+              ctx.beginPath();
+              ctx.arc(node.x!, node.y!, nodeRadius, 0, 2 * Math.PI);
+              
+              // Fill with color (no opacity for yellow to make it stand out)
+              if (isConnected) {
+                ctx.fillStyle = '#FFD700'; // Bright yellow for connected nodes
+              } else {
+                // Convert hex to rgba with opacity
+                const r = parseInt(baseColor.slice(1, 3), 16);
+                const g = parseInt(baseColor.slice(3, 5), 16);
+                const b = parseInt(baseColor.slice(5, 7), 16);
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.4)`;
+              }
+              ctx.fill();
+              
+              // Add a border for connected nodes
+              if (isConnected) {
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 2 / globalScale;
+                ctx.stroke();
+              }
+              
+              // Draw text with stroke for visibility
               ctx.font = `bold ${fontSize}px Sans-Serif`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              
-              // Draw text with stroke for visibility
-              const labelY = node.y! + (node.__size! || 8) / globalScale + 10;
-              ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-              ctx.lineWidth = 3 / globalScale;
+              const labelY = node.y! + nodeRadius + 10;
+              ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+              ctx.lineWidth = 4 / globalScale;
               ctx.strokeText(label, node.x!, labelY);
               ctx.fillStyle = 'white';
               ctx.fillText(label, node.x!, labelY);
             }}
             nodeColor={(node: any) => {
-              const color = getNodeColor(node);
+              // Use ref to get latest state (nodeColor might be cached)
+              const currentGrabbed = stateRef.current.grabbedNodeId;
+              const currentConnected = stateRef.current.connectedNodeIds;
+              const isConnected = currentGrabbed && currentConnected.includes(node.id);
+              if (isConnected) {
+                return '#FFD70066'; // Yellow with opacity for connected nodes
+              }
+              const color = getNodeColorCallback(node);
               // Convert hex to rgba with opacity
               return color + '66'; // 66 = approximately 40% opacity in hex
             }}
             nodeVal={(node: any) => node.val}
-            nodeRelSize={8}
+            nodeRelSize={12}
             linkWidth={(link: any) => Math.max(2, link.strength * 4)}
             linkColor={() => 'rgba(255,255,255,0.6)'}
             linkDirectionalArrowLength={4}
             linkDirectionalArrowRelPos={1}
             onNodeClick={handleNodeClick}
+            onNodeDrag={handleNodeDrag}
+            onNodeDragEnd={handleNodeDragEnd}
             cooldownTicks={100}
             onEngineStop={() => {}}
             enableNodeDrag={true}

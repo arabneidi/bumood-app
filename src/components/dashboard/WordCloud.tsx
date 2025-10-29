@@ -36,8 +36,9 @@ export default function WordCloud({ moodEntries, userPreferences, timeRange }: W
       
       switch (timeRange) {
         case 'daily':
+          // Compare local dates consistently
           const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          const entryStart = new Date(entryDate.getUTCFullYear(), entryDate.getUTCMonth(), entryDate.getUTCDate());
+          const entryStart = new Date(entryDate.getFullYear(), entryDate.getMonth(), entryDate.getDate());
           return entryStart.getTime() === todayStart.getTime();
         case 'weekly':
           const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -56,12 +57,18 @@ export default function WordCloud({ moodEntries, userPreferences, timeRange }: W
     // Process activities
     filteredEntries.forEach(entry => {
       if (entry.activities) {
-        const activities = Array.isArray(entry.activities) ? entry.activities : JSON.parse(entry.activities || '[]');
-        activities.forEach((activity: string) => {
-          if (activity) {
-            wordFreq[activity] = (wordFreq[activity] || 0) + 1;
-          }
-        });
+        try {
+          const activities = Array.isArray(entry.activities) ? entry.activities : JSON.parse(entry.activities || '[]');
+          activities.forEach((activity: string) => {
+            if (activity && typeof activity === 'string') {
+              // Normalize activity name: capitalize first letter, lowercase rest
+              const normalized = activity.charAt(0).toUpperCase() + activity.slice(1).toLowerCase();
+              wordFreq[normalized] = (wordFreq[normalized] || 0) + 1;
+            }
+          });
+        } catch (error) {
+          console.error('Error parsing activities in WordCloud:', error, entry.activities);
+        }
       }
     });
 
@@ -104,11 +111,14 @@ export default function WordCloud({ moodEntries, userPreferences, timeRange }: W
       }
     });
 
-    // Convert to array format
-    const wordsArray = Object.entries(wordFreq).map(([text, value]) => ({
-      text,
-      value
-    }));
+    // Convert to array format and sort by frequency (highest first)
+    // This ensures all words are included, even with frequency of 1
+    const wordsArray = Object.entries(wordFreq)
+      .map(([text, value]) => ({
+        text,
+        value
+      }))
+      .sort((a, b) => b.value - a.value); // Sort by frequency descending
 
     setWords(wordsArray);
   };

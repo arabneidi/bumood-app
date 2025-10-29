@@ -27,6 +27,7 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
 
 
   const data = useMemo(() => {
+    const calcStart = performance.now();
     // Sort newest first
     const entries = [...moodEntries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -48,14 +49,18 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
     const days = Object.keys(byDay).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
     // Identify cycle starts (onPeriod true where previous day not onPeriod)
+    // Store both the date key (for local parsing) and UTC Date (for other calculations)
     const cycleStarts: Date[] = [];
+    const cycleStartKeys: string[] = [];
     for (let i = 0; i < days.length; i++) {
       const d = days[i];
       const prev = i > 0 ? days[i - 1] : undefined;
       const todayOn = byDay[d].onPeriod;
       const prevOn = prev ? byDay[prev].onPeriod : false;
       if (todayOn && !prevOn) {
-        // Fix: Create date in UTC to avoid timezone shift
+        // Store date key for local date parsing (for consistent day calculation)
+        cycleStartKeys.push(d);
+        // Also create UTC Date for other calculations
         const [year, month, day] = d.split('-').map(Number);
         const cycleStart = new Date(Date.UTC(year, month - 1, day));
         cycleStarts.push(cycleStart);
@@ -71,8 +76,9 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
     }
     const avgCycle = cycleLengths.length ? Math.round(cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length) : null;
 
-    // Last period start
+    // Last period start - get both the Date and the date key
     const lastStart = cycleStarts[cycleStarts.length - 1];
+    const lastStartKey = cycleStartKeys[cycleStartKeys.length - 1];
     
     const today = new Date();
     const daysSinceLast = lastStart ? Math.round((Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()) - Date.UTC(lastStart.getUTCFullYear(), lastStart.getUTCMonth(), lastStart.getUTCDate())) / (24 * 3600 * 1000)) : null;
@@ -107,16 +113,27 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
       if (anyTodayOn) {
         currentlyOnPeriod = true;
       } else {
-        // Otherwise, consider ON until explicitly ended (no time window)
-        const latestAfterStart = entries.find(e => new Date(e.createdAt).getTime() >= lastStart.getTime());
-        const explicitlyEnded = latestAfterStart ? latestAfterStart.onPeriod === false : false;
-        currentlyOnPeriod = !explicitlyEnded;
+        // Otherwise, consider ON until explicitly ended (strictly after last start)
+        // Find the most recent start entry (onPeriod === true)
+        const lastStartEntry = entries.find(e => e.onPeriod === true);
+        if (lastStartEntry) {
+          const lastStartTime = new Date(lastStartEntry.createdAt).getTime();
+          // Look for an explicit end strictly AFTER the last start
+          const endAfterStart = entries.find(e => new Date(e.createdAt).getTime() > lastStartTime && e.onPeriod === false);
+          currentlyOnPeriod = !endAfterStart;
+        } else {
+          currentlyOnPeriod = false;
+        }
       }
 
       // Compute current day relative to lastStart if active
-      if (currentlyOnPeriod) {
+      // Use local dates consistently to match new entry page calculation
+      if (currentlyOnPeriod && lastStartKey) {
         const today = new Date();
-        const periodStart = new Date(lastStart.getUTCFullYear(), lastStart.getUTCMonth(), lastStart.getUTCDate());
+        // Parse the date key string directly as a local date (YYYY-MM-DD format)
+        // This matches how the new entry page handles dates for consistency
+        const [year, month, day] = lastStartKey.split('-').map(Number);
+        const periodStart = new Date(year, month - 1, day); // Local midnight (month is 0-indexed)
         const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         const diffTime = todayDateOnly.getTime() - periodStart.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -130,6 +147,8 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
     const todayAlcohol = byDay[todayKey]?.alcohol ?? 0;
     const preWindow = predictedNextStart ? Math.abs(Math.round((Date.UTC(predictedNextStart.getUTCFullYear(), predictedNextStart.getUTCMonth(), predictedNextStart.getUTCDate()) - Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())) / (24 * 3600 * 1000))) : null;
 
+    const calcTime = performance.now() - calcStart;
+    console.log(`⏱️ [PeriodInsights] Calculations: ${calcTime.toFixed(2)}ms`);
     return { 
       series, 
       avgCycle, 

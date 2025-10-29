@@ -114,28 +114,35 @@ export default function ActivityDriversChart({
     }
   }, [driversData]);
 
+  // Fixed 5 colorful colors for activities
+  const fixedColors = [
+    'bg-blue-500',    // Blue
+    'bg-purple-500',  // Purple
+    'bg-pink-500',    // Pink
+    'bg-orange-500',  // Orange
+    'bg-green-500'    // Green
+  ];
+
+  // Map each of the top 5 activities to a unique color
+  const activityColorMap = new Map<string, string>();
+  topActivities.forEach((activity, index) => {
+    activityColorMap.set(activity.tag.toLowerCase(), fixedColors[index % fixedColors.length]);
+  });
+
   const getActivityColor = (activity: string) => {
-    const colorMap: { [key: string]: string } = {
-      'exercise': 'bg-green-500',
-      'yoga': 'bg-pink-500',
-      'walking': 'bg-blue-500',
-      'watching': 'bg-purple-500',
-      'coding': 'bg-orange-500',
-      'calling': 'bg-cyan-500',
-      'puzzles': 'bg-yellow-500',
-      'meeting': 'bg-amber-500',
-      'swimming': 'bg-teal-500',
-      'socializing': 'bg-indigo-500',
-      'napping': 'bg-slate-400',
-      'studying': 'bg-emerald-600',
-      'reading': 'bg-violet-500',
-      'gaming': 'bg-red-600',
-      'cooking': 'bg-lime-500',
-      'cleaning': 'bg-sky-500',
-      'shopping': 'bg-fuchsia-500',
-      'traveling': 'bg-stone-500'
-    };
-    return colorMap[activity.toLowerCase()] || 'bg-gray-500';
+    // First check if it's one of the top 5 activities (get unique color)
+    const activityLower = activity.toLowerCase();
+    if (activityColorMap.has(activityLower)) {
+      return activityColorMap.get(activityLower)!;
+    }
+    // For any other activities, use hash function
+    let hash = 0;
+    for (let i = 0; i < activityLower.length; i++) {
+      hash = ((hash << 5) - hash) + activityLower.charCodeAt(i);
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    const colorIndex = Math.abs(hash) % fixedColors.length;
+    return fixedColors[colorIndex];
   };
 
   return (
@@ -242,18 +249,16 @@ export default function ActivityDriversChart({
                     style={{
                       boxShadow: activitiesPresent.length > 0 
                         ? `0 0 20px ${activitiesPresent.map(a => {
-                            const colorMap: { [key: string]: string } = {
-                              'exercise': 'rgba(34, 197, 94, 0.3)',
-                              'yoga': 'rgba(239, 68, 68, 0.3)',
-                              'walking': 'rgba(59, 130, 246, 0.3)',
-                              'watching': 'rgba(147, 51, 234, 0.3)',
-                              'coding': 'rgba(249, 115, 22, 0.3)',
-                              'calling': 'rgba(6, 182, 212, 0.3)',
-                              'puzzles': 'rgba(236, 72, 153, 0.3)',
-                              'meeting': 'rgba(234, 179, 8, 0.3)',
-                              'swimming': 'rgba(20, 184, 166, 0.3)'
+                            // Fixed 5 colorful glow colors matching the background colors
+                            const glowColorMap: { [key: string]: string } = {
+                              'bg-blue-500': 'rgba(59, 130, 246, 0.4)',
+                              'bg-purple-500': 'rgba(168, 85, 247, 0.4)',
+                              'bg-pink-500': 'rgba(236, 72, 153, 0.4)',
+                              'bg-orange-500': 'rgba(249, 115, 22, 0.4)',
+                              'bg-green-500': 'rgba(34, 197, 94, 0.4)'
                             };
-                            return colorMap[a.activity.toLowerCase()] || 'rgba(107, 114, 128, 0.3)';
+                            const bgColor = getActivityColor(a.activity);
+                            return glowColorMap[bgColor] || 'rgba(107, 114, 128, 0.3)';
                           }).join(', ')}, inset 0 0 0 1px rgba(147, 51, 234, 0.3)`
                         : '0 0 15px rgba(147, 51, 234, 0.2), inset 0 0 0 1px rgba(147, 51, 234, 0.3)'
                     }}

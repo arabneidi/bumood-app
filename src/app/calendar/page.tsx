@@ -129,9 +129,9 @@ export default function CalendarPage() {
   const getMoodEmoji = (mood: MoodEntry | undefined, date: Date) => {
     if (!mood) return "";
     
-    // Check if this is the first day of a period
-    if (mood.onPeriod && mood.periodDay === 1) {
-      return "🩸"; // Blood drop for first day of period
+    // Show blood icon for any period day (not just day 1)
+    if (mood.onPeriod) {
+      return "🩸"; // Blood drop for period days
     }
     
     // Use the same calculation as dashboard: Life Rhythm Score (0-100)

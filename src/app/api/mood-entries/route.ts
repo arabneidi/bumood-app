@@ -127,18 +127,129 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Use custom date if provided, otherwise use current date
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-    const entryDate = customDate 
-      ? (customDate === today 
-          ? new Date() // Use current time for today's entries
-          : new Date(`${customDate}T12:00:00`)) // Use noon for past/future dates
-      : new Date();
+    // Determine authoritative local timestamp for this entry
+    // Priority:
+    // 1) Latest activityEntries[].exactTime (local) if provided
+    // 2) If customDate provided without specific timeslots/activities, use local current time on that date
+    // 3) Otherwise use local now
+    const nowLocal = new Date();
+    const todayLocalStr = new Date().toISOString().split('T')[0];
+    let chosenCreatedAt: Date | null = null;
+
+    // From activityEntries - use exact local time from activities (format: 2025-09-28T11:00:00, no Z)
+    if (activityEntries && Array.isArray(activityEntries) && activityEntries.length > 0) {
+      try {
+        const parsed = typeof activityEntries === 'string' ? JSON.parse(activityEntries) : activityEntries;
+        // Find the latest exactTime (already in local format like "2025-09-28T11:00:00")
+        const latestExactTime = parsed
+          .map((e: any) => e?.exactTime)
+          .filter((t: string | undefined) => t && typeof t === 'string')
+          .sort((a: string, b: string) => {
+            // Compare as strings (YYYY-MM-DDTHH:mm:ss format, local time)
+            return b.localeCompare(a);
+          })[0];
+        
+        if (latestExactTime) {
+          // Parse as local time (format: "2025-09-28T11:00:00" - no Z means local)
+          // Extract date components to create a proper local Date object
+          const [datePart, timePart] = latestExactTime.split('T');
+          const [year, month, day] = datePart.split('-').map(Number);
+          const [hour, minute, second] = (timePart || '00:00:00').split(':').map(Number);
+          chosenCreatedAt = new Date(year, month - 1, day, hour, minute, second || 0);
+        }
+      } catch {}
+    }
+
+    // From customDate without activities
+    if (!chosenCreatedAt && customDate) {
+      if (customDate === todayLocalStr) {
+        chosenCreatedAt = nowLocal; // current local time
+      } else {
+        // Use the actual local time when the entry is being created, applied to the custom date
+        const hh = String(nowLocal.getHours()).padStart(2, '0');
+        const mm = String(nowLocal.getMinutes()).padStart(2, '0');
+        chosenCreatedAt = new Date(`${customDate}T${hh}:${mm}:00`); // local wall-clock on chosen day
+      }
+    }
+
+    if (!chosenCreatedAt) {
+      chosenCreatedAt = nowLocal;
+    }
     
-    console.log('📅 Entry date:', entryDate.toISOString());
+    console.log('📅 Chosen createdAt (local):', chosenCreatedAt);
+    
+    // If onPeriod is true, add "Menstruation" activity at 12pm
+    let finalActivities: string[] = [];
+    let finalActivityEntries: any[] = [];
+    
+    try {
+      finalActivities = Array.isArray(activities) ? activities : (activities ? JSON.parse(activities) : []);
+      if (!Array.isArray(finalActivities)) finalActivities = [];
+    } catch {
+      finalActivities = [];
+    }
+    
+    // If alcohol > 0, add "Drinking" activity at 12pm (MC-only, no DSS)
+    if (alcohol && Number(alcohol) > 0 && !finalActivities.includes('Drinking')) {
+      console.log('🍺 Adding Drinking activity for alcohol day');
+      finalActivities.push('Drinking');
+      const entryDate2 = new Date(chosenCreatedAt);
+      const y2 = entryDate2.getFullYear();
+      const m2 = String(entryDate2.getMonth() + 1).padStart(2, '0');
+      const d2 = String(entryDate2.getDate()).padStart(2, '0');
+      const exactTime2 = `${y2}-${m2}-${d2}T12:00:00`;
+      const hour2 = 12;
+      const timeSlot2 = hour2 < 12 ? `morning-${hour2}` : hour2 < 17 ? `midday-${hour2}` : hour2 < 22 ? `evening-${hour2}` : `night-${hour2}`;
+      const drinkingEntry = {
+        activity: 'Drinking',
+        exactTime: exactTime2,
+        timeSlot: timeSlot2,
+        hour: hour2
+      };
+      const hasDrinking = finalActivityEntries.some((e: any) => e?.activity === 'Drinking' && e?.exactTime === exactTime2);
+      if (!hasDrinking) finalActivityEntries.push(drinkingEntry);
+    }
+
+    try {
+      finalActivityEntries = Array.isArray(activityEntries) ? activityEntries : (activityEntries ? JSON.parse(activityEntries) : []);
+      if (!Array.isArray(finalActivityEntries)) finalActivityEntries = [];
+    } catch {
+      finalActivityEntries = [];
+    }
+    
+    if (onPeriod === true && !finalActivities.includes('Menstruation')) {
+      console.log('🩸 Adding Menstruation activity for period day');
+      
+      // Add to activities array
+      finalActivities.push('Menstruation');
+      
+      // Add to activityEntries with exactTime at 12pm on the entry date
+      const entryDate = new Date(chosenCreatedAt);
+      const year = entryDate.getFullYear();
+      const month = String(entryDate.getMonth() + 1).padStart(2, '0');
+      const day = String(entryDate.getDate()).padStart(2, '0');
+      const exactTime = `${year}-${month}-${day}T12:00:00`;
+      const hour = 12;
+      const timeSlot = hour < 12 ? `morning-${hour}` : hour < 17 ? `midday-${hour}` : hour < 22 ? `evening-${hour}` : `night-${hour}`;
+      
+      const menstruationEntry = {
+        activity: 'Menstruation',
+        exactTime: exactTime,
+        timeSlot: timeSlot,
+        hour: hour
+      };
+      
+      // Only add if not already present
+      const hasMenstruation = finalActivityEntries.some((e: any) => 
+        e?.activity === 'Menstruation' && e?.exactTime === exactTime
+      );
+      if (!hasMenstruation) {
+        finalActivityEntries.push(menstruationEntry);
+      }
+    }
     
     // Calculate Mood Composite
-    const timeBucket = getTimeBucket(entryDate);
+    const timeBucket = getTimeBucket(chosenCreatedAt);
     console.log('🧮 Calculating Mood Composite...');
     const mcResult = await calculateMoodComposite(
       dummyUserId,
@@ -146,7 +257,7 @@ export async function POST(request: NextRequest) {
       parseInt(energy),
       parseInt(focus),
       parseInt(stress),
-      entryDate
+      chosenCreatedAt
     );
     console.log('✅ Mood Composite calculated:', mcResult.moodComposite);
 
@@ -160,10 +271,10 @@ export async function POST(request: NextRequest) {
         stress: parseInt(stress),
         sleep: sleep !== null && sleep !== undefined ? parseFloat(sleep) : null,
         notes: notes || null,
-        activities: JSON.stringify(activities),
+        activities: JSON.stringify(finalActivities),
         selectedTimeSlots: selectedTimeSlots ? JSON.stringify(selectedTimeSlots) : null,
         selectedSubcategories: selectedSubcategories ? JSON.stringify(selectedSubcategories) : null,
-        activityEntries: activityEntries ? JSON.stringify(activityEntries) : null,
+        activityEntries: finalActivityEntries.length > 0 ? JSON.stringify(finalActivityEntries) : null,
         dssAnalysis: dssAnalysis ? (typeof dssAnalysis === 'string' ? dssAnalysis : JSON.stringify(dssAnalysis)) : null,
         reflection: reflection || null,
         voiceNote: voiceNote || null,
@@ -178,8 +289,8 @@ export async function POST(request: NextRequest) {
         caffeine: caffeine ? parseInt(caffeine) : null,
         alcohol: alcohol ? parseInt(alcohol) : null,
         // Use custom date/time if provided
-        createdAt: entryDate,
-        updatedAt: entryDate,
+        createdAt: chosenCreatedAt,
+        updatedAt: chosenCreatedAt,
       },
     });
     console.log('✅ Mood entry created successfully:', moodEntry.id);
@@ -243,7 +354,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Auto-create/update DailyTracking record based on mood entry data
-    const trackingDate = new Date(entryDate);
+    const trackingDate = new Date(chosenCreatedAt);
     trackingDate.setHours(0, 0, 0, 0);
     
     // Parse activities and DSS analysis to extract DSS components

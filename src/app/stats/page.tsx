@@ -57,37 +57,47 @@ export default function StatsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      const perfStart = performance.now();
       try {
         setLoading(true);
         
         // Fetch mood entries
+        const moodStart = performance.now();
         const moodResponse = await fetch('/api/mood-entries');
         if (!moodResponse.ok) throw new Error('Failed to fetch mood entries');
         const moodData = await moodResponse.json();
+        const moodTime = performance.now() - moodStart;
+        console.log(`⏱️ [Stats] Mood entries: ${moodTime.toFixed(2)}ms`);
         setMoodEntries(moodData);
 
         // Fetch user info
+        const userStart = performance.now();
         const userResponse = await fetch('/api/user');
         if (userResponse.ok) {
           const userData = await userResponse.json();
           setUserInfo(userData);
         } else if (userResponse.status === 404) {
-          // No user data - this is expected for a clean database
           console.log('No user data found - clean database state');
           setUserInfo(null);
         } else {
           throw new Error('Failed to fetch user info');
         }
+        const userTime = performance.now() - userStart;
+        console.log(`⏱️ [Stats] User info: ${userTime.toFixed(2)}ms`);
 
         // Fetch user preferences for network graph
+        const prefStart = performance.now();
         const preferencesResponse = await fetch('/api/learn-connections?userId=dummy-user');
         if (preferencesResponse.ok) {
           const preferencesData = await preferencesResponse.json();
           setUserPreferences(preferencesData);
         }
+        const prefTime = performance.now() - prefStart;
+        console.log(`⏱️ [Stats] Learn connections: ${prefTime.toFixed(2)}ms`);
 
         // Fetch DSS data (current calculated DSS)
         try {
+          const dssStart = performance.now();
           const dssResponse = await fetch('/api/dss?userId=dummy-user');
           if (dssResponse.ok) {
             const dssData = await dssResponse.json();
@@ -95,6 +105,8 @@ export default function StatsPage() {
               setDssData(dssData.data.currentDSS);
             }
           }
+          const dssTime = performance.now() - dssStart;
+          console.log(`⏱️ [Stats] DSS data: ${dssTime.toFixed(2)}ms`);
         } catch (dssError) {
           console.error('Error fetching DSS data:', dssError);
         } finally {
@@ -103,17 +115,22 @@ export default function StatsPage() {
 
         // Fetch Drivers data
         try {
+          const driversStart = performance.now();
           const driversResponse = await fetch('/api/drivers');
           if (driversResponse.ok) {
             const driversData = await driversResponse.json();
             setDriversData(driversData);
           }
+          const driversTime = performance.now() - driversStart;
+          console.log(`⏱️ [Stats] Drivers data: ${driversTime.toFixed(2)}ms`);
         } catch (driversError) {
           console.error('Error fetching drivers data:', driversError);
         } finally {
           setDriversLoading(false);
         }
 
+        const totalTime = performance.now() - perfStart;
+        console.log(`⏱️ [Stats] Total load time: ${totalTime.toFixed(2)}ms`);
 
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -131,11 +148,14 @@ export default function StatsPage() {
     const fetchPowerHours = async () => {
       setPowerHoursLoading(true);
       try {
+        const powerStart = performance.now();
         const powerHoursResponse = await fetch(`/api/power-hours?userId=dummy-user&window=${powerHoursWindow}`);
         if (powerHoursResponse.ok) {
           const powerHoursData = await powerHoursResponse.json();
           setPowerHoursData(powerHoursData);
         }
+        const powerTime = performance.now() - powerStart;
+        console.log(`⏱️ [Stats] Power hours (${powerHoursWindow}): ${powerTime.toFixed(2)}ms`);
       } catch (powerHoursError) {
         console.error('Error fetching power hours data:', powerHoursError);
       } finally {

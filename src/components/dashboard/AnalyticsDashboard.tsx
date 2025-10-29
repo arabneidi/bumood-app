@@ -27,6 +27,7 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
   useEffect(() => {
     const fetchMCDSSData = async () => {
       try {
+        const mcStart = performance.now();
         console.log('🔵 AnalyticsDashboard - Fetching MC-DSS data...');
         const response = await fetch('/api/mc-dss-trends?userId=dummy-user&days=7');
         console.log('🔵 AnalyticsDashboard - MC-DSS response status:', response.status);
@@ -41,6 +42,8 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
         } else {
           console.error('🔵 AnalyticsDashboard - MC-DSS response not ok:', response.status);
         }
+        const mcTime = performance.now() - mcStart;
+        console.log(`⏱️ [AnalyticsDashboard] MC-DSS fetch: ${mcTime.toFixed(2)}ms`);
       } catch (error) {
         console.error('🔵 AnalyticsDashboard - Error fetching MC-DSS data:', error);
       } finally {

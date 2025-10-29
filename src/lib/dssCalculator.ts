@@ -167,9 +167,75 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
         maxSleepHours = Math.max(maxSleepHours, entry.sleep);
       }
       
-      // Recovery action (simplified - assume true if any entry has sleep > 7 hours)
+      // Recovery action: sleep > 7 hours OR activities with RI component (EXCLUDE Menstruation)
       if (entry.sleep && entry.sleep > 7) {
         hasRecoveryAction = true;
+      }
+      
+      // Check for recovery activities (RI component) in activityEntries - Menstruation excluded from DSS
+      if (entry.activityEntries) {
+        try {
+          const activityEntries = JSON.parse(entry.activityEntries);
+          if (Array.isArray(activityEntries)) {
+            for (const activityEntry of activityEntries) {
+              const activityName = activityEntry.activity;
+              
+              // Skip Menstruation - it doesn't contribute to DSS, only MC
+              if (activityName === 'Menstruation') {
+                continue;
+              }
+              
+              // Check database for RI component
+              const predefinedActivity = await prisma.predefinedActivity.findFirst({
+                where: {
+                  name: activityName,
+                  dssComponent: 'RI',
+                  isActive: true
+                }
+              });
+              
+              if (predefinedActivity) {
+                hasRecoveryAction = true;
+                console.log(`🔵 Found RI activity: ${activityName} -> recovery action for RI`);
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          // Skip if parsing fails
+        }
+      }
+      
+      // Also check activities array for RI component (Menstruation excluded)
+      if (entry.activities) {
+        try {
+          const activities = Array.isArray(entry.activities) ? entry.activities : JSON.parse(entry.activities || '[]');
+          if (Array.isArray(activities)) {
+            for (const activityName of activities) {
+              // Skip Menstruation - it doesn't contribute to DSS, only MC
+              if (activityName === 'Menstruation') {
+                continue;
+              }
+              
+              // Check database for RI component
+              const predefinedActivity = await prisma.predefinedActivity.findFirst({
+                where: {
+                  name: activityName,
+                  dssComponent: 'RI',
+                  isActive: true
+                }
+              });
+              
+              if (predefinedActivity) {
+                hasRecoveryAction = true;
+                console.log(`🔵 Found RI activity in activities array: ${activityName} -> recovery action for RI`);
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          // Skip if parsing fails
+        }
       }
     }
 
