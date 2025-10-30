@@ -1,3 +1,25 @@
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+
+// Update the demo user profile with provided fields
+export async function PUT(request: NextRequest) {
+  try {
+    const data = await request.json();
+    const userId = 'dummy-user';
+    await db.user.upsert({
+      where: { id: userId },
+      create: { id: userId, name: 'Demo User', email: 'demo@example.com', ...data },
+      update: { ...data }
+    });
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error?.message || 'Failed' }, { status: 500 });
+  }
+}
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 export const runtime = 'nodejs';

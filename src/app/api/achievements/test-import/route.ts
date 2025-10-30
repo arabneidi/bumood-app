@@ -1,3 +1,35 @@
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+
+export async function POST(request: NextRequest) {
+  try {
+    const items = await request.json();
+    if (!Array.isArray(items)) return NextResponse.json({ error: 'array required' }, { status: 400 });
+    let count = 0;
+    for (const a of items) {
+      await db.achievement.create({
+        data: {
+          id: a.id || undefined,
+          userId: a.userId || 'dummy-user',
+          type: a.type || '',
+          title: a.title || '',
+          description: a.description || '',
+          icon: a.icon || '',
+          stars: a.stars ?? 1,
+          unlockedAt: a.unlockedAt ? new Date(a.unlockedAt) : null
+        }
+      });
+      count++;
+    }
+    return NextResponse.json({ success: true, count });
+  } catch (e: any) {
+    return NextResponse.json({ success: false, error: e?.message || 'Failed' }, { status: 500 });
+  }
+}
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 export const runtime = 'nodejs';
