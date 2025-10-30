@@ -35,6 +35,15 @@ export async function POST(request: NextRequest) {
     });
     console.log('✅ Deleted', goalsDeleted.count, 'goals');
 
+    // Delete goal daily progress (new table)
+    let goalProgressDailyDeleted = { count: 0 } as { count: number };
+    try {
+      goalProgressDailyDeleted = await db.goalProgressDaily.deleteMany({ where: { userId } });
+      console.log('✅ Deleted', goalProgressDailyDeleted.count, 'goal progress daily records');
+    } catch (e) {
+      console.log('⚠️  GoalProgressDaily model not found, skipping');
+    }
+
     // Delete all achievements (this removes achieved badges)
     const achievementsDeleted = await db.achievement.deleteMany({
       where: { userId }
@@ -56,6 +65,33 @@ export async function POST(request: NextRequest) {
       console.log('✅ Deleted', aiActionsDeleted.count, 'AI actions');
     } catch (error) {
       console.log('⚠️  AI actions model not found, skipping');
+    }
+
+    // Delete congratulations
+    let congratulationsDeleted = { count: 0 } as { count: number };
+    try {
+      congratulationsDeleted = await db.congratulation.deleteMany({ where: { userId } });
+      console.log('✅ Deleted', congratulationsDeleted.count, 'congratulations');
+    } catch (e) {
+      console.log('⚠️  Congratulation model not found, skipping');
+    }
+
+    // Delete period tracking
+    let periodTrackingDeleted = { count: 0 } as { count: number };
+    try {
+      periodTrackingDeleted = await db.periodTracking.deleteMany({ where: { userId } });
+      console.log('✅ Deleted', periodTrackingDeleted.count, 'period tracking entries');
+    } catch (e) {
+      console.log('⚠️  PeriodTracking model not found, skipping');
+    }
+
+    // Delete activity outcome connections (learned associations)
+    let activityConnectionsDeleted = { count: 0 } as { count: number };
+    try {
+      activityConnectionsDeleted = await db.activityOutcomeConnection.deleteMany({ where: { userId } });
+      console.log('✅ Deleted', activityConnectionsDeleted.count, 'activity outcome connections');
+    } catch (e) {
+      console.log('⚠️  ActivityOutcomeConnection model not found, skipping');
     }
 
     try {
@@ -149,17 +185,29 @@ export async function POST(request: NextRequest) {
     const remainingAchievements = await db.achievement.count({
       where: { userId }
     });
+    const remainingGoalProgressDaily = await db.goalProgressDaily.count({ where: { userId } }).catch(() => 0);
+    const remainingCongratulations = await db.congratulation.count({ where: { userId } }).catch(() => 0);
+    const remainingPeriodTracking = await db.periodTracking.count({ where: { userId } }).catch(() => 0);
+    const remainingActivityConnections = await db.activityOutcomeConnection.count({ where: { userId } }).catch(() => 0);
 
     const isClean = remainingMoodEntries === 0 && 
                    remainingDailyTracking === 0 && 
                    remainingGoals === 0 && 
-                   remainingAchievements === 0;
+                   remainingAchievements === 0 &&
+                   remainingGoalProgressDaily === 0 &&
+                   remainingCongratulations === 0 &&
+                   remainingPeriodTracking === 0 &&
+                   remainingActivityConnections === 0;
 
     console.log('📊 Cleanup verification:');
     console.log('Mood entries remaining:', remainingMoodEntries);
     console.log('Daily tracking remaining:', remainingDailyTracking);
     console.log('Goals remaining:', remainingGoals);
     console.log('Achievements remaining:', remainingAchievements);
+    console.log('GoalProgressDaily remaining:', remainingGoalProgressDaily);
+    console.log('Congratulations remaining:', remainingCongratulations);
+    console.log('PeriodTracking remaining:', remainingPeriodTracking);
+    console.log('ActivityOutcomeConnections remaining:', remainingActivityConnections);
 
     return NextResponse.json({
       success: true,
@@ -170,10 +218,14 @@ export async function POST(request: NextRequest) {
           dailyTracking: dailyTrackingDeleted.count,
           goals: goalsDeleted.count,
           achievements: achievementsDeleted.count, // Achieved badges removed
+          goalProgressDaily: goalProgressDailyDeleted.count,
           aiActions: aiActionsDeleted.count,
           aiPreferences: aiPreferencesDeleted.count,
           aiSuggestions: aiSuggestionsDeleted.count,
-          learnConnections: learnConnectionsDeleted.count
+          learnConnections: learnConnectionsDeleted.count,
+          congratulations: congratulationsDeleted.count,
+          periodTracking: periodTrackingDeleted.count,
+          activityOutcomeConnections: activityConnectionsDeleted.count
         },
         verification: {
           isClean,
@@ -181,7 +233,11 @@ export async function POST(request: NextRequest) {
             moodEntries: remainingMoodEntries,
             dailyTracking: remainingDailyTracking,
             goals: remainingGoals,
-            achievements: remainingAchievements
+            achievements: remainingAchievements,
+            goalProgressDaily: remainingGoalProgressDaily,
+            congratulations: remainingCongratulations,
+            periodTracking: remainingPeriodTracking,
+            activityOutcomeConnections: remainingActivityConnections
           }
         }
       }
