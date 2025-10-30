@@ -1,8 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { db } from '@/lib/db';
 import { calculateDSS } from '@/lib/dssCalculator';
 import { calculateMoodComposite, getCurrentTimeBucket } from '@/lib/moodCompositeCalculator';
 
@@ -23,32 +22,18 @@ export async function GET(request: NextRequest) {
     const historicalStart = new Date(startDate);
     historicalStart.setDate(historicalStart.getDate() - 14);
     
-    const [moodEntries] = await Promise.all([
-      prisma.moodEntry.findMany({
-        where: {
-          userId,
-          createdAt: {
-            gte: startDate,
-            lte: endDate
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
+    const moodEntries = await db.moodEntry.findMany({
+      where: {
+        userId,
+        createdAt: {
+          gte: startDate,
+          lte: endDate
         }
-      }),
-      // Pre-fetch historical data that calculate functions will need (warm connection)
-      prisma.moodEntry.findMany({
-        where: {
-          userId,
-          createdAt: {
-            gte: historicalStart,
-            lt: startDate
-          }
-        },
-        select: { id: true }, // Just fetch IDs to warm connection, not full data
-        take: 1
-      })
-    ]);
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
 
     // Group entries by date (using local time, not UTC)
     const entriesByDate = moodEntries.reduce((acc, entry) => {
@@ -82,7 +67,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate all days in parallel (MC and DSS for each day run in parallel)
-    const trendDataPromises = dateKeys.map(async (dateKey) => {
+    const computeForDate = async (dateKey: string) => {
       const entries = entriesByDate[dateKey] || [];
       
       // Create date object from YYYY-MM-DD string in local timezone
@@ -176,9 +161,12 @@ export async function GET(request: NextRequest) {
             mc: mcValue,
         dss: dssScore
       };
-    });
+    };
 
-    const trendData = await Promise.all(trendDataPromises);
+    const trendData: any[] = [];
+    for (const dateKey of dateKeys) {
+      trendData.push(await computeForDate(dateKey));
+    }
     trendData.reverse();
 
     return NextResponse.json({

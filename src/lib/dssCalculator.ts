@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { db } from '@/lib/db';
 
 export interface DSSComponents {
   learningMomentum: number;
@@ -49,7 +48,7 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
   
-  const moodEntries = await prisma.moodEntry.findMany({
+  const moodEntries = await db.moodEntry.findMany({
     where: {
       userId,
       createdAt: {
@@ -121,7 +120,7 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
           if (Array.isArray(activityEntries)) {
             for (const activityEntry of activityEntries) {
               const activityName = activityEntry.activity;
-              const predefinedActivity = await prisma.predefinedActivity.findFirst({
+              const predefinedActivity = await db.predefinedActivity.findFirst({
                 where: {
                   name: activityName,
                   dssComponent: 'LM',
@@ -145,7 +144,7 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
           if (Array.isArray(activityEntries)) {
             for (const activityEntry of activityEntries) {
               const activityName = activityEntry.activity;
-              const predefinedActivity = await prisma.predefinedActivity.findFirst({
+              const predefinedActivity = await db.predefinedActivity.findFirst({
                 where: {
                   name: activityName,
                   dssComponent: 'Connection',
@@ -189,7 +188,7 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
               }
               
               // Check database for RI component
-              const predefinedActivity = await prisma.predefinedActivity.findFirst({
+              const predefinedActivity = await db.predefinedActivity.findFirst({
                 where: {
                   name: activityName,
                   dssComponent: 'RI',
@@ -363,7 +362,7 @@ async function calculateLearningMomentum(tracking: any, userId: string, date: Da
   nextDay.setDate(nextDay.getDate() + 1);
 
   const [lmGoals, todaysProgress] = await Promise.all([
-    prisma.goal.findMany({
+    db.goal.findMany({
       where: {
         userId: userId,
         dssComponent: 'LM',
@@ -371,7 +370,7 @@ async function calculateLearningMomentum(tracking: any, userId: string, date: Da
       },
       select: { id: true }
     }),
-    prisma.goalProgressDaily.findMany({
+    db.goalProgressDaily.findMany({
       where: {
         userId: userId,
         date: { gte: dayStart, lt: nextDay }
@@ -405,7 +404,7 @@ async function calculateRecoveryIndex(tracking: any, userId: string, date: Date)
   nextDay.setDate(nextDay.getDate() + 1);
 
   const [riGoals, todaysProgress] = await Promise.all([
-    prisma.goal.findMany({
+    db.goal.findMany({
       where: {
         userId: userId,
         dssComponent: 'RI',
@@ -413,7 +412,7 @@ async function calculateRecoveryIndex(tracking: any, userId: string, date: Date)
       },
       select: { id: true }
     }),
-    prisma.goalProgressDaily.findMany({
+    db.goalProgressDaily.findMany({
       where: {
         userId: userId,
         date: { gte: dayStart, lt: nextDay }
@@ -444,7 +443,7 @@ async function calculateConnectionScore(tracking: any, userId: string, date: Dat
   nextDay.setDate(nextDay.getDate() + 1);
 
   const [connectionGoals, todaysProgress] = await Promise.all([
-    prisma.goal.findMany({
+    db.goal.findMany({
       where: {
         userId: userId,
         dssComponent: 'Connection',
@@ -452,7 +451,7 @@ async function calculateConnectionScore(tracking: any, userId: string, date: Dat
       },
       select: { id: true }
     }),
-    prisma.goalProgressDaily.findMany({
+    db.goalProgressDaily.findMany({
       where: {
         userId: userId,
         date: { gte: dayStart, lt: nextDay }
@@ -504,7 +503,7 @@ export async function updateDSSForDay(userId: string, date: Date): Promise<void>
   const today = new Date(date);
   today.setHours(0, 0, 0, 0);
   
-  await prisma.dailyTracking.upsert({
+  await db.dailyTracking.upsert({
     where: {
       userId_date: {
         userId,

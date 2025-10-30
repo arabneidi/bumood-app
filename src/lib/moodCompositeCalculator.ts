@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '@/lib/db';
 
 export type TimeBucket = 'morning' | 'midday' | 'evening' | 'night';
 
@@ -60,7 +58,7 @@ export async function calculateMoodComposite(
   // 1. Were created in the current time bucket, OR
   // 2. Have activities in the current time bucket (stored in selectedTimeSlots or activityEntries)
   // Since selectedTimeSlots is a JSON string, we'll fetch all entries and filter in code
-  const allEntries = await prisma.moodEntry.findMany({
+  const allEntries = await db.moodEntry.findMany({
     where: {
       userId,
       createdAt: {
@@ -182,7 +180,7 @@ export async function calculateMoodCompositeForPowerHours(
   }
   
   // Get ALL entries in the window (not just same time bucket)
-  const allEntries = await prisma.moodEntry.findMany({
+  const allEntries = await db.moodEntry.findMany({
     where: {
       userId,
       createdAt: {
@@ -329,7 +327,7 @@ function calculateZScore(value: number, history: number[]): number {
  * Update Mood Composite for a specific mood entry
  */
 export async function updateMoodCompositeForEntry(entryId: string): Promise<void> {
-  const entry = await prisma.moodEntry.findUnique({
+  const entry = await db.moodEntry.findUnique({
     where: { id: entryId }
   });
 
@@ -344,7 +342,7 @@ export async function updateMoodCompositeForEntry(entryId: string): Promise<void
     entry.createdAt
   );
 
-  await prisma.moodEntry.update({
+  await db.moodEntry.update({
     where: { id: entryId },
     data: {
       moodComposite: mcResult.moodComposite,
@@ -368,7 +366,7 @@ export async function getMoodCompositeTrends(
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
-  const entries = await prisma.moodEntry.findMany({
+  const entries = await db.moodEntry.findMany({
     where: {
       userId,
       createdAt: {

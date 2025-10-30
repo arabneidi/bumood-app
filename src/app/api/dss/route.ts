@@ -188,11 +188,8 @@ export async function POST(request: NextRequest) {
 
     const targetDate = date ? new Date(date) : new Date();
     
-    // Update the daily tracking with new DSS component data
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
-
-    const updatedTracking = await prisma.dailyTracking.upsert({
+    // Update the daily tracking with new DSS component data (use shared db client)
+    const updatedTracking = await db.dailyTracking.upsert({
       where: {
         userId_date: {
           userId,
