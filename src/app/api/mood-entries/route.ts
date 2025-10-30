@@ -706,12 +706,20 @@ export async function GET(request: NextRequest) {
       take: 100, // Last 100 entries to include more historical data
     });
 
-    const entriesWithActivities = moodEntries.map(entry => ({
-      ...entry,
-      activities: entry.activities ? JSON.parse(entry.activities) : [],
-      selectedSubcategories: entry.selectedSubcategories ? JSON.parse(entry.selectedSubcategories) : [],
-      activityEntries: entry.activityEntries ? JSON.parse(entry.activityEntries) : [],
-    }));
+    const entriesWithActivities = moodEntries.map(entry => {
+      const d = new Date(entry.createdAt);
+      // Local-friendly fields (do not mutate createdAt)
+      const localKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const localCreatedAt = `${localKey}T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+      return {
+        ...entry,
+        activities: entry.activities ? JSON.parse(entry.activities) : [],
+        selectedSubcategories: entry.selectedSubcategories ? JSON.parse(entry.selectedSubcategories) : [],
+        activityEntries: entry.activityEntries ? JSON.parse(entry.activityEntries) : [],
+        localCreatedAt, // e.g., 2025-10-15T08:00:00 (local wall-clock)
+        localDate: localKey   // e.g., 2025-10-15
+      };
+    });
 
     return NextResponse.json(entriesWithActivities);
   } catch (error) {

@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { NextRequest, NextResponse } from 'next/server';
-import { calculateMoodComposite, getMoodCompositeTrends, getCurrentTimeBucket } from '@/lib/moodCompositeCalculator';
+import { calculateMoodComposite, getMoodCompositeTrends, getCurrentTimeBucket, getTimeBucket } from '@/lib/moodCompositeCalculator';
 import { db } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
@@ -11,13 +11,14 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId') || 'dummy-user';
     const days = parseInt(searchParams.get('days') || '14'); // Dashboard MC uses 14-day window
     const calculateCurrent = searchParams.get('calculateCurrent') === 'true';
+    const currentHourParam = searchParams.get('currentHour');
 
     // Get Mood Composite trends
     const trends = await getMoodCompositeTrends(userId, days);
     
     // logs removed for cleanliness
     
-    // If requested, get MC for current time - try cache first
+    // If requested, get MC for current time - align bucket with client hour when provided
     let currentMC: number | null = null;
     if (calculateCurrent) {
       // ALWAYS recompute current MC (no cache) to keep parity with MC–DSS chart
@@ -38,7 +39,8 @@ export async function GET(request: NextRequest) {
 
         // Use entries that have at least one activity whose timeSlot prefix matches the current time bucket.
         // Fallbacks: selectedTimeSlots prefix; finally timeBucket column if neither available.
-        const currentBucket = getCurrentTimeBucket();
+        // Use explicit Date for time bucket (chart-style)
+        let currentBucket = getTimeBucket(new Date());
         const bucketEntries = todayEntries.filter((e: any) => {
           // activityEntries first
           if (e?.activityEntries) {
@@ -123,7 +125,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         trends,
-        currentTimeBucket: getCurrentTimeBucket(),
+        currentTimeBucket: getTimeBucket(new Date()),
         currentMC
       }
     });
