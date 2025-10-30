@@ -206,26 +206,23 @@ export default function NewEntry() {
     const anyTodayOn = moodEntries.some(e => new Date(e.createdAt).toISOString().split('T')[0] === todayLocal && e.onPeriod);
     if (anyTodayOn) return true;
 
-    // Consider ON from last start until an explicit end entry occurs
-    const entriesDesc = [...moodEntries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    // Consider ON from last explicit start until an explicit end marker (periodDay === 0) occurs
     const entriesAsc = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    let lastStart: any = entriesAsc.find(e => e.onPeriod) || null;
-    for (let i = 1; i < entriesAsc.length; i++) {
-      const prev = entriesAsc[i - 1];
+    // Find last start (onPeriod===true)
+    let lastStart: any = null;
+    for (let i = 0; i < entriesAsc.length; i++) {
       const cur = entriesAsc[i];
-      if (!prev.onPeriod && cur.onPeriod) lastStart = cur;
+      if (cur.onPeriod === true) lastStart = cur;
     }
     if (!lastStart) return false;
 
-    const lastStartDate = new Date(lastStart.createdAt);
-    const startOnly = new Date(lastStartDate.getFullYear(), lastStartDate.getMonth(), lastStartDate.getDate());
-    const now = new Date();
-    const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const daysSinceStart = Math.floor((nowOnly.getTime() - startOnly.getTime()) / (1000 * 60 * 60 * 24));
+    // If any entry after lastStart has periodDay === 0, treat as explicit end
+    const lastStartTs = new Date(lastStart.createdAt).getTime();
+    const ended = entriesAsc.some(e => new Date(e.createdAt).getTime() >= lastStartTs && (e.periodDay === 0));
+    if (ended) return false;
 
-    const latestAfterStart = entriesDesc.find(e => new Date(e.createdAt).getTime() >= lastStartDate.getTime());
-    const explicitlyEnded = latestAfterStart ? latestAfterStart.onPeriod === false : false;
-    return !explicitlyEnded && daysSinceStart >= 0;
+    // Otherwise, still considered on period
+    return true;
   };
 
   // Get current period day from inferred last cycle start
@@ -962,7 +959,7 @@ export default function NewEntry() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
-        className="max-w-4xl mx-auto py-8 relative z-10"
+        className="w-full max-w-none px-4 md:px-6 lg:px-8 py-8 relative z-10"
       >
       
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -1309,7 +1306,7 @@ export default function NewEntry() {
               opacity: { duration: 0.6, delay: 0.3 },
               y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
           >
             {/* Glowing Edge Effect */}
             <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
@@ -1380,7 +1377,7 @@ export default function NewEntry() {
                 opacity: { duration: 0.6, delay: 0.5 },
                 y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
               }}
-              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
+              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
             >
               {/* Glowing Edge Effect */}
               <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
@@ -1500,7 +1497,7 @@ export default function NewEntry() {
                 opacity: { duration: 0.6, delay: 0.4 + (activityIndex * 0.1) },
                 y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
               }}
-              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8 mb-8"
+              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mb-8"
             >
               {/* Glowing Edge Effect */}
               <div className="absolute inset-0 rounded-3xl border-2 border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)] animate-pulse"></div>
@@ -1633,7 +1630,7 @@ export default function NewEntry() {
                 opacity: { duration: 0.6, delay: 1.0 },
                 y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" }
               }}
-              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
+              className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
             >
               {/* Glowing Edge Effect */}
               <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
@@ -1735,10 +1732,10 @@ export default function NewEntry() {
                           await fetch('/api/mood-entries', {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: mostRecent.id, onPeriod: false, periodDay: null })
+                            body: JSON.stringify({ id: mostRecent.id, onPeriod: false, periodDay: 0 })
                           });
                           // Reflect change in local moodEntries state
-                          setMoodEntries(prev => prev.map(e => e.id === mostRecent.id ? { ...e, onPeriod: false, periodDay: null, updatedAt: new Date().toISOString() } : e));
+                          setMoodEntries(prev => prev.map(e => e.id === mostRecent.id ? { ...e, onPeriod: false, periodDay: 0, updatedAt: new Date().toISOString() } : e));
                         }
                       } catch (err) {
                         console.error('Failed to end period:', err);
@@ -1761,7 +1758,7 @@ export default function NewEntry() {
               opacity: { duration: 0.6, delay: 1.2 },
               y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8 mx-8"
+            className="relative bg-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 p-8"
           >
             {/* Glowing Edge Effect */}
             <div className={`absolute inset-0 rounded-3xl border-2 ${(formData.onPeriod && isFirstPeriodEntry) ? 'border-red-400/80 shadow-[0_0_50px_rgba(239,68,68,0.8),0_0_100px_rgba(239,68,68,0.6),0_0_150px_rgba(239,68,68,0.4)]' : 'border-purple-400/50 shadow-[0_0_30px_rgba(147,51,234,0.4)]'} animate-pulse`}></div>
