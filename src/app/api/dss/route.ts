@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { calculateDSS, getDSSTrends, updateDSSForDay } from '@/lib/dssCalculator';
+import { calculateDSS, calculateDSSForRadar, getDSSTrends, updateDSSForDay } from '@/lib/dssCalculator';
 
 export async function GET(request: NextRequest) {
   try {
@@ -105,8 +105,8 @@ export async function GET(request: NextRequest) {
         currentDSS = null;
       } else {
         if (noCache) {
-          // Always recalc for stats radar when noCache=true
-          currentDSS = await calculateDSS(userId, currentDay);
+          // Always recalc for stats radar when noCache=true (use radar-specific calc)
+          currentDSS = await calculateDSSForRadar(userId, currentDay);
         } else {
           // Prefer cached value if present to avoid recalculation on each refresh (dashboard)
           const cachedToday = await db.dailyTracking.findUnique({
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
           });
           if (cachedToday && cachedToday.dssScore != null) {
             // Recalculate only z-scores/historical for DSS Radar while keeping cached score/components
-            const zcalc = await calculateDSS(userId, currentDay);
+            const zcalc = await calculateDSSForRadar(userId, currentDay);
             currentDSS = {
               dssScore: cachedToday.dssScore,
               components: {

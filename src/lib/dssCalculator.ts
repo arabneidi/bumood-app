@@ -339,6 +339,15 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
 }
 
 /**
+ * Dedicated DSS calculator for the DSS Radar.
+ * Currently mirrors calculateDSS, but isolated so we can evolve radar-specific
+ * behavior independently (e.g., logging/off, different history windows, etc.).
+ */
+export async function calculateDSSForRadar(userId: string, date: Date): Promise<DSSResult> {
+  return calculateDSS(userId, date);
+}
+
+/**
  * Calculate Learning Momentum: LM = deepwork_minutes + 10*tasks_completed + goal_progress
  */
 async function calculateLearningMomentum(tracking: any, userId: string, date: Date): Promise<number> {
