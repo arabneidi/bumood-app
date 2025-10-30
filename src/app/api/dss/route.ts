@@ -100,25 +100,32 @@ export async function GET(request: NextRequest) {
         where: { userId, createdAt: { gte: currentDay, lt: tomorrow } }
       });
 
+      const noCache = searchParams.get('noCache') === 'true';
       if (hasTodayEntries === 0) {
         currentDSS = null;
       } else {
-        // Prefer cached value if present to avoid recalculation on each refresh
-        const cachedToday = await db.dailyTracking.findUnique({
-          where: { userId_date: { userId, date: currentDay } }
-        });
-        if (cachedToday && cachedToday.dssScore != null) {
-          currentDSS = {
-            dssScore: cachedToday.dssScore,
-            components: {
-              learningMomentum: cachedToday.learningMomentum || 0,
-              recoveryIndex: cachedToday.recoveryIndex || 0,
-              connectionScore: cachedToday.connectionScore || 0
-            },
-            zScores: { zLM: 0, zRI: 0, zCN: 0 },
-            historicalData: { lmHistory: [], riHistory: [], cnHistory: [] }
-          } as any;
+        if (noCache) {
+          // Always recalc for stats radar when noCache=true
+          currentDSS = await calculateDSS(userId, currentDay);
         } else {
+          // Prefer cached value if present to avoid recalculation on each refresh (dashboard)
+          const cachedToday = await db.dailyTracking.findUnique({
+            where: { userId_date: { userId, date: currentDay } }
+          });
+          if (cachedToday && cachedToday.dssScore != null) {
+            // Recalculate only z-scores/historical for DSS Radar while keeping cached score/components
+            const zcalc = await calculateDSS(userId, currentDay);
+            currentDSS = {
+              dssScore: cachedToday.dssScore,
+              components: {
+                learningMomentum: cachedToday.learningMomentum || 0,
+                recoveryIndex: cachedToday.recoveryIndex || 0,
+                connectionScore: cachedToday.connectionScore || 0
+              },
+              zScores: zcalc.zScores,
+              historicalData: zcalc.historicalData
+            } as any;
+          } else {
           // Calculate and write-back cache for future reads
           currentDSS = await calculateDSS(userId, currentDay);
           try {
@@ -143,6 +150,8 @@ export async function GET(request: NextRequest) {
             console.log('⚠️ DSS write-back cache (today) failed:', (e as Error).message);
           }
         }
+      }
+      
       }
       
       return NextResponse.json({

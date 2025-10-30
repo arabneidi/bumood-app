@@ -90,7 +90,7 @@ export default function StatsPage() {
           .finally(() => console.log(`⏱️ [Stats] Learn connections: ${(performance.now() - prefStart).toFixed(2)}ms`));
 
         const dssStart = performance.now();
-        fetch('/api/dss?userId=dummy-user')
+        fetch('/api/dss?userId=dummy-user&noCache=true')
           .then(async r => {
             if (r.ok) {
               const data = await r.json();
