@@ -92,11 +92,10 @@ export default function StatsPage() {
 
         const dssStart = performance.now();
         fetch('/api/dss?userId=dummy-user&noCache=true')
-          .then(async r => {
-            if (r.ok) {
-              const data = await r.json();
-              if (data.success && data.data && data.data.currentDSS) setDssData(data.data.currentDSS);
-            }
+          .then(async (r) => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            const data = await r.json();
+            if (data?.success && data?.data?.currentDSS) setDssData(data.data.currentDSS);
           })
           .catch(err => console.error('DSS error:', err))
           .finally(() => setDssLoading(false));

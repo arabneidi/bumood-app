@@ -877,19 +877,6 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
               {suggestions.filter(s => s.priority === 'high').length} high priority
             </span>
           </div>
-          <div className="mt-3">
-            <button
-              onClick={() => setShowPayload(v => !v)}
-              className="text-xs underline text-slate-400 hover:text-slate-300"
-            >
-              {showPayload ? 'Hide' : 'Show'} AI payload sent
-            </button>
-            {showPayload && lastPayload && (
-              <pre className="mt-2 max-h-64 overflow-auto text-xs text-slate-300 bg-slate-800/50 p-3 rounded border border-blue-400/30">
-{JSON.stringify(lastPayload, null, 2)}
-              </pre>
-            )}
-          </div>
         </div>
       )}
     </div>

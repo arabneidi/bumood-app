@@ -113,21 +113,53 @@ export async function GET(request: NextRequest) {
           });
           let mcValue: number | null = null;
           if (bucketEntries.length > 0) {
-            // Average entries within the bucket
-            const avgValence = bucketEntries.reduce((sum, e) => sum + e.valence, 0) / bucketEntries.length;
-            const avgEnergy = bucketEntries.reduce((sum, e) => sum + e.energy, 0) / bucketEntries.length;
-            const avgFocus = bucketEntries.reduce((sum, e) => sum + e.focus, 0) / bucketEntries.length;
-            const avgStress = bucketEntries.reduce((sum, e) => sum + e.stress, 0) / bucketEntries.length;
+            // Group by timeSlot value within the current bucket, compute MC per slot, then average across slots
+            const slotToEntries = new Map<string, any[]>();
+            for (const e of bucketEntries as any[]) {
+              try {
+                const arr = typeof e.activityEntries === 'string' ? JSON.parse(e.activityEntries) : e.activityEntries;
+                if (Array.isArray(arr)) {
+                  for (const a of arr) {
+                    const ts: string = String(a?.timeSlot || '');
+                    const bucket = ts.split('-')[0];
+                    if (bucket !== currentBucket) continue;
+                    if (!slotToEntries.has(ts)) slotToEntries.set(ts, []);
+                    slotToEntries.get(ts)!.push(e);
+                  }
+                }
+              } catch {}
+            }
 
-            // For MC calculation: ensure the date passed is anchored in the SAME bucket on that day
-            const mcDate = new Date(currentDay);
-            if (currentBucket === 'morning') mcDate.setHours(8, 0, 0, 0);
-            else if (currentBucket === 'midday') mcDate.setHours(13, 0, 0, 0);
-            else if (currentBucket === 'evening') mcDate.setHours(19, 0, 0, 0);
-            else mcDate.setHours(1, 0, 0, 0); // night
-
-            const mcResult = await calculateMoodComposite(userId, avgValence, avgEnergy, avgFocus, avgStress, mcDate);
-            mcValue = mcResult.moodComposite;
+            const slotKeys = Array.from(slotToEntries.keys());
+            if (slotKeys.length > 0) {
+              const perSlotMC: number[] = [];
+              for (const ts of slotKeys) {
+                const entriesInSlot = slotToEntries.get(ts)!;
+                const avgValence = entriesInSlot.reduce((s, e) => s + e.valence, 0) / entriesInSlot.length;
+                const avgEnergy = entriesInSlot.reduce((s, e) => s + e.energy, 0) / entriesInSlot.length;
+                const avgFocus = entriesInSlot.reduce((s, e) => s + e.focus, 0) / entriesInSlot.length;
+                const avgStress = entriesInSlot.reduce((s, e) => s + e.stress, 0) / entriesInSlot.length;
+                // Anchor to the hour from timeSlot suffix
+                const hourMatch = ts.match(/-(\d{1,2})$/);
+                const slotHour = hourMatch ? parseInt(hourMatch[1]) : (currentBucket === 'morning' ? 8 : currentBucket === 'midday' ? 13 : currentBucket === 'evening' ? 19 : 1);
+                const mcDate = new Date(currentDay);
+                mcDate.setHours(slotHour, 0, 0, 0);
+                const mcResult = await calculateMoodComposite(userId, avgValence, avgEnergy, avgFocus, avgStress, mcDate);
+                perSlotMC.push(mcResult.moodComposite);
+              }
+              mcValue = perSlotMC.reduce((s, v) => s + v, 0) / perSlotMC.length;
+            } else {
+              // Fallback: average across bucket entries (no explicit timeSlot strings)
+              const avgValence = bucketEntries.reduce((sum, e) => sum + e.valence, 0) / bucketEntries.length;
+              const avgEnergy = bucketEntries.reduce((sum, e) => sum + e.energy, 0) / bucketEntries.length;
+              const avgFocus = bucketEntries.reduce((sum, e) => sum + e.focus, 0) / bucketEntries.length;
+              const avgStress = bucketEntries.reduce((sum, e) => sum + e.stress, 0) / bucketEntries.length;
+              const mcDate = new Date(currentDay);
+              const fallbackHour = currentBucket === 'morning' ? 8 : currentBucket === 'midday' ? 13 : currentBucket === 'evening' ? 19 : 1;
+              mcDate.setHours(fallbackHour, 0, 0, 0);
+              const mcResult = await calculateMoodComposite(userId, avgValence, avgEnergy, avgFocus, avgStress, mcDate);
+              mcValue = mcResult.moodComposite;
+            }
           }
 
           // DSS calculated only when there are entries for the day

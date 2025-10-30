@@ -24,14 +24,14 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
   const [mcDssData, setMcDssData] = useState<any[]>([]);
   const [mcDssLoading, setMcDssLoading] = useState(true);
 
-  // Fetch trend data immediately on mount (no lazy load)
+  // Fetch trend data immediately on mount (single attempt)
   useEffect(() => {
     const fetchMCDSSData = async () => {
       try {
-        const response = await fetch('/api/mc-dss-trends?userId=dummy-user&days=7');
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success) setMcDssData(result.data);
+        const res = await fetch('/api/mc-dss-trends?userId=dummy-user&days=7');
+        if (res.ok) {
+          const result = await res.json();
+          if (result?.success) setMcDssData(result.data);
         }
       } finally {
         setMcDssLoading(false);

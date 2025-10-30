@@ -20,23 +20,10 @@ export async function GET(request: NextRequest) {
     // If requested, get MC for current time - try cache first
     let currentMC: number | null = null;
     if (calculateCurrent) {
-      // Try to get from cache first
+      // ALWAYS recompute current MC (no cache) to keep parity with MC–DSS chart
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
-      const cached = await db.dailyTracking.findUnique({
-        where: {
-          userId_date: {
-            userId,
-            date: today
-          }
-        }
-      });
-
-      if (cached && cached.moodComposite !== null) {
-        // Use cached value
-        currentMC = cached.moodComposite;
-      } else {
+      {
         // Compute using CHART LOGIC and upsert cache
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -75,13 +62,51 @@ export async function GET(request: NextRequest) {
           return e?.timeBucket === currentBucket;
         });
         if (bucketEntries.length > 0) {
-          const avgValence = bucketEntries.reduce((s: number, e: any) => s + e.valence, 0) / bucketEntries.length;
-          const avgEnergy = bucketEntries.reduce((s: number, e: any) => s + e.energy, 0) / bucketEntries.length;
-          const avgFocus = bucketEntries.reduce((s: number, e: any) => s + e.focus, 0) / bucketEntries.length;
-          const avgStress = bucketEntries.reduce((s: number, e: any) => s + e.stress, 0) / bucketEntries.length;
-
-          const mcResult = await calculateMoodComposite(userId, avgValence, avgEnergy, avgFocus, avgStress, new Date());
-          currentMC = mcResult.moodComposite;
+          // Group by timeSlot (e.g., morning-7) within the bucket, compute per-slot MC, then average across slots
+          const slotToEntries = new Map<string, any[]>();
+          for (const e of bucketEntries as any[]) {
+            try {
+              const arr = typeof e.activityEntries === 'string' ? JSON.parse(e.activityEntries) : e.activityEntries;
+              if (Array.isArray(arr)) {
+                for (const a of arr) {
+                  const ts: string = String(a?.timeSlot || '');
+                  const bucket = ts.split('-')[0];
+                  if (bucket !== currentBucket) continue;
+                  if (!slotToEntries.has(ts)) slotToEntries.set(ts, []);
+                  slotToEntries.get(ts)!.push(e);
+                }
+              }
+            } catch {}
+          }
+          const slotKeys = Array.from(slotToEntries.keys());
+          if (slotKeys.length > 0) {
+            const perSlotMC: number[] = [];
+            for (const ts of slotKeys) {
+              const entriesInSlot = slotToEntries.get(ts)!;
+              const avgValence = entriesInSlot.reduce((s: number, e: any) => s + e.valence, 0) / entriesInSlot.length;
+              const avgEnergy = entriesInSlot.reduce((s: number, e: any) => s + e.energy, 0) / entriesInSlot.length;
+              const avgFocus = entriesInSlot.reduce((s: number, e: any) => s + e.focus, 0) / entriesInSlot.length;
+              const avgStress = entriesInSlot.reduce((s: number, e: any) => s + e.stress, 0) / entriesInSlot.length;
+              const hourMatch = ts.match(/-(\d{1,2})$/);
+              const slotHour = hourMatch ? parseInt(hourMatch[1]) : (currentBucket === 'morning' ? 8 : currentBucket === 'midday' ? 13 : currentBucket === 'evening' ? 19 : 1);
+              const mcDate = new Date();
+              mcDate.setHours(slotHour, 0, 0, 0);
+              const mcResult = await calculateMoodComposite(userId, avgValence, avgEnergy, avgFocus, avgStress, mcDate);
+              perSlotMC.push(mcResult.moodComposite);
+            }
+            currentMC = perSlotMC.reduce((s, v) => s + v, 0) / perSlotMC.length;
+          } else {
+            // Fallback to averaging entries when no explicit timeSlots exist
+            const avgValence = bucketEntries.reduce((s: number, e: any) => s + e.valence, 0) / bucketEntries.length;
+            const avgEnergy = bucketEntries.reduce((s: number, e: any) => s + e.energy, 0) / bucketEntries.length;
+            const avgFocus = bucketEntries.reduce((s: number, e: any) => s + e.focus, 0) / bucketEntries.length;
+            const avgStress = bucketEntries.reduce((s: number, e: any) => s + e.stress, 0) / bucketEntries.length;
+            const mcDate = new Date();
+            const fallbackHour = currentBucket === 'morning' ? 8 : currentBucket === 'midday' ? 13 : currentBucket === 'evening' ? 19 : 1;
+            mcDate.setHours(fallbackHour, 0, 0, 0);
+            const mcResult = await calculateMoodComposite(userId, avgValence, avgEnergy, avgFocus, avgStress, mcDate);
+            currentMC = mcResult.moodComposite;
+          }
 
           await db.dailyTracking.upsert({
             where: { userId_date: { userId, date: today } },
