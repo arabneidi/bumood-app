@@ -325,7 +325,7 @@ export default function ProfilePage() {
                         // Check if it's the full export format
                         if (jsonData.userProfile || jsonData.goals || jsonData.periodTracking) {
                           // Full export format - import all data types
-                          const importResults: any = { moodEntries: 0, profile: false, goals: 0, achievements: 0, periodTracking: 0 };
+                          const importResults: any = { moodEntries: 0, profile: false, goals: 0, achievements: 0, periodTracking: 0, goalProgressDaily: 0 };
                           
                           // Import Profile if exists
                           if (jsonData.userProfile) {
@@ -351,6 +351,21 @@ export default function ProfilePage() {
                               });
                               if (userResponse.ok) importResults.profile = true;
                             } catch (e) { console.error('Profile import error:', e); }
+                          }
+
+                          // Import GoalProgressDaily if exists
+                          if (jsonData.goalProgressDaily && Array.isArray(jsonData.goalProgressDaily)) {
+                            try {
+                              const response = await fetch('/api/goal-progress-daily/test-import', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(jsonData.goalProgressDaily)
+                              });
+                              if (response.ok) {
+                                const res = await response.json();
+                                importResults.goalProgressDaily = res.count || jsonData.goalProgressDaily.length;
+                              }
+                            } catch (e) { console.error('GoalProgressDaily import error:', e); }
                           }
                           
                           // Extract and send mood entries
@@ -422,7 +437,7 @@ export default function ProfilePage() {
                       } else {
                         // Parse CSV
                         const lines = text.split('\n');
-                        const importResults: any = { profile: false, goals: 0, achievements: 0, periodTracking: 0 };
+                        const importResults: any = { profile: false, goals: 0, achievements: 0, periodTracking: 0, goalProgressDaily: 0 };
                         
                         // Proper CSV parser that handles quoted fields
                         const parseCSVLine = (line: string): string[] => {
@@ -580,6 +595,43 @@ export default function ProfilePage() {
                           }
                         }
                         
+                        // Import GOAL PROGRESS DAILY section if exists
+                        if (lines.some(l => l.includes('GOAL PROGRESS DAILY'))) {
+                          const gpdStart = lines.findIndex(l => l.includes('GOAL PROGRESS DAILY'));
+                          // End at next section or end of file
+                          const gpdEnd = lines.findIndex((l, i) => i > gpdStart && (l.includes('MOOD ENTRIES'))) || lines.length;
+                          if (gpdStart !== -1) {
+                            const items: any[] = [];
+                            for (let i = gpdStart + 2; i < gpdEnd && i < lines.length; i++) {
+                              const line = lines[i];
+                              if (line && !line.startsWith('MOOD ENTRIES')) {
+                                try {
+                                  const values = parseCSVLine(line);
+                                  if (values.length >= 5) {
+                                    items.push({
+                                      id: values[0],
+                                      userId: values[1] || 'dummy-user',
+                                      goalId: values[2],
+                                      date: values[3] ? new Date(parseInt(values[3]) * 1000).toISOString() : null,
+                                      value: parseInt(values[4]) || 0
+                                    });
+                                  }
+                                } catch (e) { console.error('GoalProgressDaily parse error:', e); }
+                              }
+                            }
+                            if (items.length > 0) {
+                              try {
+                                const response = await fetch('/api/goal-progress-daily/test-import', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify(items)
+                                });
+                                if (response.ok) importResults.goalProgressDaily = items.length;
+                              } catch (e) { console.error('GoalProgressDaily import error:', e); }
+                            }
+                          }
+                        }
+
                         // Import ACHIEVEMENTS section if exists
                         if (lines.some(l => l.includes('ACHIEVEMENTS'))) {
                           const achievementsStart = lines.findIndex(l => l.includes('ACHIEVEMENTS'));
@@ -2185,7 +2237,7 @@ export default function ProfilePage() {
           setShowExportModal(false);
           try {
             // Fetch all data
-            const [moodEntriesRes, userRes, goalsRes, achievementsRes, predefinedActivitiesRes, periodTrackingRes, congratulationsRes, dailyTrackingRes] = await Promise.all([
+            const [moodEntriesRes, userRes, goalsRes, achievementsRes, predefinedActivitiesRes, periodTrackingRes, congratulationsRes, dailyTrackingRes, goalProgressDailyRes] = await Promise.all([
               fetch('/api/mood-entries'),
               fetch('/api/user?userId=dummy-user'),
               fetch('/api/goals'),
@@ -2193,7 +2245,8 @@ export default function ProfilePage() {
               fetch('/api/predefined-activities'),
               fetch('/api/period-tracking?userId=dummy-user'),
               fetch('/api/congratulations?userId=dummy-user'),
-              fetch('/api/daily-tracking?userId=dummy-user')
+              fetch('/api/daily-tracking?userId=dummy-user'),
+              fetch('/api/goal-progress-daily?userId=dummy-user')
             ]);
             
             const moodEntries = await moodEntriesRes.json();
@@ -2205,6 +2258,7 @@ export default function ProfilePage() {
             const periodTracking = await periodTrackingRes.json();
             const congratulations = await congratulationsRes.json();
             const dailyTracking = await dailyTrackingRes.json();
+            const goalProgressDaily = await goalProgressDailyRes.json();
             
             // Get AI API key connections and encrypted keys
             const { getDecryptedApiKey, hasApiKey } = await import('@/lib/encryption');
@@ -2448,7 +2502,29 @@ export default function ProfilePage() {
               rows.push('');
               rows.push('');
               
-              // 8. Mood Entries
+              // 8. Goal Progress Daily
+              rows.push('GOAL PROGRESS DAILY');
+              if (goalProgressDaily && goalProgressDaily.length > 0) {
+                rows.push('ID,User ID,Goal ID,Date,Value,Created Date,Updated Date');
+                for (const gpd of goalProgressDaily) {
+                  rows.push([
+                    escapeCsv(gpd.id),
+                    escapeCsv(gpd.userId),
+                    escapeCsv(gpd.goalId),
+                    escapeCsv(toUnixTimestamp(gpd.date)),
+                    escapeCsv(gpd.value ?? 0),
+                    escapeCsv(toUnixTimestamp(gpd.createdAt)),
+                    escapeCsv(toUnixTimestamp(gpd.updatedAt))
+                  ].join(','));
+                }
+              } else {
+                rows.push('No goal progress daily found');
+              }
+
+              rows.push('');
+              rows.push('');
+
+              // 9. Mood Entries
               rows.push('MOOD ENTRIES');
               rows.push('ID,User ID,Valence,Energy,Focus,Stress,Sleep,Notes,Activities,Selected Time Slots,Selected Subcategories,Activity Entries,DSS Analysis,Reflection,Voice Note,AI Suggestion,Time Bucket,On Period,Period Day,Water Intake,Meals Eaten,Meal Quality,Caffeine,Alcohol,Mood Composite,Created Date,Updated Date');
               
@@ -2585,6 +2661,15 @@ export default function ProfilePage() {
                   stars: achievement.stars,
                   unlockedAt: achievement.unlockedAt,
                   createdAt: achievement.createdAt
+                })),
+                goalProgressDaily: (goalProgressDaily || []).map((g: any) => ({
+                  id: g.id,
+                  userId: g.userId,
+                  goalId: g.goalId,
+                  date: g.date,
+                  value: g.value,
+                  createdAt: g.createdAt,
+                  updatedAt: g.updatedAt
                 })),
                 congratulations: congratulations.map((congratulation: any) => ({
                   id: congratulation.id,
