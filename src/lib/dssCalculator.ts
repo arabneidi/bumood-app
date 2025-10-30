@@ -538,27 +538,45 @@ export async function getDSSTrends(userId: string, days: number = 30): Promise<{
   connectionScore: number[];
 }> {
   const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
+  endDate.setHours(0, 0, 0, 0);
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - (days - 1));
 
-  const trackingData = await prisma.dailyTracking.findMany({
-    where: {
-      userId,
-      date: {
-        gte: startDate,
-        lte: endDate
-      }
-    },
-    orderBy: {
-      date: 'asc'
+  const dates: string[] = [];
+  const dssScores: number[] = [];
+  const learningMomentum: number[] = [];
+  const recoveryIndex: number[] = [];
+  const connectionScore: number[] = [];
+
+  const cursor = new Date(startDate);
+  while (cursor <= endDate) {
+    const y = cursor.getFullYear();
+    const m = String(cursor.getMonth() + 1).padStart(2, '0');
+    const d = String(cursor.getDate()).padStart(2, '0');
+    const dateKey = `${y}-${m}-${d}`;
+    dates.push(dateKey);
+
+    const dayStart = new Date(cursor);
+    const nextDay = new Date(cursor);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    const hasEntries = await db.moodEntry.count({ where: { userId, createdAt: { gte: dayStart, lt: nextDay } } });
+
+    if (hasEntries === 0) {
+      dssScores.push(0);
+      learningMomentum.push(0);
+      recoveryIndex.push(0);
+      connectionScore.push(0);
+    } else {
+      const res = await calculateDSS(userId, dayStart);
+      dssScores.push(res.dssScore || 0);
+      learningMomentum.push(res.components.learningMomentum || 0);
+      recoveryIndex.push(res.components.recoveryIndex || 0);
+      connectionScore.push(res.components.connectionScore || 0);
     }
-  });
 
-  return {
-    dates: trackingData.map(entry => entry.date.toISOString().split('T')[0]),
-    dssScores: trackingData.map(entry => entry.dssScore || 0),
-    learningMomentum: trackingData.map(entry => entry.learningMomentum || 0),
-    recoveryIndex: trackingData.map(entry => entry.recoveryIndex || 0),
-    connectionScore: trackingData.map(entry => entry.connectionScore || 0)
-  };
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return { dates, dssScores, learningMomentum, recoveryIndex, connectionScore };
 }
