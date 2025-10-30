@@ -53,6 +53,28 @@ export async function GET(request: NextRequest) {
 
       // Not cached - calculate (this should rarely happen if caching works)
       const dssResult = await calculateDSS(userId, targetDate);
+      // Write-back cache so subsequent loads don't recalc after import
+      try {
+        await db.dailyTracking.upsert({
+          where: { userId_date: { userId, date: targetDate } },
+          update: {
+            dssScore: dssResult.dssScore,
+            learningMomentum: dssResult.components.learningMomentum,
+            recoveryIndex: dssResult.components.recoveryIndex,
+            connectionScore: dssResult.components.connectionScore
+          },
+          create: {
+            userId,
+            date: targetDate,
+            dssScore: dssResult.dssScore,
+            learningMomentum: dssResult.components.learningMomentum,
+            recoveryIndex: dssResult.components.recoveryIndex,
+            connectionScore: dssResult.components.connectionScore
+          }
+        });
+      } catch (e) {
+        console.log('⚠️ DSS write-back cache failed:', (e as Error).message);
+      }
       return NextResponse.json({
         success: true,
         data: dssResult
@@ -81,8 +103,46 @@ export async function GET(request: NextRequest) {
       if (hasTodayEntries === 0) {
         currentDSS = null;
       } else {
-        // Calculate using EXACT same logic as get-dss-today.ts (no cache)
-        currentDSS = await calculateDSS(userId, currentDay);
+        // Prefer cached value if present to avoid recalculation on each refresh
+        const cachedToday = await db.dailyTracking.findUnique({
+          where: { userId_date: { userId, date: currentDay } }
+        });
+        if (cachedToday && cachedToday.dssScore != null) {
+          currentDSS = {
+            dssScore: cachedToday.dssScore,
+            components: {
+              learningMomentum: cachedToday.learningMomentum || 0,
+              recoveryIndex: cachedToday.recoveryIndex || 0,
+              connectionScore: cachedToday.connectionScore || 0
+            },
+            zScores: { zLM: 0, zRI: 0, zCN: 0 },
+            historicalData: { lmHistory: [], riHistory: [], cnHistory: [] }
+          } as any;
+        } else {
+          // Calculate and write-back cache for future reads
+          currentDSS = await calculateDSS(userId, currentDay);
+          try {
+            await db.dailyTracking.upsert({
+              where: { userId_date: { userId, date: currentDay } },
+              update: {
+                dssScore: currentDSS.dssScore,
+                learningMomentum: currentDSS.components.learningMomentum,
+                recoveryIndex: currentDSS.components.recoveryIndex,
+                connectionScore: currentDSS.components.connectionScore
+              },
+              create: {
+                userId,
+                date: currentDay,
+                dssScore: currentDSS.dssScore,
+                learningMomentum: currentDSS.components.learningMomentum,
+                recoveryIndex: currentDSS.components.recoveryIndex,
+                connectionScore: currentDSS.components.connectionScore
+              }
+            });
+          } catch (e) {
+            console.log('⚠️ DSS write-back cache (today) failed:', (e as Error).message);
+          }
+        }
       }
       
       return NextResponse.json({
