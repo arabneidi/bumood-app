@@ -296,9 +296,11 @@ export async function POST(request: NextRequest) {
     });
     console.log('✅ Mood entry created successfully:', moodEntry.id);
 
-    // Update MC and DSS cache after new entry is saved
-    // Use EXACT same logic as get-dss-today.ts script
-    try {
+    // Kick off post-save tasks in background to keep response fast
+    ;(async () => {
+      // Update MC and DSS cache after new entry is saved
+      // Use EXACT same logic as get-dss-today.ts script
+      try {
       const entryDate = new Date(chosenCreatedAt);
       
       // EXACT same pattern as get-dss-today.ts (lines 10-15):
@@ -330,19 +332,19 @@ export async function POST(request: NextRequest) {
         const avgFocus = todayEntries.reduce((sum, e) => sum + e.focus, 0) / todayEntries.length;
         const avgStress = todayEntries.reduce((sum, e) => sum + e.stress, 0) / todayEntries.length;
 
-        // MC calculation - EXACTLY like chart: use current time (now) for time bucket
-        const now = new Date(); // Current time for today's bucket - IMPORTANT: Use current time for all MC calculations
-        const mcResult = await calculateMoodComposite(
-          dummyUserId,
-          avgValence,
-          avgEnergy,
-          avgFocus,
-          avgStress,
-          now
-        );
-
-        // DSS calculation - EXACTLY like get-dss-today.ts (line 21):
-        const dssResult = await calculateDSS(dummyUserId, currentDay);
+        // Calculate MC and DSS in parallel
+        const now = new Date();
+        const [mcResult, dssResult] = await Promise.all([
+          calculateMoodComposite(
+            dummyUserId,
+            avgValence,
+            avgEnergy,
+            avgFocus,
+            avgStress,
+            now
+          ),
+          calculateDSS(dummyUserId, currentDay)
+        ]);
 
         // Save to cache
         await db.dailyTracking.upsert({
@@ -370,10 +372,9 @@ export async function POST(request: NextRequest) {
           }
         });
       }
-    } catch (cacheError) {
-      console.error('⚠️ Error updating cache:', cacheError);
-      // Don't fail entry creation if cache update fails
-    }
+      } catch (cacheError) {
+        console.error('⚠️ Error updating cache:', cacheError);
+      }
 
     // Update user's recent activities with specific subcategories
     if (selectedSubcategories && selectedSubcategories.length > 0) {
@@ -556,10 +557,10 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Learn from user activities and subcategories
-    console.log('🧠 Learning from user activities...');
-    try {
-      const learnResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/learn-user-preferences`, {
+      // Learn from user activities and subcategories
+      console.log('🧠 Learning from user activities...');
+      try {
+        const learnResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/learn-user-preferences`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -575,21 +576,20 @@ export async function POST(request: NextRequest) {
         })
       });
       
-      if (learnResponse.ok) {
+        if (learnResponse.ok) {
         const learnData = await learnResponse.json();
         console.log('✅ User preferences learned:', learnData.updates);
-      } else {
+        } else {
         console.log('⚠️ Learning preferences failed, but mood entry was saved');
-      }
-    } catch (learnError) {
+        }
+      } catch (learnError) {
       console.error('⚠️ Error learning preferences:', learnError);
-      // Don't fail the mood entry creation if learning fails
-    }
+      }
 
-    // Check and unlock achievements after creating the mood entry
-    console.log('🏆 Checking achievements...');
-    try {
-      const newAchievements = await calculateAchievements(dummyUserId);
+      // Check and unlock achievements after creating the mood entry
+      console.log('🏆 Checking achievements...');
+      try {
+        const newAchievements = await calculateAchievements(dummyUserId);
       console.log(`✅ Found ${newAchievements.length} new achievements`);
       
       // Save new achievements to database and create congratulations
@@ -635,14 +635,13 @@ export async function POST(request: NextRequest) {
           // Don't fail the achievement creation if congratulation fails
         }
       }
-    } catch (achievementError) {
+      } catch (achievementError) {
       console.error('⚠️ Error calculating achievements:', achievementError);
-      // Don't fail the mood entry creation if achievement calculation fails
-    }
+      }
+    })();
 
-    // Signal dashboard to regenerate AI suggestions and Pro Tips
-    // This will be picked up by the dashboard's useEffect
-    console.log('📝 Mood entry created - signaling dashboard for regeneration');
+    // Return immediately; background tasks are running
+    console.log('📝 Mood entry created - background updates started');
 
     return NextResponse.json(moodEntry);
   } catch (error) {

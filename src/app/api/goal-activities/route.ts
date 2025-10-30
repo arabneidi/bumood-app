@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { calculateDSS } from '@/lib/dssCalculator';
+import { calculateMoodComposite } from '@/lib/moodCompositeCalculator';
 
 export async function POST(request: NextRequest) {
   try {
@@ -112,6 +114,59 @@ export async function POST(request: NextRequest) {
       await db.dailyTracking.update({
         where: { id: dailyTracking.id },
         data: updateData
+      });
+      
+      // ALSO record per-goal daily progress (used by DSS calculation)
+      const existingProgress = await db.goalProgressDaily.findUnique({
+        where: {
+          goalId_date: {
+            goalId: goalId,
+            date: today
+          }
+        }
+      });
+      const newValue = Math.max(0, (existingProgress?.value || 0) + (progressChange || 0));
+      await db.goalProgressDaily.upsert({
+        where: { goalId_date: { goalId, date: today } },
+        update: { value: newValue },
+        create: { userId: dummyUserId, goalId, date: today, value: newValue }
+      });
+      
+      // Recalculate today's MC/DSS and update cache so dashboard matches chart
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const todayEntries = await db.moodEntry.findMany({
+        where: { userId: dummyUserId, createdAt: { gte: today, lt: tomorrow } },
+        orderBy: { createdAt: 'desc' }
+      });
+      let mcValue: number | null = null;
+      if (todayEntries.length > 0) {
+        const avgValence = todayEntries.reduce((s, e) => s + e.valence, 0) / todayEntries.length;
+        const avgEnergy = todayEntries.reduce((s, e) => s + e.energy, 0) / todayEntries.length;
+        const avgFocus = todayEntries.reduce((s, e) => s + e.focus, 0) / todayEntries.length;
+        const avgStress = todayEntries.reduce((s, e) => s + e.stress, 0) / todayEntries.length;
+        const mcRes = await calculateMoodComposite(dummyUserId, avgValence, avgEnergy, avgFocus, avgStress, new Date());
+        mcValue = mcRes.moodComposite;
+      }
+      const dssRes = await calculateDSS(dummyUserId, today);
+      await db.dailyTracking.upsert({
+        where: { userId_date: { userId: dummyUserId, date: today } },
+        update: {
+          moodComposite: mcValue,
+          dssScore: dssRes.dssScore,
+          learningMomentum: dssRes.components.learningMomentum,
+          recoveryIndex: dssRes.components.recoveryIndex,
+          connectionScore: dssRes.components.connectionScore
+        },
+        create: {
+          userId: dummyUserId,
+          date: today,
+          moodComposite: mcValue,
+          dssScore: dssRes.dssScore,
+          learningMomentum: dssRes.components.learningMomentum,
+          recoveryIndex: dssRes.components.recoveryIndex,
+          connectionScore: dssRes.components.connectionScore
+        }
       });
       
     } catch (error) {

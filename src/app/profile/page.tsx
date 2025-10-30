@@ -1036,8 +1036,8 @@ export default function ProfilePage() {
                               
                               // Force refresh of all dashboard data by reloading the page
                               setTimeout(() => {
-                                // Navigate to stats page to see the cleared data
-                                router.push('/stats');
+                                // Navigate to dashboard after clearing data
+                                router.push('/');
                               }, 1000);
                             } else {
                               setMessage('❌ Failed to clear data');
