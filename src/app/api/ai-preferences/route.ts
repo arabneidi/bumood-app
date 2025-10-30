@@ -4,10 +4,6 @@ export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 // Fallback preferences when AI is unavailable
 function generateFallbackPreferences(activity: string, selectedGenres: string[], preferenceType: string) {
   const fallbackData = {
@@ -101,15 +97,16 @@ export async function POST(req: Request) {
       selectedGenres, 
       userInfo, 
       existingFavorites,
-      preferenceType 
+      preferenceType,
+      apiKey: clientApiKey
     } = await req.json();
 
     if (!activity || !preferenceType) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Check if OpenAI API key is available
-    const apiKey = process.env.OPENAI_API_KEY;
+    // Check if OpenAI API key is available (from client or environment)
+    const apiKey = clientApiKey || process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
     if (!apiKey) {
       console.log('📱 No OpenAI API key found - using fallback preferences');
       return NextResponse.json({
@@ -124,6 +121,9 @@ export async function POST(req: Request) {
     console.log('User info:', userInfo);
     console.log('Selected genres:', selectedGenres);
     console.log('Existing favorites:', existingFavorites);
+
+    // Instantiate OpenAI using the resolved apiKey for this request
+    const openai = new OpenAI({ apiKey });
 
     let prompt = '';
     

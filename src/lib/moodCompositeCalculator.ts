@@ -27,9 +27,11 @@ export interface MoodCompositeResult {
 export function getTimeBucket(date: Date): TimeBucket {
   const hour = date.getHours();
   
-  if (hour >= 5 && hour < 12) return 'morning';
-  if (hour >= 12 && hour < 17) return 'midday';
-  if (hour >= 17 && hour < 22) return 'evening';
+  // Align buckets with New Entry page:
+  // Morning: 05–10, Midday: 11–16, Evening: 17–22, Night: 23–04
+  if (hour >= 5 && hour <= 10) return 'morning';
+  if (hour >= 11 && hour <= 16) return 'midday';
+  if (hour >= 17 && hour <= 22) return 'evening';
   return 'night';
 }
 

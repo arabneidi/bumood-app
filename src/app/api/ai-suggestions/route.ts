@@ -12,7 +12,8 @@ export async function GET(req: NextRequest) {
     
     console.log('🤖 Fetching AI suggestions for user:', userId);
     
-    if (!process.env.OPENAI_API_KEY) {
+    const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    if (!apiKey) {
       return NextResponse.json({ error: 'OpenAI API key not configured on server' }, { status: 500 });
     }
 
@@ -143,7 +144,7 @@ export async function GET(req: NextRequest) {
       activeGoals: userProfile.activeGoals?.length || 0
     });
 
-    const suggestions = await generateAISuggestions(userProfile);
+    const suggestions = await generateAISuggestions(userProfile, apiKey);
     console.log('✅ Generated AI suggestions:', suggestions.length);
     
     return NextResponse.json({ suggestions });
@@ -167,8 +168,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const profile = body as UserMoodProfile;
+    const clientApiKey = body.apiKey; // Accept API key from client if provided
 
-    if (!process.env.OPENAI_API_KEY) {
+    // Try client-provided key first, then server env vars
+    const apiKey = clientApiKey || process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    if (!apiKey) {
       return NextResponse.json({ error: 'OpenAI API key not configured on server' }, { status: 500 });
     }
 
@@ -203,7 +207,8 @@ export async function POST(req: NextRequest) {
 
     console.log('🎯 Active goals for AI suggestions:', goalsWithProgress);
 
-    const suggestions = await generateAISuggestions(profileWithGoals);
+    // Pass API key to generateAISuggestions if provided from client
+    const suggestions = await generateAISuggestions(profileWithGoals, apiKey);
     return NextResponse.json({ suggestions });
   } catch (err: any) {
     console.error('AI suggestions API error:', err?.message || err);

@@ -149,13 +149,13 @@ export function isAIAvailable(): boolean {
 }
 
 // Generate AI suggestions using free APIs
-export async function generateAISuggestions(profile: UserMoodProfile): Promise<AISuggestion[]> {
+export async function generateAISuggestions(profile: UserMoodProfile, providedApiKey?: string): Promise<AISuggestion[]> {
   console.log(`\n${'='.repeat(60)}`);
   console.log(`🤖 AI MODE: ${AI_MODE}`);
   console.log(`${'='.repeat(60)}\n`);
 
-  // Check if AI is available
-  if (!isAIAvailable()) {
+  // Check if AI is available (including provided key)
+  if (!providedApiKey && !isAIAvailable()) {
     console.log('📱 No AI API keys found - using local fallback suggestions');
     return generateLocalSuggestionsWithLearning(profile);
   }
@@ -163,7 +163,7 @@ export async function generateAISuggestions(profile: UserMoodProfile): Promise<A
   if (AI_MODE === 'OPENAI_ONLY') {
     console.log('🤖 Using OPENAI API for REAL AI');
     try {
-      const suggestions = await generateWithOpenAI(profile);
+      const suggestions = await generateWithOpenAI(profile, providedApiKey);
       console.log('✅ OpenAI API SUCCESS!');
       return suggestions;
     } catch (error) {
@@ -238,13 +238,14 @@ export async function generateAISuggestions(profile: UserMoodProfile): Promise<A
 }
 
 // Generate suggestions using OpenAI API (REAL AI!)
-async function generateWithOpenAI(profile: UserMoodProfile): Promise<AISuggestion[]> {
-  // Check for user's stored API key first, then environment variables
-  let apiKey = null;
+async function generateWithOpenAI(profile: UserMoodProfile, providedApiKey?: string): Promise<AISuggestion[]> {
+  // Use provided key first, then check stored keys, then environment variables
+  let apiKey = providedApiKey || null;
   
-  // Only try localStorage on client side
-  if (typeof window !== 'undefined') {
-    apiKey = localStorage.getItem('openai_api_key');
+  // Only try localStorage on client side if no provided key
+  if (!apiKey && typeof window !== 'undefined') {
+    const { getDecryptedApiKey } = await import('@/lib/encryption');
+    apiKey = getDecryptedApiKey('openai') || localStorage.getItem('openai_api_key');
   }
   
   // Always fall back to environment variables (works on server side)

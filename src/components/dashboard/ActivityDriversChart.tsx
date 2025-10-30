@@ -41,6 +41,36 @@ export default function ActivityDriversChart({
 }: ActivityDriversChartProps) {
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isAIAvailable, setIsAIAvailable] = useState(false);
+
+  // Check if AI is available (align with Pro Tips and AI Suggestions)
+  useEffect(() => {
+    const checkAI = async () => {
+      try {
+        // Prefer encrypted key detection used across the app
+        if (typeof window !== 'undefined') {
+          const { hasApiKey } = await import('@/lib/encryption');
+          if (hasApiKey && hasApiKey('openai')) {
+            setIsAIAvailable(true);
+            return;
+          }
+        }
+
+        // Fallback to server-side env check
+        const res = await fetch('/api/test-env');
+        if (res.ok) {
+          const data = await res.json();
+          setIsAIAvailable(Boolean(data?.hasApiKey));
+          return;
+        }
+
+        setIsAIAvailable(false);
+      } catch {
+        setIsAIAvailable(false);
+      }
+    };
+    checkAI();
+  }, []);
 
   // Check if driversData exists and has data
   if (!driversData || !driversData.helpful || !driversData.harmful || 
@@ -60,20 +90,40 @@ export default function ActivityDriversChart({
     );
   }
 
-  // Get top 5 activities by absolute effect size
-  const allActivities = [...driversData.helpful, ...driversData.harmful];
-  const sortedActivities = allActivities.sort((a, b) => {
-    const aEffect = Math.abs(Number(a.overallEffect));
-    const bEffect = Math.abs(Number(b.overallEffect));
-    return bEffect - aEffect; // Descending order by absolute effect
-  });
-  const topActivities = sortedActivities.slice(0, 5);
+  // Always show 6 activities: 4 top helpful (highest positive effect) and 2 top harmful (most negative)
+  const helpfulSorted = [...(driversData.helpful || [])]
+    .sort((a, b) => Number(b.overallEffect) - Number(a.overallEffect)); // positive high first
+  const harmfulSorted = [...(driversData.harmful || [])]
+    .sort((a, b) => Number(a.overallEffect) - Number(b.overallEffect)); // negative low first
+
+  let topHelpful = helpfulSorted.slice(0, 4);
+  let topHarmful = harmfulSorted.slice(0, 2);
+
+  // If not enough items on one side, fill from the other by absolute effect
+  if (topHelpful.length < 4) {
+    const needed = 4 - topHelpful.length;
+    const harmfulByAbs = [...harmfulSorted].sort((a, b) => Math.abs(Number(b.overallEffect)) - Math.abs(Number(a.overallEffect)));
+    topHelpful = topHelpful.concat(harmfulByAbs.slice(0, needed));
+  }
+  if (topHarmful.length < 2) {
+    const needed = 2 - topHarmful.length;
+    const helpfulByAbs = [...helpfulSorted].sort((a, b) => Math.abs(Number(b.overallEffect)) - Math.abs(Number(a.overallEffect)));
+    topHarmful = topHarmful.concat(helpfulByAbs.slice(0, needed));
+  }
+
+  // Combine and ensure we have at most 6 total; if overflow (due to filling), trim by absolute effect
+  let topActivities = [...topHelpful, ...topHarmful];
+  if (topActivities.length > 6) {
+    topActivities = topActivities
+      .sort((a, b) => Math.abs(Number(b.overallEffect)) - Math.abs(Number(a.overallEffect)))
+      .slice(0, 6);
+  }
   
   // Debug sorting
   console.log('🔍 Activity Sorting Debug:', {
-    allActivities: allActivities.map(a => ({ tag: a.tag, effect: a.overallEffect, abs: Math.abs(a.overallEffect) })),
-    sortedActivities: sortedActivities.map(a => ({ tag: a.tag, effect: a.overallEffect, abs: Math.abs(a.overallEffect) })),
-    topActivities: topActivities.map(a => ({ tag: a.tag, effect: a.overallEffect, abs: Math.abs(a.overallEffect) }))
+    helpfulSorted: helpfulSorted.map(a => ({ tag: a.tag, effect: a.overallEffect })),
+    harmfulSorted: harmfulSorted.map(a => ({ tag: a.tag, effect: a.overallEffect })),
+    topActivities: topActivities.map(a => ({ tag: a.tag, effect: a.overallEffect }))
   });
 
   const fetchMonthlyData = async () => {
@@ -169,7 +219,7 @@ export default function ActivityDriversChart({
         <div className="mb-6">
           <h4 className="text-lg font-semibold text-slate-300 mb-4 flex items-center">
             <BarChart3 className="w-5 h-5 mr-2 text-blue-400" />
-            Top 5 Activities by Impact
+            Top Activity Drivers (4 helpful, 2 harmful)
           </h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -347,7 +397,7 @@ export default function ActivityDriversChart({
               <Brain className="w-5 h-5 text-purple-500 mr-2" />
               <h4 className="text-lg font-semibold text-purple-400">AI Psychological Analysis</h4>
             </div>
-            {onGetAiInsights && (
+            {onGetAiInsights && isAIAvailable && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

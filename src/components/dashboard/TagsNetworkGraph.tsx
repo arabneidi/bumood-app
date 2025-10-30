@@ -544,7 +544,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
                 ctx.stroke();
               }
               
-              // Draw text with stroke for visibility
+              // Draw text with stroke for visibility; yellow labels for connected nodes
               ctx.font = `bold ${fontSize}px Sans-Serif`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
@@ -552,7 +552,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
               ctx.strokeStyle = 'rgba(0,0,0,0.8)';
               ctx.lineWidth = 4 / globalScale;
               ctx.strokeText(label, node.x!, labelY);
-              ctx.fillStyle = 'white';
+              ctx.fillStyle = isConnected ? '#FFD700' : 'white';
               ctx.fillText(label, node.x!, labelY);
             }}
             nodeColor={(node: any) => {

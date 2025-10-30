@@ -351,23 +351,33 @@ export default function NewEntry() {
     }
   }, [moodEntries]);
 
-  // Set AI icon based on connected services
+  // Set AI icon based on connected services (keys set via profile page)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const openaiKey = localStorage.getItem('openai_api_key');
-      const geminiKey = localStorage.getItem('gemini_api_key');
-      const textcortexKey = localStorage.getItem('textcortex_api_key');
-      
-      if (openaiKey) {
-        setAiIcon('openai');
-      } else if (geminiKey) {
-        setAiIcon('gemini');
-      } else if (textcortexKey) {
-        setAiIcon('textcortex');
-      } else {
-        setAiIcon('🤖');
+    const detectAI = async () => {
+      let icon = '🤖';
+      if (typeof window !== 'undefined') {
+        // Check for API keys set via profile page (checks encrypted keys)
+        const { hasApiKey } = await import('@/lib/encryption');
+        const openaiKey = hasApiKey('openai');
+        const geminiKey = hasApiKey('gemini');
+        const textcortexKey = hasApiKey('textcortex');
+        if (openaiKey) icon = 'openai';
+        else if (geminiKey) icon = 'gemini';
+        else if (textcortexKey) icon = 'textcortex';
       }
-    }
+      // If no client key from profile page, check server env
+      if (icon === '🤖') {
+        try {
+          const res = await fetch('/api/test-env');
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.hasApiKey) icon = 'openai';
+          }
+        } catch {}
+      }
+      setAiIcon(icon as any);
+    };
+    detectAI();
   }, []);
 
   // Generate preference options when activities change
@@ -417,6 +427,10 @@ export default function NewEntry() {
       const userResponse = await fetch('/api/user?userId=dummy-user');
       const userInfo = userResponse.ok ? await userResponse.json() : {};
       
+      // Get API key from localStorage (set via profile page) - SINGLE SOURCE OF TRUTH
+      const { getApiKeyForRequest } = await import('@/lib/encryption');
+      const apiKey = getApiKeyForRequest('openai');
+
       // Generate AI-powered genre options for each activity
       const genrePromises = formData.activities.map(async (activity) => {
         try {
@@ -436,7 +450,8 @@ export default function NewEntry() {
                 favoriteAuthors: userInfo.favoriteAuthors,
                 favoriteMovies: userInfo.favoriteMovies,
                 favoritePhilosophers: userInfo.favoritePhilosophers,
-              }
+              },
+              ...(apiKey && { apiKey }) // Include API key if available
             })
           });
           
@@ -566,7 +581,8 @@ export default function NewEntry() {
                 favoriteMovies: userInfo.favoriteMovies,
                 favoritePhilosophers: userInfo.favoritePhilosophers,
               },
-              existingFavorites
+              existingFavorites,
+              ...(apiKey && { apiKey }) // Include API key if available
             })
           });
           

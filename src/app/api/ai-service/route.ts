@@ -18,8 +18,9 @@ export async function POST(request: NextRequest) {
       promptLength: prompt.length
     });
 
-    // Check for OpenAI API key
-    const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    // Check for OpenAI API key (from client request or environment)
+    const clientApiKey = body.apiKey;
+    const apiKey = clientApiKey || process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
     
     if (!apiKey) {
       console.log('❌ OpenAI API key not found');

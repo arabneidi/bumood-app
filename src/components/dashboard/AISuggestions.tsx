@@ -202,10 +202,17 @@ export default function AISuggestions({ moodEntries, currentMood, refreshTrigger
       const prompt = createOpenAIPrompt(userProfile);
       console.log('📝 EXACT PROMPT SENT TO AI:', prompt);
       
+      // Get API key from localStorage (set via profile page) - SINGLE SOURCE OF TRUTH
+      const { getApiKeyForRequest } = await import('@/lib/encryption');
+      const apiKey = getApiKeyForRequest('openai');
+
       const res = await fetch('/api/ai-suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userProfile)
+        body: JSON.stringify({
+          ...userProfile,
+          ...(apiKey && { apiKey }) // Include API key if available (from profile page)
+        })
       });
       if (!res.ok) {
         const text = await res.text();

@@ -1,10 +1,10 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 import { calculateDSS } from '@/lib/dssCalculator';
-import { calculateMoodComposite } from '@/lib/moodCompositeCalculator';
+import { calculateMoodComposite, getCurrentTimeBucket } from '@/lib/moodCompositeCalculator';
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,25 +18,37 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - (days - 1)); // Include today (days - 1 days ago)
     startDate.setHours(0, 0, 0, 0); // Start of day
     
-    const moodEntries = await db.moodEntry.findMany({
-      where: {
-        userId,
-        createdAt: {
-          gte: startDate,
-          lte: endDate
+    // Pre-fetch all entries needed: requested range + 14 days historical context for calculations
+    // This warms the database connection and ensures data is in memory
+    const historicalStart = new Date(startDate);
+    historicalStart.setDate(historicalStart.getDate() - 14);
+    
+    const [moodEntries] = await Promise.all([
+      prisma.moodEntry.findMany({
+        where: {
+          userId,
+          createdAt: {
+            gte: startDate,
+            lte: endDate
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-
-    console.log('📊 MC-DSS API - Date range:', {
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      totalEntries: moodEntries.length,
-      sampleEntry: moodEntries[0] ? { createdAt: moodEntries[0].createdAt, date: new Date(moodEntries[0].createdAt).toISOString() } : null
-    });
+      }),
+      // Pre-fetch historical data that calculate functions will need (warm connection)
+      prisma.moodEntry.findMany({
+        where: {
+          userId,
+          createdAt: {
+            gte: historicalStart,
+            lt: startDate
+          }
+        },
+        select: { id: true }, // Just fetch IDs to warm connection, not full data
+        take: 1
+      })
+    ]);
 
     // Group entries by date (using local time, not UTC)
     const entriesByDate = moodEntries.reduce((acc, entry) => {
@@ -54,69 +66,74 @@ export async function GET(request: NextRequest) {
       return acc;
     }, {} as Record<string, typeof moodEntries>);
 
-    console.log('📊 MC-DSS API - Date groups:', {
-      dates: Object.keys(entriesByDate),
-      entriesPerDate: Object.entries(entriesByDate).map(([date, entries]) => ({ date, count: entries.length }))
-    });
-
     // Calculate MC and DSS for each day (last 7 days)
-    const trendData = [];
-    const now = new Date(); // Current time for today's bucket
+        const now = new Date();
+        const currentBucket = getCurrentTimeBucket();
     
-    // Sort dates from oldest to newest
-    const sortedDates = Object.keys(entriesByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-    
-    for (const dateKey of sortedDates) {
-      const entries = entriesByDate[dateKey];
+    // Build full list of local date keys from startDate..endDate (inclusive)
+    const dateKeys: string[] = [];
+    const cursor = new Date(startDate);
+    while (cursor <= endDate) {
+      const y = cursor.getFullYear();
+      const m = String(cursor.getMonth() + 1).padStart(2, '0');
+      const d = String(cursor.getDate()).padStart(2, '0');
+      dateKeys.push(`${y}-${m}-${d}`);
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    // Calculate all days in parallel (MC and DSS for each day run in parallel)
+    const trendDataPromises = dateKeys.map(async (dateKey) => {
+      const entries = entriesByDate[dateKey] || [];
       
       // Create date object from YYYY-MM-DD string in local timezone
       const [year, month, day] = dateKey.split('-').map(Number);
       const currentDay = new Date(year, month - 1, day);
       currentDay.setHours(0, 0, 0, 0);
-      
-      // Check if this is today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const isToday = currentDay.getTime() === today.getTime();
-      
-      // Average all entries for this day (same as dashboard MC logic)
-      const avgValence = entries.reduce((sum, e) => sum + e.valence, 0) / entries.length;
-      const avgEnergy = entries.reduce((sum, e) => sum + e.energy, 0) / entries.length;
-      const avgFocus = entries.reduce((sum, e) => sum + e.focus, 0) / entries.length;
-      const avgStress = entries.reduce((sum, e) => sum + e.stress, 0) / entries.length;
 
-      // For MC calculation - EXACTLY like dashboard:
-      // Always use new Date() (current time) to determine the time bucket
-      // This ensures the same bucket is used for historical data filtering
-      const mcDate = now;
+      // If no entries at all for this local day, return nulls so the chart shows no point
+      if (entries.length === 0) {
+        return { date: dateKey, mc: null, dss: null } as any;
+      }
       
-      const mcResult = await calculateMoodComposite(
-        userId,
-        avgValence,
-        avgEnergy,
-        avgFocus,
-        avgStress,
-        mcDate
-      );
+          // Filter entries to ONLY those in the same time bucket as "now"
+          const bucketEntries = entries.filter((e) => e.timeBucket === currentBucket);
+          let mcValue: number | null = null;
+          if (bucketEntries.length > 0) {
+            // Average entries within the bucket
+            const avgValence = bucketEntries.reduce((sum, e) => sum + e.valence, 0) / bucketEntries.length;
+            const avgEnergy = bucketEntries.reduce((sum, e) => sum + e.energy, 0) / bucketEntries.length;
+            const avgFocus = bucketEntries.reduce((sum, e) => sum + e.focus, 0) / bucketEntries.length;
+            const avgStress = bucketEntries.reduce((sum, e) => sum + e.stress, 0) / bucketEntries.length;
 
-      // Calculate DSS for this day (use noon for DSS)
-      const dssDate = new Date(year, month - 1, day, 12, 0, 0);
-      const dssResult = await calculateDSS(userId, dssDate);
+            // For MC calculation: ensure the date passed is anchored in the SAME bucket on that day
+            const mcDate = new Date(currentDay);
+            if (currentBucket === 'morning') mcDate.setHours(8, 0, 0, 0);
+            else if (currentBucket === 'midday') mcDate.setHours(13, 0, 0, 0);
+            else if (currentBucket === 'evening') mcDate.setHours(19, 0, 0, 0);
+            else mcDate.setHours(1, 0, 0, 0); // night
 
-      trendData.push({
+            const mcResult = await calculateMoodComposite(userId, avgValence, avgEnergy, avgFocus, avgStress, mcDate);
+            mcValue = mcResult.moodComposite;
+          }
+
+          // DSS calculated only when there are entries for the day
+          let dssScore: number | null = null;
+          try {
+            const dssResult = await calculateDSS(userId, currentDay);
+            dssScore = dssResult?.dssScore ?? null;
+          } catch (e) {
+            console.error('DSS calc error for', dateKey, e);
+          }
+          
+          return {
         date: dateKey,
-        mc: mcResult.moodComposite,
-        dss: dssResult.dssScore
-      });
-    }
-    
-    // Reverse to get newest first
-    trendData.reverse();
-
-    console.log('📊 MC-DSS Trends API response:', {
-      totalDays: trendData.length,
-      data: trendData
+            mc: mcValue,
+        dss: dssScore
+      };
     });
+
+    const trendData = await Promise.all(trendDataPromises);
+    trendData.reverse();
 
     return NextResponse.json({
       success: true,

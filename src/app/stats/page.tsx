@@ -56,92 +56,68 @@ export default function StatsPage() {
   
 
   useEffect(() => {
-    const fetchData = async () => {
-      const perfStart = performance.now();
+    const perfStart = performance.now();
+    setLoading(true);
+
+    // Kick off all requests in parallel; update sections independently as they complete
+    (async () => {
       try {
-        setLoading(true);
-        
-        // Fetch mood entries
         const moodStart = performance.now();
-        const moodResponse = await fetch('/api/mood-entries');
-        if (!moodResponse.ok) throw new Error('Failed to fetch mood entries');
-        const moodData = await moodResponse.json();
-        const moodTime = performance.now() - moodStart;
-        console.log(`⏱️ [Stats] Mood entries: ${moodTime.toFixed(2)}ms`);
-        setMoodEntries(moodData);
+        fetch('/api/mood-entries')
+          .then(async r => {
+            if (!r.ok) throw new Error('Failed to fetch mood entries');
+            const data = await r.json();
+            setMoodEntries(data);
+          })
+          .catch(err => console.error('Mood entries error:', err))
+          .finally(() => console.log(`⏱️ [Stats] Mood entries: ${(performance.now() - moodStart).toFixed(2)}ms`));
 
-        // Fetch user info
         const userStart = performance.now();
-        const userResponse = await fetch('/api/user');
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          setUserInfo(userData);
-        } else if (userResponse.status === 404) {
-          console.log('No user data found - clean database state');
-          setUserInfo(null);
-        } else {
-          throw new Error('Failed to fetch user info');
-        }
-        const userTime = performance.now() - userStart;
-        console.log(`⏱️ [Stats] User info: ${userTime.toFixed(2)}ms`);
+        fetch('/api/user')
+          .then(async r => {
+            if (r.ok) setUserInfo(await r.json());
+            else if (r.status === 404) setUserInfo(null);
+            else throw new Error('Failed to fetch user info');
+          })
+          .catch(err => console.error('User info error:', err))
+          .finally(() => console.log(`⏱️ [Stats] User info: ${(performance.now() - userStart).toFixed(2)}ms`));
 
-        // Fetch user preferences for network graph
         const prefStart = performance.now();
-        const preferencesResponse = await fetch('/api/learn-connections?userId=dummy-user');
-        if (preferencesResponse.ok) {
-          const preferencesData = await preferencesResponse.json();
-          setUserPreferences(preferencesData);
-        }
-        const prefTime = performance.now() - prefStart;
-        console.log(`⏱️ [Stats] Learn connections: ${prefTime.toFixed(2)}ms`);
+        fetch('/api/learn-connections?userId=dummy-user')
+          .then(r => r.ok ? r.json() : null)
+          .then(data => data && setUserPreferences(data))
+          .catch(err => console.error('Learn connections error:', err))
+          .finally(() => console.log(`⏱️ [Stats] Learn connections: ${(performance.now() - prefStart).toFixed(2)}ms`));
 
-        // Fetch DSS data (current calculated DSS)
-        try {
-          const dssStart = performance.now();
-          const dssResponse = await fetch('/api/dss?userId=dummy-user');
-          if (dssResponse.ok) {
-            const dssData = await dssResponse.json();
-            if (dssData.success && dssData.data && dssData.data.currentDSS) {
-              setDssData(dssData.data.currentDSS);
+        const dssStart = performance.now();
+        fetch('/api/dss?userId=dummy-user')
+          .then(async r => {
+            if (r.ok) {
+              const data = await r.json();
+              if (data.success && data.data && data.data.currentDSS) setDssData(data.data.currentDSS);
             }
-          }
-          const dssTime = performance.now() - dssStart;
-          console.log(`⏱️ [Stats] DSS data: ${dssTime.toFixed(2)}ms`);
-        } catch (dssError) {
-          console.error('Error fetching DSS data:', dssError);
-        } finally {
-          setDssLoading(false);
-        }
+          })
+          .catch(err => console.error('DSS error:', err))
+          .finally(() => {
+            setDssLoading(false);
+            console.log(`⏱️ [Stats] DSS data: ${(performance.now() - dssStart).toFixed(2)}ms`);
+          });
 
-        // Fetch Drivers data
-        try {
-          const driversStart = performance.now();
-          const driversResponse = await fetch('/api/drivers');
-          if (driversResponse.ok) {
-            const driversData = await driversResponse.json();
-            setDriversData(driversData);
-          }
-          const driversTime = performance.now() - driversStart;
-          console.log(`⏱️ [Stats] Drivers data: ${driversTime.toFixed(2)}ms`);
-        } catch (driversError) {
-          console.error('Error fetching drivers data:', driversError);
-        } finally {
-          setDriversLoading(false);
-        }
-
-        const totalTime = performance.now() - perfStart;
-        console.log(`⏱️ [Stats] Total load time: ${totalTime.toFixed(2)}ms`);
-
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        const driversStart = performance.now();
+        fetch('/api/drivers')
+          .then(r => r.ok ? r.json() : null)
+          .then(data => data && setDriversData(data))
+          .catch(err => console.error('Drivers error:', err))
+          .finally(() => {
+            setDriversLoading(false);
+            console.log(`⏱️ [Stats] Drivers data: ${(performance.now() - driversStart).toFixed(2)}ms`);
+          });
       } finally {
-        setLoading(false);
+        setLoading(false); // let the page render; sections show skeletons using their own loading flags
+        console.log(`⏱️ [Stats] Requests kicked off in parallel: ${(performance.now() - perfStart).toFixed(2)}ms`);
       }
-    };
-
-    fetchData();
-  }, []); // Remove powerHoursWindow from dependencies
+    })();
+  }, []);
 
   // Separate effect for power hours window changes
   useEffect(() => {

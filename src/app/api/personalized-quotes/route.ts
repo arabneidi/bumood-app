@@ -9,9 +9,13 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'dummy-user';
+    const clientApiKey = searchParams.get('apiKey'); // Accept API key from query param
     
     console.log('🎯 Fetching personalized quote for user:', userId);
-    console.log('🔑 OpenAI API Key available:', !!process.env.OPENAI_API_KEY);
+    
+    // Check for API key (from client or environment)
+    const apiKey = clientApiKey || process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    console.log('🔑 OpenAI API Key available:', !!apiKey);
     
     // Get user profile data
     const user = await db.user.findUnique({
@@ -323,7 +327,7 @@ export async function GET(request: NextRequest) {
     
     // Generate personalized quote
     console.log('🎯 About to call generateCoachingTip with profile:', JSON.stringify(userProfile, null, 2));
-    const quote = await generateCoachingTip(userProfile);
+    const quote = await generateCoachingTip(userProfile, apiKey);
     console.log('✅ Generated personalized quote:', quote);
     
     return NextResponse.json({ 

@@ -24,28 +24,15 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
   const [mcDssData, setMcDssData] = useState<any[]>([]);
   const [mcDssLoading, setMcDssLoading] = useState(true);
 
+  // Fetch trend data immediately on mount (no lazy load)
   useEffect(() => {
     const fetchMCDSSData = async () => {
       try {
-        const mcStart = performance.now();
-        console.log('🔵 AnalyticsDashboard - Fetching MC-DSS data...');
         const response = await fetch('/api/mc-dss-trends?userId=dummy-user&days=7');
-        console.log('🔵 AnalyticsDashboard - MC-DSS response status:', response.status);
-        
         if (response.ok) {
           const result = await response.json();
-          console.log('🔵 AnalyticsDashboard - MC-DSS result:', result);
-          if (result.success) {
-            setMcDssData(result.data);
-            console.log('🔵 AnalyticsDashboard - MC-DSS data set:', result.data);
-          }
-        } else {
-          console.error('🔵 AnalyticsDashboard - MC-DSS response not ok:', response.status);
+          if (result.success) setMcDssData(result.data);
         }
-        const mcTime = performance.now() - mcStart;
-        console.log(`⏱️ [AnalyticsDashboard] MC-DSS fetch: ${mcTime.toFixed(2)}ms`);
-      } catch (error) {
-        console.error('🔵 AnalyticsDashboard - Error fetching MC-DSS data:', error);
       } finally {
         setMcDssLoading(false);
       }
@@ -540,36 +527,37 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
       </motion.div>
 
       {/* MC vs DSS Chart */}
-      <motion.div 
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.75 }}
-        className="mb-8"
-      >
-        <motion.div
-          whileHover={{ scale: 1.02, y: -5 }}
-          transition={{ type: "spring", stiffness: 300 }}
+      <div className="mb-8">
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.75 }}
         >
-          <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-indigo-500/20 hover:shadow-xl transition-all duration-300">
-            <motion.h3 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.95 }}
-              className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4 flex items-center"
-            >
-              <TrendingUp className="w-6 h-6 mr-2 text-indigo-500" />
-              MC vs DSS Trend (Last 7 Days)
-            </motion.h3>
-            {mcDssLoading ? (
-              <div className="flex items-center justify-center h-[250px]">
-                <div className="w-8 h-8 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            ) : (
-              <MCDSSChart data={mcDssData} height={250} />
-            )}
-          </Card>
+          <motion.div
+            whileHover={{ scale: 1.02, y: -5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <Card className="p-6 bg-slate-800/40 backdrop-blur-sm border border-indigo-500/20 hover:shadow-xl transition-all duration-300">
+              <motion.h3 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.95 }}
+                className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4 flex items-center"
+              >
+                <TrendingUp className="w-6 h-6 mr-2 text-indigo-500" />
+                MC vs DSS Trend (Last 7 Days)
+              </motion.h3>
+              {mcDssLoading ? (
+                <div className="flex items-center justify-center h-[250px]">
+                  <div className="w-8 h-8 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <MCDSSChart data={mcDssData} height={250} />
+              )}
+            </Card>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
 
       {/* Activity Analysis */}
       <motion.div 

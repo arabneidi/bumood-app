@@ -147,6 +147,10 @@ TONE: Professional, analytical, insightful, and clinically informed. Write as if
 
 RESPONSE FORMAT: Provide a concise, well-structured analysis focusing on the most important insights. Use clear headings and bullet points for easy reading. Keep the response focused and actionable. MAXIMUM 500 WORDS - prioritize the most critical psychological insights only.`;
 
+    // Get API key from request body or environment
+    const clientApiKey = body.apiKey;
+    const apiKey = clientApiKey || process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+
     // Call AI service
     const aiResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/ai-service`, {
       method: 'POST',
@@ -156,7 +160,8 @@ RESPONSE FORMAT: Provide a concise, well-structured analysis focusing on the mos
       body: JSON.stringify({
         prompt: aiPrompt,
         type: 'drivers_analysis',
-        context: 'activity_drivers'
+        context: 'activity_drivers',
+        ...(apiKey && { apiKey }) // Include API key if available
       })
     });
 

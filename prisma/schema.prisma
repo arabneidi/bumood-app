@@ -131,6 +131,20 @@ model Goal {
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+/// Daily, per-goal progress increments to be used in DSS component calculations
+model GoalProgressDaily {
+  id        String   @id @default(cuid())
+  userId    String
+  goalId    String
+  date      DateTime
+  value     Int      @default(0) // increment/progress recorded for this day
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([goalId, date])
+  @@index([userId, date])
+}
+
 model PredefinedGoal {
   id           String   @id @default(cuid())
   title        String
@@ -273,6 +287,7 @@ model DailyTracking {
   recoveryAction            Boolean  @default(false)
   positiveSocialTouchpoints Int?     @default(0)
   dssScore                  Float?
+  moodComposite             Float?
   learningMomentum          Float?
   recoveryIndex             Float?
   connectionScore           Float?

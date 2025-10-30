@@ -74,23 +74,40 @@ export default function ProfilePage() {
   // Load AI configuration
   const loadAIConfig = async () => {
     try {
-      // Check for encrypted API keys
+      // Check for encrypted API keys in localStorage
       const openaiKey = hasApiKey('openai');
       const geminiKey = hasApiKey('gemini');
       const textcortexKey = hasApiKey('textcortex');
       
+      // Also check if server has API key (for server-side features)
+      let serverHasKey = false;
+      try {
+        const res = await fetch('/api/test-env');
+        if (res.ok) {
+          const data = await res.json();
+          serverHasKey = data?.hasApiKey || false;
+        }
+      } catch {
+        // Ignore errors
+      }
+      
+      // AI is connected if either client (localStorage) or server has the key
+      const openaiConnected = openaiKey || serverHasKey;
+      const geminiConnected = geminiKey || serverHasKey;
+      const textcortexConnected = textcortexKey || serverHasKey;
+      
       const config = {
         openai: { 
-          isConnected: openaiKey, 
-          lastUsed: openaiKey ? new Date().toISOString() : null 
+          isConnected: openaiConnected, 
+          lastUsed: openaiConnected ? new Date().toISOString() : null 
         },
         gemini: { 
-          isConnected: geminiKey, 
-          lastUsed: geminiKey ? new Date().toISOString() : null 
+          isConnected: geminiConnected, 
+          lastUsed: geminiConnected ? new Date().toISOString() : null 
         },
         textcortex: { 
-          isConnected: textcortexKey, 
-          lastUsed: textcortexKey ? new Date().toISOString() : null 
+          isConnected: textcortexConnected, 
+          lastUsed: textcortexConnected ? new Date().toISOString() : null 
         }
       };
       

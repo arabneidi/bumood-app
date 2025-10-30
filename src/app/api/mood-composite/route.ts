@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateMoodComposite, getMoodCompositeTrends, getCurrentTimeBucket } from '@/lib/moodCompositeCalculator';
+import { db } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,49 +21,58 @@ export async function GET(request: NextRequest) {
       allMCs: trends.moodComposites
     });
     
-    // If requested, calculate MC for current time using averaged mood values from all entries today
-    let currentMC = null;
-    if (calculateCurrent && trends.moodComposites.length > 0) {
-      const { db } = require('@/lib/db');
-      
-      // Get start and end of today
+    // If requested, get MC for current time - try cache first
+    let currentMC: number | null = null;
+    if (calculateCurrent) {
+      // Try to get from cache first
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
       
-      // Get all entries from today
-      const todayEntries = await db.moodEntry.findMany({
+      const cached = await db.dailyTracking.findUnique({
         where: {
-          userId,
-          createdAt: {
-            gte: today,
-            lt: tomorrow
+          userId_date: {
+            userId,
+            date: today
           }
-        },
-        orderBy: {
-          createdAt: 'desc'
         }
       });
-      
-      if (todayEntries.length > 0) {
-        // Average all entries from today
-        const avgValence = todayEntries.reduce((sum, e) => sum + e.valence, 0) / todayEntries.length;
-        const avgEnergy = todayEntries.reduce((sum, e) => sum + e.energy, 0) / todayEntries.length;
-        const avgFocus = todayEntries.reduce((sum, e) => sum + e.focus, 0) / todayEntries.length;
-        const avgStress = todayEntries.reduce((sum, e) => sum + e.stress, 0) / todayEntries.length;
-        
-        console.log(`🔵 Using ${todayEntries.length} entries from today, averaged values: V=${avgValence.toFixed(2)}, E=${avgEnergy.toFixed(2)}, F=${avgFocus.toFixed(2)}, S=${avgStress.toFixed(2)}`);
-        
-        const mcResult = await calculateMoodComposite(
-          userId,
-          avgValence,
-          avgEnergy,
-          avgFocus,
-          avgStress,
-          new Date() // Current time
-        );
-        currentMC = mcResult.moodComposite;
+
+      if (cached && cached.moodComposite !== null) {
+        // Use cached value
+        currentMC = cached.moodComposite;
+      } else {
+        // Compute using CHART LOGIC and upsert cache
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const todayEntries = await db.moodEntry.findMany({
+          where: {
+            userId,
+            createdAt: { gte: today, lt: tomorrow }
+          },
+          orderBy: { createdAt: 'desc' }
+        });
+
+        // Use only entries from the current time bucket
+        const currentBucket = getCurrentTimeBucket();
+        const bucketEntries = todayEntries.filter(e => e.timeBucket === currentBucket);
+        if (bucketEntries.length > 0) {
+          const avgValence = todayEntries.reduce((s, e) => s + e.valence, 0) / todayEntries.length;
+          const avgEnergy = todayEntries.reduce((s, e) => s + e.energy, 0) / todayEntries.length;
+          const avgFocus = todayEntries.reduce((s, e) => s + e.focus, 0) / todayEntries.length;
+          const avgStress = todayEntries.reduce((s, e) => s + e.stress, 0) / todayEntries.length;
+
+          const mcResult = await calculateMoodComposite(userId, avgValence, avgEnergy, avgFocus, avgStress, new Date());
+          currentMC = mcResult.moodComposite;
+
+          await db.dailyTracking.upsert({
+            where: { userId_date: { userId, date: today } },
+            update: { moodComposite: currentMC },
+            create: { userId, date: today, moodComposite: currentMC }
+          });
+        } else {
+          currentMC = null; // no data in current time bucket → N/A on dashboard
+        }
       }
     }
     

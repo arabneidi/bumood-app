@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-
 const prisma = new PrismaClient();
 
 export interface DSSComponents {
@@ -68,7 +67,11 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
   
   for (const entry of moodEntries) {
     const entryDate = new Date(entry.createdAt);
-    const dateKey = entryDate.toISOString().split('T')[0];
+    // Use LOCAL date key (not UTC) to bucket entries by your local day
+    const y = entryDate.getFullYear();
+    const m = String(entryDate.getMonth() + 1).padStart(2, '0');
+    const d = String(entryDate.getDate()).padStart(2, '0');
+    const dateKey = `${y}-${m}-${d}`;
     
     if (!dailyData.has(dateKey)) {
       dailyData.set(dateKey, {
@@ -344,22 +347,34 @@ async function calculateLearningMomentum(tracking: any, userId: string, date: Da
   const deepworkMinutes = tracking.deepworkMinutes || 0;
   const tasksCompleted = tracking.tasksCompleted || 0;
   
-  // Get goal progress for LM goals (Learning Momentum)
-  const lmGoals = await prisma.goal.findMany({
-    where: {
-      userId: userId,
-      dssComponent: 'LM',
-      completed: false
-    }
-  });
-  
-  // Calculate goal progress contribution
-  let goalProgress = 0;
-  for (const goal of lmGoals) {
-    // Each +1 on goal progress contributes to LM
-    const progressValue = goal.currentValue || 0;
-    goalProgress += progressValue * 2; // Each goal progress point = 2 LM points
-  }
+  // Use ONLY today's per-goal progress (not cumulative)
+  const dayStart = new Date(date);
+  dayStart.setHours(0, 0, 0, 0);
+  const nextDay = new Date(dayStart);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  const [lmGoals, todaysProgress] = await Promise.all([
+    prisma.goal.findMany({
+      where: {
+        userId: userId,
+        dssComponent: 'LM',
+        completed: false
+      },
+      select: { id: true }
+    }),
+    prisma.goalProgressDaily.findMany({
+      where: {
+        userId: userId,
+        date: { gte: dayStart, lt: nextDay }
+      },
+      select: { goalId: true, value: true }
+    })
+  ]);
+
+  const lmGoalIds = new Set(lmGoals.map(g => g.id));
+  const goalProgress = todaysProgress
+    .filter(p => lmGoalIds.has(p.goalId))
+    .reduce((sum, p) => sum + (p.value || 0) * 2, 0); // Each goal progress point = 2 LM points
   
   const result = deepworkMinutes + (10 * tasksCompleted) + goalProgress;
   console.log(`🔵 calculateLearningMomentum: deepwork=${deepworkMinutes}, tasks=${tasksCompleted}, goals=${goalProgress}, result=${result}`);
@@ -374,23 +389,34 @@ async function calculateRecoveryIndex(tracking: any, userId: string, date: Date)
   
   const sleepHours = tracking.sleepHours || 0;
   const recoveryAction = tracking.recoveryAction || false;
-  
-  // Get goal progress for RI goals (Recovery Index)
-  const riGoals = await prisma.goal.findMany({
-    where: {
-      userId: userId,
-      dssComponent: 'RI',
-      completed: false
-    }
-  });
-  
-  // Calculate goal progress contribution
-  let goalProgress = 0;
-  for (const goal of riGoals) {
-    // Each +1 on goal progress contributes to RI
-    const progressValue = goal.currentValue || 0;
-    goalProgress += progressValue * 1.5; // Each goal progress point = 1.5 RI points
-  }
+
+  const dayStart = new Date(date);
+  dayStart.setHours(0, 0, 0, 0);
+  const nextDay = new Date(dayStart);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  const [riGoals, todaysProgress] = await Promise.all([
+    prisma.goal.findMany({
+      where: {
+        userId: userId,
+        dssComponent: 'RI',
+        completed: false
+      },
+      select: { id: true }
+    }),
+    prisma.goalProgressDaily.findMany({
+      where: {
+        userId: userId,
+        date: { gte: dayStart, lt: nextDay }
+      },
+      select: { goalId: true, value: true }
+    })
+  ]);
+
+  const riGoalIds = new Set(riGoals.map(g => g.id));
+  const goalProgress = todaysProgress
+    .filter(p => riGoalIds.has(p.goalId))
+    .reduce((sum, p) => sum + (p.value || 0) * 1.5, 0); // Each point = 1.5 RI points
   
   return sleepHours + (recoveryAction ? 1 : 0) + goalProgress;
 }
@@ -402,23 +428,34 @@ async function calculateConnectionScore(tracking: any, userId: string, date: Dat
   if (!tracking) return 0;
   
   const socialTouchpoints = tracking.positiveSocialTouchpoints || 0;
-  
-  // Get goal progress for Connection goals
-  const connectionGoals = await prisma.goal.findMany({
-    where: {
-      userId: userId,
-      dssComponent: 'Connection',
-      completed: false
-    }
-  });
-  
-  // Calculate goal progress contribution
-  let goalProgress = 0;
-  for (const goal of connectionGoals) {
-    // Each +1 on goal progress contributes to Connection
-    const progressValue = goal.currentValue || 0;
-    goalProgress += progressValue * 1; // Each goal progress point = 1 Connection point
-  }
+
+  const dayStart = new Date(date);
+  dayStart.setHours(0, 0, 0, 0);
+  const nextDay = new Date(dayStart);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  const [connectionGoals, todaysProgress] = await Promise.all([
+    prisma.goal.findMany({
+      where: {
+        userId: userId,
+        dssComponent: 'Connection',
+        completed: false
+      },
+      select: { id: true }
+    }),
+    prisma.goalProgressDaily.findMany({
+      where: {
+        userId: userId,
+        date: { gte: dayStart, lt: nextDay }
+      },
+      select: { goalId: true, value: true }
+    })
+  ]);
+
+  const connGoalIds = new Set(connectionGoals.map(g => g.id));
+  const goalProgress = todaysProgress
+    .filter(p => connGoalIds.has(p.goalId))
+    .reduce((sum, p) => sum + (p.value || 0) * 1, 0); // Each point = 1 Connection point
   
   return socialTouchpoints + goalProgress;
 }

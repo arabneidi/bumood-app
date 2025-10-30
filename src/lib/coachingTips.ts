@@ -70,8 +70,9 @@ export interface UserProfile {
   fieldOfStudy?: string;
 }
 
-export async function generateCoachingTip(userProfile: UserProfile): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY;
+export async function generateCoachingTip(userProfile: UserProfile, providedApiKey?: string): Promise<string> {
+  // Use provided key first, then check environment variables
+  const apiKey = providedApiKey || process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
   
   console.log('🔑 OpenAI API Key available in coaching tips:', !!apiKey);
   console.log('📊 User profile for coaching tips:', JSON.stringify(userProfile, null, 2));

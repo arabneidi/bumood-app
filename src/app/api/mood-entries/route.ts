@@ -4,6 +4,7 @@ export const revalidate = 0;
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { calculateMoodComposite, getTimeBucket } from "@/lib/moodCompositeCalculator";
+import { calculateDSS } from "@/lib/dssCalculator";
 import { calculateAchievements } from "@/lib/achievementCalculator";
 
 // Helper functions for achievement rollback validation
@@ -295,6 +296,85 @@ export async function POST(request: NextRequest) {
     });
     console.log('✅ Mood entry created successfully:', moodEntry.id);
 
+    // Update MC and DSS cache after new entry is saved
+    // Use EXACT same logic as get-dss-today.ts script
+    try {
+      const entryDate = new Date(chosenCreatedAt);
+      
+      // EXACT same pattern as get-dss-today.ts (lines 10-15):
+      // Create date object exactly like the chart does (entry date at midnight)
+      const todayYear = entryDate.getFullYear();
+      const todayMonth = entryDate.getMonth();
+      const todayDay = entryDate.getDate();
+      const currentDay = new Date(todayYear, todayMonth, todayDay);
+      currentDay.setHours(0, 0, 0, 0);
+      
+      // Get all entries for this day (includes the new entry we just saved)
+      const tomorrow = new Date(currentDay);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const todayEntries = await db.moodEntry.findMany({
+        where: {
+          userId: dummyUserId,
+          createdAt: {
+            gte: currentDay,
+            lt: tomorrow
+          }
+        }
+      });
+
+      if (todayEntries.length > 0) {
+        // EXACT same calculation as MC vs DSS chart for a single day:
+        // Average all entries for this day (same as chart logic line 84-87)
+        const avgValence = todayEntries.reduce((sum, e) => sum + e.valence, 0) / todayEntries.length;
+        const avgEnergy = todayEntries.reduce((sum, e) => sum + e.energy, 0) / todayEntries.length;
+        const avgFocus = todayEntries.reduce((sum, e) => sum + e.focus, 0) / todayEntries.length;
+        const avgStress = todayEntries.reduce((sum, e) => sum + e.stress, 0) / todayEntries.length;
+
+        // MC calculation - EXACTLY like chart: use current time (now) for time bucket
+        const now = new Date(); // Current time for today's bucket - IMPORTANT: Use current time for all MC calculations
+        const mcResult = await calculateMoodComposite(
+          dummyUserId,
+          avgValence,
+          avgEnergy,
+          avgFocus,
+          avgStress,
+          now
+        );
+
+        // DSS calculation - EXACTLY like get-dss-today.ts (line 21):
+        const dssResult = await calculateDSS(dummyUserId, currentDay);
+
+        // Save to cache
+        await db.dailyTracking.upsert({
+          where: {
+            userId_date: {
+              userId: dummyUserId,
+              date: currentDay
+            }
+          },
+          update: {
+            moodComposite: mcResult.moodComposite,
+            dssScore: dssResult.dssScore,
+            learningMomentum: dssResult.components.learningMomentum,
+            recoveryIndex: dssResult.components.recoveryIndex,
+            connectionScore: dssResult.components.connectionScore
+          },
+          create: {
+            userId: dummyUserId,
+            date: currentDay,
+            moodComposite: mcResult.moodComposite,
+            dssScore: dssResult.dssScore,
+            learningMomentum: dssResult.components.learningMomentum,
+            recoveryIndex: dssResult.components.recoveryIndex,
+            connectionScore: dssResult.components.connectionScore
+          }
+        });
+      }
+    } catch (cacheError) {
+      console.error('⚠️ Error updating cache:', cacheError);
+      // Don't fail entry creation if cache update fails
+    }
+
     // Update user's recent activities with specific subcategories
     if (selectedSubcategories && selectedSubcategories.length > 0) {
       try {
@@ -445,8 +525,7 @@ export async function POST(request: NextRequest) {
         sleepHours: sleep !== null && sleep !== undefined ? parseFloat(sleep) : 0,
         recoveryAction: sleep !== null && sleep !== undefined && parseFloat(sleep) >= 8,
         positiveSocialTouchpoints: connectionScore,
-        // Update DSS scores
-        dssScore: 0.5 * learningMomentum + 0.3 * recoveryIndex + 0.2 * connectionScore,
+        // Update DSS component fields only; DSS score is computed via calculateDSS and saved elsewhere
         learningMomentum: learningMomentum,
         recoveryIndex: recoveryIndex,
         connectionScore: connectionScore
@@ -470,7 +549,7 @@ export async function POST(request: NextRequest) {
         sleepHours: sleep !== null && sleep !== undefined ? parseFloat(sleep) : 0,
         recoveryAction: sleep !== null && sleep !== undefined && parseFloat(sleep) >= 8,
         positiveSocialTouchpoints: connectionScore,
-        dssScore: 0.5 * learningMomentum + 0.3 * recoveryIndex + 0.2 * connectionScore,
+        // Do not set dssScore here; it is computed by calculateDSS later
         learningMomentum: learningMomentum,
         recoveryIndex: recoveryIndex,
         connectionScore: connectionScore

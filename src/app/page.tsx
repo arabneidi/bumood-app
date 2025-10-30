@@ -188,12 +188,14 @@ export default function Home() {
           });
         }
 
-        // Process DSS data
+        // Process DSS data (use explicit currentDSS only; no fallback)
         if (dssRes.ok) {
           const data = await dssRes.json();
           if (data.success && data.data) {
-            setDssScore(data.data.dssScore);
-            setDssData(data.data);
+            const current = data.data.currentDSS ?? null;
+            const score = current?.dssScore ?? null;
+            setDssScore(score);
+            setDssData(current);
           }
           setDssLoading(false);
         }
@@ -202,20 +204,17 @@ export default function Home() {
         if (mcRes.ok) {
           const data = await mcRes.json();
           if (data.success && data.data) {
-            // Use currentMC if calculated, otherwise fallback to last trend value
-            const mcValue = data.data.currentMC !== undefined ? data.data.currentMC : 
-                           (data.data.trends.moodComposites[data.data.trends.moodComposites.length - 1] || null);
-            console.log('🔵 Dashboard setting moodComposite:', {
-              currentMC: data.data.currentMC,
-              lastTrendMC: data.data.trends.moodComposites[data.data.trends.moodComposites.length - 1],
-              finalMC: mcValue,
-              arrayLength: data.data.trends.moodComposites.length
-            });
+            // No fallback: use only the explicit currentMC number
+            const mcValue = typeof data.data.currentMC === 'number' ? data.data.currentMC : null;
+            console.log('🔵 Dashboard setting moodComposite (no fallback):', { currentMC: mcValue });
             setMoodComposite(mcValue);
             setCurrentTimeBucket(data.data.currentTimeBucket);
           }
           setMcLoading(false);
         }
+
+        // Note: Dashboard values come from cached database via /api/dss and /api/mood-composite.
+        // Cache is recalculated on new entry using the same functions as the MC vs DSS chart.
 
         // Process streak data
         if (streakRes.ok) {
@@ -247,7 +246,11 @@ export default function Home() {
           setIsGeneratingProTip(true);
           try {
             console.log('🎯 CLIENT: Fetching pro tips from API...');
-            const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
+            // Get API key from localStorage (set via profile page) - SINGLE SOURCE OF TRUTH
+            const { getApiKeyForRequest } = await import('@/lib/encryption');
+            const apiKey = getApiKeyForRequest('openai');
+            const apiKeyParam = apiKey ? `&apiKey=${encodeURIComponent(apiKey)}` : '';
+            const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user${apiKeyParam}`);
             if (quoteRes.ok) {
               const quoteData = await quoteRes.json();
               console.log('📝 CLIENT: Pro tip response received:', quoteData.quote);
@@ -286,7 +289,11 @@ export default function Home() {
           } else {
             // No saved Pro Tip, generate one
             try {
-              const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user`);
+              // Get API key from localStorage (set via profile page) - SINGLE SOURCE OF TRUTH
+            const { getApiKeyForRequest } = await import('@/lib/encryption');
+            const apiKey = getApiKeyForRequest('openai');
+            const apiKeyParam = apiKey ? `&apiKey=${encodeURIComponent(apiKey)}` : '';
+            const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user${apiKeyParam}`);
               if (quoteRes.ok) {
                 const quoteData = await quoteRes.json();
                 setProTip(quoteData.quote);

@@ -86,3 +86,22 @@ export function migrateLegacyKeys(): void {
 if (typeof window !== 'undefined') {
   migrateLegacyKeys();
 }
+
+// Helper function to get API key from localStorage (for client-side API calls)
+// This is the SINGLE source of truth - keys are only set via profile page
+export function getApiKeyForRequest(provider: string = 'openai'): string | null {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    // Try encrypted key first (primary storage method from profile page)
+    const decrypted = getDecryptedApiKey(provider);
+    if (decrypted) return decrypted;
+    
+    // Fallback to legacy unencrypted key
+    const legacy = localStorage.getItem(`${provider}_api_key`);
+    return legacy;
+  } catch (error) {
+    console.error(`Error getting ${provider} API key:`, error);
+    return null;
+  }
+}

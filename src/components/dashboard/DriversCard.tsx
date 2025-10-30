@@ -41,13 +41,18 @@ export default function DriversCard({ data, loading, userInfo }: DriversCardProp
     
     setAiLoading(true);
     try {
+      // Get API key from localStorage (set via profile page) - SINGLE SOURCE OF TRUTH
+      const { getApiKeyForRequest } = await import('@/lib/encryption');
+      const apiKey = getApiKeyForRequest('openai');
+
       const response = await fetch('/api/ai-drivers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           driversData: data,
           userInfo: userInfo,
-          timeRange: '4 weeks'
+          timeRange: '4 weeks',
+          ...(apiKey && { apiKey }) // Include API key if available
         })
       });
       

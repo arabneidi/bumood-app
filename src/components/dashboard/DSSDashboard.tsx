@@ -30,7 +30,9 @@ export default function DSSDashboard() {
       const data = await response.json();
       
       if (data.success) {
-        setDssData(data.data);
+        // Use explicit currentDSS from API to avoid any fallback confusion
+        const current = data?.data?.currentDSS ?? data?.data;
+        setDssData(current);
       }
     } catch (error) {
       console.error('Error fetching DSS data:', error);
