@@ -9,6 +9,7 @@ import PeriodInsights from '@/components/dashboard/PeriodInsights';
 import DSSRadar from '@/components/dashboard/DSSRadar';
 import DriversCard from '@/components/dashboard/DriversCard';
 import PowerHoursHeatmap from '@/components/charts/PowerHoursHeatmap';
+import PerformanceHeatmap from '@/components/charts/PerformanceHeatmap';
 import WordCloud from '@/components/dashboard/WordCloud';
 
 interface MoodEntry {
@@ -39,6 +40,7 @@ export default function StatsPage() {
   const [userPreferences, setUserPreferences] = useState<any>(null);
   const [networkTimeRange, setNetworkTimeRange] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
   const [powerHoursWindow, setPowerHoursWindow] = useState<'weekly' | 'monthly' | 'yearly'>('weekly');
+  const [performanceWindow, setPerformanceWindow] = useState<'weekly' | 'monthly' | 'yearly'>('weekly');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -53,6 +55,8 @@ export default function StatsPage() {
   // Power Hours states
   const [powerHoursData, setPowerHoursData] = useState<any>(null);
   const [powerHoursLoading, setPowerHoursLoading] = useState(true);
+  const [performanceData, setPerformanceData] = useState<any>(null);
+  const [performanceLoading, setPerformanceLoading] = useState(true);
   
 
   useEffect(() => {
@@ -69,8 +73,7 @@ export default function StatsPage() {
             const data = await r.json();
             setMoodEntries(data);
           })
-          .catch(err => console.error('Mood entries error:', err))
-          .finally(() => console.log(`⏱️ [Stats] Mood entries: ${(performance.now() - moodStart).toFixed(2)}ms`));
+          .catch(err => console.error('Mood entries error:', err));
 
         const userStart = performance.now();
         fetch('/api/user')
@@ -79,15 +82,13 @@ export default function StatsPage() {
             else if (r.status === 404) setUserInfo(null);
             else throw new Error('Failed to fetch user info');
           })
-          .catch(err => console.error('User info error:', err))
-          .finally(() => console.log(`⏱️ [Stats] User info: ${(performance.now() - userStart).toFixed(2)}ms`));
+          .catch(err => console.error('User info error:', err));
 
         const prefStart = performance.now();
         fetch('/api/learn-connections?userId=dummy-user')
           .then(r => r.ok ? r.json() : null)
           .then(data => data && setUserPreferences(data))
-          .catch(err => console.error('Learn connections error:', err))
-          .finally(() => console.log(`⏱️ [Stats] Learn connections: ${(performance.now() - prefStart).toFixed(2)}ms`));
+          .catch(err => console.error('Learn connections error:', err));
 
         const dssStart = performance.now();
         fetch('/api/dss?userId=dummy-user&noCache=true')
@@ -98,23 +99,17 @@ export default function StatsPage() {
             }
           })
           .catch(err => console.error('DSS error:', err))
-          .finally(() => {
-            setDssLoading(false);
-            console.log(`⏱️ [Stats] DSS data: ${(performance.now() - dssStart).toFixed(2)}ms`);
-          });
+          .finally(() => setDssLoading(false));
 
         const driversStart = performance.now();
         fetch('/api/drivers')
           .then(r => r.ok ? r.json() : null)
           .then(data => data && setDriversData(data))
           .catch(err => console.error('Drivers error:', err))
-          .finally(() => {
-            setDriversLoading(false);
-            console.log(`⏱️ [Stats] Drivers data: ${(performance.now() - driversStart).toFixed(2)}ms`);
-          });
+          .finally(() => setDriversLoading(false));
       } finally {
         setLoading(false); // let the page render; sections show skeletons using their own loading flags
-        console.log(`⏱️ [Stats] Requests kicked off in parallel: ${(performance.now() - perfStart).toFixed(2)}ms`);
+        // quiet perf log
       }
     })();
   }, []);
@@ -130,8 +125,6 @@ export default function StatsPage() {
           const powerHoursData = await powerHoursResponse.json();
           setPowerHoursData(powerHoursData);
         }
-        const powerTime = performance.now() - powerStart;
-        console.log(`⏱️ [Stats] Power hours (${powerHoursWindow}): ${powerTime.toFixed(2)}ms`);
       } catch (powerHoursError) {
         console.error('Error fetching power hours data:', powerHoursError);
       } finally {
@@ -141,6 +134,26 @@ export default function StatsPage() {
 
     fetchPowerHours();
   }, [powerHoursWindow]);
+
+  // Separate effect for performance window changes (decoupled from power hours)
+  useEffect(() => {
+    (async () => {
+      try {
+        setPerformanceLoading(true);
+        const perfStart = performance.now();
+        const perfResponse = await fetch(`/api/performance-hours?userId=dummy-user&window=${performanceWindow}`);
+        if (perfResponse.ok) {
+          const p = await perfResponse.json();
+          setPerformanceData(p);
+        }
+        console.log(`⏱️ [Stats] Performance hours fetch (${performanceWindow}) took ${(performance.now() - perfStart).toFixed(2)}ms`);
+      } catch (e) {
+        console.error('Performance hours error:', e);
+      } finally {
+        setPerformanceLoading(false);
+      }
+    })();
+  }, [performanceWindow]);
 
   if (loading) {
     return (
@@ -279,6 +292,55 @@ export default function StatsPage() {
             <PowerHoursHeatmap 
               data={powerHoursData?.data || []} 
               loading={powerHoursLoading} 
+            />
+          </div>
+        </motion.div>
+
+        {/* Performance (DSS) Heatmap Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.35 }}
+          className="mb-12"
+        >
+          <div className="relative bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-emerald-500/20 p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <span className="mr-2 text-3xl">📈</span>
+                Performance
+              </h2>
+
+              {/* Independent window selector for Performance */}
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-slate-300">Window:</span>
+                <div className="flex bg-slate-700/50 backdrop-blur-sm rounded-lg p-1 border border-emerald-500/20">
+                  {[
+                    { value: 'weekly', label: 'Weekly', icon: '🗓️' },
+                    { value: 'monthly', label: 'Monthly', icon: '📅' },
+                    { value: 'yearly', label: 'Yearly', icon: '🗓️' }
+                  ].map((option) => (
+                    <motion.button
+                      key={option.value}
+                      onClick={() => setPerformanceWindow(option.value as any)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
+                        performanceWindow === option.value
+                          ? 'bg-emerald-500/30 text-white shadow-lg'
+                          : 'text-slate-300 hover:text-white hover:bg-emerald-500/20'
+                      }`}
+                    >
+                      <span className="mr-1">{option.icon}</span>
+                      {option.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <PerformanceHeatmap
+              data={performanceData?.data || []}
+              loading={performanceLoading}
             />
           </div>
         </motion.div>

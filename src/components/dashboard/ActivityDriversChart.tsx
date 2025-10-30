@@ -119,12 +119,7 @@ export default function ActivityDriversChart({
       .slice(0, 6);
   }
   
-  // Debug sorting
-  console.log('🔍 Activity Sorting Debug:', {
-    helpfulSorted: helpfulSorted.map(a => ({ tag: a.tag, effect: a.overallEffect })),
-    harmfulSorted: harmfulSorted.map(a => ({ tag: a.tag, effect: a.overallEffect })),
-    topActivities: topActivities.map(a => ({ tag: a.tag, effect: a.overallEffect }))
-  });
+  // silent debug
 
   const fetchMonthlyData = async () => {
     setLoading(true);
@@ -145,11 +140,7 @@ export default function ActivityDriversChart({
 
       const results = await Promise.all(monthlyPromises);
       const filteredResults = results.filter(Boolean);
-      console.log('📊 Monthly data fetched:', {
-        topActivities: topActivities.map(a => a.tag),
-        fetchedActivities: filteredResults.map(r => r.activity),
-        results: filteredResults
-      });
+      // silent debug
       setMonthlyData(filteredResults);
     } catch (error) {
       console.error('Error fetching monthly data:', error);
@@ -287,10 +278,7 @@ export default function ActivityDriversChart({
                   activityData.chartData && activityData.chartData[index]?.hasActivity
                 );
                 
-                // Simple debug for cells with activities
-                if (activitiesPresent.length > 0) {
-                  console.log(`Day ${dayNumber}: ${activitiesPresent.length} activities - ${activitiesPresent.map(a => a.activity).join(', ')}`);
-                }
+                // silent cell debug
                 
                 return (
                   <div

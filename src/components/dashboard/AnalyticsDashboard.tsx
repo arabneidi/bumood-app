@@ -50,11 +50,7 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
     return entryDate >= fourteenDaysAgo;
   });
   
-  console.log('📊 Analytics Dashboard - Data filtering:', {
-    totalEntries: data.length,
-    last14DaysEntries: recentData.length,
-    filterDate: fourteenDaysAgo.toISOString()
-  });
+  // removed noisy debug logs
   
   if (recentData.length === 0) {
     return (
@@ -182,14 +178,7 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
   const last7Days = sortedDailyAverages.slice(0, 7);
   const previous7Days = sortedDailyAverages.slice(7, 14);
   
-  console.log('📊 Stats Analytics - Daily averages:', {
-    totalDays: sortedDailyAverages.length,
-    last7Dates: last7Days.map(d => d.date),
-    previous7Dates: previous7Days.map(d => d.date),
-    weeklyAvgValence: avgValence,
-    last7AvgValence: last7Days.reduce((sum, d) => sum + d.valence, 0) / last7Days.length,
-    previous7AvgValence: previous7Days.reduce((sum, d) => sum + d.valence, 0) / previous7Days.length
-  });
+  // removed noisy debug logs
   
   // Valence trend (calculated from daily averages, using actual days with data)
   const last7DaysCount = last7Days.length;

@@ -18,9 +18,6 @@ const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const hours = Array.from({ length: 24 }, (_, i) => i);
 
 export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapProps) {
-  // Debug: Log the data being received
-  console.log('PowerHoursHeatmap data:', data);
-  console.log('PowerHoursHeatmap loading:', loading);
   
   if (loading) {
     return (
@@ -75,7 +72,6 @@ export default function PowerHoursHeatmap({ data, loading }: PowerHoursHeatmapPr
   const maxMC = mcValues.length > 0 ? Math.max(...mcValues) : 2;
   const range = maxMC - minMC;
 
-  console.log('📊 Power Hours Dynamic Range:', { minMC, maxMC, range });
 
   // Get MC value
   const getMCValue = (day: string, hour: number) => {

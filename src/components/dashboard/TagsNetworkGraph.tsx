@@ -53,7 +53,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
   const [showSubcategories, setShowSubcategories] = useState<boolean>(false);
   const [grabbedNodeId, setGrabbedNodeId] = useState<string | null>(null);
   const [connectedNodeIds, setConnectedNodeIds] = useState<string[]>([]);
-  const graphRef = React.useRef<any>(null);
+  // removed ref to avoid forwarding warnings
   const isDraggingRef = React.useRef<string | null>(null); // Track which node is currently being dragged
   const stateRef = React.useRef<{ grabbedNodeId: string | null; connectedNodeIds: string[] }>({
     grabbedNodeId: null,
@@ -62,11 +62,6 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
   
   // Keep ref in sync with state
   useEffect(() => {
-    console.log('🟡 [StateRef Update] Updating stateRef:', {
-      grabbedNodeId,
-      connectedNodeIds,
-      connectedCount: connectedNodeIds.length
-    });
     stateRef.current = { grabbedNodeId, connectedNodeIds };
   }, [grabbedNodeId, connectedNodeIds]);
 
@@ -74,9 +69,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
     const start = performance.now();
     fetchLearnedConnections();
     generateNetworkData();
-    const time = performance.now() - start;
-    console.log(`⏱️ [TagsNetworkGraph] generateNetworkData: ${time.toFixed(2)}ms`);
-    console.log('🟡 [TagsNetworkGraph] Component initialized, drag handlers should be active');
+    // silence debug timings
   }, [moodEntries, userPreferences, timeRange]);
 
 
@@ -251,7 +244,6 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
     });
 
     const genTime = performance.now() - genStart;
-    console.log(`⏱️ [TagsNetworkGraph] Data processing: ${genTime.toFixed(2)}ms (${nodes.length} nodes, ${links.length} links)`);
     setGraphData({ nodes, links });
   };
 
@@ -290,8 +282,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
   };
 
   const handleNodeClick = useCallback((node: any) => {
-    // Zoom to node on click
-    console.log('Node clicked:', node);
+    // Zoom to node on click (no console noise)
   }, []);
 
   const handleNodeDrag = useCallback((node: any) => {
@@ -299,25 +290,19 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
     
     // Check if this is a new drag (node not currently being dragged)
     if (isDraggingRef.current !== nodeId) {
-      console.log('🟡 ===== NODE DRAG START (detected via onNodeDrag) =====');
-      console.log('🟡 Raw node object:', node);
-      console.log('🟡 Extracted nodeId:', nodeId);
-      console.log('🟡 Current graphData.nodes count:', graphData.nodes.length);
-      console.log('🟡 Current graphData.links count:', graphData.links.length);
-      console.log('🟡 showSubcategories:', showSubcategories);
+      // silence debug logs during drag
       
       isDraggingRef.current = nodeId;
       setGrabbedNodeId(nodeId);
-      console.log('🟡 Set grabbedNodeId to:', nodeId);
+      
       
       // Find all connected nodes from filteredGraphData.links (respects subcategory visibility)
       const filteredNodes = graphData.nodes.filter(n => showSubcategories || n.category !== 'subcategory');
       const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
-      console.log('🟡 Filtered nodes count:', filteredNodes.length);
-      console.log('🟡 Filtered node IDs:', Array.from(filteredNodeIds));
+      
       
       const connected: string[] = [];
-      console.log('🟡 Checking links for connections...');
+      
       graphData.links.forEach((link, index) => {
         const sourceId = typeof link.source === 'string' ? link.source : (link.source as any).id;
         const targetId = typeof link.target === 'string' ? link.target : (link.target as any).id;
@@ -325,48 +310,32 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
         // Only consider links between visible nodes
         if (filteredNodeIds.has(sourceId) && filteredNodeIds.has(targetId)) {
           if (sourceId === nodeId && !connected.includes(targetId)) {
-            console.log(`🟡 Found connection at link[${index}]: source=${sourceId} matches, adding target=${targetId}`);
+            
             connected.push(targetId);
           } else if (targetId === nodeId && !connected.includes(sourceId)) {
-            console.log(`🟡 Found connection at link[${index}]: target=${targetId} matches, adding source=${sourceId}`);
+            
             connected.push(sourceId);
           }
         }
       });
       
-      console.log('🟡 Final connected nodes array:', connected);
-      console.log('🟡 Setting connectedNodeIds to:', connected);
+      
       setConnectedNodeIds(connected);
-      console.log('🟡 ===== NODE DRAG START COMPLETE =====');
+      
     }
   }, [graphData.links, graphData.nodes, showSubcategories]);
 
   const handleNodeDragEnd = useCallback(() => {
-    console.log('🟡 ===== NODE DRAG END =====');
-    console.log('🟡 Clearing grabbedNodeId (was:', grabbedNodeId, ')');
-    console.log('🟡 Clearing connectedNodeIds (was:', connectedNodeIds, ')');
     isDraggingRef.current = null;
     setGrabbedNodeId(null);
     setConnectedNodeIds([]);
-    console.log('🟡 ===== NODE DRAG END COMPLETE =====');
   }, [grabbedNodeId, connectedNodeIds]);
 
   const getNodeColorCallback = useCallback((node: any) => {
     return getNodeColor(node);
   }, [grabbedNodeId, connectedNodeIds, driversData]);
 
-  // Force graph to refresh when grabbed node changes
-  useEffect(() => {
-    if (graphRef.current) {
-      // Trigger a refresh by calling pauseAnimation and resumeAnimation
-      graphRef.current.pauseAnimation();
-      setTimeout(() => {
-        if (graphRef.current) {
-          graphRef.current.resumeAnimation();
-        }
-      }, 10);
-    }
-  }, [grabbedNodeId, connectedNodeIds]);
+  // no-op: avoid ref-based refresh to reduce console noise
 
   // Filter graph data based on subcategory visibility
   const filteredGraphData = useMemo(() => {
@@ -465,7 +434,6 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
         {/* Force Graph */}
         <div className="absolute inset-0" style={{ top: '80px', bottom: '100px' }}>
           <ForceGraph2D
-            ref={graphRef}
             graphData={filteredGraphData}
             width={undefined}
             height={undefined}
@@ -482,15 +450,7 @@ export default function TagsNetworkGraph({ moodEntries, userPreferences, timeRan
               const currentConnected = stateRef.current.connectedNodeIds;
               const isConnected = currentGrabbed && currentConnected.includes(node.id);
               
-              // Debug logging (only log once per node when grabbed to avoid spam)
-              if (currentGrabbed && Math.random() < 0.01) { // Log 1% of the time to reduce spam
-                console.log('🟡 [Canvas] Rendering node:', node.id, {
-                  currentGrabbed,
-                  currentConnected,
-                  isConnected,
-                  nodeId: node.id
-                });
-              }
+              // silence canvas debug
               
               // Get base color
               let baseColor: string;

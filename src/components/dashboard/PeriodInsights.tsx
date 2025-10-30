@@ -148,7 +148,7 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
     const preWindow = predictedNextStart ? Math.abs(Math.round((Date.UTC(predictedNextStart.getUTCFullYear(), predictedNextStart.getUTCMonth(), predictedNextStart.getUTCDate()) - Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())) / (24 * 3600 * 1000))) : null;
 
     const calcTime = performance.now() - calcStart;
-    console.log(`⏱️ [PeriodInsights] Calculations: ${calcTime.toFixed(2)}ms`);
+    // silent calc timing
     return { 
       series, 
       avgCycle, 

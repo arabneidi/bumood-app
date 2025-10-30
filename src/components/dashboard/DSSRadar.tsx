@@ -110,22 +110,7 @@ export default function DSSRadar({ data, loading }: DSSRadarProps) {
     }
   ];
 
-  // Debug logging
-  console.log('🎯 DSS Radar Debug:', {
-    rawValues: { learningMomentum, recoveryIndex, connectionScore },
-    originalZScores: { zLM, zRI, zCN },
-    normalizedZScores: { normalized_zLM, normalized_zRI, normalized_zCN },
-    maxAbsValue: maxAbsValue,
-    scaleMax: scaleMax,
-    chartData: chartData
-  });
-  
-  console.log('🎯 DSS Radar Chart Data for Display:', {
-    'Learning Momentum': `z=${zLM.toFixed(2)} → normalized=${normalized_zLM.toFixed(2)}`,
-    'Recovery Index': `z=${zRI.toFixed(2)} → normalized=${normalized_zRI.toFixed(2)}`,
-    'Connection': `z=${zCN.toFixed(2)} → normalized=${normalized_zCN.toFixed(2)}`,
-    'Scale Range': `-${scaleMax} to +${scaleMax} (normalized)`
-  });
+  // silent debug
 
   return (
     <motion.div 
