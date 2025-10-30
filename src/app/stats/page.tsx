@@ -146,7 +146,7 @@ export default function StatsPage() {
           const p = await perfResponse.json();
           setPerformanceData(p);
         }
-        console.log(`⏱️ [Stats] Performance hours fetch (${performanceWindow}) took ${(performance.now() - perfStart).toFixed(2)}ms`);
+        // removed performance fetch timing log
       } catch (e) {
         console.error('Performance hours error:', e);
       } finally {

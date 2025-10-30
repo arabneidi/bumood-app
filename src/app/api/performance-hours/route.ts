@@ -36,7 +36,6 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' }
     });
     const fetchMs = Date.now() - apiStart;
-    console.log(`⏱️ [Performance API] fetched ${entries.length} entries in ${fetchMs}ms (histStart=${historyStart.toISOString().slice(0,10)} window=${window})`);
     // Fetch active predefined activities once to classify LM/RI/CN
     const predefined = await db.predefinedActivity.findMany({ where: { isActive: true } });
     const activityToComponent = new Map<string, string>();
@@ -377,8 +376,7 @@ export async function GET(request: NextRequest) {
       cursor.setDate(cursor.getDate() + 1);
     }
 
-    console.log(`📊 [Performance API] result points=${result.length}, days=${Math.ceil(result.length/24)}`);
-    console.log(`✅ [Performance API] total time ${Date.now() - apiStart}ms`);
+    
     return NextResponse.json({ data: result, window, period: { startDate: startDate.toISOString(), endDate: endDate.toISOString() }, debug: debugPayload });
   } catch (error: any) {
     console.error('❌ Error fetching performance hours data:', error);

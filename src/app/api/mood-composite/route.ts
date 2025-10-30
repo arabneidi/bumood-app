@@ -15,11 +15,7 @@ export async function GET(request: NextRequest) {
     // Get Mood Composite trends
     const trends = await getMoodCompositeTrends(userId, days);
     
-    console.log('📊 Mood Composite API response:', {
-      moodCompositesCount: trends.moodComposites.length,
-      lastMC: trends.moodComposites[trends.moodComposites.length - 1],
-      allMCs: trends.moodComposites
-    });
+    // logs removed for cleanliness
     
     // If requested, get MC for current time - try cache first
     let currentMC: number | null = null;
@@ -53,14 +49,36 @@ export async function GET(request: NextRequest) {
           orderBy: { createdAt: 'desc' }
         });
 
-        // Use only entries from the current time bucket
+        // Use entries that have at least one activity whose timeSlot prefix matches the current time bucket.
+        // Fallbacks: selectedTimeSlots prefix; finally timeBucket column if neither available.
         const currentBucket = getCurrentTimeBucket();
-        const bucketEntries = todayEntries.filter(e => e.timeBucket === currentBucket);
+        const bucketEntries = todayEntries.filter((e: any) => {
+          // activityEntries first
+          if (e?.activityEntries) {
+            try {
+              const arr = typeof e.activityEntries === 'string' ? JSON.parse(e.activityEntries) : e.activityEntries;
+              if (Array.isArray(arr) && arr.some((a: any) => String(a?.timeSlot||'').split('-')[0] === currentBucket)) {
+                return true;
+              }
+            } catch {}
+          }
+          // selectedTimeSlots next
+          if (e?.selectedTimeSlots) {
+            try {
+              const slots = typeof e.selectedTimeSlots === 'string' ? JSON.parse(e.selectedTimeSlots) : e.selectedTimeSlots;
+              if (Array.isArray(slots) && slots.some((ts: any) => String(ts||'').split('-')[0] === currentBucket)) {
+                return true;
+              }
+            } catch {}
+          }
+          // fallback to timeBucket
+          return e?.timeBucket === currentBucket;
+        });
         if (bucketEntries.length > 0) {
-          const avgValence = todayEntries.reduce((s, e) => s + e.valence, 0) / todayEntries.length;
-          const avgEnergy = todayEntries.reduce((s, e) => s + e.energy, 0) / todayEntries.length;
-          const avgFocus = todayEntries.reduce((s, e) => s + e.focus, 0) / todayEntries.length;
-          const avgStress = todayEntries.reduce((s, e) => s + e.stress, 0) / todayEntries.length;
+          const avgValence = bucketEntries.reduce((s: number, e: any) => s + e.valence, 0) / bucketEntries.length;
+          const avgEnergy = bucketEntries.reduce((s: number, e: any) => s + e.energy, 0) / bucketEntries.length;
+          const avgFocus = bucketEntries.reduce((s: number, e: any) => s + e.focus, 0) / bucketEntries.length;
+          const avgStress = bucketEntries.reduce((s: number, e: any) => s + e.stress, 0) / bucketEntries.length;
 
           const mcResult = await calculateMoodComposite(userId, avgValence, avgEnergy, avgFocus, avgStress, new Date());
           currentMC = mcResult.moodComposite;

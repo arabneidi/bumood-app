@@ -95,8 +95,22 @@ export async function GET(request: NextRequest) {
         return { date: dateKey, mc: null, dss: null } as any;
       }
       
-          // Filter entries to ONLY those in the same time bucket as "now"
-          const bucketEntries = entries.filter((e) => e.timeBucket === currentBucket);
+          // Filter entries to ONLY those that include at least one activity whose timeSlot prefix matches the current bucket
+          const bucketEntries = entries.filter((e) => {
+            if (!e?.activityEntries) return false;
+            try {
+              const arr = typeof (e as any).activityEntries === 'string' ? JSON.parse((e as any).activityEntries) : (e as any).activityEntries;
+              if (!Array.isArray(arr)) return false;
+              return arr.some((a: any) => {
+                const ts = a?.timeSlot ? String(a.timeSlot) : '';
+                // timeSlot example: "morning-7", "midday-12", etc.
+                const bucket = ts.split('-')[0];
+                return bucket === currentBucket;
+              });
+            } catch {
+              return false;
+            }
+          });
           let mcValue: number | null = null;
           if (bucketEntries.length > 0) {
             // Average entries within the bucket

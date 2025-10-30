@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
         moodComposite: true,
         timeBucket: true,
         selectedTimeSlots: true,
+        activityEntries: true,
         valence: true,
         energy: true,
         focus: true,
@@ -99,54 +100,70 @@ export async function GET(request: NextRequest) {
 
     // Process each mood entry
     moodEntries.forEach(entry => {
-      const entryDate = new Date(entry.createdAt);
-      const dayOfWeek = daysOfWeek[entryDate.getDay()];
-      
-      // Extract hours from selectedTimeSlots if available, otherwise use createdAt
-      let hoursToProcess: number[] = [entryDate.getHours()]; // Default to createdAt hour
-      
-      if (entry.selectedTimeSlots) {
+      const defaultDate = new Date(entry.createdAt);
+      const defaultDay = daysOfWeek[defaultDate.getDay()];
+
+      // Prefer precise activity times when available
+      let addedAny = false;
+      if (entry.activityEntries) {
         try {
-          const timeSlots = typeof entry.selectedTimeSlots === 'string' 
-            ? JSON.parse(entry.selectedTimeSlots) 
-            : entry.selectedTimeSlots;
-          
-          if (timeSlots && timeSlots.length > 0) {
-            // Process ALL time slots, not just the first one
-            hoursToProcess = [];
-            timeSlots.forEach((timeSlotStr: string) => {
-              // Extract hour from format like "midday-12" or "night-23"
-              const hourMatch = timeSlotStr.match(/[-]?(\d+)/);
+          const acts = typeof entry.activityEntries === 'string' ? JSON.parse(entry.activityEntries) : entry.activityEntries;
+          if (Array.isArray(acts) && acts.length > 0) {
+            for (const a of acts) {
+              const hour = typeof a?.hour === 'number' ? a.hour : null;
+              const day = a?.exactTime ? daysOfWeek[new Date(a.exactTime).getDay()] : defaultDay;
+              if (hour !== null && hour >= 0 && hour <= 23) {
+                const key = `${day}-${hour}`;
+                if (!mcDataByTimeSlot.has(key)) {
+                  mcDataByTimeSlot.set(key, { mcValues: [], entries: [], day, hour });
+                }
+                const slot = mcDataByTimeSlot.get(key);
+                slot.mcValues.push(entry.moodComposite || 0);
+                slot.entries.push(entry);
+                addedAny = true;
+              }
+            }
+          }
+        } catch {}
+      }
+
+      // Fallback to selectedTimeSlots if no activityEntries parsed
+      if (!addedAny && entry.selectedTimeSlots) {
+        try {
+          const timeSlots = typeof entry.selectedTimeSlots === 'string' ? JSON.parse(entry.selectedTimeSlots) : entry.selectedTimeSlots;
+          if (Array.isArray(timeSlots) && timeSlots.length > 0) {
+            for (const timeSlotStr of timeSlots) {
+              const hourMatch = String(timeSlotStr).match(/[-]?(\d+)/);
               if (hourMatch) {
-                const parsedHour = parseInt(hourMatch[1]);
-                if (!isNaN(parsedHour) && parsedHour >= 0 && parsedHour <= 23) {
-                  hoursToProcess.push(parsedHour);
+                const hour = parseInt(hourMatch[1]);
+                if (!isNaN(hour) && hour >= 0 && hour <= 23) {
+                  const key = `${defaultDay}-${hour}`;
+                  if (!mcDataByTimeSlot.has(key)) {
+                    mcDataByTimeSlot.set(key, { mcValues: [], entries: [], day: defaultDay, hour });
+                  }
+                  const slot = mcDataByTimeSlot.get(key);
+                  slot.mcValues.push(entry.moodComposite || 0);
+                  slot.entries.push(entry);
                 }
               }
-            });
+            }
           }
         } catch (e) {
           console.log('⚠️ Could not parse selectedTimeSlots, using createdAt hour:', e.message);
         }
       }
-      
-      // Create a data point for each hour
-      hoursToProcess.forEach(hour => {
-        const key = `${dayOfWeek}-${hour}`;
-        
+
+      // Last resort: use createdAt hour
+      if (!addedAny) {
+        const hour = defaultDate.getHours();
+        const key = `${defaultDay}-${hour}`;
         if (!mcDataByTimeSlot.has(key)) {
-          mcDataByTimeSlot.set(key, {
-            mcValues: [],
-            entries: [],
-            day: dayOfWeek,
-            hour: hour
-          });
+          mcDataByTimeSlot.set(key, { mcValues: [], entries: [], day: defaultDay, hour });
         }
-        
-        const timeSlotData = mcDataByTimeSlot.get(key);
-        timeSlotData.mcValues.push(entry.moodComposite || 0);
-        timeSlotData.entries.push(entry);
-      });
+        const slot = mcDataByTimeSlot.get(key);
+        slot.mcValues.push(entry.moodComposite || 0);
+        slot.entries.push(entry);
+      }
     });
 
     // Get ALL historical entries for proper z-score calculation

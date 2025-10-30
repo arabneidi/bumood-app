@@ -23,11 +23,11 @@ export async function GET(request: NextRequest) {
     // fetch entries spanning the day (use createdAt for coarse range), then filter by exactTime per activity
     const entries = await db.moodEntry.findMany({
       where: { userId, createdAt: { gte: dayStart, lt: nextDay } },
-      select: { id: true, createdAt: true, activityEntries: true },
+      select: { id: true, createdAt: true, activityEntries: true, timeBucket: true },
       orderBy: { createdAt: 'asc' }
     });
 
-    const out: Array<{ name: string; hour: number | null; exactTime: string | null }> = [];
+    const out: Array<{ name: string; hour: number | null; exactTime: string | null; timeBucket: string | null }> = [];
     for (const e of entries) {
       if (!e.activityEntries) continue;
       try {
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
             const effective = a?.exactTime ? new Date(a.exactTime) : new Date(e.createdAt);
             const key = fmtDateKey(effective);
             if (key !== dateStr) continue;
-            out.push({ name: a?.activity || a?.name || 'unknown', hour: typeof a?.hour === 'number' ? a.hour : null, exactTime: a?.exactTime || null });
+            out.push({ name: a?.activity || a?.name || 'unknown', hour: typeof a?.hour === 'number' ? a.hour : null, exactTime: a?.exactTime || null, timeBucket: e.timeBucket || null });
           }
         }
       } catch {}

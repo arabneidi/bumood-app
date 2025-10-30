@@ -16,19 +16,7 @@ const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const hours = Array.from({ length: 24 }, (_, i) => i);
 
 export default function PerformanceHeatmap({ data, loading }: PerformanceHeatmapProps) {
-  // Focused diagnostics for slow loads/appearance
-  if (typeof window !== 'undefined') {
-    try {
-      const nonNull = data?.filter?.(d => d && d.dssValue !== null) || [];
-      const sample = nonNull.slice(0, 5).map(d => ({ day: d.day, hour: d.hour, v: d.dssValue }));
-      console.log('🧭 [PerformanceHeatmap] props:', {
-        loading: !!loading,
-        totalPoints: data?.length || 0,
-        nonNullPoints: nonNull.length,
-        sample
-      });
-    } catch {}
-  }
+  // diagnostics removed
 
   if (loading) {
     return (
