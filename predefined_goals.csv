@@ -1,0 +1,37 @@
+id,title,description,category,subcategory,dssComponent,targetValue,unit,difficulty,isActive,createdAt,updatedAt
+cmh5ik0mj000010ttgwd9q3fl,"Run 5K","Run 5 kilometers",health,exercise,RI,30,days,medium,1,1761350407723,1761350407723
+cmh5ik0mn000110ttbbmvp7ju,"Gym 3x/week","Go to gym 3 times per week",health,exercise,RI,12,weeks,medium,1,1761350407727,1761350407727
+cmh5ik0mp000210ttrnlfn5wa,"Daily yoga","Practice yoga daily",health,exercise,RI,30,days,medium,1,1761350407730,1761350407730
+cmh5ik0ms000310tthqbynguc,"Drink 8 glasses water","Drink 8 glasses of water daily",health,nutrition,RI,30,days,medium,1,1761350407732,1761350407732
+cmh5ik0mu000410ttormvs02h,"Eat 5 veggies","Eat 5 servings of vegetables daily",health,nutrition,RI,30,days,medium,1,1761350407734,1761350407734
+cmh5ik0mw000510ttxr6vba80,"No sugar","Avoid added sugars",health,nutrition,RI,30,days,medium,1,1761350407737,1761350407737
+cmh5ik0mz000610tti6s2con9,"Sleep 8 hours","Get 8 hours of sleep nightly",health,sleep,RI,30,days,medium,1,1761350407740,1761350407740
+cmh5ik0n2000710ttxn5hc1zc,"Bed by 10pm","Go to bed by 10pm",health,sleep,RI,30,days,medium,1,1761350407742,1761350407742
+cmh5ik0n4000810tti2w6u8xu,"No phone before bed","No phone use 1 hour before bed",health,sleep,RI,30,days,medium,1,1761350407745,1761350407745
+cmh5ik0n7000910tt4i0d9prs,"Meditate 10 min","Meditate for 10 minutes daily",mental,meditation,RI,30,days,medium,1,1761350407747,1761350407747
+cmh5ik0n9000a10tt2hd2u3oi,"Morning mindfulness","Practice morning mindfulness",mental,meditation,RI,30,days,medium,1,1761350407749,1761350407749
+cmh5ik0nb000b10ttn8a44wwb,"Evening reflection","Evening reflection practice",mental,meditation,RI,30,days,medium,1,1761350407751,1761350407751
+cmh5ik0nd000c10ttoagdnpkj,"Quit smoking","Quit smoking completely",mental,breaking-bad-habits,RI,90,days,medium,1,1761350407754,1761350407754
+cmh5ik0ng000d10tt1dfnuqpn,"No alcohol","Avoid alcohol",mental,breaking-bad-habits,RI,30,days,medium,1,1761350407756,1761350407756
+cmh5ik0ni000e10tt3wpmfxy3,"Reduce caffeine","Reduce caffeine intake",mental,breaking-bad-habits,RI,30,days,medium,1,1761350407758,1761350407758
+cmh5ik0nk000f10ttzn1179oc,"Read 30 min","Read for 30 minutes daily",mental,learning,LM,30,days,medium,1,1761350407761,1761350407761
+cmh5ik0nn000g10ttuqsxux0d,"Learn new skill","Learn a new skill",mental,learning,LM,90,days,medium,1,1761350407763,1761350407763
+cmh5ik0no000h10ttmon0a2rf,"Take course","Complete an online course",mental,learning,LM,1,course,medium,1,1761350407765,1761350407765
+cmh5ik0np000i10tthrvpyr5t,"Complete project","Complete a work project",productivity,work,LM,1,project,medium,1,1761350407766,1761350407766
+cmh5ik0nq000j10ttetg6t6mu,"Learn new tool","Learn a new work tool",productivity,work,LM,30,days,medium,1,1761350407767,1761350407767
+cmh5ik0nt000k10tto1dpj2bz,"Clean desk daily","Keep desk clean daily",productivity,organization,LM,30,days,medium,1,1761350407769,1761350407769
+cmh5ik0nw000l10ttwmpm8tht,"Plan tomorrow","Plan the next day",productivity,organization,LM,30,days,medium,1,1761350407772,1761350407772
+cmh5ik0ny000m10ttkp0o2e0x,Declutter,"Declutter living space",productivity,organization,LM,7,days,medium,1,1761350407775,1761350407775
+cmh5ik0o1000n10ttt7bl2rad,Networking,"Network professionally",productivity,work,Connection,4,weeks,medium,1,1761350407778,1761350407778
+cmh5ik0o3000o10ttd68r3aoq,"Call parents weekly","Call parents once a week",relationships,family,Connection,4,weeks,medium,1,1761350407780,1761350407780
+cmh5ik0o6000p10tts0k1u24z,"Family dinner","Have family dinner",relationships,family,Connection,4,weeks,medium,1,1761350407782,1761350407782
+cmh5ik0o8000q10tt19uuwdu8,"Quality time","Spend quality time with family",relationships,family,Connection,4,weeks,medium,1,1761350407784,1761350407784
+cmh5ik0oa000r10ttpltm46zy,"Meet friend weekly","Meet a friend weekly",relationships,friends,Connection,4,weeks,medium,1,1761350407786,1761350407786
+cmh5ik0oc000s10tt2s7q43rk,"Message friends","Message friends regularly",relationships,friends,Connection,30,days,medium,1,1761350407788,1761350407788
+cmh5ik0of000t10ttugcel0vc,"Plan outing","Plan social outings",relationships,friends,Connection,4,weeks,medium,1,1761350407791,1761350407791
+cmh5sw8zx0000ab04s4dss2gq,"Deep breathing","Practice deep breathing exercises daily",health,stress-management,RI,7,days,easy,1,1761367774606,1761367774606
+cmh5sw8zz0001ab04hyb357kd,"Take breaks","Take regular breaks during work",health,stress-management,RI,5,days,easy,1,1761367774608,1761367774608
+cmh5sw9010002ab04hkqmxl4o,"Journal stress","Write about daily stressors",health,stress-management,RI,3,days,medium,1,1761367774609,1761367774609
+cmh5sw9020003ab04nk5piq87,"Daily gratitude","Write down 3 things you're grateful for",mental,building-good-habits,RI,7,days,easy,1,1761367774611,1761367774611
+cmh5sw9040004ab04sw88jofn,"Positive affirmations","Repeat positive affirmations daily",mental,building-good-habits,RI,7,days,easy,1,1761367774612,1761367774612
+cmh5sw9060005ab04ow9n588h,"Mindful moments","Take mindful moments throughout the day",mental,building-good-habits,RI,5,days,medium,1,1761367774614,1761367774614

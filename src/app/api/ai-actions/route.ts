@@ -2,9 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '@/lib/db';
 
 // GET - Fetch AI suggestion actions for a user
 export async function GET(request: NextRequest) {
@@ -12,7 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'dummy-user'; // Default to dummy-user if not provided
     
-    const actions = await prisma.aISuggestionAction.findMany({
+    const actions = await db.aISuggestionAction.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' }
     });
@@ -47,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // Ensure user exists (create if not)
     try {
-      await prisma.user.upsert({
+      await db.user.upsert({
         where: { id: userId },
         update: {},
         create: {
@@ -60,7 +58,7 @@ export async function POST(request: NextRequest) {
       console.log('User already exists or created:', userError);
     }
 
-    const aiAction = await prisma.aISuggestionAction.create({
+    const aiAction = await db.aISuggestionAction.create({
       data: {
         userId,
         suggestionId,

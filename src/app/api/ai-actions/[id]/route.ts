@@ -2,9 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '@/lib/db';
 
 // PUT - Update AI suggestion action (mark as tried, rate helpfulness, add feedback)
 export async function PUT(
@@ -33,7 +31,7 @@ export async function PUT(
       updateData.feedback = feedback;
     }
 
-    const aiAction = await prisma.aISuggestionAction.update({
+    const aiAction = await db.aISuggestionAction.update({
       where: { id: params.id },
       data: updateData
     });
@@ -51,7 +49,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await prisma.aISuggestionAction.delete({
+    await db.aISuggestionAction.delete({
       where: { id: params.id }
     });
 

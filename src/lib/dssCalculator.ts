@@ -61,6 +61,41 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
     }
   });
 
+  // Preload predefined activities once to avoid per-entry DB queries
+  const predefinedActivities = await db.predefinedActivity.findMany({
+    where: { isActive: true },
+    select: { name: true, dssComponent: true }
+  });
+  const lmActivities = new Set(predefinedActivities.filter(a => a.dssComponent === 'LM').map(a => a.name));
+  const riActivities = new Set(predefinedActivities.filter(a => a.dssComponent === 'RI').map(a => a.name));
+  const cnActivities = new Set(predefinedActivities.filter(a => a.dssComponent === 'Connection').map(a => a.name));
+
+  // Batch-load goals once and derive goal id sets per component
+  const allGoals = await db.goal.findMany({
+    where: { userId, completed: false },
+    select: { id: true, dssComponent: true }
+  });
+  const lmGoalIds = new Set(allGoals.filter(g => g.dssComponent === 'LM').map(g => g.id));
+  const riGoalIds = new Set(allGoals.filter(g => g.dssComponent === 'RI').map(g => g.id));
+  const connGoalIds = new Set(allGoals.filter(g => g.dssComponent === 'Connection').map(g => g.id));
+
+  // Batch-load goal progress for the whole window and index by local date key
+  const allProgress = await db.goalProgressDaily.findMany({
+    where: { userId, date: { gte: fourteenDaysAgo, lt: tomorrow } },
+    select: { goalId: true, date: true, value: true }
+  });
+  const progressByDate = new Map<string, { goalId: string; value: number }[]>();
+  for (const p of allProgress) {
+    const pd = new Date(p.date);
+    pd.setHours(0, 0, 0, 0);
+    const y = pd.getFullYear();
+    const m = String(pd.getMonth() + 1).padStart(2, '0');
+    const d = String(pd.getDate()).padStart(2, '0');
+    const key = `${y}-${m}-${d}`;
+    if (!progressByDate.has(key)) progressByDate.set(key, []);
+    progressByDate.get(key)!.push({ goalId: p.goalId, value: p.value || 0 });
+  }
+
   // Group mood entries by date and calculate DSS components for each day
   const dailyData = new Map<string, any>();
   
@@ -120,14 +155,7 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
           if (Array.isArray(activityEntries)) {
             for (const activityEntry of activityEntries) {
               const activityName = activityEntry.activity;
-              const predefinedActivity = await db.predefinedActivity.findFirst({
-                where: {
-                  name: activityName,
-                  dssComponent: 'LM',
-                  isActive: true
-                }
-              });
-              if (predefinedActivity) {
+              if (lmActivities.has(activityName)) {
                 totalTasksCompleted += 1; // Count each time slot with LM activity
               }
             }
@@ -144,14 +172,7 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
           if (Array.isArray(activityEntries)) {
             for (const activityEntry of activityEntries) {
               const activityName = activityEntry.activity;
-              const predefinedActivity = await db.predefinedActivity.findFirst({
-                where: {
-                  name: activityName,
-                  dssComponent: 'Connection',
-                  isActive: true
-                }
-              });
-              if (predefinedActivity) {
+              if (cnActivities.has(activityName)) {
                 totalSocialTouchpoints += 1; // Count each time slot with Connection activity
                 console.log(`🔵 Found Connection activity: ${activityName} -> +1 social touchpoint`);
               } else {
@@ -188,15 +209,7 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
               }
               
               // Check database for RI component
-              const predefinedActivity = await db.predefinedActivity.findFirst({
-                where: {
-                  name: activityName,
-                  dssComponent: 'RI',
-                  isActive: true
-                }
-              });
-              
-              if (predefinedActivity) {
+              if (riActivities.has(activityName)) {
                 hasRecoveryAction = true;
                 console.log(`🔵 Found RI activity: ${activityName} -> recovery action for RI`);
                 break;
@@ -219,16 +232,8 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
                 continue;
               }
               
-              // Check database for RI component
-              const predefinedActivity = await prisma.predefinedActivity.findFirst({
-                where: {
-                  name: activityName,
-                  dssComponent: 'RI',
-                  isActive: true
-                }
-              });
-              
-              if (predefinedActivity) {
+              // Check RI from preloaded set
+              if (riActivities.has(activityName)) {
                 hasRecoveryAction = true;
                 console.log(`🔵 Found RI activity in activities array: ${activityName} -> recovery action for RI`);
                 break;
@@ -265,9 +270,9 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
   // Get today's data (most recent day)
   const todayData = historicalData[0];
   if (todayData) {
-    todayLM = await calculateLearningMomentum(todayData, userId, todayData.date);
-    todayRI = await calculateRecoveryIndex(todayData, userId, todayData.date);
-    todayCN = await calculateConnectionScore(todayData, userId, todayData.date);
+    todayLM = await calculateLearningMomentum(todayData, userId, todayData.date, lmActivities, lmGoalIds, progressByDate);
+    todayRI = await calculateRecoveryIndex(todayData, userId, todayData.date, riActivities, riGoalIds, progressByDate);
+    todayCN = await calculateConnectionScore(todayData, userId, todayData.date, cnActivities, connGoalIds, progressByDate);
     console.log(`🔵 Today's components: LM=${todayLM}, RI=${todayRI}, CN=${todayCN}`);
     console.log(`🔵 Today's data:`, JSON.stringify(todayData, null, 2));
   } else {
@@ -277,14 +282,14 @@ export async function calculateDSS(userId: string, date: Date): Promise<DSSResul
   // Use 14 days PRIOR to today for historical calculation (exclude today from z-score)
   const pastData = historicalData.slice(1); // Remove today (first element) for historical calculation
   
-  const lmHistory = await Promise.all(pastData.map(async dayData => 
-    await calculateLearningMomentum(dayData, userId, dayData.date)
+  const lmHistory = await Promise.all(pastData.map(async dayData =>
+    await calculateLearningMomentum(dayData, userId, dayData.date, lmActivities, lmGoalIds, progressByDate)
   ));
-  const riHistory = await Promise.all(pastData.map(async dayData => 
-    await calculateRecoveryIndex(dayData, userId, dayData.date)
+  const riHistory = await Promise.all(pastData.map(async dayData =>
+    await calculateRecoveryIndex(dayData, userId, dayData.date, riActivities, riGoalIds, progressByDate)
   ));
-  const cnHistory = await Promise.all(pastData.map(async dayData => 
-    await calculateConnectionScore(dayData, userId, dayData.date)
+  const cnHistory = await Promise.all(pastData.map(async dayData =>
+    await calculateConnectionScore(dayData, userId, dayData.date, cnActivities, connGoalIds, progressByDate)
   ));
 
   // Calculate z-scores only if we have enough historical data
@@ -349,7 +354,14 @@ export async function calculateDSSForRadar(userId: string, date: Date): Promise<
 /**
  * Calculate Learning Momentum: LM = deepwork_minutes + 10*tasks_completed + goal_progress
  */
-async function calculateLearningMomentum(tracking: any, userId: string, date: Date): Promise<number> {
+async function calculateLearningMomentum(
+  tracking: any,
+  userId: string,
+  date: Date,
+  lmActivities: Set<string>,
+  lmGoalIds: Set<string>,
+  progressByDate: Map<string, { goalId: string; value: number }[]>
+): Promise<number> {
   if (!tracking) return 0;
   
   const deepworkMinutes = tracking.deepworkMinutes || 0;
@@ -361,25 +373,11 @@ async function calculateLearningMomentum(tracking: any, userId: string, date: Da
   const nextDay = new Date(dayStart);
   nextDay.setDate(nextDay.getDate() + 1);
 
-  const [lmGoals, todaysProgress] = await Promise.all([
-    db.goal.findMany({
-      where: {
-        userId: userId,
-        dssComponent: 'LM',
-        completed: false
-      },
-      select: { id: true }
-    }),
-    db.goalProgressDaily.findMany({
-      where: {
-        userId: userId,
-        date: { gte: dayStart, lt: nextDay }
-      },
-      select: { goalId: true, value: true }
-    })
-  ]);
-
-  const lmGoalIds = new Set(lmGoals.map(g => g.id));
+  const y = dayStart.getFullYear();
+  const m = String(dayStart.getMonth() + 1).padStart(2, '0');
+  const d = String(dayStart.getDate()).padStart(2, '0');
+  const key = `${y}-${m}-${d}`;
+  const todaysProgress = progressByDate.get(key) || [];
   const goalProgress = todaysProgress
     .filter(p => lmGoalIds.has(p.goalId))
     .reduce((sum, p) => sum + (p.value || 0) * 2, 0); // Each goal progress point = 2 LM points
@@ -392,7 +390,14 @@ async function calculateLearningMomentum(tracking: any, userId: string, date: Da
 /**
  * Calculate Recovery Index: RI = sleep_hours + (recovery_action ? 1 : 0) + goal_progress
  */
-async function calculateRecoveryIndex(tracking: any, userId: string, date: Date): Promise<number> {
+async function calculateRecoveryIndex(
+  tracking: any,
+  userId: string,
+  date: Date,
+  riActivities: Set<string>,
+  riGoalIds: Set<string>,
+  progressByDate: Map<string, { goalId: string; value: number }[]>
+): Promise<number> {
   if (!tracking) return 0;
   
   const sleepHours = tracking.sleepHours || 0;
@@ -403,25 +408,11 @@ async function calculateRecoveryIndex(tracking: any, userId: string, date: Date)
   const nextDay = new Date(dayStart);
   nextDay.setDate(nextDay.getDate() + 1);
 
-  const [riGoals, todaysProgress] = await Promise.all([
-    db.goal.findMany({
-      where: {
-        userId: userId,
-        dssComponent: 'RI',
-        completed: false
-      },
-      select: { id: true }
-    }),
-    db.goalProgressDaily.findMany({
-      where: {
-        userId: userId,
-        date: { gte: dayStart, lt: nextDay }
-      },
-      select: { goalId: true, value: true }
-    })
-  ]);
-
-  const riGoalIds = new Set(riGoals.map(g => g.id));
+  const y = dayStart.getFullYear();
+  const m = String(dayStart.getMonth() + 1).padStart(2, '0');
+  const d = String(dayStart.getDate()).padStart(2, '0');
+  const key = `${y}-${m}-${d}`;
+  const todaysProgress = progressByDate.get(key) || [];
   const goalProgress = todaysProgress
     .filter(p => riGoalIds.has(p.goalId))
     .reduce((sum, p) => sum + (p.value || 0) * 1.5, 0); // Each point = 1.5 RI points
@@ -432,7 +423,14 @@ async function calculateRecoveryIndex(tracking: any, userId: string, date: Date)
 /**
  * Calculate Connection Score: CN = positive_social_touchpoints + goal_progress
  */
-async function calculateConnectionScore(tracking: any, userId: string, date: Date): Promise<number> {
+async function calculateConnectionScore(
+  tracking: any,
+  userId: string,
+  date: Date,
+  cnActivities: Set<string>,
+  connGoalIds: Set<string>,
+  progressByDate: Map<string, { goalId: string; value: number }[]>
+): Promise<number> {
   if (!tracking) return 0;
   
   const socialTouchpoints = tracking.positiveSocialTouchpoints || 0;
@@ -442,25 +440,11 @@ async function calculateConnectionScore(tracking: any, userId: string, date: Dat
   const nextDay = new Date(dayStart);
   nextDay.setDate(nextDay.getDate() + 1);
 
-  const [connectionGoals, todaysProgress] = await Promise.all([
-    db.goal.findMany({
-      where: {
-        userId: userId,
-        dssComponent: 'Connection',
-        completed: false
-      },
-      select: { id: true }
-    }),
-    db.goalProgressDaily.findMany({
-      where: {
-        userId: userId,
-        date: { gte: dayStart, lt: nextDay }
-      },
-      select: { goalId: true, value: true }
-    })
-  ]);
-
-  const connGoalIds = new Set(connectionGoals.map(g => g.id));
+  const y = dayStart.getFullYear();
+  const m = String(dayStart.getMonth() + 1).padStart(2, '0');
+  const d = String(dayStart.getDate()).padStart(2, '0');
+  const key = `${y}-${m}-${d}`;
+  const todaysProgress = progressByDate.get(key) || [];
   const goalProgress = todaysProgress
     .filter(p => connGoalIds.has(p.goalId))
     .reduce((sum, p) => sum + (p.value || 0) * 1, 0); // Each point = 1 Connection point

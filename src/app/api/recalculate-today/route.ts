@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 import { calculateDSS } from '@/lib/dssCalculator';
 import { calculateMoodComposite } from '@/lib/moodCompositeCalculator';
 
-const prisma = new PrismaClient();
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,7 +20,7 @@ export async function POST(request: NextRequest) {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     // Fetch all today's entries
-    const todayEntries = await prisma.moodEntry.findMany({
+    const todayEntries = await db.moodEntry.findMany({
       where: {
         userId,
         createdAt: { gte: today, lt: tomorrow }
@@ -43,7 +42,7 @@ export async function POST(request: NextRequest) {
     // DSS always uses local midnight like the chart
     const dssRes = await calculateDSS(userId, today);
 
-    await prisma.dailyTracking.upsert({
+    await db.dailyTracking.upsert({
       where: { userId_date: { userId, date: today } },
       update: {
         moodComposite: mcValue,

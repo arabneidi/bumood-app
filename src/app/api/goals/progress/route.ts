@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 import { calculateDSS } from '@/lib/dssCalculator';
 import { calculateMoodComposite } from '@/lib/moodCompositeCalculator';
 
-const prisma = new PrismaClient();
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,7 +22,7 @@ export async function POST(req: NextRequest) {
     const day = date ? new Date(date) : new Date();
     day.setHours(0, 0, 0, 0);
 
-    const result = await prisma.goalProgressDaily.upsert({
+    const result = await db.goalProgressDaily.upsert({
       where: { goalId_date: { goalId, date: day } as any },
       update: { value },
       create: { userId, goalId, date: day, value }
@@ -33,7 +32,7 @@ export async function POST(req: NextRequest) {
     const tomorrow = new Date(day);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const todayEntries = await prisma.moodEntry.findMany({
+    const todayEntries = await db.moodEntry.findMany({
       where: { userId, createdAt: { gte: day, lt: tomorrow } },
       orderBy: { createdAt: 'desc' }
     });
@@ -50,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     const dssRes = await calculateDSS(userId, day);
 
-    await prisma.dailyTracking.upsert({
+    await db.dailyTracking.upsert({
       where: { userId_date: { userId, date: day } },
       update: {
         moodComposite: mcValue,

@@ -2,9 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '@/lib/db';
 
 // PUT - Update period tracking entry
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
@@ -13,7 +11,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json();
     const { endDate, flowIntensity, symptoms, notes } = body;
     
-    const periodEntry = await prisma.periodTracking.update({
+    const periodEntry = await db.periodTracking.update({
       where: { id },
       data: {
         ...(endDate && { endDate: new Date(endDate) }),
@@ -35,7 +33,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   try {
     const { id } = params;
     
-    await prisma.periodTracking.delete({
+    await db.periodTracking.delete({
       where: { id }
     });
     
