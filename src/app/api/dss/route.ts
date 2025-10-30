@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       // Get DSS trends - use calculated DSS instead of stored values
       const trends = await getDSSTrends(userId, days);
       
-      // Try to get current DSS from cache first
+      // Always recalculate current DSS for stats (do not use cached value)
       // Use EXACT same pattern as get-dss-today.ts
       const today = new Date();
       const todayYear = today.getFullYear();
@@ -70,15 +70,6 @@ export async function GET(request: NextRequest) {
       const currentDay = new Date(todayYear, todayMonth, todayDay);
       currentDay.setHours(0, 0, 0, 0);
       
-      const cached = await db.dailyTracking.findUnique({
-        where: {
-          userId_date: {
-            userId,
-            date: currentDay
-          }
-        }
-      });
-
       let currentDSS;
       // If there are no entries today (local), treat as no current DSS even if cache exists
       const tomorrow = new Date(currentDay);
@@ -89,34 +80,9 @@ export async function GET(request: NextRequest) {
 
       if (hasTodayEntries === 0) {
         currentDSS = null;
-      } else if (cached && cached.dssScore !== null) {
-        // Return cached DSS directly from database - no calculation needed
-        currentDSS = {
-          dssScore: cached.dssScore,
-          components: {
-            learningMomentum: cached.learningMomentum || 0,
-            recoveryIndex: cached.recoveryIndex || 0,
-            connectionScore: cached.connectionScore || 0
-          },
-          zScores: {
-            zLM: 0,
-            zRI: 0,
-            zCN: 0
-          },
-          historicalData: {
-            lmHistory: [],
-            riHistory: [],
-            cnHistory: []
-          }
-        };
       } else {
-        // Not cached - calculate only if there are entries today (local time)
-        if (hasTodayEntries === 0) {
-          currentDSS = null;
-        } else {
-          // Calculate using EXACT same logic as get-dss-today.ts
-          currentDSS = await calculateDSS(userId, currentDay);
-        }
+        // Calculate using EXACT same logic as get-dss-today.ts (no cache)
+        currentDSS = await calculateDSS(userId, currentDay);
       }
       
       return NextResponse.json({

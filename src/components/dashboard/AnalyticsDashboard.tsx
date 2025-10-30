@@ -545,7 +545,7 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
                 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4 flex items-center"
               >
                 <TrendingUp className="w-6 h-6 mr-2 text-indigo-500" />
-                MC vs DSS Trend (Last 7 Days)
+                MC vs DSS Trend
               </motion.h3>
               {mcDssLoading ? (
                 <div className="flex items-center justify-center h-[250px]">

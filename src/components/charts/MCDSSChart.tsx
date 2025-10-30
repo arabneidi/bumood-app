@@ -29,7 +29,8 @@ function MCDSSChartInner({ data, height = 300 }: MCDSSChartProps) {
   }, [data]);
 
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <div>
+      <ResponsiveContainer width="100%" height={height}>
       <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
         <CartesianGrid strokeDasharray="2 4" stroke="#e5e7eb" />
         <XAxis dataKey="date" stroke="#6b7280" fontSize={12} minTickGap={20} />
@@ -65,6 +66,18 @@ function MCDSSChartInner({ data, height = 300 }: MCDSSChartProps) {
         />
       </LineChart>
     </ResponsiveContainer>
+      {/* Legend placed below chart — match DSS Radar (Wellness) legend style */}
+      <div className="flex items-center gap-4 mt-4">
+        <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-indigo-500/30 hover:border-indigo-400/50 transition-all duration-300 shadow-sm">
+          <span className="w-3 h-3 rounded-full shadow" style={{ backgroundColor: '#6366f1' }}></span>
+          <span className="text-sm font-bold text-white">Mood Composite</span>
+        </div>
+        <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-slate-800/30 backdrop-blur-sm border border-green-500/30 hover:border-green-400/50 transition-all duration-300 shadow-sm">
+          <span className="w-3 h-3 rounded-full shadow" style={{ backgroundColor: '#10b981' }}></span>
+          <span className="text-sm font-bold text-white">Daily Success Score</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
