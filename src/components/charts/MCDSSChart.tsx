@@ -21,7 +21,8 @@ function MCDSSChartInner({ data, height = 300 }: MCDSSChartProps) {
       const itemDate = new Date(year, month - 1, day); // Local timezone
       
       return {
-        date: `${itemDate.getUTCFullYear()}-${String(itemDate.getUTCMonth() + 1).padStart(2, '0')}-${String(itemDate.getUTCDate()).padStart(2, '0')}`,
+        // Use local date components to match how the date picker forms dates
+        date: `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}-${String(itemDate.getDate()).padStart(2, '0')}`,
         mc: item.mc === null || item.mc === undefined ? null : parseFloat(item.mc.toFixed(2)),
         dss: item.dss === null || item.dss === undefined ? null : parseFloat(item.dss.toFixed(2))
       };
