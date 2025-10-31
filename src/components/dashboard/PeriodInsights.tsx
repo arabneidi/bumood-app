@@ -727,7 +727,7 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
                       body: JSON.stringify({
                         id: data.mostRecentEntry?.id,
                         onPeriod: false,
-                        periodDay: null
+                        periodDay: 0
                       }),
                     });
                     
