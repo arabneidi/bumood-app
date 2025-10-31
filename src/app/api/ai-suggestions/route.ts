@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     
     console.log('🤖 Fetching AI suggestions for user:', userId);
     
-    const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: 'OpenAI API key not configured on server' }, { status: 500 });
     }
@@ -170,8 +170,8 @@ export async function POST(req: NextRequest) {
     const profile = body as UserMoodProfile;
     const clientApiKey = body.apiKey; // Accept API key from client if provided
 
-    // Try client-provided key first, then server env vars
-    const apiKey = clientApiKey || process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    // Try client-provided key first, then server env var (for global access)
+    const apiKey = clientApiKey || process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: 'OpenAI API key not configured on server' }, { status: 500 });
     }

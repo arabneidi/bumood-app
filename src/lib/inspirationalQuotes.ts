@@ -164,7 +164,8 @@ export async function generateAIMotivationalQuote(userProfile: {
   }[];
 }): Promise<string> {
   try {
-    const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    // Use server-side env var for global access
+    const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {
       console.log('⚠️ OpenAI API key not found, using random quote');

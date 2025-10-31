@@ -5,7 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    // Check server-side env var for global access
+    const apiKey = process.env.OPENAI_API_KEY;
     
     return NextResponse.json({ 
       hasApiKey: !!apiKey,

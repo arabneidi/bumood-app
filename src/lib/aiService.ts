@@ -126,14 +126,14 @@ const AI_MODE: 'OPENAI_ONLY' | 'GEMINI_ONLY' | 'TEXTCORTEX_ONLY' | 'DEEPAI_ONLY'
 
 // Check if AI services are available
 export function isAIAvailable(): boolean {
-  // Check environment variables first
-  const envOpenaiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-  const envGeminiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-  const envTextcortexKey = process.env.TEXTCORTEX_API_KEY || process.env.NEXT_PUBLIC_TEXTCORTEX_API_KEY;
-  const envDeepaiKey = process.env.DEEPAI_API_KEY || process.env.NEXT_PUBLIC_DEEPAI_API_KEY;
-  const envHuggingfaceToken = process.env.HUGGINGFACE_API_TOKEN || process.env.NEXT_PUBLIC_HUGGINGFACE_API_TOKEN;
+  // Check server-side environment variables first (priority for global access)
+  const envOpenaiKey = process.env.OPENAI_API_KEY;
+  const envGeminiKey = process.env.GEMINI_API_KEY;
+  const envTextcortexKey = process.env.TEXTCORTEX_API_KEY;
+  const envDeepaiKey = process.env.DEEPAI_API_KEY;
+  const envHuggingfaceToken = process.env.HUGGINGFACE_API_TOKEN;
   
-  // Check localStorage for user-provided keys (client-side only)
+  // Check localStorage for user-provided keys (client-side only, fallback)
   let userOpenaiKey = false;
   let userGeminiKey = false;
   let userTextcortexKey = false;
@@ -144,6 +144,7 @@ export function isAIAvailable(): boolean {
     userTextcortexKey = !!localStorage.getItem('textcortex_api_key');
   }
   
+  // Server env vars take priority (work globally), localStorage is fallback
   return !!(envOpenaiKey || envGeminiKey || envTextcortexKey || envDeepaiKey || envHuggingfaceToken || 
            userOpenaiKey || userGeminiKey || userTextcortexKey);
 }
@@ -239,18 +240,18 @@ export async function generateAISuggestions(profile: UserMoodProfile, providedAp
 
 // Generate suggestions using OpenAI API (REAL AI!)
 async function generateWithOpenAI(profile: UserMoodProfile, providedApiKey?: string): Promise<AISuggestion[]> {
-  // Use provided key first, then check stored keys, then environment variables
+  // Priority order: provided key > server env var > localStorage (for backward compatibility)
   let apiKey = providedApiKey || null;
   
-  // Only try localStorage on client side if no provided key
+  // Server-side env var takes priority for global access
+  if (!apiKey) {
+    apiKey = process.env.OPENAI_API_KEY;
+  }
+  
+  // Only try localStorage on client side if no server env var (fallback for users who set their own key)
   if (!apiKey && typeof window !== 'undefined') {
     const { getDecryptedApiKey } = await import('@/lib/encryption');
     apiKey = getDecryptedApiKey('openai') || localStorage.getItem('openai_api_key');
-  }
-  
-  // Always fall back to environment variables (works on server side)
-  if (!apiKey) {
-    apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
   }
   
   if (!apiKey) {

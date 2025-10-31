@@ -225,72 +225,37 @@ export default function NewEntry() {
     return true;
   };
 
-  // Get current period day from inferred last cycle start
+  // Get current period day from inferred last cycle start (rolls across days until explicit end)
   const getCurrentPeriodDay = () => {
-    const isOnPeriod = formData.onPeriod || isCurrentlyOnPeriod();
-    if (!isOnPeriod) return 0;
+    const onNow = formData.onPeriod || isCurrentlyOnPeriod();
+    if (!onNow) return 0;
 
-    // If the form captured a start date this session (user just clicked to start period), respect it
-    // This handles NEW cycle starts - always Day 1 when periodStartDate is set in the current session
+    // If user just started this session, respect the session start date
     if (periodStartDate) {
-      // Parse periodStartDate (format: "YYYY-MM-DD") as local date
-      const [year, month, day] = periodStartDate.split('-').map(Number);
-      const startOnly = new Date(year, month - 1, day); // month is 0-indexed
+      const [y, m, d] = periodStartDate.split('-').map(Number);
+      const startOnly = new Date(y, m - 1, d);
       const today = new Date();
       const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      const diffDays = Math.floor((todayOnly.getTime() - startOnly.getTime()) / (1000 * 60 * 60 * 24));
-      // If this is today (new cycle start), always return 1
-      if (diffDays === 0) return 1;
-      return Math.max(1, diffDays + 1);
+      const diff = Math.floor((todayOnly.getTime() - startOnly.getTime()) / (1000 * 60 * 60 * 24));
+      return Math.max(1, diff + 1);
     }
 
-    // For continuing periods from database: derive last start from entries
-    // Only use this if there's an ACTIVE period in the database (not a new cycle)
+    // Infer from history: find last explicit start (onPeriod===true) with no later end marker (periodDay===0)
     const asc = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    
-    // Check if the most recent entry explicitly ended the period
-    const desc = [...moodEntries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    const mostRecent = desc[0];
-    
-    // If most recent entry has onPeriod=false, this is a NEW cycle start, return 1
-    if (mostRecent && mostRecent.onPeriod === false) {
-      return 1;
-    }
-    
-    // Find the last cycle start (transition false→true)
     let lastStart: any = null;
-    for (let i = 1; i < asc.length; i++) {
-      const prev = asc[i - 1];
-      const cur = asc[i];
-      if (!prev.onPeriod && cur.onPeriod) {
-        lastStart = cur;
-      }
+    for (const e of asc) {
+      if (e.onPeriod === true) lastStart = e;
+      // Any explicit end marks the cycle finished
+      if (e.periodDay === 0) lastStart = null;
     }
-    
-    // If no previous cycle start found, this is Day 1
-    if (!lastStart) return 1;
-    
-    // Verify this is actually an active period (not a closed cycle)
-    // Extract date key from createdAt the same way PeriodInsights does
-    // This ensures consistency between the button and chart calculations
-    const lastStartDate = new Date(lastStart.createdAt);
-    // Extract UTC date components (matching dateKeyUTC logic from PeriodInsights)
-    const lastStartYear = lastStartDate.getUTCFullYear();
-    const lastStartMonth = lastStartDate.getUTCMonth();
-    const lastStartDay = lastStartDate.getUTCDate();
-    // Parse as local date (same as PeriodInsights does with date keys)
-    const lastStartOnly = new Date(lastStartYear, lastStartMonth, lastStartDay);
+    if (!lastStart) return 1; // treat current as Day 1 if no active start found
+
+    const s = new Date(lastStart.createdAt);
+    const startOnly = new Date(s.getFullYear(), s.getMonth(), s.getDate());
     const today = new Date();
     const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const daysSinceStart = Math.floor((todayOnly.getTime() - lastStartOnly.getTime()) / (1000 * 60 * 60 * 24));
-    
-    // If the last start was from a previous cycle that should have ended (more than 7 days ago), 
-    // and there's no explicit continuation, this is a new cycle
-    if (daysSinceStart > 7 && (!mostRecent || mostRecent.onPeriod === false)) {
-      return 1;
-    }
-    
-    return Math.max(1, daysSinceStart + 1);
+    const diffDays = Math.floor((todayOnly.getTime() - startOnly.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(1, diffDays + 1);
   };
 
   // Load user preferences and mood entries on component mount
@@ -1726,16 +1691,57 @@ export default function NewEntry() {
                         handleChange('onPeriod', false);
                         setShowEndPeriodModal(false);
 
-                        // Persist explicit end to backend by updating most recent entry
+                        // Persist explicit end to backend
                         const mostRecent = [...moodEntries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-                        if (mostRecent && mostRecent.id) {
-                          await fetch('/api/mood-entries', {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: mostRecent.id, onPeriod: false, periodDay: 0 })
-                          });
-                          // Reflect change in local moodEntries state
-                          setMoodEntries(prev => prev.map(e => e.id === mostRecent.id ? { ...e, onPeriod: false, periodDay: 0, updatedAt: new Date().toISOString() } : e));
+                        if (mostRecent) {
+                          const mrDate = new Date(mostRecent.createdAt);
+                          const today = new Date();
+                          const sameLocalDay = (
+                            mrDate.getFullYear() === today.getFullYear() &&
+                            mrDate.getMonth() === today.getMonth() &&
+                            mrDate.getDate() === today.getDate()
+                          );
+
+                          if (sameLocalDay) {
+                            // Update today's entry directly
+                            await fetch('/api/mood-entries', {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ id: mostRecent.id, onPeriod: false, periodDay: 0 })
+                            });
+                            setMoodEntries(prev => prev.map(e => e.id === mostRecent.id ? { ...e, onPeriod: false, periodDay: 0, updatedAt: new Date().toISOString() } : e));
+                          } else {
+                            // Create a minimal end-marker entry for TODAY so we do not alter past-day icons
+                            const y = today.getFullYear();
+                            const m = String(today.getMonth() + 1).padStart(2, '0');
+                            const d = String(today.getDate()).padStart(2, '0');
+                            const todayStr = `${y}-${m}-${d}`;
+                            await fetch('/api/mood-entries', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                valence: 5,
+                                energy: 5,
+                                focus: 5,
+                                stress: 5,
+                                sleep: 0,
+                                notes: 'Period ended',
+                                activities: [],
+                                selectedTimeSlots: [],
+                                selectedSubcategories: [],
+                                activityEntries: [],
+                                dssAnalysis: null,
+                                onPeriod: false,
+                                periodDay: 0,
+                                waterIntake: 0,
+                                mealsEaten: 0,
+                                mealQuality: 'good',
+                                caffeine: 0,
+                                alcohol: 0,
+                                customDate: todayStr
+                              })
+                            });
+                          }
                         }
                       } catch (err) {
                         console.error('Failed to end period:', err);

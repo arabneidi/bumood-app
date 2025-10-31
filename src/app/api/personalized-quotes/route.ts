@@ -13,8 +13,9 @@ export async function GET(request: NextRequest) {
     
     console.log('🎯 Fetching personalized quote for user:', userId);
     
-    // Check for API key (from client or environment)
-    const apiKey = clientApiKey || process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    // Check for API key (from client or server environment)
+    // Server env var takes priority for global access
+    const apiKey = clientApiKey || process.env.OPENAI_API_KEY;
     console.log('🔑 OpenAI API Key available:', !!apiKey);
     
     // Get user profile data

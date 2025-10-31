@@ -105,8 +105,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Check if OpenAI API key is available (from client or environment)
-    const apiKey = clientApiKey || process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    // Check if OpenAI API key is available (from client or server environment)
+    // Server env var takes priority for global access
+    const apiKey = clientApiKey || process.env.OPENAI_API_KEY;
     if (!apiKey) {
       console.log('📱 No OpenAI API key found - using fallback preferences');
       return NextResponse.json({
