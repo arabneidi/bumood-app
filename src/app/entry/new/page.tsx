@@ -206,7 +206,7 @@ export default function NewEntry() {
     const anyTodayOn = moodEntries.some(e => new Date(e.createdAt).toISOString().split('T')[0] === todayLocal && e.onPeriod);
     if (anyTodayOn) return true;
 
-    // Consider ON from last explicit start until an explicit end marker (periodDay === 0) occurs
+    // Consider ON from last explicit start until an explicit end marker occurs
     const entriesAsc = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     // Find last start (onPeriod===true)
     let lastStart: any = null;
@@ -216,9 +216,13 @@ export default function NewEntry() {
     }
     if (!lastStart) return false;
 
-    // If any entry after lastStart has periodDay === 0, treat as explicit end
+    // If any entry after lastStart has periodDay === 0 OR onPeriod === false, treat as explicit end
+    // (onPeriod === false is the normal way periods end, not just periodDay === 0)
     const lastStartTs = new Date(lastStart.createdAt).getTime();
-    const ended = entriesAsc.some(e => new Date(e.createdAt).getTime() >= lastStartTs && (e.periodDay === 0));
+    const ended = entriesAsc.some(e => {
+      const entryTs = new Date(e.createdAt).getTime();
+      return entryTs >= lastStartTs && (e.periodDay === 0 || e.onPeriod === false);
+    });
     if (ended) return false;
 
     // Otherwise, still considered on period
@@ -240,13 +244,19 @@ export default function NewEntry() {
       return Math.max(1, diff + 1);
     }
 
-    // Infer from history: find last explicit start (onPeriod===true) with no later end marker (periodDay===0)
+    // Infer from history: find last explicit start (onPeriod===true) with no later end marker
+    // End markers are: periodDay === 0 OR onPeriod === false (normal period ending)
     const asc = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     let lastStart: any = null;
     for (const e of asc) {
       if (e.onPeriod === true) lastStart = e;
-      // Any explicit end marks the cycle finished
-      if (e.periodDay === 0) lastStart = null;
+      // Any explicit end marks the cycle finished (periodDay === 0 OR onPeriod === false)
+      if (e.periodDay === 0 || e.onPeriod === false) {
+        // Only reset if this entry is after the last start
+        if (lastStart && new Date(e.createdAt).getTime() >= new Date(lastStart.createdAt).getTime()) {
+          lastStart = null;
+        }
+      }
     }
     if (!lastStart) return 1; // treat current as Day 1 if no active start found
 
