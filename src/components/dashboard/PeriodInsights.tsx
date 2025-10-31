@@ -119,7 +119,11 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
         if (lastStartEntry) {
           const lastStartTime = new Date(lastStartEntry.createdAt).getTime();
           // Look for an explicit end strictly AFTER the last start
-          const endAfterStart = entries.find(e => new Date(e.createdAt).getTime() > lastStartTime && e.onPeriod === false);
+          // End markers: periodDay === 0 OR onPeriod === false (same logic as New Entry page)
+          const endAfterStart = entries.find(e => {
+            const entryTs = new Date(e.createdAt).getTime();
+            return entryTs >= lastStartTime && (e.periodDay === 0 || e.onPeriod === false);
+          });
           currentlyOnPeriod = !endAfterStart;
         } else {
           currentlyOnPeriod = false;
