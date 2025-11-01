@@ -9,6 +9,14 @@ import ParameterSlider from "@/components/ui/ParameterSlider";
 import ActivitySelector from "@/components/ui/ActivitySelector";
 import { generateAISuggestions } from "@/lib/aiService";
 
+// Utility: date only key (UTC) - fixed formatting
+function dateKeyUTC(d: Date): string {
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Helper functions for genre styling
 const getGenreSelectedStyle = (genre: string) => {
   const colorMap: { [key: string]: string } = {
@@ -224,6 +232,7 @@ export default function NewEntry() {
   };
 
   // Get current period day from inferred last cycle start (rolls across days until explicit end)
+  // This matches the Period Insights calculation logic
   const getCurrentPeriodDay = () => {
     const onNow = formData.onPeriod || isCurrentlyOnPeriod();
     if (!onNow) return 0;
@@ -238,27 +247,39 @@ export default function NewEntry() {
       return Math.max(1, diff + 1);
     }
 
-    // Infer from history: find last explicit start (onPeriod===true) with no later end marker
-    // End markers are: periodDay === 0 OR onPeriod === false (normal period ending)
-    const asc = [...moodEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    let lastStart: any = null;
-    for (const e of asc) {
-      if (e.onPeriod === true) lastStart = e;
-      // Any explicit end marks the cycle finished (periodDay === 0 OR onPeriod === false)
-      if (e.periodDay === 0 || e.onPeriod === false) {
-        // Only reset if this entry is after the last start
-        if (lastStart && new Date(e.createdAt).getTime() >= new Date(lastStart.createdAt).getTime()) {
-          lastStart = null;
-        }
+    // Group entries by day using UTC date keys (same as Period Insights)
+    const byDay: Record<string, { onPeriod: boolean }> = {};
+    for (const e of moodEntries) {
+      const k = dateKeyUTC(new Date(e.createdAt));
+      if (!byDay[k]) byDay[k] = { onPeriod: false };
+      byDay[k].onPeriod = byDay[k].onPeriod || !!e.onPeriod;
+    }
+
+    const days = Object.keys(byDay).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+    // Identify cycle starts (onPeriod true where previous day not onPeriod) - same as Period Insights
+    const cycleStartKeys: string[] = [];
+    for (let i = 0; i < days.length; i++) {
+      const d = days[i];
+      const prev = i > 0 ? days[i - 1] : undefined;
+      const todayOn = byDay[d].onPeriod;
+      const prevOn = prev ? byDay[prev].onPeriod : false;
+      if (todayOn && !prevOn) {
+        cycleStartKeys.push(d);
       }
     }
-    if (!lastStart) return 1; // treat current as Day 1 if no active start found
 
-    const s = new Date(lastStart.createdAt);
-    const startOnly = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+    // Get the last start key
+    const lastStartKey = cycleStartKeys[cycleStartKeys.length - 1];
+    if (!lastStartKey) return 1;
+
+    // Calculate days since last start (same as Period Insights)
     const today = new Date();
-    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const diffDays = Math.floor((todayOnly.getTime() - startOnly.getTime()) / (1000 * 60 * 60 * 24));
+    const [year, month, day] = lastStartKey.split('-').map(Number);
+    const periodStart = new Date(year, month - 1, day); // Local midnight (month is 0-indexed)
+    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const diffTime = todayDateOnly.getTime() - periodStart.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     return Math.max(1, diffDays + 1);
   };
 
