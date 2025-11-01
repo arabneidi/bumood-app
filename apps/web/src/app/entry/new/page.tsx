@@ -147,29 +147,40 @@ export default function NewEntry() {
     
     // Handle period tracking logic
     if (name === 'onPeriod' && value === true) {
-      // Set period start date to today (Day 1) - use local date, not UTC
+      // Only set periodStartDate if this is a NEW period start (not continuing an existing one)
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
       const day = String(now.getDate()).padStart(2, '0');
       const today = `${year}-${month}-${day}`;
-      setPeriodStartDate(today);
       
-      // Check if this is the first period entry today (compare local dates)
+      // Check if there are any period entries today (compare local dates)
       const hasPeriodEntryToday = moodEntries.some(entry => {
         const entryDate = new Date(entry.createdAt);
         const entryDateLocal = `${entryDate.getFullYear()}-${String(entryDate.getMonth() + 1).padStart(2, '0')}-${String(entryDate.getDate()).padStart(2, '0')}`;
         return entryDateLocal === today && entry.onPeriod;
       });
       
+      // Check if there's an active period in history (before today)
+      const isContinuingPeriod = moodEntries.some(entry => {
+        const entryDate = new Date(entry.createdAt);
+        const entryDateLocal = `${entryDate.getFullYear()}-${String(entryDate.getMonth() + 1).padStart(2, '0')}-${String(entryDate.getDate()).padStart(2, '0')}`;
+        return entryDateLocal < today && entry.onPeriod;
+      });
+      
+      // Only set periodStartDate if this is a brand new period (not today, not continuing)
+      if (!hasPeriodEntryToday && !isContinuingPeriod) {
+        setPeriodStartDate(today);
+      }
+      
       // Mark as first period entry if no other period entries exist today
       setIsFirstPeriodEntry(!hasPeriodEntryToday);
       
-      console.log('🩸 Period started:', {
+      console.log('🩸 Period toggle:', {
         today,
         hasPeriodEntryToday,
+        isContinuingPeriod,
         isFirstPeriodEntry: !hasPeriodEntryToday,
-        periodDay: 1
       });
     } else if (name === 'onPeriod' && value === false) {
       // Clear period start date when period ends - resets to Day 1 for next cycle
@@ -178,23 +189,6 @@ export default function NewEntry() {
       
       console.log('🩸 Period ended - reset for next cycle');
     }
-  };
-
-  // Calculate period day (1, 2, 3, etc.)
-  const getPeriodDay = () => {
-    if (!periodStartDate) {
-      // If no period start date but user is on period, it's Day 1
-      if (formData.onPeriod) {
-        return 1;
-      }
-      return 0;
-    }
-    
-    const start = new Date(periodStartDate);
-    const today = new Date();
-    const diffTime = today.getTime() - start.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(1, diffDays); // Minimum day 1
   };
 
   // Check if user is currently on period (day-level or inferred ongoing until explicitly ended)
@@ -773,7 +767,7 @@ export default function NewEntry() {
     console.log('📊 Form Data:', formData);
     console.log('📝 Reflection:', reflection);
     console.log('🌊 On Period:', formData.onPeriod);
-    console.log('📅 Period Day:', formData.onPeriod ? getPeriodDay() : null);
+    console.log('📅 Period Day:', formData.onPeriod ? getCurrentPeriodDay() : null);
 
     try {
       const payload = {
@@ -789,7 +783,7 @@ export default function NewEntry() {
         activityEntries: formData.activityEntries,
         dssAnalysis: formData.dssAnalysis ? JSON.stringify(formData.dssAnalysis) : null,
         onPeriod: formData.onPeriod,
-        periodDay: formData.onPeriod ? getPeriodDay() : null,
+        periodDay: formData.onPeriod ? getCurrentPeriodDay() : null,
         waterIntake: formData.waterIntake,
         mealsEaten: formData.mealsEaten,
         mealQuality: formData.mealQuality,

@@ -132,16 +132,17 @@ export default function PeriodInsights({ moodEntries, userInfo }: PeriodInsights
 
       // Compute current day relative to lastStart if active
       // Use local dates consistently to match new entry page calculation
-      if (currentlyOnPeriod && lastStartKey) {
-        const today = new Date();
-        // Parse the date key string directly as a local date (YYYY-MM-DD format)
-        // This matches how the new entry page handles dates for consistency
-        const [year, month, day] = lastStartKey.split('-').map(Number);
-        const periodStart = new Date(year, month - 1, day); // Local midnight (month is 0-indexed)
-        const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const diffTime = todayDateOnly.getTime() - periodStart.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        currentDay = Math.max(1, diffDays + 1);
+      if (currentlyOnPeriod) {
+        // Find the most recent entry with onPeriod=true to get the actual start date/time
+        const actualLastStart = entries.find(e => e.onPeriod === true);
+        if (actualLastStart) {
+          const today = new Date();
+          const s = new Date(actualLastStart.createdAt);
+          const startOnly = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+          const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          const diffDays = Math.floor((todayOnly.getTime() - startOnly.getTime()) / (1000 * 60 * 60 * 24));
+          currentDay = Math.max(1, diffDays + 1);
+        }
       }
     }
 
