@@ -58,6 +58,7 @@ model User {
   favoritePhilosophers       String?
   customFavorites            String?
   recentActivities           String?
+  darkMode                   Boolean  @default(false)
   aiActions                  AISuggestionAction[]
   accounts                   Account[]
   achievements               Achievement[]

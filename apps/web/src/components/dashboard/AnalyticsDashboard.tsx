@@ -564,9 +564,9 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 1 }}
-              className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-yellow-600 bg-clip-text text-transparent mb-4 flex items-center"
+              className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-yellow-600 dark:from-slate-300 dark:via-slate-200 dark:to-slate-300 bg-clip-text text-transparent mb-4 flex items-center"
             >
-              <Activity className="w-6 h-6 mr-2 text-orange-500" />
+              <Activity className="w-6 h-6 mr-2 text-orange-500 dark:text-slate-300" />
               Top Activities
             </motion.h3>
             <ActivityChart data={data} type="bar" height={250} />
@@ -582,9 +582,9 @@ export default function AnalyticsDashboard({ data, dssData, dssLoading }: Analyt
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 1.1 }}
-              className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 flex items-center"
+              className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-slate-300 dark:via-slate-200 dark:to-slate-300 bg-clip-text text-transparent mb-4 flex items-center"
             >
-              <Star className="w-6 h-6 mr-2 text-purple-500" />
+              <Star className="w-6 h-6 mr-2 text-purple-500 dark:text-slate-300" />
               Activity Distribution
             </motion.h3>
             <ActivityChart data={data} type="pie" height={250} />

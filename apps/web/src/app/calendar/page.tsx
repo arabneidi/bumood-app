@@ -109,21 +109,21 @@ export default function CalendarPage() {
   };
 
   const getMoodColor = (mood: MoodEntry | undefined) => {
-    if (!mood) return "bg-slate-800/40 backdrop-blur-xl border border-slate-600/50";
+    if (!mood) return "bg-slate-800/40 dark:bg-slate-700/60 backdrop-blur-xl border border-slate-600/50 dark:border-slate-500/50";
     
     // Special color for period days
     if (mood.onPeriod) {
-      return "bg-gradient-to-br from-pink-500 to-rose-600"; // Pink/rose for period days
+      return "bg-gradient-to-br from-pink-500 to-rose-600 dark:from-slate-600 dark:to-slate-700"; // Pink/rose for period days
     }
     
     // Use the same calculation as dashboard: Life Rhythm Score (0-100)
     const lifeRhythmScore = Math.round((mood.valence + mood.energy + mood.focus + ((mood.sleep || 8) / 2)) / 3.5 * 10);
     // Life Rhythm Score ranges from 0 to 100
-    if (lifeRhythmScore >= 80) return "bg-gradient-to-br from-green-400 to-emerald-500";  // 80%+
-    if (lifeRhythmScore >= 60) return "bg-gradient-to-br from-blue-400 to-cyan-500";      // 60%+
-    if (lifeRhythmScore >= 40) return "bg-gradient-to-br from-yellow-400 to-orange-400";  // 40%+
-    if (lifeRhythmScore >= 20) return "bg-gradient-to-br from-orange-400 to-red-400";     // 20%+
-    return "bg-gradient-to-br from-red-500 to-pink-600";  // Below 20%
+    if (lifeRhythmScore >= 80) return "bg-gradient-to-br from-green-400 to-emerald-500 dark:from-slate-600 dark:to-slate-700";  // 80%+
+    if (lifeRhythmScore >= 60) return "bg-gradient-to-br from-blue-400 to-cyan-500 dark:from-slate-600 dark:to-slate-700";      // 60%+
+    if (lifeRhythmScore >= 40) return "bg-gradient-to-br from-yellow-400 to-orange-400 dark:from-slate-600 dark:to-slate-700";  // 40%+
+    if (lifeRhythmScore >= 20) return "bg-gradient-to-br from-orange-400 to-red-400 dark:from-slate-600 dark:to-slate-700";     // 20%+
+    return "bg-gradient-to-br from-red-500 to-pink-600 dark:from-slate-700 dark:to-slate-800";  // Below 20%
   };
 
   const getMoodEmoji = (mood: MoodEntry | undefined, date: Date) => {
@@ -214,8 +214,8 @@ export default function CalendarPage() {
                     key={index}
                     onClick={() => setSelectedDate(day)}
                     className={`h-20 relative rounded-2xl transition-all duration-300 flex flex-col items-center justify-center p-2 ${
-                      moodEntry ? getMoodColor(moodEntry) : 'bg-slate-800/40 backdrop-blur-xl border border-slate-600/50'
-                    } ${isSelected ? 'ring-4 ring-blue-400' : ''}`}
+                      moodEntry ? getMoodColor(moodEntry) : 'bg-slate-800/40 dark:bg-slate-700/60 backdrop-blur-xl border border-slate-600/50 dark:border-slate-500/50'
+                    } ${isSelected ? 'ring-4 ring-blue-400 dark:ring-slate-400' : ''}`}
                   >
                     <span className="text-sm font-bold text-white mb-1">{day.getDate()}</span>
                     {moodEntry && (
@@ -235,30 +235,30 @@ export default function CalendarPage() {
             {selectedEntry ? (
               <div className="space-y-4">
                 {(selectedEntry as any)._isAveraged && (
-                  <div className="bg-blue-500/20 border border-blue-400/50 rounded-2xl p-3 text-center">
-                    <div className="text-sm text-blue-300">
+                  <div className="bg-blue-500/20 dark:bg-slate-800/60 border border-blue-400/50 dark:border-slate-600/50 rounded-2xl p-3 text-center">
+                    <div className="text-sm text-blue-300 dark:text-slate-300">
                       📊 Daily Average ({(selectedEntry as any)._entryCount} entries)
                     </div>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-purple-500/20 border border-purple-400/50 rounded-2xl">
-                    <Star className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+                  <div className="text-center p-4 bg-purple-500/20 dark:bg-slate-800/60 border border-purple-400/50 dark:border-slate-600/50 rounded-2xl">
+                    <Star className="w-6 h-6 text-purple-400 dark:text-slate-300 mx-auto mb-2" />
                     <div className="text-3xl font-bold">{selectedEntry.valence}</div>
                     <div className="text-sm text-slate-300">Valence</div>
                   </div>
-                  <div className="text-center p-4 bg-green-500/20 border border-green-400/50 rounded-2xl">
-                    <Zap className="w-6 h-6 text-green-400 mx-auto mb-2" />
+                  <div className="text-center p-4 bg-green-500/20 dark:bg-slate-800/60 border border-green-400/50 dark:border-slate-600/50 rounded-2xl">
+                    <Zap className="w-6 h-6 text-green-400 dark:text-slate-300 mx-auto mb-2" />
                     <div className="text-3xl font-bold">{selectedEntry.energy}</div>
                     <div className="text-sm text-slate-300">Energy</div>
                   </div>
-                  <div className="text-center p-4 bg-blue-500/20 border border-blue-400/50 rounded-2xl">
-                    <Target className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+                  <div className="text-center p-4 bg-blue-500/20 dark:bg-slate-800/60 border border-blue-400/50 dark:border-slate-600/50 rounded-2xl">
+                    <Target className="w-6 h-6 text-blue-400 dark:text-slate-300 mx-auto mb-2" />
                     <div className="text-3xl font-bold">{selectedEntry.focus}</div>
                     <div className="text-sm text-slate-300">Focus</div>
                   </div>
-                  <div className="text-center p-4 bg-red-500/20 border border-red-400/50 rounded-2xl">
-                    <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-2" />
+                  <div className="text-center p-4 bg-red-500/20 dark:bg-slate-800/60 border border-red-400/50 dark:border-slate-600/50 rounded-2xl">
+                    <AlertTriangle className="w-6 h-6 text-red-400 dark:text-slate-300 mx-auto mb-2" />
                     <div className="text-3xl font-bold">{selectedEntry.stress}</div>
                     <div className="text-sm text-slate-300">Stress</div>
                   </div>

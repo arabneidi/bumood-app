@@ -623,7 +623,7 @@ export default function GoalsPage() {
                         }}>
                           {goal.title}
                         </h3>
-                        <div className="text-xs text-cyan-300 font-medium">Active Goal</div>
+                        <div className="text-xs text-cyan-300 dark:text-slate-300 font-medium">Active Goal</div>
                       </div>
                     </div>
                     
@@ -632,7 +632,7 @@ export default function GoalsPage() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/20">
                         <div className="flex items-center">
                           <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3 animate-pulse"></div>
-                          <span className="text-cyan-300 text-sm font-medium">Category</span>
+                          <span className="text-cyan-300 dark:text-slate-300 text-sm font-medium">Category</span>
                         </div>
                         <span className="text-white text-sm font-bold bg-cyan-500/20 px-3 py-1 rounded-full">{(goal as any).category || 'General'}</span>
                       </div>
@@ -650,7 +650,7 @@ export default function GoalsPage() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-400/20">
                         <div className="flex items-center">
                           <div className="w-2 h-2 bg-orange-400 rounded-full mr-3 animate-pulse"></div>
-                          <span className="text-orange-300 text-sm font-medium">Difficulty</span>
+                          <span className="text-orange-300 dark:text-slate-300 text-sm font-medium">Difficulty</span>
                         </div>
                         <span className={`text-white text-sm font-bold px-3 py-1 rounded-full capitalize ${
                           goal.difficulty === 'easy' ? 'bg-green-500/20' :
@@ -662,25 +662,25 @@ export default function GoalsPage() {
                       </div>
                       
                       {/* Progress */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-400/20">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-green-500/10 dark:from-slate-800/60 dark:to-slate-800/60 border border-emerald-400/20 dark:border-slate-600/50">
                         <div className="flex items-center">
-                          <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3 animate-pulse"></div>
-                          <span className="text-emerald-300 text-sm font-medium">Progress</span>
+                          <div className="w-2 h-2 bg-emerald-400 dark:bg-slate-500 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-emerald-300 dark:text-slate-300 text-sm font-medium">Progress</span>
                         </div>
-                        <span className="text-white text-sm font-bold bg-emerald-500/20 px-3 py-1 rounded-full">{goal.currentValue}/{goal.targetValue} days</span>
+                        <span className="text-white dark:text-slate-200 text-sm font-bold bg-emerald-500/20 dark:bg-slate-700/60 px-3 py-1 rounded-full">{goal.currentValue}/{goal.targetValue} days</span>
                       </div>
                       
                       {/* DSS */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-400/20">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-slate-800/60 dark:to-slate-800/60 border border-indigo-400/20 dark:border-slate-600/50">
                         <div className="flex items-center">
-                          <div className="w-2 h-2 bg-indigo-400 rounded-full mr-3 animate-pulse"></div>
-                          <span className="text-indigo-300 text-sm font-medium">DSS</span>
+                          <div className="w-2 h-2 bg-indigo-400 dark:bg-slate-500 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-indigo-300 dark:text-slate-300 text-sm font-medium">DSS</span>
                         </div>
-                        <span className={`text-white text-sm font-bold px-3 py-1 rounded-full ${
-                          goal.dssComponent === 'LM' ? 'bg-blue-500/20 text-blue-300' :
-                          goal.dssComponent === 'RI' ? 'bg-green-500/20 text-green-300' :
-                          goal.dssComponent === 'Connection' ? 'bg-pink-500/20 text-pink-300' :
-                          'bg-gray-500/20 text-gray-300'
+                        <span className={`text-white dark:text-slate-200 text-sm font-bold px-3 py-1 rounded-full ${
+                          goal.dssComponent === 'LM' ? 'bg-blue-500/20 dark:bg-slate-700/60 text-blue-300 dark:text-slate-300' :
+                          goal.dssComponent === 'RI' ? 'bg-green-500/20 dark:bg-slate-700/60 text-green-300 dark:text-slate-300' :
+                          goal.dssComponent === 'Connection' ? 'bg-pink-500/20 dark:bg-slate-700/60 text-pink-300 dark:text-slate-300' :
+                          'bg-gray-500/20 dark:bg-slate-700/60 text-gray-300 dark:text-slate-300'
                         }`}>
                           {goal.dssComponent || 'LM'}
                         </span>
@@ -690,7 +690,7 @@ export default function GoalsPage() {
                     <div className="mb-4">
                       <div className="w-full bg-slate-700 rounded-full h-3 mb-2">
                         <div
-                          className="bg-gradient-to-r from-cyan-500 to-blue-500 h-3 rounded-full transition-all duration-300"
+                          className="bg-gradient-to-r from-cyan-500 to-blue-500 dark:from-slate-600 dark:to-slate-700 h-3 rounded-full transition-all duration-300"
                           style={{ width: `${Math.round((goal.currentValue / goal.targetValue) * 100)}%` }}
                         ></div>
                       </div>
@@ -708,7 +708,7 @@ export default function GoalsPage() {
                       </button>
                       <button
                         onClick={() => updateProgress(goal.id, 1)}
-                        className="px-3 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-sm font-medium transition-all duration-200"
+                        className="px-3 py-2 bg-green-500/20 dark:bg-slate-700/60 hover:bg-green-500/30 dark:hover:bg-slate-600/60 text-green-400 dark:text-slate-300 rounded-lg text-sm font-medium transition-all duration-200"
                       >
                         +1
                       </button>
@@ -749,21 +749,28 @@ export default function GoalsPage() {
                   }}
                 >
                   {/* Edge glow effect - green for completed */}
-                  <div className="absolute inset-0 rounded-2xl"
+                  <div className="absolute inset-0 rounded-2xl dark:border-slate-600/50"
                     style={{
                       background: 'linear-gradient(45deg, transparent, rgba(16, 185, 129, 0.1), transparent)',
                       border: '1px solid rgba(16, 185, 129, 0.3)',
                       boxShadow: 'inset 0 0 20px rgba(16, 185, 129, 0.2), 0 0 40px rgba(16, 185, 129, 0.3)'
                     }}
                   ></div>
+                  <div className="absolute inset-0 rounded-2xl dark:hidden"
+                    style={{
+                      background: 'linear-gradient(45deg, transparent, rgba(71, 85, 105, 0.1), transparent)',
+                      border: '1px solid rgba(71, 85, 105, 0.3)',
+                      boxShadow: 'inset 0 0 20px rgba(71, 85, 105, 0.2), 0 0 40px rgba(71, 85, 105, 0.3)'
+                    }}
+                  ></div>
                   
                   <div className="relative z-10 p-6">
                     <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mr-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-slate-600 dark:to-slate-700 rounded-full flex items-center justify-center mr-4">
                         <Target className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold text-white mb-1" style={{
+                        <h3 className="text-xl font-bold text-white mb-1 dark:text-slate-200" style={{
                           background: 'linear-gradient(45deg, #10b981, #059669, #047857)',
                           WebkitBackgroundClip: 'text',
                           WebkitTextFillColor: 'transparent',
@@ -771,34 +778,34 @@ export default function GoalsPage() {
                         }}>
                           {goal.title}
                         </h3>
-                        <div className="text-xs text-green-300 font-medium">✅ Completed Goal</div>
+                        <div className="text-xs text-green-300 dark:text-slate-300 font-medium">✅ Completed Goal</div>
                       </div>
                     </div>
                     
                     <div className="mb-4 space-y-3">
                       {/* Category */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-400/20">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 dark:from-slate-800/60 dark:to-slate-800/60 border border-green-400/20 dark:border-slate-600/50">
                         <div className="flex items-center">
-                          <div className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse"></div>
-                          <span className="text-green-300 text-sm font-medium">Category</span>
+                          <div className="w-2 h-2 bg-green-400 dark:bg-slate-500 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-green-300 dark:text-slate-300 text-sm font-medium">Category</span>
                         </div>
-                        <span className="text-white text-sm font-bold bg-green-500/20 px-3 py-1 rounded-full">{goal.category}</span>
+                        <span className="text-white dark:text-slate-200 text-sm font-bold bg-green-500/20 dark:bg-slate-700/60 px-3 py-1 rounded-full">{goal.category}</span>
                       </div>
                       
                       {/* Type */}
                       <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-400/20">
                         <div className="flex items-center">
                           <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3 animate-pulse"></div>
-                          <span className="text-emerald-300 text-sm font-medium">Type</span>
+                          <span className="text-emerald-300 dark:text-slate-300 text-sm font-medium">Type</span>
                         </div>
-                        <span className="text-white text-sm font-bold bg-emerald-500/20 px-3 py-1 rounded-full">{goal.subcategory}</span>
+                        <span className="text-white dark:text-slate-200 text-sm font-bold bg-emerald-500/20 dark:bg-slate-700/60 px-3 py-1 rounded-full">{goal.subcategory}</span>
                       </div>
                       
                       {/* Difficulty */}
                       <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border border-teal-400/20">
                         <div className="flex items-center">
                           <div className="w-2 h-2 bg-teal-400 rounded-full mr-3 animate-pulse"></div>
-                          <span className="text-teal-300 text-sm font-medium">Difficulty</span>
+                          <span className="text-teal-300 dark:text-slate-300 text-sm font-medium">Difficulty</span>
                         </div>
                         <span className={`text-white text-sm font-bold px-3 py-1 rounded-full capitalize ${
                           goal.difficulty === 'easy' ? 'bg-green-500/20' :
@@ -813,22 +820,22 @@ export default function GoalsPage() {
                       <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/20">
                         <div className="flex items-center">
                           <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3 animate-pulse"></div>
-                          <span className="text-cyan-300 text-sm font-medium">Duration</span>
+                          <span className="text-cyan-300 dark:text-slate-300 text-sm font-medium">Duration</span>
                         </div>
-                        <span className="text-white text-sm font-bold bg-cyan-500/20 px-3 py-1 rounded-full">{goal.targetValue} days</span>
+                        <span className="text-white dark:text-slate-200 text-sm font-bold bg-cyan-500/20 dark:bg-slate-700/60 px-3 py-1 rounded-full">{goal.targetValue} days</span>
                       </div>
                       
                       {/* DSS */}
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-400/20">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-slate-800/60 dark:to-slate-800/60 border border-indigo-400/20 dark:border-slate-600/50">
                         <div className="flex items-center">
-                          <div className="w-2 h-2 bg-indigo-400 rounded-full mr-3 animate-pulse"></div>
-                          <span className="text-indigo-300 text-sm font-medium">DSS</span>
+                          <div className="w-2 h-2 bg-indigo-400 dark:bg-slate-500 rounded-full mr-3 animate-pulse"></div>
+                          <span className="text-indigo-300 dark:text-slate-300 text-sm font-medium">DSS</span>
                         </div>
-                        <span className={`text-white text-sm font-bold px-3 py-1 rounded-full ${
-                          goal.dssComponent === 'LM' ? 'bg-blue-500/20 text-blue-300' :
-                          goal.dssComponent === 'RI' ? 'bg-green-500/20 text-green-300' :
-                          goal.dssComponent === 'Connection' ? 'bg-pink-500/20 text-pink-300' :
-                          'bg-gray-500/20 text-gray-300'
+                        <span className={`text-white dark:text-slate-200 text-sm font-bold px-3 py-1 rounded-full ${
+                          goal.dssComponent === 'LM' ? 'bg-blue-500/20 dark:bg-slate-700/60 text-blue-300 dark:text-slate-300' :
+                          goal.dssComponent === 'RI' ? 'bg-green-500/20 dark:bg-slate-700/60 text-green-300 dark:text-slate-300' :
+                          goal.dssComponent === 'Connection' ? 'bg-pink-500/20 dark:bg-slate-700/60 text-pink-300 dark:text-slate-300' :
+                          'bg-gray-500/20 dark:bg-slate-700/60 text-gray-300 dark:text-slate-300'
                         }`}>
                           {goal.dssComponent || 'LM'}
                         </span>
@@ -838,12 +845,12 @@ export default function GoalsPage() {
                     <div className="mb-4">
                       <div className="w-full bg-slate-700 rounded-full h-3 mb-2">
                         <div
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-300"
+                          className="bg-gradient-to-r from-green-500 to-emerald-500 dark:from-slate-600 dark:to-slate-700 h-3 rounded-full transition-all duration-300"
                           style={{ width: '100%' }}
                         ></div>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-green-300 text-sm font-bold">100% Complete!</span>
+                        <span className="text-green-300 dark:text-slate-300 text-sm font-bold">100% Complete!</span>
                       </div>
                     </div>
                   </div>
@@ -870,11 +877,11 @@ export default function GoalsPage() {
           <div className="mb-12">
             <div className="flex items-center mb-8">
               <div className="mr-4">
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl">
+                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-slate-700 dark:to-slate-800 rounded-2xl">
                   <Trophy className="w-8 h-8 text-white" />
                 </div>
               </div>
-              <h3 className="text-3xl font-black bg-gradient-to-r from-green-500 via-emerald-500 to-cyan-500 bg-clip-text text-transparent">✅ Achieved Badges</h3>
+              <h3 className="text-3xl font-black bg-gradient-to-r from-green-500 via-emerald-500 to-cyan-500 dark:from-slate-300 dark:via-slate-200 dark:to-slate-300 bg-clip-text text-transparent">✅ Achieved Badges</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {achievements.achieved.length === 0 ? (
@@ -885,23 +892,23 @@ export default function GoalsPage() {
                 achievements.achieved.map((badge, index) => (
                 <div 
                   key={badge.id} 
-                  className="relative p-6 rounded-2xl border-2 shadow-2xl transition-all duration-300 bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-400/50 group hover:scale-105"
+                  className="relative p-6 rounded-2xl border-2 shadow-2xl transition-all duration-300 bg-gradient-to-br from-green-500/20 to-emerald-500/20 dark:from-slate-800/60 dark:to-slate-800/60 border-green-400/50 dark:border-slate-600/50 group hover:scale-105"
                   style={{
                     animation: `float ${4 + (index * 0.3)}s ease-in-out infinite`,
                     animationDelay: `${index * 0.4}s`
                   }}
                 >
-                  <div className="absolute inset-0 rounded-2xl border-2 border-green-400/50 shadow-[0_0_25px_rgba(34,197,94,0.8)] animate-pulse group-hover:shadow-[0_0_40px_rgba(34,197,94,1)] transition-all duration-500"></div>
+                  <div className="absolute inset-0 rounded-2xl border-2 border-green-400/50 dark:border-slate-600/50 shadow-[0_0_25px_rgba(34,197,94,0.8)] dark:shadow-[0_0_25px_rgba(71,85,105,0.5)] animate-pulse group-hover:shadow-[0_0_40px_rgba(34,197,94,1)] dark:group-hover:shadow-[0_0_40px_rgba(71,85,105,0.7)] transition-all duration-500"></div>
                   <div className="relative text-center">
                     <div className="text-6xl mb-4">{badge.icon}</div>
-                    <h4 className="text-xl font-black mb-2 text-green-300">{badge.title}</h4>
-                    <p className="text-sm mb-4 text-green-200">{badge.description}</p>
+                    <h4 className="text-xl font-black mb-2 text-green-300 dark:text-slate-200">{badge.title}</h4>
+                    <p className="text-sm mb-4 text-green-200 dark:text-slate-300">{badge.description}</p>
                     <div className="flex justify-center space-x-1">
                       {[...Array(3)].map((_, i) => (
                         <Star key={i} className={`w-4 h-4 ${i < badge.stars ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
                       ))}
                     </div>
-                    <div className="mt-4 text-green-300 font-bold">✅ Achieved!</div>
+                    <div className="mt-4 text-green-300 dark:text-slate-200 font-bold">✅ Achieved!</div>
                   </div>
                 </div>
                 ))
@@ -1176,7 +1183,7 @@ export default function GoalsPage() {
               
               {/* Goal Details */}
               <div className="bg-slate-700/30 rounded-xl p-4 mb-6 border border-slate-600/50">
-                <h4 className="text-xl font-bold text-green-300 mb-2">{completedGoal.title}</h4>
+                <h4 className="text-xl font-bold text-green-300 dark:text-slate-200 mb-2">{completedGoal.title}</h4>
                 <p className="text-slate-300">You've successfully completed your goal!</p>
                 <div className="mt-3 flex items-center justify-center space-x-4">
                   <span className="text-sm text-slate-400">Difficulty:</span>
@@ -1188,8 +1195,8 @@ export default function GoalsPage() {
               
               {/* Achievement Impact */}
               <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-4 mb-6 border border-green-400/30">
-                <h5 className="text-lg font-bold text-green-300 mb-2">🏆 Achievement Unlocked!</h5>
-                <p className="text-sm text-green-200">This completion will contribute to your achievement badges and overall progress.</p>
+                <h5 className="text-lg font-bold text-green-300 dark:text-slate-200 mb-2">🏆 Achievement Unlocked!</h5>
+                <p className="text-sm text-green-200 dark:text-slate-300">This completion will contribute to your achievement badges and overall progress.</p>
               </div>
               
               {/* Action Buttons */}

@@ -9,8 +9,12 @@ interface ActivityChartProps {
 }
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
+const DARK_COLORS = ['#475569', '#64748b', '#475569', '#64748b', '#475569', '#64748b', '#475569', '#64748b']; // Grey shades for dark mode
 
 export default function ActivityChart({ data, type = 'bar', height = 300 }: ActivityChartProps) {
+  // Check if dark mode is active
+  const isDarkMode = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
+  const activeColors = isDarkMode ? DARK_COLORS : COLORS;
   // Get activity counts
   const allActivities = data.flatMap(entry => {
     // Activities are already parsed by the API
@@ -35,7 +39,7 @@ export default function ActivityChart({ data, type = 'bar', height = 300 }: Acti
     .map(([activity, count], index) => ({
       activity,
       count,
-      color: COLORS[index % COLORS.length]
+      color: activeColors[index % activeColors.length]
     }));
 
   // Show empty state if no activities
@@ -71,10 +75,11 @@ export default function ActivityChart({ data, type = 'bar', height = 300 }: Acti
           </Pie>
           <Tooltip 
             contentStyle={{ 
-              backgroundColor: 'white', 
-              border: '1px solid #e5e7eb', 
+              backgroundColor: isDarkMode ? '#1e293b' : 'white',
+              border: isDarkMode ? '1px solid #475569' : '1px solid #e5e7eb',
               borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              color: isDarkMode ? '#cbd5e1' : '#1f2937'
             }}
           />
         </PieChart>
@@ -85,22 +90,28 @@ export default function ActivityChart({ data, type = 'bar', height = 300 }: Acti
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+        <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? "#475569" : "#e5e7eb"} />
         <XAxis 
           dataKey="activity" 
-          stroke="#6b7280" 
+          stroke={isDarkMode ? "#94a3b8" : "#6b7280"}
+          tick={{ fill: isDarkMode ? "#cbd5e1" : "#6b7280" }}
           fontSize={12}
           angle={-45}
           textAnchor="end"
           height={80}
         />
-        <YAxis stroke="#6b7280" fontSize={12} />
+        <YAxis 
+          stroke={isDarkMode ? "#94a3b8" : "#6b7280"}
+          tick={{ fill: isDarkMode ? "#cbd5e1" : "#6b7280" }}
+          fontSize={12} 
+        />
         <Tooltip 
           contentStyle={{ 
-            backgroundColor: 'white', 
-            border: '1px solid #e5e7eb', 
+            backgroundColor: isDarkMode ? '#1e293b' : 'white',
+            border: isDarkMode ? '1px solid #475569' : '1px solid #e5e7eb',
             borderRadius: '8px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            color: isDarkMode ? '#cbd5e1' : '#1f2937'
           }}
         />
         <Bar dataKey="count" radius={[4, 4, 0, 0]}>

@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
         favoriteArtists: true,
         favoriteMovies: true,
         favoritePhilosophers: true,
-        customFavorites: true
+        customFavorites: true,
+        darkMode: true
       }
     });
     
@@ -65,7 +66,7 @@ export async function PUT(request: NextRequest) {
       userId = 'dummy-user', gender, name, age, height, weight, timezone, 
       personality, universityLevel, fieldOfStudy,
       interests, quoteStyle, favoriteAuthors,
-      favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers, customFavorites
+      favoriteWriters, favoriteSportsFigures, favoriteMusicians, favoriteArtists, favoriteMovies, favoritePhilosophers, customFavorites, darkMode
     } = body;
     
     console.log('Updating user:', userId);
@@ -89,7 +90,8 @@ export async function PUT(request: NextRequest) {
       ...(favoriteArtists !== undefined && { favoriteArtists }),
       ...(favoriteMovies !== undefined && { favoriteMovies }),
       ...(favoritePhilosophers !== undefined && { favoritePhilosophers }),
-      ...(customFavorites !== undefined && { customFavorites })
+      ...(customFavorites !== undefined && { customFavorites }),
+      ...(darkMode !== undefined && { darkMode })
     };
     
     console.log('📝 Database update data:', updateData);

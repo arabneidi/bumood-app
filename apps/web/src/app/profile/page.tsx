@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Save, Sparkles, Heart, Star, Zap, Palette, Music, BookOpen, Gamepad2, Plus, Minus, Settings, Bot } from 'lucide-react';
+import { User, Save, Sparkles, Heart, Star, Zap, Palette, Music, BookOpen, Gamepad2, Plus, Minus, Settings, Bot, Moon, Sun } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import AISettings from '@/components/settings/AISettings';
 import ExportModal from '@/components/ui/ExportModal';
 import { hasApiKey } from '@/lib/encryption';
+import { useTheme } from '@/lib/themeContext';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { isDark, toggleTheme } = useTheme();
   
   // Add global styles to hide spinner arrows
   useEffect(() => {
@@ -293,7 +295,7 @@ export default function ProfilePage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowExportModal(true)}
-                className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center gap-3"
+                className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 dark:bg-gradient-to-r dark:from-slate-700 dark:to-slate-800 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl dark:shadow-slate-900/50 dark:hover:from-slate-600 dark:hover:to-slate-700 transition-all duration-300 flex items-center gap-3"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -947,7 +949,7 @@ export default function ProfilePage() {
                   };
                   input.click();
                 }}
-                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center gap-3"
+                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 dark:bg-gradient-to-r dark:from-slate-700 dark:to-slate-800 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl dark:shadow-slate-900/50 dark:hover:from-slate-600 dark:hover:to-slate-700 transition-all duration-300 flex items-center gap-3"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -959,7 +961,7 @@ export default function ProfilePage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowClearConfirm(true)}
-                className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center gap-3"
+                className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 dark:bg-gradient-to-r dark:from-slate-700 dark:to-slate-800 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl dark:shadow-slate-900/50 dark:hover:from-slate-600 dark:hover:to-slate-700 transition-all duration-300 flex items-center gap-3"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1886,8 +1888,8 @@ export default function ProfilePage() {
                     }}
                     className={`relative overflow-hidden rounded-2xl p-4 font-bold text-lg transition-all duration-300 ${
                       profile.interests.includes(interest.name)
-                        ? `bg-gradient-to-r ${interest.color} text-white shadow-2xl transform scale-105`
-                        : 'bg-slate-800/40 backdrop-blur-xl text-slate-300 border border-slate-600/50 hover:border-slate-500 hover:shadow-xl'
+                        ? `bg-gradient-to-r ${interest.color} dark:bg-gradient-to-r dark:from-slate-600 dark:to-slate-700 text-white shadow-2xl transform scale-105`
+                        : 'bg-slate-800/40 dark:bg-slate-800/80 backdrop-blur-xl text-slate-300 dark:text-slate-200 border border-slate-600/50 dark:border-slate-600/70 hover:border-slate-500 dark:hover:border-slate-500 hover:shadow-xl'
                     }`}
                   >
                     <div className="flex flex-col items-center space-y-2">
@@ -2108,6 +2110,66 @@ export default function ProfilePage() {
             </motion.div>
 
             {/* Custom Categories functionality removed from schema */}
+
+            {/* Dark Mode Toggle Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.1, duration: 0.6 }}
+              className="mb-8 p-6 bg-slate-800/40 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl border border-slate-700/50 dark:border-slate-600/50 shadow-xl"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <motion.div
+                    animate={{ rotate: isDark ? [0, 360] : [360, 0] }}
+                    transition={{ duration: 0.5 }}
+                    className="p-3 bg-gradient-to-r from-yellow-400 to-orange-500 dark:from-slate-700 dark:to-slate-800 rounded-2xl"
+                  >
+                    {isDark ? (
+                      <Moon className="w-6 h-6 text-white dark:text-slate-200" />
+                    ) : (
+                      <Sun className="w-6 h-6 text-white" />
+                    )}
+                  </motion.div>
+                  <div>
+                    <h3 className="text-2xl font-black bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 dark:from-slate-300 dark:via-slate-200 dark:to-slate-300 bg-clip-text text-transparent">
+                      Dark Mode
+                    </h3>
+                    <p className="text-slate-300 dark:text-slate-200 text-sm mt-1">
+                      Toggle between light and dark theme
+                    </p>
+                  </div>
+                </div>
+                <motion.button
+                  onClick={toggleTheme}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`relative w-16 h-9 rounded-full transition-colors duration-300 ${
+                    isDark
+                      ? 'bg-gradient-to-r from-slate-700 to-slate-800'
+                      : 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                  }`}
+                >
+                  <motion.div
+                    layout
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30
+                    }}
+                    className={`absolute top-1 w-7 h-7 bg-white dark:bg-slate-600 rounded-full shadow-lg flex items-center justify-center ${
+                      isDark ? 'left-8' : 'left-1'
+                    }`}
+                  >
+                    {isDark ? (
+                      <Moon className="w-4 h-4 text-slate-200" />
+                    ) : (
+                      <Sun className="w-4 h-4 text-orange-500" />
+                    )}
+                  </motion.div>
+                </motion.button>
+              </div>
+            </motion.div>
 
             {/* Save Button */}
             <motion.div

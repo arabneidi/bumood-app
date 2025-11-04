@@ -61,8 +61,8 @@ export default function Navigation() {
                   ease: "easeInOut"
                 }}
               >
-                <span style={{ color: '#1e40af' }}>BU</span>
-                <span style={{ color: '#6b21a8' }}>Mood</span>
+                <span className="dark:text-blue-400" style={{ color: '#1e40af' }}>BU</span>
+                <span className="dark:text-purple-400" style={{ color: '#6b21a8' }}>Mood</span>
               </motion.span>
             </Link>
           </div>
@@ -88,8 +88,8 @@ export default function Navigation() {
                   >
                     <Link 
                       href={item.href}
-                      className={`group flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg hover:scale-105 bg-gradient-to-r ${item.color} text-white relative overflow-hidden z-10 ${
-                        active ? "ring-4 ring-white ring-opacity-90 shadow-2xl scale-110 border-2 border-white border-opacity-70 animate-pulse" : ""
+                      className={`group flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg hover:scale-105 bg-gradient-to-r ${item.color} dark:bg-gradient-to-r dark:from-slate-700 dark:to-slate-800 text-white relative overflow-hidden z-10 ${
+                        active ? "ring-4 ring-white dark:ring-slate-400 ring-opacity-90 dark:ring-opacity-70 shadow-2xl scale-110 border-2 border-white dark:border-slate-400 border-opacity-70 dark:border-opacity-50 animate-pulse" : ""
                       }`}
                     >
                       {/* Animated Background Shimmer */}

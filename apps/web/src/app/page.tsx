@@ -456,7 +456,7 @@ export default function Home() {
   const getMoodColor = (mood: MoodEntry) => {
     // Use DSS score for coloring (DSS ranges from -3 to +3 typically)
     const score = dssScore !== null && dssScore !== undefined ? dssScore : 0;
-    if (score >= 1) return "bg-gradient-to-br from-green-400 to-emerald-500";  // Excellent
+    if (score >= 1) return "bg-gradient-to-br from-green-400 to-emerald-500 dark:from-slate-600 dark:to-slate-700";  // Excellent
     if (score >= 0) return "bg-gradient-to-br from-blue-400 to-cyan-500";      // Good
     if (score >= -1) return "bg-gradient-to-br from-yellow-400 to-orange-400"; // Fair
     return "bg-gradient-to-br from-red-500 to-pink-600";  // Needs Improvement
@@ -619,8 +619,8 @@ export default function Home() {
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
-            <p className="mt-4 text-slate-300">Loading your dashboard...</p>
-            <p className="mt-2 text-xs text-slate-400">Loading state: {loading.toString()}</p>
+            <p className="mt-4 text-slate-300 dark:text-slate-200">Loading your dashboard...</p>
+            <p className="mt-2 text-xs text-slate-400 dark:text-slate-300">Loading state: {loading.toString()}</p>
           </div>
         ) : (
           <>
@@ -689,7 +689,7 @@ export default function Home() {
                         }}
                         className="relative"
                       >
-                        <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-2xl">
+                        <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center shadow-2xl dark:shadow-slate-900/50">
                           <motion.div
                             animate={{ 
                               scale: [1, 1.1, 1]
@@ -716,7 +716,7 @@ export default function Home() {
                         {[...Array(3)].map((_, i) => (
                           <motion.div
                             key={i}
-                            className="absolute inset-0 rounded-full border-4 border-blue-400"
+                            className="absolute inset-0 rounded-full border-4 border-blue-400 dark:border-slate-500"
                             animate={{
                               scale: [1, 1.5, 2],
                               opacity: [0.6, 0.3, 0]
@@ -730,8 +730,8 @@ export default function Home() {
                         ))}
                       </motion.div>
                       <div className="mt-4 text-center">
-                        <div className="text-lg font-semibold text-blue-300">Daily Success Score</div>
-                        <div className="text-sm text-slate-400">Overall Performance</div>
+                        <div className="text-lg font-semibold text-blue-300 dark:text-slate-200">Daily Success Score</div>
+                        <div className="text-sm text-slate-400 dark:text-slate-300">Overall Performance</div>
                       </div>
                     </motion.div>
 
@@ -754,7 +754,7 @@ export default function Home() {
                         }}
                         className="relative"
                       >
-                        <div className="w-48 h-48 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-2xl">
+                        <div className="w-48 h-48 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center shadow-2xl dark:shadow-slate-900/50">
                           <motion.div
                             animate={{ 
                               scale: [1, 1.1, 1]
@@ -798,8 +798,8 @@ export default function Home() {
                         ))}
                       </motion.div>
                       <div className="mt-4 text-center">
-                        <div className="text-lg font-semibold text-purple-300">Mood Composite</div>
-                        <div className="text-sm text-slate-400">Emotional State</div>
+                        <div className="text-lg font-semibold text-purple-300 dark:text-slate-200">Mood Composite</div>
+                        <div className="text-sm text-slate-400 dark:text-slate-300">Emotional State</div>
                       </div>
                     </motion.div>
                   </div>
@@ -830,7 +830,7 @@ export default function Home() {
                     >
                       <div className="rounded-full h-16 w-16 border-4 border-blue-400 border-t-transparent mx-auto"></div>
                     </motion.div>
-                    <p className="mt-4 text-slate-300 text-lg">Loading achievements...</p>
+                    <p className="mt-4 text-slate-300 dark:text-slate-200 text-lg">Loading achievements...</p>
                   </div>
                 </div>
               </motion.div>
@@ -907,11 +907,11 @@ export default function Home() {
                         >
                           {/* Colorful Transparent Glass - Different Colors for Each Achievement */}
                           <div className={`relative rounded-2xl border-2 backdrop-blur-xl p-6 overflow-hidden shadow-lg ${
-                            index === 0 ? 'border-cyan-400/60 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-cyan-500/20' :
-                            index === 1 ? 'border-orange-400/60 bg-gradient-to-br from-orange-500/20 via-red-500/20 to-orange-500/20' :
-                            index === 2 ? 'border-yellow-400/60 bg-gradient-to-br from-yellow-500/20 via-amber-500/20 to-yellow-500/20' :
-                            index === 3 ? 'border-pink-400/60 bg-gradient-to-br from-pink-500/20 via-purple-500/20 to-pink-500/20' :
-                            'border-blue-400/60 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-indigo-500/20'
+                            index === 0 ? 'border-cyan-400/60 dark:border-slate-600 dark:bg-slate-800/60' :
+                            index === 1 ? 'border-orange-400/60 dark:border-slate-600 dark:bg-slate-800/60' :
+                            index === 2 ? 'border-yellow-400/60 dark:border-slate-600 dark:bg-slate-800/60' :
+                            index === 3 ? 'border-pink-400/60 dark:border-slate-600 dark:bg-slate-800/60' :
+                            'border-blue-400/60 dark:border-slate-600 dark:bg-slate-800/60'
                           }`}>
                             {/* Glowing Edge Effect with Different Colors */}
                             <div className={`absolute inset-0 rounded-2xl border shadow-lg animate-pulse ${
@@ -940,7 +940,7 @@ export default function Home() {
                               </h3>
                               
                               {/* Description */}
-                              <p className="text-sm text-slate-200 mb-3">
+                              <p className="text-sm text-slate-200 dark:text-slate-100 mb-3">
                                 {achievement.description}
                               </p>
                               
@@ -956,7 +956,7 @@ export default function Home() {
                                     return (
                                       <span
                                         key={i}
-                                        className={`text-sm ${isActive ? 'text-yellow-300' : 'text-slate-400'}`}
+                                        className={`text-sm ${isActive ? 'text-yellow-300 dark:text-yellow-200' : 'text-slate-400 dark:text-slate-300'}`}
                                         style={{
                                           color: isActive ? '#fbbf24' : '#64748b',
                                           opacity: isActive ? 1 : 0.4
@@ -978,7 +978,7 @@ export default function Home() {
                   {/* Locked Badges Section */}
                   {achievements.filter(a => !a.unlockedAt).length > 0 && (
                     <div className="relative z-10">
-                      <h3 className="text-xl font-bold text-slate-400 mb-4 flex items-center">
+                      <h3 className="text-xl font-bold text-slate-400 dark:text-slate-300 mb-4 flex items-center">
                         <span className="mr-2">🏆</span>
                         <span className="mr-2">🔒</span>
                         Locked Badges
@@ -1021,12 +1021,12 @@ export default function Home() {
                                 </div>
                                 
                                 {/* Title in Muted Blue-Purple */}
-                                <h3 className="text-xl font-bold bg-gradient-to-r from-slate-400 via-slate-300 to-slate-400 bg-clip-text text-transparent mb-2">
+                                <h3 className="text-xl font-bold bg-gradient-to-r from-slate-400 via-slate-300 to-slate-400 dark:from-slate-300 dark:via-slate-200 dark:to-slate-300 bg-clip-text text-transparent mb-2">
                                   {achievement.title}
                                 </h3>
                                 
                                 {/* Description */}
-                                <p className="text-sm text-slate-400 mb-3">
+                                <p className="text-sm text-slate-400 dark:text-slate-300 mb-3">
                                   {achievement.description}
                                 </p>
                                 
@@ -1042,7 +1042,7 @@ export default function Home() {
                                       return (
                                         <span
                                           key={i}
-                                          className={`text-sm ${isActive ? 'text-slate-400' : 'text-slate-600'}`}
+                                          className={`text-sm ${isActive ? 'text-slate-400 dark:text-slate-300' : 'text-slate-600 dark:text-slate-400'}`}
                                           style={{
                                             color: isActive ? '#94a3b8' : '#475569',
                                             opacity: isActive ? 0.8 : 0.3

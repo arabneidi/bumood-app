@@ -157,11 +157,11 @@ export default function ActivityDriversChart({
 
   // Fixed 5 colorful colors for activities
   const fixedColors = [
-    'bg-blue-500',    // Blue
-    'bg-purple-500',  // Purple
-    'bg-pink-500',    // Pink
-    'bg-orange-500',  // Orange
-    'bg-green-500'    // Green
+    'bg-blue-500 dark:bg-slate-600',    // Blue
+    'bg-purple-500 dark:bg-slate-600',  // Purple
+    'bg-pink-500 dark:bg-slate-600',    // Pink
+    'bg-orange-500 dark:bg-slate-600',  // Orange
+    'bg-green-500 dark:bg-slate-600'    // Green
   ];
 
   // Map each of the top 5 activities to a unique color
@@ -222,8 +222,8 @@ export default function ActivityDriversChart({
                 transition={{ delay: 0.1 * index }}
                 className={`p-4 rounded-lg border ${
                   activity.isHelpful 
-                    ? 'bg-green-900/20 border-green-500/30' 
-                    : 'bg-red-900/20 border-red-500/30'
+                    ? 'bg-green-900/20 dark:bg-slate-800/60 border-green-500/30 dark:border-slate-600/50' 
+                    : 'bg-red-900/20 dark:bg-slate-800/60 border-red-500/30 dark:border-slate-600/50'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -232,7 +232,7 @@ export default function ActivityDriversChart({
                     <span className="font-semibold text-slate-200 capitalize">{activity.tag}</span>
                   </div>
                   <span className={`text-sm font-medium ${
-                    activity.isHelpful ? 'text-green-400' : 'text-red-400'
+                    activity.isHelpful ? 'text-green-400 dark:text-slate-300' : 'text-red-400 dark:text-slate-300'
                   }`}>
                     {activity.isHelpful ? '+' : ''}{activity.overallEffect.toFixed(3)}
                   </span>
@@ -287,6 +287,9 @@ export default function ActivityDriversChart({
                     style={{
                       boxShadow: activitiesPresent.length > 0 
                         ? `0 0 20px ${activitiesPresent.map(a => {
+                            // Check if dark mode is active (check if document has dark class)
+                            const isDarkMode = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+                            
                             // Fixed 5 colorful glow colors matching the background colors
                             const glowColorMap: { [key: string]: string } = {
                               'bg-blue-500': 'rgba(59, 130, 246, 0.4)',
@@ -296,7 +299,13 @@ export default function ActivityDriversChart({
                               'bg-green-500': 'rgba(34, 197, 94, 0.4)'
                             };
                             const bgColor = getActivityColor(a.activity);
-                            return glowColorMap[bgColor] || 'rgba(107, 114, 128, 0.3)';
+                            // If dark mode, use grey glow; otherwise use colorful glow
+                            if (isDarkMode) {
+                              return 'rgba(71, 85, 105, 0.4)';
+                            }
+                            // Extract base color class (before dark: variant)
+                            const baseColor = bgColor.split(' ')[0];
+                            return glowColorMap[baseColor] || 'rgba(107, 114, 128, 0.3)';
                           }).join(', ')}, inset 0 0 0 1px rgba(147, 51, 234, 0.3)`
                         : '0 0 15px rgba(147, 51, 234, 0.2), inset 0 0 0 1px rgba(147, 51, 234, 0.3)'
                     }}
@@ -435,7 +444,7 @@ export default function ActivityDriversChart({
               {/* Cache Status Indicator */}
               {isCached && (
                 <div className="flex items-center mb-3 text-xs text-purple-300">
-                  <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                  <div className="w-2 h-2 bg-green-400 dark:bg-slate-500 rounded-full mr-2"></div>
                   <span>Cached analysis • Last updated: {cacheTimestamp ? new Date(cacheTimestamp).toISOString().split('T')[0] : 'Unknown'}</span>
                 </div>
               )}

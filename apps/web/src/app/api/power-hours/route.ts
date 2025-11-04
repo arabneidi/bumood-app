@@ -15,22 +15,27 @@ export async function GET(request: NextRequest) {
 
     // Define date range based on window
     const endDate = new Date();
-    let startDate = new Date();
+    let startDate = new Date(endDate);
     let days = 7; // Default to weekly
 
     if (window === 'weekly') {
       // Last 7 days from today, but start from the day before to include today
       startDate.setDate(endDate.getDate() - 6);
+      startDate.setHours(0, 0, 0, 0);
       days = 7;
     } else if (window === 'monthly') {
-      // Current month from the 1st
-      startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
-      days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      // Last 30 days from today (rolling 30 days, not from 1st of month)
+      startDate.setDate(endDate.getDate() - 29);
+      startDate.setHours(0, 0, 0, 0);
+      days = 30;
     } else if (window === 'yearly') {
-      // Current year from January 1st
-      startDate = new Date(endDate.getFullYear(), 0, 1);
+      // Current year from January 1st at midnight - MODIFY existing date like weekly
+      startDate.setMonth(0, 1);
+      startDate.setHours(0, 0, 0, 0);
       days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     }
+    
+    endDate.setHours(23, 59, 59, 999); // Include the entire end date
 
     console.log(`📊 Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
     console.log(`📊 Window: ${window}, Days: ${days}`);
@@ -190,9 +195,9 @@ export async function GET(request: NextRequest) {
     // Generate data for all days and hours in the period
     const powerHoursData = [];
     
-    for (let i = 0; i < days; i++) {
-      const currentDate = new Date(startDate);
-      currentDate.setDate(startDate.getDate() + i);
+    const cursor = new Date(startDate);
+    while (cursor <= endDate) {
+      const currentDate = new Date(cursor);
       const dayOfWeek = daysOfWeek[currentDate.getDay()];
 
       for (let hour = 0; hour < 24; hour++) {
@@ -318,6 +323,9 @@ export async function GET(request: NextRequest) {
           console.log(`📊 SUNDAY ${hour}:00 - MC: ${avgMC}, Historical entries: ${historicalDataForTimeSlot.length}, TimeSlot data: ${timeSlotData?.mcValues?.length || 0}`);
         }
       }
+      // Move to next day - set to start of next day for comparison
+      cursor.setDate(cursor.getDate() + 1);
+      cursor.setHours(0, 0, 0, 0);
     }
 
     console.log(`📊 Generated ${powerHoursData.length} power hours data points`);

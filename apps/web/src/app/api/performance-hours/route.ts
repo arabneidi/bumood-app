@@ -19,10 +19,19 @@ export async function GET(request: NextRequest) {
 
     // Define date range
     const endDate = new Date();
-    const startDate = new Date(endDate);
-    if (window === 'weekly') startDate.setDate(endDate.getDate() - 6);
-    else if (window === 'monthly') startDate.setDate(1);
-    else startDate.setMonth(0, 1);
+    let startDate = new Date(endDate);
+    if (window === 'weekly') {
+      startDate.setDate(endDate.getDate() - 6);
+      startDate.setHours(0, 0, 0, 0);
+    } else if (window === 'monthly') {
+      // Last 30 days from today (rolling 30 days, not from 1st of month)
+      startDate.setDate(endDate.getDate() - 29);
+      startDate.setHours(0, 0, 0, 0);
+    } else {
+      startDate.setMonth(0, 1);
+      startDate.setHours(0, 0, 0, 0);
+    }
+    endDate.setHours(23, 59, 59, 999); // Include the entire end date
 
     const apiStart = Date.now();
     // For weekly, include extra 7 days before window start to allow rolling 7-day histories per cell
@@ -373,7 +382,9 @@ export async function GET(request: NextRequest) {
 
         result.push({ day: dayLabel, hour: h, dssValue });
       }
+      // Move to next day - set to start of next day for comparison
       cursor.setDate(cursor.getDate() + 1);
+      cursor.setHours(0, 0, 0, 0);
     }
 
     

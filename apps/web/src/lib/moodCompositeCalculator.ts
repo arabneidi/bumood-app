@@ -172,7 +172,9 @@ export async function calculateMoodCompositeForPowerHours(
       startDate.setDate(currentDate.getDate() - 7);
       break;
     case 'monthly':
-      startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      // Last 30 days from current date (rolling 30 days, not from 1st of month)
+      startDate = new Date(currentDate);
+      startDate.setDate(currentDate.getDate() - 29);
       break;
     case 'yearly':
       startDate = new Date(currentDate.getFullYear(), 0, 1);
