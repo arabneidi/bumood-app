@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -17,6 +17,8 @@ export default function Home() {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [userPreferences, setUserPreferences] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  // Start with empty string to avoid hydration mismatch
+  // Load Pro Tip only on client side after mount
   const [proTip, setProTip] = useState("");
   const [achievements, setAchievements] = useState<any[]>([]);
   const [showAllBadges, setShowAllBadges] = useState(false);
@@ -41,6 +43,11 @@ export default function Home() {
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
   const [streakData, setStreakData] = useState({ currentStreak: 0, bestStreak: 0, waterIntakeToday: 0 });
   
+  // Use refs to prevent duplicate calls in React Strict Mode
+  const isFetchingRef = useRef(false);
+  const proTipLoadRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  
   // Check for mood entry creation signal
   const moodEntryCreated = typeof window !== 'undefined' ? localStorage.getItem('mood-entry-created') : null;
 
@@ -55,26 +62,48 @@ export default function Home() {
   } = useCongratulations('dummy-user');
 
 
+  // Load Pro Tip from localStorage on client mount (prevents hydration mismatch)
+  useEffect(() => {
+    // Prevent duplicate calls in React Strict Mode
+    if (proTipLoadRef.current) return;
+    proTipLoadRef.current = true;
+    
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pro-tip');
+      if (saved && saved !== "Your mental wellness journey starts here.") {
+        console.log('📱 Loading Pro Tip from localStorage on mount');
+        setProTip(saved);
+      }
+      // Don't load from database here - let fetchData handle it to avoid duplicate calls
+    }
+  }, []);
+
   useEffect(() => {
     async function fetchData() {
-      // Prevent duplicate fetchData calls
-      if (isFetchingData) {
-        console.log('🚫 Dashboard already fetching data, skipping duplicate request');
+      // Prevent duplicate fetchData calls (React Strict Mode runs effects twice)
+      if (isFetchingRef.current) {
         return;
       }
+      isFetchingRef.current = true;
+      
+      // Cancel any previous requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
       
       setIsFetchingData(true);
       try {
-        console.log('🔄 Dashboard fetching data...');
-        // Fetch all data in parallel
+        // Fetch all data in parallel (with abort signal)
         const [moodEntriesRes, achievementsRes, goalsRes, userRes, dssRes, mcRes, streakRes] = await Promise.all([
-          fetch("/api/mood-entries"),
-          fetch("/api/achievements"),
-          fetch("/api/goals"),
-          fetch("/api/user?userId=dummy-user"),
-          fetch("/api/dss?userId=dummy-user"),
-          fetch("/api/mood-composite?userId=dummy-user&calculateCurrent=true"),
-          fetch("/api/streak?userId=dummy-user")
+          fetch("/api/mood-entries", { signal }),
+          fetch("/api/achievements", { signal }),
+          fetch("/api/goals", { signal }),
+          fetch("/api/user?userId=dummy-user", { signal }),
+          fetch("/api/dss?userId=dummy-user", { signal }),
+          fetch("/api/mood-composite?userId=dummy-user&calculateCurrent=true", { signal }),
+          fetch("/api/streak?userId=dummy-user", { signal })
         ]);
 
         // Process mood entries
@@ -92,13 +121,6 @@ export default function Home() {
           })));
           
           // Only update if the data has actually changed
-          console.log('🔍 Hash comparison:', {
-            entriesHash: entriesHash.substring(0, 50) + '...',
-            lastMoodEntriesHash: lastMoodEntriesHash.substring(0, 50) + '...',
-            hasChanged: entriesHash !== lastMoodEntriesHash,
-            lastHashEmpty: lastMoodEntriesHash === ''
-          });
-          
           if (entriesHash !== lastMoodEntriesHash) {
             setMoodEntries(data);
             setLastMoodEntriesHash(entriesHash);
@@ -106,13 +128,9 @@ export default function Home() {
             if (lastMoodEntriesHash !== '') {
               setHasNewMoodData(true); // Flag that we have new data
               setHasNewProTipData(true); // Also trigger Pro Tips regeneration
-              console.log('📊 Mood entries updated - AI suggestions and Pro Tips will regenerate');
-            } else {
-              console.log('📊 First load - AI suggestions and Pro Tips will not regenerate');
             }
           } else {
             setHasNewMoodData(false); // No new data
-            console.log('📊 Mood entries unchanged - AI suggestions will not regenerate');
           }
         }
 
@@ -134,12 +152,7 @@ export default function Home() {
             // Only set flag to true if we had previous data (not first load)
             if (lastAchievementsHash !== '') {
               setHasNewProTipData(true); // New achievement = new coaching opportunity
-              console.log('🏆 Achievements updated - Pro Tips will regenerate');
-            } else {
-              console.log('🏆 First load achievements - Pro Tips will not regenerate');
             }
-          } else {
-            console.log('🏆 Achievements unchanged - Pro Tips will not regenerate');
           }
           setAchievementsLoading(false);
         }
@@ -166,12 +179,7 @@ export default function Home() {
             // Only set flag to true if we had previous data (not first load)
             if (lastGoalsHash !== '') {
               setHasNewProTipData(true); // New goal or goal change = new coaching opportunity
-              console.log('🎯 Goals updated - Pro Tips will regenerate');
-            } else {
-              console.log('🎯 First load goals - Pro Tips will not regenerate');
             }
-          } else {
-            console.log('🎯 Goals unchanged - Pro Tips will not regenerate');
           }
         }
 
@@ -206,7 +214,6 @@ export default function Home() {
           if (data.success && data.data) {
             // No fallback: use only the explicit currentMC number
             const mcValue = typeof data.data.currentMC === 'number' ? data.data.currentMC : null;
-            console.log('🔵 Dashboard setting moodComposite (no fallback):', { currentMC: mcValue });
             setMoodComposite(mcValue);
             setCurrentTimeBucket(data.data.currentTimeBucket);
           }
@@ -228,89 +235,123 @@ export default function Home() {
           }
         }
 
-        // Check if goals changed from other pages
+        // Check if goals changed from other pages (localStorage flags are cleared after use)
         const goalsChanged = localStorage.getItem('goals-changed');
         const moodEntryCreated = localStorage.getItem('mood-entry-created');
-        const shouldRegenerateProTips = hasNewMoodData || hasNewProTipData || goalsChanged || moodEntryCreated;
+        
+        // Only regenerate if there's an actual change signal (localStorage flags) OR
+        // if we detected new data in THIS fetch (not from previous renders)
+        // Reset the flags after checking to prevent regeneration on next refresh
+        const shouldRegenerateProTips = goalsChanged || moodEntryCreated || (hasNewMoodData && lastMoodEntriesHash !== '') || (hasNewProTipData && lastGoalsHash !== '');
         
         console.log('🔍 Pro Tips regeneration check:', {
           hasNewMoodData,
           hasNewProTipData,
-          goalsChanged,
-          moodEntryCreated,
+          goalsChanged: !!goalsChanged,
+          moodEntryCreated: !!moodEntryCreated,
+          lastMoodEntriesHashEmpty: lastMoodEntriesHash === '',
+          lastGoalsHashEmpty: lastGoalsHash === '',
           shouldRegenerateProTips
         });
         
-        // Generate personalized quote only if we have new data and not already generating
-        if (shouldRegenerateProTips && !isGeneratingProTip) {
-          setIsGeneratingProTip(true);
-          try {
-            console.log('🎯 CLIENT: Fetching pro tips from API...');
-            // Get API key from localStorage (set via profile page) - SINGLE SOURCE OF TRUTH
-            const { getApiKeyForRequest } = await import('@/lib/encryption');
-            const apiKey = getApiKeyForRequest('openai');
-            const apiKeyParam = apiKey ? `&apiKey=${encodeURIComponent(apiKey)}` : '';
-            const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user${apiKeyParam}`);
-            if (quoteRes.ok) {
-              const quoteData = await quoteRes.json();
-              console.log('📝 CLIENT: Pro tip response received:', quoteData.quote);
-              setProTip(quoteData.quote);
-              // Save to localStorage for persistence
-              localStorage.setItem('pro-tip', quoteData.quote);
-              
-              // Clear the signals after using them
-              if (goalsChanged) {
-                localStorage.removeItem('goals-changed');
-                console.log('🎯 Pro Tips regenerated due to goals change:', quoteData.quote);
-              } else if (moodEntryCreated) {
-                localStorage.removeItem('mood-entry-created');
-                console.log('📝 Pro Tips regenerated due to new mood entry:', quoteData.quote);
-              } else {
-                console.log('🎯 Pro Tips regenerated due to new data:', quoteData.quote);
-              }
-            } else {
-              console.log('⚠️ Personalized quote API failed, using fallback');
-              setProTip("Your mental wellness journey starts here.");
-            }
-          } catch (error) {
-            console.error('Error generating personalized quote:', error);
-            setProTip("Your mental wellness journey starts here.");
-          } finally {
-            setIsGeneratingProTip(false);
+        // When goals change, force reload Pro Tip from database (background regeneration may have completed)
+        if (goalsChanged || moodEntryCreated) {
+          if (goalsChanged) {
+            localStorage.removeItem('goals-changed');
+            console.log('🎯 Goals changed - reloading Pro Tip from database (background regeneration may have completed)...');
+            // Force reload Pro Tip from database to get the updated one
+            proTipLoadRef.current = false; // Reset ref to allow reload
           }
-        } else if (shouldRegenerateProTips && isGeneratingProTip) {
-          console.log('⏳ Pro Tips already generating, skipping duplicate request');
-        } else {
-          // Load saved Pro Tip from localStorage (no regeneration needed)
-          const savedProTip = localStorage.getItem('pro-tip');
-          if (savedProTip) {
-            setProTip(savedProTip);
-            console.log('📱 Loaded saved Pro Tip from localStorage (no regeneration needed)');
-          } else {
-            // No saved Pro Tip, generate one
-            try {
-              // Get API key from localStorage (set via profile page) - SINGLE SOURCE OF TRUTH
-            const { getApiKeyForRequest } = await import('@/lib/encryption');
-            const apiKey = getApiKeyForRequest('openai');
-            const apiKeyParam = apiKey ? `&apiKey=${encodeURIComponent(apiKey)}` : '';
-            const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user${apiKeyParam}`);
-              if (quoteRes.ok) {
-                const quoteData = await quoteRes.json();
-                setProTip(quoteData.quote);
-                localStorage.setItem('pro-tip', quoteData.quote);
-                console.log('🎯 Generated initial Pro Tip');
-              } else {
-                console.log('⚠️ Personalized quote API failed, using fallback');
-                setProTip("Your mental wellness journey starts here.");
-              }
-            } catch (error) {
-              console.error('Error generating personalized quote:', error);
-              setProTip("Your mental wellness journey starts here.");
-            }
+          if (moodEntryCreated) {
+            localStorage.removeItem('mood-entry-created');
+            console.log('📝 Mood entry created - reloading Pro Tip from database...');
+            proTipLoadRef.current = false; // Reset ref to allow reload
           }
         }
+        
+        // Reset state flags
+        if (hasNewMoodData || hasNewProTipData) {
+          setHasNewMoodData(false);
+          setHasNewProTipData(false);
+        }
+        
+        // Always load Pro Tip from database (fast, non-blocking)
+        // If goals changed, force reload even if we have a Pro Tip
+        const shouldForceReload = goalsChanged || moodEntryCreated;
+        {
+          // Load Pro Tip from database in background (non-blocking)
+          // Don't wait for it - just show what we have and update when ready
+          (async () => {
+            // Prevent duplicate Pro Tip loads within the same effect run
+            // Force reload if goals changed, otherwise only load if we don't have a Pro Tip
+            if (shouldForceReload || !proTip || proTip === "Your mental wellness journey starts here.") {
+              // Only set ref if we're actually going to load (prevent duplicate loads)
+              if (proTipLoadRef.current && !shouldForceReload) {
+                return; // Already loading (unless forcing reload)
+              }
+              proTipLoadRef.current = true;
+              
+              try {
+                if (shouldForceReload) {
+                  console.log('🔄 Forcing Pro Tip reload from database (goals/mood changed)...');
+                  // Pro Tip should already be regenerated by API, but wait a moment just in case
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                  console.log('⏳ Reading Pro Tip from database (should be ready)...');
+                } else {
+                  console.log('📥 Loading Pro Tip from database (background)...');
+                }
+                const { getApiKeyForRequest } = await import('@/lib/encryption');
+                const apiKey = getApiKeyForRequest('openai');
+                const apiKeyParam = apiKey ? `&apiKey=${encodeURIComponent(apiKey)}` : '';
+                // Don't force regeneration - API will return cached from database or generate if needed
+                const quoteRes = await fetch(`/api/personalized-quotes?userId=dummy-user${apiKeyParam}`, {
+                  signal: abortControllerRef.current?.signal || AbortSignal.timeout(30000) // Use abort controller or timeout
+                });
+                console.log('📡 Database response:', { status: quoteRes.status, ok: quoteRes.ok });
+                if (quoteRes.ok) {
+                  const quoteData = await quoteRes.json();
+                  console.log('📝 Database response data:', { 
+                    hasQuote: !!quoteData.quote, 
+                    cached: quoteData.cached,
+                    source: quoteData.source,
+                    savedToDB: quoteData.savedToDB,
+                    quotePreview: quoteData.quote?.substring(0, 50) 
+                  });
+                  if (quoteData.quote && quoteData.quote !== "Your mental wellness journey starts here.") {
+                    setProTip(quoteData.quote);
+                    localStorage.setItem('pro-tip', quoteData.quote);
+                    if (quoteData.cached) {
+                      console.log('✅ Loaded Pro Tip from database:', quoteData.quote.substring(0, 50) + '...');
+                    } else {
+                      console.log('🎯 New Pro Tip generated and loaded:', quoteData.quote.substring(0, 50) + '...');
+                    }
+                  } else {
+                    console.warn('⚠️ Pro Tip is fallback or empty');
+                  }
+                } else {
+                  const errorText = await quoteRes.text();
+                  console.error('❌ Database API failed:', { status: quoteRes.status, error: errorText.substring(0, 100) });
+                }
+              } catch (error) {
+                console.error('❌ Error loading Pro Tip from database:', error);
+                // Don't update state on error - keep what we have
+              } finally {
+                // Reset ref after load attempt completes (success or failure)
+                proTipLoadRef.current = false;
+              }
+            } else {
+              // We already have a valid Pro Tip and no force reload needed
+              console.log('⏭️ Skipping Pro Tip load - already have valid tip and no changes');
+            }
+          })();
+        }
 
-      } catch (error) {
+      } catch (error: any) {
+        // Ignore abort errors (expected when component unmounts or effect re-runs)
+        if (error?.name === 'AbortError') {
+          console.log('🛑 Fetch aborted (duplicate call prevented)');
+          return;
+        }
         console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
@@ -318,16 +359,21 @@ export default function Home() {
         setDssLoading(false);
         setMcLoading(false);
         setIsFetchingData(false);
+        isFetchingRef.current = false;
       }
     }
 
     fetchData();
+    
+    // Cleanup: abort requests if component unmounts or effect re-runs
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      isFetchingRef.current = false;
+    };
   }, [timeRange]); // Refetch when time range changes or component mounts
   
-  // Debug logging for timeRange changes
-  useEffect(() => {
-    console.log('🔄 TimeRange changed to:', timeRange);
-  }, [timeRange]);
 
   // Delete entry function
   const handleDeleteEntry = (entryId: string) => {
@@ -398,7 +444,6 @@ export default function Home() {
       }
     });
     
-    console.log(`📊 Time range: ${timeRange}, Filtered entries: ${filtered.length} of ${moodEntries.length}`);
     return filtered;
   };
 
@@ -484,26 +529,36 @@ export default function Home() {
         <div className="absolute top-24 left-0 right-0 bottom-0 z-0 bg-[linear-gradient(90deg,transparent_24%,rgba(59,130,246,0.1)_25%,rgba(59,130,246,0.1)_26%,transparent_27%,transparent_74%,rgba(147,51,234,0.1)_75%,rgba(147,51,234,0.1)_76%,transparent_77%)] bg-[length:50px_50px] animate-pulse"></div>
         {/* Floating Particles */}
         <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-purple-400/30 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -100, 0],
-                x: [0, Math.random() * 50 - 25, 0],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                duration: 3 + Math.random() * 2,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
+          {[...Array(20)].map((_, i) => {
+            // Deterministic pseudo-random based on index to avoid hydration mismatch
+            const seed = i * 0.618033988749895; // Golden ratio for better distribution
+            const left = (seed * 100) % 100;
+            const top = ((seed * 137.508) % 100); // Another prime multiplier
+            const xOffset = (seed * 50) % 50 - 25;
+            const duration = 3 + (seed * 2) % 2;
+            const delay = (seed * 2) % 2;
+            
+            return (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-purple-400/30 rounded-full"
+                style={{
+                  left: `${left}%`,
+                  top: `${top}%`,
+                }}
+                animate={{
+                  y: [0, -100, 0],
+                  x: [0, xOffset, 0],
+                  opacity: [0, 1, 0],
+                }}
+                transition={{
+                  duration: duration,
+                  repeat: Infinity,
+                  delay: delay,
+                }}
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -1194,15 +1249,7 @@ export default function Home() {
             </motion.div>
 
             {/* Today's Entries Section */}
-            {(() => {
-              console.log('🔍 Today Entries Check:', { 
-                timeRange, 
-                filteredCount: filteredEntries.length,
-                totalCount: moodEntries.length,
-                shouldShow: timeRange === 'daily' && filteredEntries.length > 0 
-              });
-              return timeRange === 'daily' && filteredEntries.length > 0;
-            })() && (
+            {timeRange === 'daily' && filteredEntries.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: [0, -5, 0] }}

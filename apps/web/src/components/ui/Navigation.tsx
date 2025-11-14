@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { useTheme } from "@/lib/themeContext";
+import { Moon, Sun } from "lucide-react";
 
 export default function Navigation() {
   const pathname = usePathname();
+  const { isDark, toggleTheme } = useTheme();
 
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true;
@@ -131,6 +134,69 @@ export default function Navigation() {
                 </motion.div>
               );
             })}
+            
+            {/* Dark Mode Toggle Button */}
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+            >
+              <motion.div
+                animate={{ 
+                  y: [0, -4, 0],
+                }}
+                transition={{
+                  duration: 2 + 5 * 0.5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <motion.button
+                  onClick={toggleTheme}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`group flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg bg-gradient-to-r ${
+                    isDark 
+                      ? 'from-slate-700 to-slate-800' 
+                      : 'from-yellow-400 to-orange-500'
+                  } text-white relative overflow-hidden z-10`}
+                >
+                  {/* Animated Background Shimmer */}
+                  <motion.div
+                    className="absolute inset-0 bg-white pointer-events-none"
+                    animate={{
+                      x: ['-100%', '200%'],
+                      opacity: [0, 0.2, 0]
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      delay: 5 * 0.5
+                    }}
+                  />
+                  
+                  {/* Icon with Animation */}
+                  <motion.div
+                    className="relative z-10"
+                    animate={{ 
+                      rotate: [0, 5, -5, 0],
+                      scale: [1, 1.05, 1]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    {isDark ? (
+                      <Sun className="w-5 h-5" />
+                    ) : (
+                      <Moon className="w-5 h-5" />
+                    )}
+                  </motion.div>
+                </motion.button>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </div>

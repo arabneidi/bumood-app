@@ -84,6 +84,93 @@ export async function PUT(
       console.error('❌ Error invalidating AI drivers cache:', cacheError);
     }
 
+    // Regenerate Pro Tips when goal progress changes or goal is completed
+    // Do this BEFORE returning response so it completes before user navigates to dashboard
+    console.log('🔍 Checking if Pro Tip regeneration needed:', { 
+      currentValue, 
+      currentValueDefined: currentValue !== undefined,
+      completed, 
+      completedTrue: completed === true,
+      shouldRegenerate: currentValue !== undefined || completed === true
+    });
+    
+    if (currentValue !== undefined || completed === true) {
+      // Wait for Pro Tip regeneration to complete (with timeout)
+      // This ensures Pro Tip is ready when user navigates to dashboard
+      try {
+        // Get API key from environment (server-side)
+        const apiKey = process.env.OPENAI_API_KEY;
+        const apiKeyParam = apiKey ? `&apiKey=${encodeURIComponent(apiKey)}` : '';
+        const proTipUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/personalized-quotes?userId=${currentGoal.userId}&forceRegenerate=true${apiKeyParam}`;
+        console.log('🔄 Regenerating Pro Tips after goal update (waiting for completion, max 8s)...');
+        console.log('🔗 Pro Tip URL:', proTipUrl.replace(apiKey || '', '***'));
+        
+        const startTime = Date.now();
+        
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+        
+        try {
+          const response = await fetch(proTipUrl, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            signal: controller.signal,
+          });
+          
+          clearTimeout(timeoutId);
+          const duration = Date.now() - startTime;
+          
+          console.log(`⏱️ Pro Tip regeneration completed in ${duration}ms`);
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.savedToDB) {
+              console.log('✅ Pro Tip regenerated and saved to database:', data.quote?.substring(0, 50) + '...');
+            } else {
+              console.log('✅ Pro Tip regenerated (not saved to DB):', data.quote?.substring(0, 50) + '...');
+            }
+          } else {
+            const errorText = await response.text();
+            console.error('⚠️ Pro Tip regeneration failed:', response.status, errorText.substring(0, 100));
+          }
+        } catch (fetchError: any) {
+          clearTimeout(timeoutId);
+          if (fetchError.name === 'AbortError') {
+            console.log('⏱️ Pro Tip regeneration timed out after 8s - continuing in background...');
+            // Continue regeneration in background if it times out
+            ;(async () => {
+              try {
+                const bgResponse = await fetch(proTipUrl, {
+                  method: 'GET',
+                  headers: { 'Content-Type': 'application/json' },
+                });
+                if (bgResponse.ok) {
+                  const data = await bgResponse.json();
+                  console.log('✅ Background Pro Tip regeneration completed:', data.quote?.substring(0, 50) + '...');
+                }
+              } catch (bgError) {
+                console.error('⚠️ Background Pro Tip regeneration failed:', bgError);
+              }
+            })();
+          } else {
+            throw fetchError;
+          }
+        }
+      } catch (error) {
+        console.error('⚠️ Error regenerating Pro Tips:', error);
+        if (error instanceof Error) {
+          console.error('Error details:', error.message, error.stack?.substring(0, 200));
+        }
+        // Don't fail the goal update if Pro Tip regeneration fails
+      }
+      console.log('✅ Goal update complete - Pro Tip regeneration finished or continuing in background');
+    } else {
+      console.log('⏭️ Skipping Pro Tip regeneration - no progress change or completion');
+    }
+
     return NextResponse.json(updatedGoal);
   } catch (error) {
     console.error("Error updating goal:", error);

@@ -10,13 +10,39 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'dummy-user';
     const clientApiKey = searchParams.get('apiKey'); // Accept API key from query param
+    const forceRegenerate = searchParams.get('forceRegenerate') === 'true'; // Force regeneration
     
-    console.log('🎯 Fetching personalized quote for user:', userId);
+    console.log('🎯 API called - userId:', userId, 'forceRegenerate:', forceRegenerate);
+    console.log('🔍 Prisma client has proTip model:', typeof (db as any).proTip !== 'undefined');
     
     // Check for API key (from client or server environment)
     // Server env var takes priority for global access
     const apiKey = clientApiKey || process.env.OPENAI_API_KEY;
     console.log('🔑 OpenAI API Key available:', !!apiKey);
+    
+    if (!apiKey && forceRegenerate) {
+      console.error('❌ No API key available for Pro Tip generation');
+      // Try to return existing Pro Tip from database
+      const existingProTip = await db.proTip.findFirst({
+        where: { userId },
+        orderBy: { updatedAt: 'desc' }
+      });
+      
+      if (existingProTip && existingProTip.tip !== "Your mental wellness journey starts here.") {
+        console.log('✅ No API key - returning existing Pro Tip from database');
+        return NextResponse.json({ 
+          quote: existingProTip.tip,
+          source: existingProTip.source,
+          cached: true
+        });
+      }
+      
+      return NextResponse.json({ 
+        quote: "Your mental wellness journey starts here.",
+        source: "fallback",
+        error: "No API key available for Pro Tip generation"
+      });
+    }
     
     // Get user profile data
     const user = await db.user.findUnique({
@@ -29,6 +55,56 @@ export async function GET(request: NextRequest) {
         quote: "Your mental wellness journey starts here.",
         source: "system"
       });
+    }
+    
+    // Simple: Check database for existing Pro Tip (unless forcing regeneration)
+    if (!forceRegenerate) {
+      try {
+        // Check if Prisma client has the model
+        if (typeof (db as any).proTip === 'undefined') {
+          console.log('⚠️ Prisma client does not have proTip model - server needs restart');
+          return NextResponse.json({ 
+            quote: "Your mental wellness journey starts here.",
+            source: "fallback",
+            error: "Prisma client needs restart"
+          });
+        }
+        
+        console.log('🔍 Checking database for existing Pro Tip...');
+        const existingProTip = await db.proTip.findFirst({
+          where: { userId },
+          orderBy: { updatedAt: 'desc' }
+        });
+        
+        if (existingProTip) {
+          console.log('📦 Found Pro Tip in database:', { 
+            hasTip: !!existingProTip.tip, 
+            tipLength: existingProTip.tip?.length || 0,
+            source: existingProTip.source 
+          });
+          
+          if (existingProTip.tip && existingProTip.tip !== "Your mental wellness journey starts here.") {
+            console.log('✅ Returning saved Pro Tip from database');
+            return NextResponse.json({ 
+              quote: existingProTip.tip,
+              source: existingProTip.source,
+              cached: true
+            });
+          } else {
+            console.log('⚠️ Pro Tip in database is fallback - will generate new one');
+          }
+        } else {
+          console.log('📭 No Pro Tip found in database');
+        }
+      } catch (dbError) {
+        console.error('❌ Error reading Pro Tip:', dbError instanceof Error ? dbError.message : String(dbError));
+        console.error('❌ Error stack:', dbError instanceof Error ? dbError.stack?.substring(0, 200) : 'No stack');
+        return NextResponse.json({ 
+          quote: "Your mental wellness journey starts here.",
+          source: "fallback",
+          error: dbError instanceof Error ? dbError.message : "Database read failed"
+        });
+      }
     }
     
     // Get recent mood entries for context
@@ -327,22 +403,132 @@ export async function GET(request: NextRequest) {
     });
     
     // Generate personalized quote
-    console.log('🎯 About to call generateCoachingTip with profile:', JSON.stringify(userProfile, null, 2));
-    const quote = await generateCoachingTip(userProfile, apiKey);
-    console.log('✅ Generated personalized quote:', quote);
+    console.log('🎯 About to call generateCoachingTip with profile');
+    console.log('🔑 API Key available:', !!apiKey, 'Length:', apiKey?.length || 0);
+    let quote: string;
+    try {
+      if (!apiKey) {
+        throw new Error('No API key provided for Pro Tip generation');
+      }
+      quote = await generateCoachingTip(userProfile, apiKey);
+      console.log('✅ Generated personalized quote:', quote?.substring(0, 100) + '...');
+      
+      // Validate quote is not empty
+      if (!quote || quote.trim().length === 0) {
+        console.error('❌ Generated quote is empty, using fallback');
+        quote = "Your mental wellness journey starts here.";
+      }
+    } catch (genError) {
+      console.error('❌ Error in generateCoachingTip:', genError);
+      if (genError instanceof Error) {
+        console.error('Error message:', genError.message);
+        console.error('Error stack:', genError.stack?.substring(0, 200));
+      }
+      quote = "Your mental wellness journey starts here.";
+    }
     
-    return NextResponse.json({ 
+    // Save Pro Tip to database (upsert - update if exists, create if not)
+    // Only save if it's not the fallback quote
+    let savedToDB = false;
+    if (quote && quote !== "Your mental wellness journey starts here." && quote.trim().length > 0) {
+      try {
+        // Check if Prisma client has ProTip model
+        if (!db.proTip) {
+          console.error('❌ Prisma client does not have ProTip model - server needs restart');
+          console.log('⚠️ Pro Tip generated but cannot save to database until server restarts');
+          savedToDB = false;
+        } else {
+          const existingProTip = await db.proTip.findFirst({
+            where: { userId },
+            orderBy: { updatedAt: 'desc' }
+          });
+          
+          if (existingProTip) {
+            // Update existing Pro Tip
+            await db.proTip.update({
+              where: { id: existingProTip.id },
+              data: {
+                tip: quote,
+                source: "ai",
+                updatedAt: new Date()
+              }
+            });
+            savedToDB = true;
+            console.log('💾 Updated existing Pro Tip in database:', quote.substring(0, 50) + '...');
+          } else {
+            // Create new Pro Tip
+            await db.proTip.create({
+              data: {
+                userId,
+                tip: quote,
+                source: "ai"
+              }
+            });
+            savedToDB = true;
+            console.log('💾 Created new Pro Tip in database:', quote.substring(0, 50) + '...');
+          }
+        }
+      } catch (error) {
+        console.error('⚠️ Error saving Pro Tip to database:', error);
+        if (error instanceof Error) {
+          console.error('Error details:', error.message);
+          if (error.message.includes('findFirst') || error.message.includes('proTip')) {
+            console.log('⚠️ Prisma client needs restart to access ProTip model');
+          }
+        }
+        savedToDB = false;
+        // Continue even if save fails
+      }
+    } else {
+      console.log('⚠️ Skipping save - quote is fallback or empty');
+      savedToDB = false;
+    }
+    
+    // Determine source based on whether quote was actually generated
+    const isFallback = quote === "Your mental wellness journey starts here.";
+    const response = { 
       quote,
-      source: "ai",
+      source: isFallback ? "fallback" : "ai",
+      cached: false,
+      savedToDB: savedToDB,
       userPreferences: {
         interests: userProfile.interests,
         recentActivities: userProfile.recentActivities
       }
+    };
+    console.log('📤 Returning Pro Tip response:', { 
+      quote: quote.substring(0, 100) + '...', 
+      source: response.source, 
+      cached: response.cached,
+      savedToDB: response.savedToDB
     });
+    return NextResponse.json(response);
     
   } catch (error) {
     console.error('❌ Error generating personalized quote:', error);
     console.error('❌ Error details:', JSON.stringify(error, null, 2));
+    
+    // Try to return existing Pro Tip from database even on error
+    try {
+      if (db.proTip) {
+        const existingProTip = await db.proTip.findFirst({
+          where: { userId },
+          orderBy: { updatedAt: 'desc' }
+        });
+        
+        if (existingProTip && existingProTip.tip !== "Your mental wellness journey starts here.") {
+          console.log('✅ Returning existing Pro Tip from database despite error');
+          return NextResponse.json({ 
+            quote: existingProTip.tip,
+            source: existingProTip.source,
+            cached: true
+          });
+        }
+      }
+    } catch (dbError) {
+      console.error('❌ Error fetching existing Pro Tip:', dbError);
+    }
+    
     return NextResponse.json({ 
       quote: "Your mental wellness journey starts here.",
       source: "fallback",

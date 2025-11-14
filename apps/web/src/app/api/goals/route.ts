@@ -130,6 +130,39 @@ export async function POST(request: NextRequest) {
       console.error('❌ Error invalidating AI drivers cache:', cacheError);
     }
 
+    // Regenerate Pro Tips when new goal is created
+    // Do this BEFORE returning response so it completes before user navigates to dashboard
+    try {
+      // Get API key from environment (server-side)
+      const apiKey = process.env.OPENAI_API_KEY;
+      const apiKeyParam = apiKey ? `&apiKey=${encodeURIComponent(apiKey)}` : '';
+      const proTipUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/personalized-quotes?userId=${dummyUserId}&forceRegenerate=true${apiKeyParam}`;
+      console.log('🔄 Regenerating Pro Tips after goal creation (waiting for completion)...');
+      
+      // Wait for regeneration to complete - this ensures DB is updated before user navigates
+      const response = await fetch(proTipUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.savedToDB) {
+          console.log('✅ Pro Tip regenerated and saved to database:', data.quote?.substring(0, 50) + '...');
+        } else {
+          console.log('✅ Pro Tip regenerated:', data.quote?.substring(0, 50) + '...');
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('⚠️ Pro Tip regeneration failed:', response.status, errorText.substring(0, 100));
+      }
+    } catch (error) {
+      console.error('⚠️ Error regenerating Pro Tips:', error);
+      // Don't fail the goal creation if Pro Tip regeneration fails
+    }
+
     return NextResponse.json(newGoal, { status: 201 });
   } catch (error) {
     console.error("Error creating goal:", error);

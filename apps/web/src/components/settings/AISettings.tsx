@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { getDecryptedApiKey, setEncryptedApiKey, hasApiKey, removeApiKey } from '@/lib/encryption';
+import { useTheme } from '@/lib/themeContext';
+import { Moon, Sun } from 'lucide-react';
 // import { AISetupManager, UserAIConfig, getAvailableServices, hasAIServices } from '@/lib/aiAuth';
 
 interface AISettingsProps {
@@ -12,6 +14,7 @@ interface AISettingsProps {
 }
 
 export default function AISettings({ onClose }: AISettingsProps) {
+  const { isDark, toggleTheme } = useTheme();
   const [aiConfig, setAiConfig] = useState({
     openai: { isConnected: false, lastUsed: null },
     gemini: { isConnected: false, lastUsed: null },
@@ -207,6 +210,61 @@ export default function AISettings({ onClose }: AISettingsProps) {
             Connect your AI accounts to get personalized suggestions and recommendations.
             Your API keys are encrypted and stored securely.
           </p>
+        </div>
+
+        {/* Dark Mode Toggle */}
+        <div className="mb-6 p-4 bg-slate-800/50 rounded-xl border border-slate-600/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <motion.div
+                animate={{ rotate: isDark ? [0, 360] : [360, 0] }}
+                transition={{ duration: 0.5 }}
+                className="p-2 bg-gradient-to-r from-yellow-400 to-orange-500 dark:from-slate-700 dark:to-slate-800 rounded-xl"
+              >
+                {isDark ? (
+                  <Moon className="w-5 h-5 text-white dark:text-slate-200" />
+                ) : (
+                  <Sun className="w-5 h-5 text-white" />
+                )}
+              </motion.div>
+              <div>
+                <h3 className="text-lg font-bold text-white">
+                  Dark Mode
+                </h3>
+                <p className="text-slate-300 text-sm">
+                  Toggle between light and dark theme
+                </p>
+              </div>
+            </div>
+            <motion.button
+              onClick={toggleTheme}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${
+                isDark
+                  ? 'bg-gradient-to-r from-slate-700 to-slate-800'
+                  : 'bg-gradient-to-r from-yellow-400 to-orange-500'
+              }`}
+            >
+              <motion.div
+                layout
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 30
+                }}
+                className={`absolute top-0.5 w-7 h-7 bg-white dark:bg-slate-600 rounded-full shadow-lg flex items-center justify-center ${
+                  isDark ? 'left-6' : 'left-0.5'
+                }`}
+              >
+                {isDark ? (
+                  <Moon className="w-3.5 h-3.5 text-slate-200" />
+                ) : (
+                  <Sun className="w-3.5 h-3.5 text-orange-500" />
+                )}
+              </motion.div>
+            </motion.button>
+          </div>
         </div>
 
         {message && (

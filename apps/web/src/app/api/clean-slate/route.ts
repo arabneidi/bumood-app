@@ -50,6 +50,15 @@ export async function POST(request: NextRequest) {
     });
     console.log('✅ Deleted', achievementsDeleted.count, 'achievements (achieved badges)');
 
+    // Delete all Pro Tips
+    let proTipsDeleted = { count: 0 } as { count: number };
+    try {
+      proTipsDeleted = await db.proTip.deleteMany({ where: { userId } });
+      console.log('✅ Deleted', proTipsDeleted.count, 'Pro Tips');
+    } catch (e) {
+      console.log('⚠️  ProTip model not found, skipping');
+    }
+
     // Note: Some models may not exist in the current schema
     // We'll handle them gracefully by checking if they exist
     let aiActionsDeleted = { count: 0 };
@@ -189,6 +198,7 @@ export async function POST(request: NextRequest) {
     const remainingCongratulations = await db.congratulation.count({ where: { userId } }).catch(() => 0);
     const remainingPeriodTracking = await db.periodTracking.count({ where: { userId } }).catch(() => 0);
     const remainingActivityConnections = await db.activityOutcomeConnection.count({ where: { userId } }).catch(() => 0);
+    const remainingProTips = await db.proTip.count({ where: { userId } }).catch(() => 0);
 
     const isClean = remainingMoodEntries === 0 && 
                    remainingDailyTracking === 0 && 
@@ -197,7 +207,8 @@ export async function POST(request: NextRequest) {
                    remainingGoalProgressDaily === 0 &&
                    remainingCongratulations === 0 &&
                    remainingPeriodTracking === 0 &&
-                   remainingActivityConnections === 0;
+                   remainingActivityConnections === 0 &&
+                   remainingProTips === 0;
 
     console.log('📊 Cleanup verification:');
     console.log('Mood entries remaining:', remainingMoodEntries);
@@ -208,6 +219,7 @@ export async function POST(request: NextRequest) {
     console.log('Congratulations remaining:', remainingCongratulations);
     console.log('PeriodTracking remaining:', remainingPeriodTracking);
     console.log('ActivityOutcomeConnections remaining:', remainingActivityConnections);
+    console.log('ProTips remaining:', remainingProTips);
 
     return NextResponse.json({
       success: true,
@@ -225,7 +237,8 @@ export async function POST(request: NextRequest) {
           learnConnections: learnConnectionsDeleted.count,
           congratulations: congratulationsDeleted.count,
           periodTracking: periodTrackingDeleted.count,
-          activityOutcomeConnections: activityConnectionsDeleted.count
+          activityOutcomeConnections: activityConnectionsDeleted.count,
+          proTips: proTipsDeleted.count
         },
         verification: {
           isClean,
@@ -237,7 +250,8 @@ export async function POST(request: NextRequest) {
             goalProgressDaily: remainingGoalProgressDaily,
             congratulations: remainingCongratulations,
             periodTracking: remainingPeriodTracking,
-            activityOutcomeConnections: remainingActivityConnections
+            activityOutcomeConnections: remainingActivityConnections,
+            proTips: remainingProTips
           }
         }
       }

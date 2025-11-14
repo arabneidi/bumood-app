@@ -70,6 +70,7 @@ model User {
   moodEntries                MoodEntry[]
   periodTracking             PeriodTracking[]
   sessions                   Session[]
+  proTips                    ProTip[]
 }
 
 model VerificationToken {
@@ -327,4 +328,16 @@ model ActivityOutcomeConnection {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, activity, outcome])
+}
+
+model ProTip {
+  id          String   @id @default(cuid())
+  userId      String
+  tip         String
+  source      String   @default("ai") // "ai" or "system"
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt])
 }

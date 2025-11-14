@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Save, Sparkles, Heart, Star, Zap, Palette, Music, BookOpen, Gamepad2, Plus, Minus, Settings, Bot, Moon, Sun } from 'lucide-react';
+import { User, Save, Sparkles, Heart, Star, Zap, Palette, Music, BookOpen, Gamepad2, Plus, Minus, Settings, Bot, Moon, Sun, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import AISettings from '@/components/settings/AISettings';
 import ExportModal from '@/components/ui/ExportModal';
@@ -68,6 +68,7 @@ export default function ProfilePage() {
   });
   
   const [loading, setLoading] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -315,6 +316,7 @@ export default function ProfilePage() {
                     const file = (e.target as HTMLInputElement).files?.[0];
                     if (!file) return;
                     
+                    setIsImporting(true);
                     try {
                       const fileExtension = file.name.split('.').pop()?.toLowerCase();
                       const text = await file.text();
@@ -945,16 +947,23 @@ export default function ProfilePage() {
                       console.error('Import error:', error);
                       setMessage('❌ Failed to import data. Please check file format.');
                       setTimeout(() => setMessage(''), 3000);
+                    } finally {
+                      setIsImporting(false);
                     }
                   };
                   input.click();
                 }}
-                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 dark:bg-gradient-to-r dark:from-slate-700 dark:to-slate-800 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl dark:shadow-slate-900/50 dark:hover:from-slate-600 dark:hover:to-slate-700 transition-all duration-300 flex items-center gap-3"
+                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 dark:bg-gradient-to-r dark:from-slate-700 dark:to-slate-800 text-white rounded-xl font-bold shadow-lg hover:shadow-2xl dark:shadow-slate-900/50 dark:hover:from-slate-600 dark:hover:to-slate-700 transition-all duration-300 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isImporting}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Import Data
+                {isImporting ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                )}
+                {isImporting ? 'Importing...' : 'Import Data'}
               </motion.button>
               
               <motion.button
@@ -1087,6 +1096,16 @@ export default function ProfilePage() {
                               setMessage('✅ All data cleared successfully!');
                               setTimeout(() => setMessage(''), 3000);
                               loadProfile(); // Refresh data
+                              
+                              // Clear all localStorage data related to dashboard
+                              localStorage.removeItem('pro-tip');
+                              localStorage.removeItem('ai-suggestions');
+                              localStorage.removeItem('last-mood-entries-hash');
+                              localStorage.removeItem('last-goals-hash');
+                              localStorage.removeItem('last-achievements-hash');
+                              localStorage.removeItem('goals-changed');
+                              localStorage.removeItem('mood-entry-created');
+                              console.log('🧹 Cleared all dashboard localStorage data (Pro Tips, AI suggestions, hashes)');
                               
                               // Force refresh of all dashboard data by reloading the page
                               setTimeout(() => {
@@ -2110,66 +2129,6 @@ export default function ProfilePage() {
             </motion.div>
 
             {/* Custom Categories functionality removed from schema */}
-
-            {/* Dark Mode Toggle Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1, duration: 0.6 }}
-              className="mb-8 p-6 bg-slate-800/40 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl border border-slate-700/50 dark:border-slate-600/50 shadow-xl"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <motion.div
-                    animate={{ rotate: isDark ? [0, 360] : [360, 0] }}
-                    transition={{ duration: 0.5 }}
-                    className="p-3 bg-gradient-to-r from-yellow-400 to-orange-500 dark:from-slate-700 dark:to-slate-800 rounded-2xl"
-                  >
-                    {isDark ? (
-                      <Moon className="w-6 h-6 text-white dark:text-slate-200" />
-                    ) : (
-                      <Sun className="w-6 h-6 text-white" />
-                    )}
-                  </motion.div>
-                  <div>
-                    <h3 className="text-2xl font-black bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 dark:from-slate-300 dark:via-slate-200 dark:to-slate-300 bg-clip-text text-transparent">
-                      Dark Mode
-                    </h3>
-                    <p className="text-slate-300 dark:text-slate-200 text-sm mt-1">
-                      Toggle between light and dark theme
-                    </p>
-                  </div>
-                </div>
-                <motion.button
-                  onClick={toggleTheme}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`relative w-16 h-9 rounded-full transition-colors duration-300 ${
-                    isDark
-                      ? 'bg-gradient-to-r from-slate-700 to-slate-800'
-                      : 'bg-gradient-to-r from-yellow-400 to-orange-500'
-                  }`}
-                >
-                  <motion.div
-                    layout
-                    transition={{
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 30
-                    }}
-                    className={`absolute top-1 w-7 h-7 bg-white dark:bg-slate-600 rounded-full shadow-lg flex items-center justify-center ${
-                      isDark ? 'left-8' : 'left-1'
-                    }`}
-                  >
-                    {isDark ? (
-                      <Moon className="w-4 h-4 text-slate-200" />
-                    ) : (
-                      <Sun className="w-4 h-4 text-orange-500" />
-                    )}
-                  </motion.div>
-                </motion.button>
-              </div>
-            </motion.div>
 
             {/* Save Button */}
             <motion.div

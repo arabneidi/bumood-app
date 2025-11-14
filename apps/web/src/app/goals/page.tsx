@@ -248,6 +248,7 @@ export default function GoalsPage() {
     try {
       const goalToUpdate = updatedGoals.find(goal => goal.id === goalId);
       if (goalToUpdate) {
+        console.log('🔄 Updating goal progress:', { goalId, currentValue: goalToUpdate.currentValue, change });
         const response = await fetch(`/api/goals/${goalId}`, {
           method: 'PUT',
           headers: {
@@ -259,12 +260,21 @@ export default function GoalsPage() {
         });
 
         if (!response.ok) {
-          console.error('Failed to update goal progress in database');
+          const errorText = await response.text();
+          console.error('❌ Failed to update goal progress in database:', response.status, errorText);
           // Optionally revert the local state change
+        } else {
+          const updatedGoal = await response.json();
+          console.log('✅ Goal progress updated successfully:', { goalId, currentValue: updatedGoal.currentValue });
+          // Signal dashboard that goals have changed (progress update)
+          localStorage.setItem('goals-changed', Date.now().toString());
+          console.log('🎯 Goal progress updated - Pro Tip regeneration triggered by API');
         }
+      } else {
+        console.error('❌ Goal not found in updated goals list:', goalId);
       }
     } catch (error) {
-      console.error('Error updating goal progress:', error);
+      console.error('❌ Error updating goal progress:', error);
     }
 
     // Track goal activity for DSS without creating a visible mood entry
@@ -369,6 +379,10 @@ export default function GoalsPage() {
         if (response.ok) {
           // Remove completed goal from the list
           setGoals(prevGoals => prevGoals.filter(goal => goal.id !== completedGoal.id));
+          
+          // Signal dashboard that goals have changed (goal completed)
+          localStorage.setItem('goals-changed', Date.now().toString());
+          console.log('🎯 Goal completed - signaling dashboard to regenerate Pro Tips');
           
           // Here you would typically:
           // 1. Update achievement progress
