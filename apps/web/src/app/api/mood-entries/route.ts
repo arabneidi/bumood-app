@@ -296,36 +296,51 @@ export async function POST(request: NextRequest) {
     });
     console.log('✅ Mood entry created successfully:', moodEntry.id);
 
-    // Regenerate Pro Tips when new mood entry is created
-    // Do this BEFORE returning response so it completes before user navigates to dashboard
+    // Regenerate Pro Tips when new mood entry is created (non-blocking)
+    // This allows mood entry creation to return immediately while Pro Tip regenerates
     try {
       // Get API key from environment (server-side)
       const apiKey = process.env.OPENAI_API_KEY;
       const apiKeyParam = apiKey ? `&apiKey=${encodeURIComponent(apiKey)}` : '';
       const proTipUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/personalized-quotes?userId=${dummyUserId}&forceRegenerate=true${apiKeyParam}`;
-      console.log('🔄 Regenerating Pro Tips after mood entry creation (waiting for completion)...');
+      console.log('🔄 Triggering Pro Tip regeneration in background after mood entry creation...');
+      console.log('🔗 Pro Tip URL:', proTipUrl.replace(apiKey || '', '***'));
       
-      // Wait for regeneration to complete - this ensures DB is updated before user navigates
-      const response = await fetch(proTipUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.savedToDB) {
-          console.log('✅ Pro Tip regenerated and saved to database:', data.quote?.substring(0, 50) + '...');
-        } else {
-          console.log('✅ Pro Tip regenerated:', data.quote?.substring(0, 50) + '...');
+      // Trigger in background (non-blocking)
+      ;(async () => {
+        try {
+          const startTime = Date.now();
+          const response = await fetch(proTipUrl, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          const duration = Date.now() - startTime;
+          
+          console.log(`⏱️ Pro Tip regeneration completed in ${duration}ms`);
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.savedToDB) {
+              console.log('✅ Pro Tip regenerated and saved to database:', data.quote?.substring(0, 50) + '...');
+            } else {
+              console.log('✅ Pro Tip regenerated (not saved to DB):', data.quote?.substring(0, 50) + '...');
+            }
+          } else {
+            const errorText = await response.text();
+            console.error('⚠️ Pro Tip regeneration failed:', response.status, errorText.substring(0, 100));
+          }
+        } catch (error) {
+          console.error('⚠️ Error regenerating Pro Tips:', error);
+          if (error instanceof Error) {
+            console.error('Error details:', error.message, error.stack?.substring(0, 200));
+          }
         }
-      } else {
-        const errorText = await response.text();
-        console.error('⚠️ Pro Tip regeneration failed:', response.status, errorText.substring(0, 100));
-      }
+      })();
+      console.log('✅ Mood entry creation complete - Pro Tip regeneration running in background');
     } catch (error) {
-      console.error('⚠️ Error regenerating Pro Tips:', error);
+      console.error('⚠️ Error triggering Pro Tip regeneration:', error);
       // Don't fail the mood entry creation if Pro Tip regeneration fails
     }
 
@@ -534,24 +549,26 @@ export async function POST(request: NextRequest) {
       recoveryIndex += 1; // Bonus for good sleep
     }
 
-    // Create or update DailyTracking record
-    await db.dailyTracking.upsert({
-      where: {
-        userId_date: {
-          userId: dummyUserId,
-          date: trackingDate
-        }
-      },
-      update: {
-        // Sync water and nutrition data from mood entry
-        waterIntake: waterIntake || 0,
-        mealsEaten: mealsEaten || 0,
-        mealQuality: mealQuality || null,
-        caffeine: caffeine || 0,
-        alcohol: alcohol || 0,
-        // Sync exercise data
-        exercise: activitiesList.length > 0,
-        exerciseType: activitiesList.length > 0 ? 'general' : null,
+    // Create or update DailyTracking record (move to background for faster response)
+    ;(async () => {
+      try {
+        await db.dailyTracking.upsert({
+          where: {
+            userId_date: {
+              userId: dummyUserId,
+              date: trackingDate
+            }
+          },
+          update: {
+            // Sync water and nutrition data from mood entry
+            waterIntake: waterIntake || 0,
+            mealsEaten: mealsEaten || 0,
+            mealQuality: mealQuality || null,
+            caffeine: caffeine || 0,
+            alcohol: alcohol || 0,
+            // Sync exercise data
+            exercise: activitiesList.length > 0,
+            exerciseType: activitiesList.length > 0 ? 'general' : null,
         exerciseDuration: activitiesList.length > 0 ? 30 : 0, // Default 30 minutes
         // DSS calculations - using actual deep work minutes and tasks
         deepworkMinutes: deepworkMinutes,
@@ -589,6 +606,9 @@ export async function POST(request: NextRequest) {
         connectionScore: connectionScore
       }
     });
+      } catch (trackingError) {
+        console.error('⚠️ Error updating DailyTracking:', trackingError);
+      }
 
       // Learn from user activities and subcategories
       console.log('🧠 Learning from user activities...');
