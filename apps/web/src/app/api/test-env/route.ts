@@ -5,20 +5,36 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    // Check server-side env var for global access
-    const apiKey = process.env.OPENAI_API_KEY;
+    // Check server-side env vars for each AI service
+    const openaiKey = process.env.OPENAI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const textcortexKey = process.env.TEXTCORTEX_API_KEY;
     
     return NextResponse.json({ 
-      hasApiKey: !!apiKey,
-      apiKeyLength: apiKey ? apiKey.length : 0,
-      apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'Not found'
+      openai: {
+        hasApiKey: !!openaiKey,
+        apiKeyLength: openaiKey ? openaiKey.length : 0,
+        apiKeyPrefix: openaiKey ? openaiKey.substring(0, 10) + '...' : 'Not found'
+      },
+      gemini: {
+        hasApiKey: !!geminiKey,
+        apiKeyLength: geminiKey ? geminiKey.length : 0,
+        apiKeyPrefix: geminiKey ? geminiKey.substring(0, 10) + '...' : 'Not found'
+      },
+      textcortex: {
+        hasApiKey: !!textcortexKey,
+        apiKeyLength: textcortexKey ? textcortexKey.length : 0,
+        apiKeyPrefix: textcortexKey ? textcortexKey.substring(0, 10) + '...' : 'Not found'
+      }
     });
     
   } catch (error) {
     console.error('Error checking environment:', error);
     return NextResponse.json({ 
       error: 'Failed to check environment',
-      hasApiKey: false
+      openai: { hasApiKey: false },
+      gemini: { hasApiKey: false },
+      textcortex: { hasApiKey: false }
     });
   }
 }

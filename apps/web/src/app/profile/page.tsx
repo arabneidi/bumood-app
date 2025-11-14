@@ -82,22 +82,26 @@ export default function ProfilePage() {
       const geminiKey = hasApiKey('gemini');
       const textcortexKey = hasApiKey('textcortex');
       
-      // Also check if server has API key (for server-side features)
-      let serverHasKey = false;
+      // Also check if server has API keys for each service (for server-side features)
+      let serverOpenaiKey = false;
+      let serverGeminiKey = false;
+      let serverTextcortexKey = false;
       try {
         const res = await fetch('/api/test-env');
         if (res.ok) {
           const data = await res.json();
-          serverHasKey = data?.hasApiKey || false;
+          serverOpenaiKey = data?.openai?.hasApiKey || false;
+          serverGeminiKey = data?.gemini?.hasApiKey || false;
+          serverTextcortexKey = data?.textcortex?.hasApiKey || false;
         }
       } catch {
         // Ignore errors
       }
       
-      // AI is connected if either client (localStorage) or server has the key
-      const openaiConnected = openaiKey || serverHasKey;
-      const geminiConnected = geminiKey || serverHasKey;
-      const textcortexConnected = textcortexKey || serverHasKey;
+      // AI is connected if either client (localStorage) or server has the key for that specific service
+      const openaiConnected = openaiKey || serverOpenaiKey;
+      const geminiConnected = geminiKey || serverGeminiKey;
+      const textcortexConnected = textcortexKey || serverTextcortexKey;
       
       const config = {
         openai: { 
@@ -145,17 +149,37 @@ export default function ProfilePage() {
     loadProfile();
   }, []);
 
-  // Debug component render
-  console.log('Profile component rendering with state:', { profile });
-  
-  // Test if console.log works at all
-  console.log('=== CONSOLE TEST - IF YOU SEE THIS, CONSOLE IS WORKING ===');
+  // Debug component render - only log custom favorites
+  // console.log('Profile component rendering with state:', { 
+  //   customFavoritesCount: profile.customFavorites?.length || 0,
+  //   customFavorites: profile.customFavorites 
+  // });
 
   const loadProfile = async () => {
     try {
       const response = await fetch('/api/user?userId=dummy-user');
       if (response.ok) {
         const data = await response.json();
+        const loadedCustomFavorites = (() => {
+          try {
+            if (!data.customFavorites) {
+              console.log('📭 No customFavorites in data');
+              return [];
+            }
+            const parsed = typeof data.customFavorites === 'string' 
+              ? JSON.parse(data.customFavorites) 
+              : data.customFavorites;
+            if (parsed && parsed.length > 0) {
+              const favoritesStr = parsed.map(f => `${f.category}: [${f.items.join(', ')}]`).join(' | ');
+              console.log(`✅ Loaded ${parsed.length} Custom Favorite${parsed.length > 1 ? 's' : ''}:`, favoritesStr);
+            }
+            return Array.isArray(parsed) ? parsed : [];
+          } catch (error) {
+            console.error('❌ Error parsing customFavorites:', error, 'Raw value:', data.customFavorites);
+            return [];
+          }
+        })();
+        
         setProfile({
           name: data.name || '',
           gender: data.gender || '',
@@ -163,6 +187,7 @@ export default function ProfilePage() {
           height: data.height?.toString() || '',
           weight: data.weight?.toString() || '',
           personality: data.personality ? JSON.parse(data.personality) : [],
+          showPersonalityDropdown: false,
           universityLevel: data.universityLevel || '',
           fieldOfStudy: data.fieldOfStudy || '',
           interests: data.interests ? JSON.parse(data.interests) : [],
@@ -170,7 +195,9 @@ export default function ProfilePage() {
           favoriteWriters: data.favoriteWriters || '',
           favoriteMovies: data.favoriteMovies || '',
           favoritePhilosophers: data.favoritePhilosophers || '',
-          customFavorites: data.customFavorites ? JSON.parse(data.customFavorites) : []
+          customFavorites: loadedCustomFavorites,
+          newCustomCategory: '',
+          newCustomItem: ''
         });
         // Custom categories removed from schema
       }
@@ -200,7 +227,24 @@ export default function ProfilePage() {
     setLoading(true);
     setMessage('');
     try {
-      console.log('Saving profile:', profile);
+      // Use a small delay to ensure any pending state updates are complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Auto-add category if user entered it but forgot to click + button
+      let finalCustomFavorites = profile.customFavorites;
+      if (profile.newCustomCategory && profile.newCustomItem) {
+        console.log('⚠️ Auto-adding category that was entered but not added to list');
+        const items = profile.newCustomItem.split(',').map(item => item.trim()).filter(item => item);
+        const autoAddedFavorite = {
+          id: Date.now().toString(),
+          category: profile.newCustomCategory.trim(),
+          items: items
+        };
+        finalCustomFavorites = [...profile.customFavorites, autoAddedFavorite];
+        console.log(`➕ Auto-added "${autoAddedFavorite.category}": [${items.join(', ')}]`);
+      }
+      
+      console.log('💾 Saving Custom Favorites:', finalCustomFavorites?.map(f => `${f.category}: [${f.items.join(', ')}]`).join(' | ') || 'None');
       
       const profileData = {
         userId: 'dummy-user',
@@ -217,10 +261,10 @@ export default function ProfilePage() {
         favoriteWriters: profile.favoriteWriters || null,
         favoriteMovies: profile.favoriteMovies || null,
         favoritePhilosophers: profile.favoritePhilosophers || null,
-        customFavorites: JSON.stringify(profile.customFavorites)
+        customFavorites: JSON.stringify(finalCustomFavorites)
       };
       
-      console.log('📤 Sending profile data to API:', profileData);
+      // console.log('📤 Sending profile data to API:', profileData);
       
       const response = await fetch('/api/user', {
         method: 'PUT',
@@ -228,11 +272,18 @@ export default function ProfilePage() {
         body: JSON.stringify(profileData)
       });
       
-      console.log('Response status:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('Saved successfully:', data);
+        console.log('✅ Profile saved! Custom Favorites:', finalCustomFavorites?.length || 0, 'categories');
+        
+        // Clear the input fields if we auto-added a category
+        if (profile.newCustomCategory || profile.newCustomItem) {
+          setProfile(prev => ({
+            ...prev,
+            newCustomCategory: '',
+            newCustomItem: ''
+          }));
+        }
         setSuccess(true);
         setMessage('✅ Profile saved successfully!');
         setTimeout(() => {
@@ -241,7 +292,7 @@ export default function ProfilePage() {
         }, 2000);
       } else {
         const error = await response.text();
-        console.error('Save failed:', error);
+        console.error('❌ Save failed:', error);
         setMessage('❌ Failed to save profile');
       }
     } catch (error) {
@@ -1987,7 +2038,6 @@ export default function ProfilePage() {
                   />
                 </motion.div>
 
-
                 {/* Favorite Movies */}
                 <motion.div
                   whileHover={{ scale: 1.05, rotate: 2 }}
@@ -2015,48 +2065,55 @@ export default function ProfilePage() {
                     placeholder="e.g., Inception, Breaking Bad, The Office"
                   />
                 </motion.div>
-
-                {/* Custom Categories */}
-                {profile.customFavorites.map((customFav, index) => (
-                  <motion.div
-                    key={customFav.id}
-                    whileHover={{ scale: 1.05, rotate: 2 }}
-                    className="group"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="block text-lg font-bold text-slate-200 flex items-center">
-                        <span className="text-2xl mr-2">⭐</span>
-                        {customFav.category}
-                      </label>
-                      <motion.button
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          const updatedFavorites = profile.customFavorites.filter((_, i) => i !== index);
-                          setProfile({...profile, customFavorites: updatedFavorites});
-                        }}
-                        className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
-                      >
-                        ✕
-                      </motion.button>
-                    </div>
-                    <input
-                      type="text"
-                      value={customFav.items.join(', ')}
-                      onChange={(e) => {
-                        const updatedFavorites = [...profile.customFavorites];
-                        updatedFavorites[index].items = e.target.value.split(',').map(item => item.trim()).filter(item => item);
-                        setProfile({...profile, customFavorites: updatedFavorites});
-                      }}
-                      className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-purple-500/10"
-                      placeholder={`e.g., ${customFav.category} examples`}
-                    />
-                  </motion.div>
-                ))}
-
-
-                {/* Custom Categories removed from schema */}
               </div>
+
+              {/* Custom Categories */}
+              {profile.customFavorites && Array.isArray(profile.customFavorites) && profile.customFavorites.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                  {profile.customFavorites.map((customFav, index) => {
+                    if (!customFav || !customFav.category) {
+                      console.warn('⚠️ Invalid customFav at index', index, ':', customFav);
+                      return null;
+                    }
+                    return (
+                      <motion.div
+                        key={customFav.id || `custom-fav-${index}`}
+                        whileHover={{ scale: 1.05, rotate: 2 }}
+                        className="group"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <label className="block text-lg font-bold text-slate-200 flex items-center">
+                            <span className="text-2xl mr-2">⭐</span>
+                            {customFav.category}
+                          </label>
+                          <motion.button
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                              const updatedFavorites = profile.customFavorites.filter((_, i) => i !== index);
+                              setProfile({...profile, customFavorites: updatedFavorites});
+                            }}
+                            className="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all duration-300"
+                          >
+                            ✕
+                          </motion.button>
+                        </div>
+                        <input
+                          type="text"
+                          value={customFav.items && Array.isArray(customFav.items) ? customFav.items.join(', ') : ''}
+                          onChange={(e) => {
+                            const updatedFavorites = [...profile.customFavorites];
+                            updatedFavorites[index].items = e.target.value.split(',').map(item => item.trim()).filter(item => item);
+                            setProfile({...profile, customFavorites: updatedFavorites});
+                          }}
+                          className="w-full px-6 py-4 bg-slate-800/60 backdrop-blur-xl border border-slate-600/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-400 text-white font-bold transition-all duration-300 group-hover:shadow-xl shadow-lg hover:shadow-purple-500/10"
+                          placeholder={`e.g., ${customFav.category} examples`}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
 
             </motion.div>
 
@@ -2098,7 +2155,7 @@ export default function ProfilePage() {
                       value={profile.newCustomItem || ''}
                       onChange={(e) => setProfile({...profile, newCustomItem: e.target.value})}
                       className="w-full px-4 py-4 bg-slate-700/60 backdrop-blur-xl border border-slate-500/50 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 text-white font-medium transition-all duration-300"
-                      placeholder="e.g., Sabrina Carpenter"
+                      placeholder="e.g., Sabrina Carpenter, Taylor Swift"
                     />
                   </div>
                   <motion.button
@@ -2107,17 +2164,33 @@ export default function ProfilePage() {
                     onClick={() => {
                       if (profile.newCustomCategory && profile.newCustomItem) {
                         const newId = Date.now().toString();
+                        // Split by comma to allow multiple items (e.g., "sabrina, taylor swift")
+                        const items = profile.newCustomItem.split(',').map(item => item.trim()).filter(item => item);
                         const newCustomFavorite = {
                           id: newId,
                           category: profile.newCustomCategory.trim(),
-                          items: [profile.newCustomItem.trim()]
+                          items: items
                         };
-                        setProfile({
-                          ...profile,
-                          customFavorites: [...profile.customFavorites, newCustomFavorite],
-                          newCustomCategory: '',
-                          newCustomItem: ''
+                        // Use functional update to ensure we have the latest state
+                        setProfile((prevProfile) => {
+                          const newFavorites = [...prevProfile.customFavorites, newCustomFavorite];
+                          console.log(`➕ Added "${newCustomFavorite.category}": [${items.join(', ')}]`);
+                          console.log(`➕ Total categories: ${newFavorites.length}`);
+                          return {
+                            ...prevProfile,
+                            customFavorites: newFavorites,
+                            newCustomCategory: '',
+                            newCustomItem: ''
+                          };
                         });
+                        
+                        // Show success message
+                        setMessage(`✅ Added "${newCustomFavorite.category}" category!`);
+                        setTimeout(() => setMessage(''), 2000);
+                      } else {
+                        console.warn('⚠️ Cannot add: Please enter both category name and items');
+                        setMessage('⚠️ Please enter both category name and items');
+                        setTimeout(() => setMessage(''), 2000);
                       }
                     }}
                     className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
