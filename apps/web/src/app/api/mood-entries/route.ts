@@ -423,6 +423,7 @@ export async function POST(request: NextRequest) {
       } catch (cacheError) {
         console.error('⚠️ Error updating cache:', cacheError);
       }
+    })();
 
     // Update user's recent activities with specific subcategories
     if (selectedSubcategories && selectedSubcategories.length > 0) {
@@ -549,8 +550,9 @@ export async function POST(request: NextRequest) {
       recoveryIndex += 1; // Bonus for good sleep
     }
 
-    // Create or update DailyTracking record (move to background for faster response)
+    // Create or update DailyTracking record and other background tasks (non-blocking)
     ;(async () => {
+      // Update DailyTracking
       try {
         await db.dailyTracking.upsert({
           where: {
@@ -569,43 +571,43 @@ export async function POST(request: NextRequest) {
             // Sync exercise data
             exercise: activitiesList.length > 0,
             exerciseType: activitiesList.length > 0 ? 'general' : null,
-        exerciseDuration: activitiesList.length > 0 ? 30 : 0, // Default 30 minutes
-        // DSS calculations - using actual deep work minutes and tasks
-        deepworkMinutes: deepworkMinutes,
-        tasksCompleted: tasksCompleted,
-        sleepHours: sleep !== null && sleep !== undefined ? parseFloat(sleep) : 0,
-        recoveryAction: sleep !== null && sleep !== undefined && parseFloat(sleep) >= 8,
-        positiveSocialTouchpoints: connectionScore,
-        // Update DSS component fields only; DSS score is computed via calculateDSS and saved elsewhere
-        learningMomentum: learningMomentum,
-        recoveryIndex: recoveryIndex,
-        connectionScore: connectionScore
-      },
-      create: {
-        userId: dummyUserId,
-        date: trackingDate,
-        // Sync water and nutrition data from mood entry
-        waterIntake: waterIntake || 0,
-        mealsEaten: mealsEaten || 0,
-        mealQuality: mealQuality || null,
-        caffeine: caffeine || 0,
-        alcohol: alcohol || 0,
-        // Sync exercise data
-        exercise: activitiesList.length > 0,
-        exerciseType: activitiesList.length > 0 ? 'general' : null,
-        exerciseDuration: activitiesList.length > 0 ? 30 : 0, // Default 30 minutes
-        // DSS calculations - using actual deep work minutes and tasks
-        deepworkMinutes: deepworkMinutes,
-        tasksCompleted: tasksCompleted,
-        sleepHours: sleep !== null && sleep !== undefined ? parseFloat(sleep) : 0,
-        recoveryAction: sleep !== null && sleep !== undefined && parseFloat(sleep) >= 8,
-        positiveSocialTouchpoints: connectionScore,
-        // Do not set dssScore here; it is computed by calculateDSS later
-        learningMomentum: learningMomentum,
-        recoveryIndex: recoveryIndex,
-        connectionScore: connectionScore
-      }
-    });
+            exerciseDuration: activitiesList.length > 0 ? 30 : 0, // Default 30 minutes
+            // DSS calculations - using actual deep work minutes and tasks
+            deepworkMinutes: deepworkMinutes,
+            tasksCompleted: tasksCompleted,
+            sleepHours: sleep !== null && sleep !== undefined ? parseFloat(sleep) : 0,
+            recoveryAction: sleep !== null && sleep !== undefined && parseFloat(sleep) >= 8,
+            positiveSocialTouchpoints: connectionScore,
+            // Update DSS component fields only; DSS score is computed via calculateDSS and saved elsewhere
+            learningMomentum: learningMomentum,
+            recoveryIndex: recoveryIndex,
+            connectionScore: connectionScore
+          },
+          create: {
+            userId: dummyUserId,
+            date: trackingDate,
+            // Sync water and nutrition data from mood entry
+            waterIntake: waterIntake || 0,
+            mealsEaten: mealsEaten || 0,
+            mealQuality: mealQuality || null,
+            caffeine: caffeine || 0,
+            alcohol: alcohol || 0,
+            // Sync exercise data
+            exercise: activitiesList.length > 0,
+            exerciseType: activitiesList.length > 0 ? 'general' : null,
+            exerciseDuration: activitiesList.length > 0 ? 30 : 0, // Default 30 minutes
+            // DSS calculations - using actual deep work minutes and tasks
+            deepworkMinutes: deepworkMinutes,
+            tasksCompleted: tasksCompleted,
+            sleepHours: sleep !== null && sleep !== undefined ? parseFloat(sleep) : 0,
+            recoveryAction: sleep !== null && sleep !== undefined && parseFloat(sleep) >= 8,
+            positiveSocialTouchpoints: connectionScore,
+            // Do not set dssScore here; it is computed by calculateDSS later
+            learningMomentum: learningMomentum,
+            recoveryIndex: recoveryIndex,
+            connectionScore: connectionScore
+          }
+        });
       } catch (trackingError) {
         console.error('⚠️ Error updating DailyTracking:', trackingError);
       }
