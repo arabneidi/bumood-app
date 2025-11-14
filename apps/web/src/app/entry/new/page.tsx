@@ -1660,6 +1660,11 @@ export default function NewEntry() {
                       <div className="font-semibold">
                         {(() => {
                           const isOnPeriod = formData.onPeriod;
+                          // If this is a first period entry (new period start), show Day 1 immediately
+                          // This is a shallow fix for display before saving
+                          if (isOnPeriod && isFirstPeriodEntry) {
+                            return 'Period Day 1';
+                          }
                           const periodDay = isOnPeriod ? getCurrentPeriodDay() : 0;
                           return isOnPeriod ? `Period Day ${periodDay}` : 'Start period cycle';
                         })()}
